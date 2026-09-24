@@ -1,0 +1,21 @@
+{
+  "name": "irms-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Internal Recruitment Management System (IRMS) - Sprint 1",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "test:backend": "npm --prefix backend run test",
+    "migrate": "npm --prefix backend run migrate",
+    "seed": "npm --prefix backend run seed",
+    "db:setup": "npm --prefix backend run db:setup"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
