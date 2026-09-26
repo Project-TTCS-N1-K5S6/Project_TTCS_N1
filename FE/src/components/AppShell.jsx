@@ -14,7 +14,8 @@ import {
   ShieldAlert,
   Lock,
   ServerCrash,
-  WifiOff
+  WifiOff,
+  UserCheck
 } from 'lucide-react';
 
 export function AppShell({
@@ -25,106 +26,87 @@ export function AppShell({
   onTriggerSimulatedError,
   children
 }) {
+  // --- KN-65: LOGIC ĐIỀU HƯỚNG ĐỘNG BẰNG PHÂN QUYỀN (ROLE-BASED DYNAMIC NAVIGATION) ---
+  
+  // 1. Quản lý Role người dùng hiện tại (Mặc định demo là 'HR', có thể switch đổi vai trò)
+  const [currentRole, setCurrentRole] = useState('HR'); 
+
+  // 2. Định nghĩa danh sách các Menu kèm theo Quyền được truy cập (roles)
+  const menuSections = [
+    {
+      title: 'Quản lý Tuyển dụng',
+      items: [
+        { id: 'dashboard', label: 'Danh sách Ứng viên', icon: Users, roles: ['HR', 'ADMIN', 'INTERVIEWER'] },
+        { id: 'vacancies', label: 'Vị trí Tuyển dụng', icon: Briefcase, roles: ['HR', 'ADMIN'] },
+        { id: 'schedule', label: 'Lịch Phỏng vấn', icon: Calendar, roles: ['HR', 'ADMIN', 'INTERVIEWER'] },
+      ]
+    },
+    {
+      title: 'Quản lý Tài khoản',
+      items: [
+        { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE'] },
+      ]
+    },
+    {
+      title: 'Kiểm thử Trang Lỗi (KN-17)',
+      items: [
+        { id: 'error-403', label: 'Lỗi 403 (Không đủ quyền)', icon: ShieldAlert, color: 'var(--error-403-color)', roles: ['HR', 'ADMIN'] },
+        { id: 'error-404', label: 'Lỗi 404 (Không tìm thấy)', icon: FileQuestion, color: 'var(--error-404-color)', roles: ['HR', 'ADMIN'] },
+        { id: 'error-401', label: 'Lỗi 401 (Hết phiên login)', icon: Lock, color: 'var(--error-401-color)', roles: ['HR', 'ADMIN'] },
+        { id: 'error-500', label: 'Lỗi 500 (Máy chủ hỏng)', icon: ServerCrash, color: 'var(--error-500-color)', roles: ['HR', 'ADMIN'] },
+        { id: 'error-503', label: 'Lỗi 503 (Bảo trì/Mất mạng)', icon: WifiOff, color: 'var(--error-503-color)', roles: ['HR', 'ADMIN'] },
+      ]
+    }
+  ];
+
   return (
     <div className="app-container" data-theme={theme}>
       {/* Sidebar Navigation */}
       <aside className="app-sidebar">
         <div className="sidebar-logo">
-          <div className="logo-badge">HR</div>
+          <div className="logo-badge">{currentRole}</div>
           <div className="logo-text">
             <h2>Hệ Thống Tuyển Dụng</h2>
             <p>TTCS Kỳ T9/2026 (K5S6)</p>
           </div>
         </div>
 
+        {/* KN-65: BỘ LỌC ĐIỀU HƯỚNG ĐỘNG (DYNAMIC MENU RENDER) */}
         <div className="nav-menu">
-          <div className="nav-menu-title">Quản lý Tuyển dụng</div>
+          {menuSections.map((section, idx) => {
+            // Lọc ra các item thuộc quyền của role hiện tại
+            const visibleItems = section.items.filter(item => item.roles.includes(currentRole));
 
-          <div
-            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <Users size={18} />
-            <span>Danh sách Ứng viên</span>
-          </div>
+            // Nếu không có item nào thỏa mãn quyền, không hiển thị tiêu đề nhóm này
+            if (visibleItems.length === 0) return null;
 
-          <div
-            className={`nav-item ${activeTab === 'vacancies' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <Briefcase size={18} />
-            <span>Vị trí Tuyển dụng</span>
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'schedule' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <Calendar size={18} />
-            <span>Lịch Phỏng vấn</span>
-          </div>
-
-          <div className="nav-menu-title" style={{ marginTop: '1.25rem' }}>
-            Quản lý Tài khoản
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'forgot-password' ? 'active' : ''}`}
-            onClick={() => setActiveTab('forgot-password')}
-          >
-            <ShieldCheck size={18} />
-            <span>Quên mật khẩu (Demo)</span>
-          </div>
-
-          <div className="nav-menu-title" style={{ marginTop: '1.25rem' }}>
-            Kiểm thử Trang Lỗi (KN-17)
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'error-403' ? 'active' : ''}`}
-            onClick={() => setActiveTab('error-403')}
-          >
-            <ShieldAlert size={18} color="var(--error-403-color)" />
-            <span>Lỗi 403 (Không đủ quyền)</span>
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'error-404' ? 'active' : ''}`}
-            onClick={() => setActiveTab('error-404')}
-          >
-            <FileQuestion size={18} color="var(--error-404-color)" />
-            <span>Lỗi 404 (Không tìm thấy)</span>
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'error-401' ? 'active' : ''}`}
-            onClick={() => setActiveTab('error-401')}
-          >
-            <Lock size={18} color="var(--error-401-color)" />
-            <span>Lỗi 401 (Hết phiên login)</span>
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'error-500' ? 'active' : ''}`}
-            onClick={() => setActiveTab('error-500')}
-          >
-            <ServerCrash size={18} color="var(--error-500-color)" />
-            <span>Lỗi 500 (Máy chủ hỏng)</span>
-          </div>
-
-          <div
-            className={`nav-item ${activeTab === 'error-503' ? 'active' : ''}`}
-            onClick={() => setActiveTab('error-503')}
-          >
-            <WifiOff size={18} color="var(--error-503-color)" />
-            <span>Lỗi 503 (Bảo trì/Mất mạng)</span>
-          </div>
+            return (
+              <React.Fragment key={idx}>
+                <div className="nav-menu-title" style={{ marginTop: idx > 0 ? '1.25rem' : '0' }}>
+                  {section.title}
+                </div>
+                {visibleItems.map(item => {
+                  const IconComponent = item.icon;
+                  return (
+                    <div
+                      key={item.id}
+                      className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+                      onClick={() => setActiveTab(item.id)}
+                    >
+                      <IconComponent size={18} color={item.color || 'currentColor'} />
+                      <span>{item.label}</span>
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            );
+          })}
         </div>
 
         <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            User Story: <strong>KN-17</strong><br />
-            Sub-tasks: <strong>KN-72 &rarr; KN-78</strong>
+            User Story: <strong>KN-65</strong><br />
+            Chức năng: <strong>Điều hướng Động (Dynamic Nav)</strong>
           </div>
         </div>
       </aside>
@@ -138,11 +120,27 @@ export function AppShell({
             <span>Hệ thống Tuyển dụng Nội bộ</span>
             <ChevronRight size={14} color="var(--text-muted)" />
             <span style={{ color: 'var(--text-secondary)' }}>
-              {activeTab === 'dashboard' ? 'Tổng quan Dashboard' : `Trang Kiểm thử Trang Lỗi ${activeTab.toUpperCase()}`}
+              {activeTab === 'dashboard' ? 'Tổng quan Dashboard' : `Trang Kiểm thử ${activeTab.toUpperCase()}`}
             </span>
           </div>
 
           <div className="header-actions">
+            {/* THÊM BỘ CHUYỂN ĐỔI ROLE ĐỂ ĐEM ĐI DEMO / TESTING THUẬN TIỆN */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem', background: 'var(--bg-card)', padding: '0.25rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              <UserCheck size={16} color="var(--accent-primary)" />
+              <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Role:</span>
+              <select 
+                value={currentRole} 
+                onChange={(e) => setCurrentRole(e.target.value)}
+                style={{ background: 'transparent', color: 'inherit', border: 'none', fontWeight: 'bold', cursor: 'pointer', outline: 'none' }}
+              >
+                <option value="HR">HR (Nhân sự)</option>
+                <option value="ADMIN">ADMIN (Quản trị)</option>
+                <option value="INTERVIEWER">INTERVIEWER (Người phỏng vấn)</option>
+                <option value="CANDIDATE">CANDIDATE (Ứng viên)</option>
+              </select>
+            </div>
+
             <button
               className="btn-icon"
               title="Chuyển đổi Chế độ Sáng / Tối"
@@ -152,10 +150,10 @@ export function AppShell({
             </button>
 
             <div className="user-profile">
-              <div className="user-avatar">HR</div>
+              <div className="user-avatar">{currentRole}</div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>DTC245200439</span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Nhân sự Nội bộ</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Quyền: {currentRole}</span>
               </div>
             </div>
           </div>
@@ -165,7 +163,7 @@ export function AppShell({
         <div className="demo-control-bar">
           <div className="demo-title">
             <Sparkles size={16} />
-            <span>Thanh Điều Hướng Kiểm Thử Trực Tiếp KN-17:</span>
+            <span>Thanh Điều Hướng Kiểm Thử Trực Tiếp KN-65 (Role: {currentRole}):</span>
           </div>
 
           <div className="demo-buttons">
