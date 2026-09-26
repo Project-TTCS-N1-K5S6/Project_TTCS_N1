@@ -1,0 +1,16 @@
+{
+  "name": "ttcs-recruitment-be",
+  "version": "1.0.0",
+  "description": "Backend System with Standardized Error Handling & Exception Management - User Story KN-17",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
