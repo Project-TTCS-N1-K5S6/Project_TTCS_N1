@@ -1,11 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng Nhập - Hệ Thống Tuyển Dụng TTCS</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/toast.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, #1e1b4b, #0f172a 60%);
+    }
+    .login-box {
+      width: 100%;
+      max-width: 440px;
+      padding: 40px;
+      background: rgba(30, 41, 59, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .login-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .login-brand-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: var(--shadow-glow);
+      margin-bottom: 16px;
+    }
+    .quick-accounts {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      border: 1px dashed var(--border-color);
+    }
+    .quick-accounts h4 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .quick-acc-btn {
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition);
+    }
+    .quick-acc-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+  </style>
 </head>
 <body>
-    
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-brand-icon">HR</div>
+      <h2 style="color: #fff; font-size: 1.5rem;">Đăng Nhập Nội Bộ</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Hệ Thống Tuyển Dụng Nội Bộ - TTCS T9/2026</p>
+    </div>
+
+    <!-- Reason notification alert if logged out due to revocation -->
+    <div id="logoutReasonAlert" style="display: none; padding: 12px 16px; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); border-radius: 10px; color: #fca5a5; font-size: 0.85rem; margin-bottom: 20px;">
+      <!-- Populated dynamically -->
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email" class="form-label">Email công việc</label>
+        <input type="email" id="email" class="form-input" placeholder="nhansu@company.com" required value="hoang.ta@company.com">
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Mật khẩu</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu..." required value="TempPassword123">
+          <button type="button" class="btn-toggle-eye" data-target="password" title="Ẩn/Hiện">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;" id="loginBtn">
+        Đăng nhập
+      </button>
+    </form>
+
+    <div class="quick-accounts">
+      <h4>Tài khoản thử nghiệm sẵn có:</h4>
+      <button class="quick-acc-btn" onclick="fillAcc('hoang.ta@company.com', 'TempPassword123')">
+        <span><strong>Hoàng Tiến Anh</strong> (Nhân sự)</span>
+        <small style="color: var(--text-muted)">hoang.ta@company.com</small>
+      </button>
+      <button class="quick-acc-btn" onclick="fillAcc('cuong.sv@company.com', 'TempPassword123')">
+        <span><strong>Sìn Văn Cương</strong> (Quản trị)</span>
+        <small style="color: var(--text-muted)">cuong.sv@company.com</small>
+      </button>
+      <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px;">* Mật khẩu khởi tạo ban đầu: <code>TempPassword123</code></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user was redirected due to session revocation (KN-56)
+      const logoutReason = sessionStorage.getItem('logoutReason');
+      if (logoutReason) {
+        const alertEl = document.getElementById('logoutReasonAlert');
+        alertEl.textContent = '🔒 ' + logoutReason;
+        alertEl.style.display = 'block';
+        sessionStorage.removeItem('logoutReason');
+      }
+
+      // Eye toggle
+      document.querySelectorAll('.btn-toggle-eye').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById(btn.getAttribute('data-target'));
+          const isPass = target.type === 'password';
+          target.type = isPass ? 'text' : 'password';
+        });
+      });
+
+      // Login form submission
+      const loginForm = document.getElementById('loginForm');
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Đang đăng nhập...';
+
+        try {
+          const response = await fetch('http://localhost:5000/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, deviceName: 'Browser Session ' + Math.floor(Math.random()*1000) })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            Auth.setToken(data.token);
+            Auth.setUser(data.user);
+            showToast('Đăng nhập thành công!', `Chào mừng ${data.user.name} quay trở lại!`, 'success');
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 800);
+          } else {
+            showToast('Đăng nhập thất bại', data.message || 'Email hoặc mật khẩu không hợp lệ.', 'error');
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Lỗi kết nối', 'Không thể kết nối với server Backend.', 'error');
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Đăng nhập';
+        }
+      });
+    });
+
+    function fillAcc(email, pass) {
+      document.getElementById('email').value = email;
+      document.getElementById('password').value = pass;
+    }
+  </script>
 </body>
 </html>
