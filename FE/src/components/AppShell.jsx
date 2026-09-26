@@ -65,6 +65,18 @@ export function AppShell({
           </div>
 
           <div className="nav-menu-title" style={{ marginTop: '1.25rem' }}>
+            Quản lý Tài khoản
+          </div>
+
+          <div
+            className={`nav-item ${activeTab === 'forgot-password' ? 'active' : ''}`}
+            onClick={() => setActiveTab('forgot-password')}
+          >
+            <ShieldCheck size={18} />
+            <span>Quên mật khẩu (Demo)</span>
+          </div>
+
+          <div className="nav-menu-title" style={{ marginTop: '1.25rem' }}>
             Kiểm thử Trang Lỗi (KN-17)
           </div>
 

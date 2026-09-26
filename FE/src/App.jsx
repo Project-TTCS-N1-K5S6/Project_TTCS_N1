@@ -10,12 +10,20 @@ import {
   Error500Page,
   Error503Page
 } from './components/SpecificErrorPages';
+import { ForgotPassword } from './components/ForgotPassword';
+import { ResetPassword } from './components/ResetPassword';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState('light');
   const [currentErrorPayload, setCurrentErrorPayload] = useState(null);
   const [simulateCrash, setSimulateCrash] = useState(false);
+
+  React.useEffect(() => {
+    if (window.location.pathname === '/reset-password') {
+      setActiveTab('reset-password');
+    }
+  }, []);
 
   const handleTriggerError = (payload) => {
     setCurrentErrorPayload(payload);
@@ -67,6 +75,18 @@ export function App() {
 
       case 'error-503':
         return <Error503Page onRetry={handleRetry} />;
+
+      case 'forgot-password':
+        return <ForgotPassword onBackToLogin={() => setActiveTab('dashboard')} />;
+
+      case 'reset-password':
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const email = urlParams.get('email');
+        return <ResetPassword token={token} email={email} onBackToLogin={() => {
+          window.history.replaceState({}, document.title, '/');
+          setActiveTab('dashboard');
+        }} />;
 
       default:
         return <Error404Page onRetry={handleRetry} />;
