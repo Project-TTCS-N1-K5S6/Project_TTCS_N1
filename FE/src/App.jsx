@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AppShell } from './components/AppShell';
 import { RecruitmentDashboard } from './components/RecruitmentDashboard';
+import { UserRoleManagement } from './components/UserRoleManagement';
 import { CommonErrorPage } from './components/CommonErrorPage';
 import {
   Error404Page,
@@ -14,7 +15,7 @@ import { ForgotPassword } from './components/ForgotPassword';
 import { ResetPassword } from './components/ResetPassword';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('role-management'); // Set role-management as default tab for KN-19 review!
   const [theme, setTheme] = useState('light');
   const [currentErrorPayload, setCurrentErrorPayload] = useState(null);
   const [simulateCrash, setSimulateCrash] = useState(false);
@@ -39,7 +40,7 @@ export function App() {
   const handleRetry = () => {
     setCurrentErrorPayload(null);
     setSimulateCrash(false);
-    setActiveTab('dashboard');
+    setActiveTab('role-management');
   };
 
   if (simulateCrash) {
@@ -58,6 +59,9 @@ export function App() {
     }
 
     switch (activeTab) {
+      case 'role-management':
+        return <UserRoleManagement />;
+
       case 'dashboard':
         return <RecruitmentDashboard onTriggerError={handleTriggerError} />;
 
@@ -77,7 +81,7 @@ export function App() {
         return <Error503Page onRetry={handleRetry} />;
 
       case 'forgot-password':
-        return <ForgotPassword onBackToLogin={() => setActiveTab('dashboard')} />;
+        return <ForgotPassword onBackToLogin={() => setActiveTab('role-management')} />;
 
       case 'reset-password':
         const urlParams = new URLSearchParams(window.location.search);
@@ -85,7 +89,7 @@ export function App() {
         const email = urlParams.get('email');
         return <ResetPassword token={token} email={email} onBackToLogin={() => {
           window.history.replaceState({}, document.title, '/');
-          setActiveTab('dashboard');
+          setActiveTab('role-management');
         }} />;
 
       default:

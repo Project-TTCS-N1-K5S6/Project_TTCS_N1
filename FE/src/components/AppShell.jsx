@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Users,
   Briefcase,
   Calendar,
-  AlertTriangle,
   Moon,
   Sun,
   ShieldCheck,
@@ -14,7 +13,8 @@ import {
   ShieldAlert,
   Lock,
   ServerCrash,
-  WifiOff
+  WifiOff,
+  UserCheck
 } from 'lucide-react';
 
 export function AppShell({
@@ -25,6 +25,14 @@ export function AppShell({
   onTriggerSimulatedError,
   children
 }) {
+  const getBreadcrumbTitle = () => {
+    switch (activeTab) {
+      case 'dashboard': return 'Tổng quan Dashboard';
+      case 'role-management': return 'Quản lý Gán & Thu hồi Vai trò (KN-19)';
+      default: return `Trang Kiểm thử ${activeTab.toUpperCase()}`;
+    }
+  };
+
   return (
     <div className="app-container" data-theme={theme}>
       {/* Sidebar Navigation */}
@@ -62,6 +70,19 @@ export function AppShell({
           >
             <Calendar size={18} />
             <span>Lịch Phỏng vấn</span>
+          </div>
+
+          <div className="nav-menu-title" style={{ marginTop: '1.25rem' }}>
+            Quản trị & Phân quyền (KN-19)
+          </div>
+
+          <div
+            className={`nav-item ${activeTab === 'role-management' ? 'active' : ''}`}
+            onClick={() => setActiveTab('role-management')}
+            style={{ fontWeight: activeTab === 'role-management' ? 700 : 500 }}
+          >
+            <UserCheck size={18} color="var(--accent-primary)" />
+            <span>Gán & Thu hồi Vai trò</span>
           </div>
 
           <div className="nav-menu-title" style={{ marginTop: '1.25rem' }}>
@@ -123,8 +144,8 @@ export function AppShell({
 
         <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            User Story: <strong>KN-17</strong><br />
-            Sub-tasks: <strong>KN-72 &rarr; KN-78</strong>
+            User Story: <strong>KN-19</strong> (Cập nhật)<br />
+            Sub-tasks: <strong>KN-87 &rarr; KN-92</strong>
           </div>
         </div>
       </aside>
@@ -138,7 +159,7 @@ export function AppShell({
             <span>Hệ thống Tuyển dụng Nội bộ</span>
             <ChevronRight size={14} color="var(--text-muted)" />
             <span style={{ color: 'var(--text-secondary)' }}>
-              {activeTab === 'dashboard' ? 'Tổng quan Dashboard' : `Trang Kiểm thử Trang Lỗi ${activeTab.toUpperCase()}`}
+              {getBreadcrumbTitle()}
             </span>
           </div>
 
@@ -155,7 +176,7 @@ export function AppShell({
               <div className="user-avatar">HR</div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>DTC245200439</span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Nhân sự Nội bộ</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Quản trị Hệ thống</span>
               </div>
             </div>
           </div>
@@ -165,10 +186,17 @@ export function AppShell({
         <div className="demo-control-bar">
           <div className="demo-title">
             <Sparkles size={16} />
-            <span>Thanh Điều Hướng Kiểm Thử Trực Tiếp KN-17:</span>
+            <span>Điều Hướng Nhanh KN-19 & KN-17:</span>
           </div>
 
           <div className="demo-buttons">
+            <button
+              className={`demo-chip ${activeTab === 'role-management' ? 'active' : ''}`}
+              onClick={() => setActiveTab('role-management')}
+              style={{ backgroundColor: activeTab === 'role-management' ? 'var(--accent-primary)' : 'transparent', color: activeTab === 'role-management' ? '#fff' : 'inherit' }}
+            >
+              🛡️ Quản lý Vai trò (KN-19)
+            </button>
             <button
               className={`demo-chip ${activeTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveTab('dashboard')}
@@ -179,32 +207,32 @@ export function AppShell({
               className={`demo-chip ${activeTab === 'error-403' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-403')}
             >
-              Xem mẫu 403 (Không đủ quyền)
+              Mẫu 403 (Forbidden)
             </button>
             <button
               className={`demo-chip ${activeTab === 'error-404' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-404')}
             >
-              Xem mẫu 404 (Trang trống)
+              Mẫu 404 (Not Found)
             </button>
             <button
               className={`demo-chip ${activeTab === 'error-401' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-401')}
             >
-              Xem mẫu 401 (Hết phiên)
+              Mẫu 401 (Unauthorized)
             </button>
             <button
               className={`demo-chip ${activeTab === 'error-500' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-500')}
             >
-              Xem mẫu 500 (Lỗi máy chủ)
+              Mẫu 500 (Internal Error)
             </button>
             <button
               className={`demo-chip`}
               onClick={() => onTriggerSimulatedError('REACT_CRASH')}
               style={{ borderColor: '#ef4444', color: '#ef4444' }}
             >
-              Thử React UI Crash (KN-75 Error Boundary)
+              React UI Crash (KN-75)
             </button>
           </div>
         </div>
