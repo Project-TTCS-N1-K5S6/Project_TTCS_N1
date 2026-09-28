@@ -1,11 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 const config = require('./config/config');
 const authRoutes = require('./routes/authRoutes');
 
 const app = express();
+const frontendDist = path.join(__dirname, '../FE/dist');
+const frontendRoot = fs.existsSync(path.join(frontendDist, 'index.html'))
+  ? frontendDist
+  : path.join(__dirname, '../FE');
 
 // Middleware
 app.use(cors());
@@ -13,7 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static frontend files if accessed via backend
-app.use(express.static(path.join(__dirname, '../FE')));
+app.use(express.static(frontendRoot));
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
@@ -25,7 +30,7 @@ app.get('/api/health', (req, res) => {
 
 // Fallback to FE index.html
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../FE/index.html'));
+  res.sendFile(path.join(frontendRoot, 'index.html'));
 });
 
 // Start server

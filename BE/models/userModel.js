@@ -93,6 +93,9 @@ class UserModel {
     if (duplicate && duplicate.id !== id) return false;
     user.name = name.trim(); user.email = email.trim().toLowerCase();
     user.department = department.trim(); user.role = role; user.status = status;
+    // Revoke old JWTs when identity, permissions, or account status changes.
+    user.tokenVersion += 1;
+    user.activeSessions = [];
     persistManagedUsers();
     return this.toPublic(user);
   }
@@ -114,6 +117,8 @@ class UserModel {
         user.activeSessions = [];
       }
     }
+
+    persistManagedUsers();
 
     return user;
   }
