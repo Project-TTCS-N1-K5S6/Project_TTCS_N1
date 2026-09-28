@@ -12,6 +12,7 @@ import {
 } from './components/SpecificErrorPages';
 import { ForgotPassword } from './components/ForgotPassword';
 import { ResetPassword } from './components/ResetPassword';
+import { AccountManagement } from './components/AccountManagement';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -60,6 +61,9 @@ export function App() {
     switch (activeTab) {
       case 'dashboard':
         return <RecruitmentDashboard onTriggerError={handleTriggerError} />;
+
+      case 'accounts':
+        return <AccountManagement onTriggerError={handleTriggerError} />;
 
       case 'error-403':
         return <Error403Page onRetry={handleRetry} />;

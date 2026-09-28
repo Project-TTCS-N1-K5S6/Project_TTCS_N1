@@ -30,6 +30,13 @@ class AuthController {
         });
       }
 
+      if (user.status === 'Đã khóa') {
+        return res.status(403).json({
+          success: false,
+          message: 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.'
+        });
+      }
+
       const isPasswordValid = bcrypt.compareSync(password, user.password);
       if (!isPasswordValid) {
         return res.status(401).json({

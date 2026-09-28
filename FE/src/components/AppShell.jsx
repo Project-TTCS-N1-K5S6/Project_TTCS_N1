@@ -15,7 +15,8 @@ import {
   Lock,
   ServerCrash,
   WifiOff,
-  UserCheck
+  UserCheck,
+  UserCog
 } from 'lucide-react';
 
 export function AppShell({
@@ -29,7 +30,7 @@ export function AppShell({
   // --- KN-65: LOGIC ĐIỀU HƯỚNG ĐỘNG BẰNG PHÂN QUYỀN (ROLE-BASED DYNAMIC NAVIGATION) ---
   
   // 1. Quản lý Role người dùng hiện tại (Mặc định demo là 'HR', có thể switch đổi vai trò)
-  const [currentRole, setCurrentRole] = useState('HR'); 
+  const [currentRole, setCurrentRole] = useState(() => localStorage.getItem('userRole') === 'ADMIN' ? 'ADMIN' : 'HR');
 
   // 2. Định nghĩa danh sách các Menu kèm theo Quyền được truy cập (roles)
   const menuSections = [
@@ -45,6 +46,7 @@ export function AppShell({
       title: 'Quản lý Tài khoản',
       items: [
         { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE'] },
+        { id: 'accounts', label: 'Quản lý tài khoản', icon: UserCog, roles: ['ADMIN'] },
       ]
     },
     {
@@ -120,7 +122,7 @@ export function AppShell({
             <span>Hệ thống Tuyển dụng Nội bộ</span>
             <ChevronRight size={14} color="var(--text-muted)" />
             <span style={{ color: 'var(--text-secondary)' }}>
-              {activeTab === 'dashboard' ? 'Tổng quan Dashboard' : `Trang Kiểm thử ${activeTab.toUpperCase()}`}
+              {activeTab === 'dashboard' ? 'Tổng quan Dashboard' : activeTab === 'accounts' ? 'Quản lý tài khoản' : `Trang Kiểm thử ${activeTab.toUpperCase()}`}
             </span>
           </div>
 
@@ -131,7 +133,7 @@ export function AppShell({
               <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Role:</span>
               <select 
                 value={currentRole} 
-                onChange={(e) => setCurrentRole(e.target.value)}
+                onChange={(e) => { setCurrentRole(e.target.value); localStorage.setItem('userRole', e.target.value); }}
                 style={{ background: 'transparent', color: 'inherit', border: 'none', fontWeight: 'bold', cursor: 'pointer', outline: 'none' }}
               >
                 <option value="HR">HR (Nhân sự)</option>
