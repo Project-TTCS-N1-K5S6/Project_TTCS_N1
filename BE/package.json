@@ -1,6 +1,7 @@
 {
   "name": "ttcs-recruitment-be",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.19.0",
   "description": "Backend System - TTCS Recruitment System",
   "main": "server.js",
   "scripts": {

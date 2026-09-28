@@ -121,3 +121,29 @@ Dự án: Thực tập cơ sở (TTCS) - Kỳ T9/2026 (K5S6)
 Phiên bản: 1.0 (GitHub Ready)
 
 Loại tài liệu: README / Document Manual
+
+## Chạy ứng dụng web
+
+Yêu cầu Node.js 20.9 trở lên và pnpm 11.19.0. Có thể kích hoạt pnpm qua Corepack:
+
+```powershell
+corepack enable
+corepack prepare pnpm@11.19.0 --activate
+```
+
+Cài dependency riêng cho từng phần:
+
+```powershell
+cd FE
+pnpm install
+pnpm run build
+
+cd ../BE
+pnpm install
+Copy-Item .env.example .env
+pnpm start
+```
+
+Để tạo tài khoản và gửi mật khẩu tạm qua email, điền thông tin SMTP trong `BE/.env`.
+Danh sách tài khoản mới được lưu cục bộ tại `BE/data/managed-users.json` và không được commit.
+Đăng nhập tài khoản quản trị viên để mở mục **Quản lý tài khoản**.
