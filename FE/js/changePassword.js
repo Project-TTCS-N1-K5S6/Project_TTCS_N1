@@ -1,19 +1,30 @@
 /**
- * Change Password Module handling KN-51 (Form UI), KN-52 (Validation), KN-53 (Response & State)
+ * ============================================================
+ *  Change Password Module - TTCS HR System
+ *  KN-51 (Form UI), KN-52 (Validation), KN-53 (Response & State)
+ *  Session-based auth, password strength, complexity rules
+ * ============================================================
  */
-document.addEventListener('DOMContentLoaded', () => {
-  // Check auth status
-  if (!Auth.isAuthenticated()) {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Check auth status via server session
+  const currentUser = await Auth.checkAuth();
+  if (!currentUser) {
+    sessionStorage.setItem('logoutReason', 'Vui lòng đăng nhập để thực hiện đổi mật khẩu.');
     window.location.href = 'login.html';
     return;
   }
 
   // Populate User Info in Header & Sidebar
-  const currentUser = Auth.getUser();
-  if (currentUser) {
-    document.querySelectorAll('.user-name').forEach(el => el.textContent = currentUser.name);
-    document.querySelectorAll('.user-role').forEach(el => el.textContent = currentUser.role);
-    document.querySelectorAll('.user-avatar').forEach(el => el.src = currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
+  document.querySelectorAll('.user-name').forEach(el => el.textContent = currentUser.name);
+  document.querySelectorAll('.user-role').forEach(el => el.textContent = formatRole(currentUser.role));
+  document.querySelectorAll('.user-avatar').forEach(el => {
+    el.src = currentUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=6366f1&color=fff`;
+  });
+
+  // Init session manager with keep-alive
+  const refreshRes = await Auth.fetchWithAuth('/api/v1/auth/refresh', { method: 'POST' });
+  if (refreshRes?.ok && refreshRes.data?.session) {
+    SessionManager.init(refreshRes.data.session);
   }
 
   // DOM Elements
@@ -48,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (input) {
         const isPassword = input.type === 'password';
         input.type = isPassword ? 'text' : 'password';
-        button.innerHTML = isPassword 
+        button.innerHTML = isPassword
           ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
           : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
       }
@@ -179,16 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPassword = currentPasswordInput.value;
     const newPassword = newPasswordInput.value;
     const confirmPassword = confirmPasswordInput.value;
-    const revokeOtherSessions = revokeOtherSessionsCheckbox.checked;
+    const revokeOtherSessions = revokeOtherSessionsCheckbox ? revokeOtherSessionsCheckbox.checked : true;
 
     // Set button loading state
     const originalBtnText = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<svg class="spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path></svg> Đang xử lý...`;
+    submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...`;
 
     try {
-      // KN-54: Call Change Password API
-      const result = await Auth.fetchWithAuth('/change-password', {
+      // Call Change Password API
+      const result = await Auth.fetchWithAuth('/api/v1/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({
           currentPassword,
@@ -200,13 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!result) return; // User was logged out due to expired session
 
-      if (result.ok && result.data.success) {
-        // KN-53: Update token with new JWT token issued by BE
-        if (result.data.newToken) {
-          Auth.setToken(result.data.newToken);
-        }
-
-        // Display Success Toast (KN-53)
+      if (result.ok && result.data && result.data.success) {
+        // Display Success Toast
         showToast(
           'Đổi mật khẩu thành công!',
           result.data.message || 'Mật khẩu của bạn đã được cập nhật thành công.',
@@ -216,16 +222,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset Form & Validation States
         changePasswordForm.reset();
-        revokeOtherSessionsCheckbox.checked = true; // Maintain default
+        if (revokeOtherSessionsCheckbox) revokeOtherSessionsCheckbox.checked = true;
         validateInputs();
-        
+
         // Refresh User Info Profile if available
         if (result.data.user) {
-          Auth.setUser(result.data.user);
+          currentUser.mustChangePw = false;
+        }
+
+        // If user was prompted to change password, redirect to dashboard after 2 seconds
+        if (sessionStorage.getItem('requireChangePwPrompt')) {
+          sessionStorage.removeItem('requireChangePwPrompt');
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
         }
       } else {
-        // Handle Server Validation Errors (KN-55)
-        const errorData = result.data;
+        // Handle Server Validation Errors
+        const errorData = result.data || {};
         if (errorData.field === 'currentPassword') {
           showFieldError(currentPasswordInput, currentPasswordError, errorData.message);
           currentPasswordInput.focus();
@@ -249,12 +263,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Logout handler
-  document.querySelectorAll('.btn-logout-icon').forEach(btn => {
+  document.querySelectorAll('.btn-logout-icon, #btnLogout').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      Auth.logout();
+      if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?')) {
+        Auth.logout();
+      }
     });
   });
+
+  function formatRole(role) {
+    const map = {
+      nhan_su: 'Nhân sự nội bộ',
+      quan_tri: 'Quản trị viên',
+      truong_phong: 'Trưởng phòng',
+      giam_doc: 'Giám đốc'
+    };
+    return map[role] || role;
+  }
 
   // Initial validation check
   validateInputs();
