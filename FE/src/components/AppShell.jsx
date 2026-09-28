@@ -30,7 +30,15 @@ export function AppShell({
   // --- KN-65: LOGIC ĐIỀU HƯỚNG ĐỘNG BẰNG PHÂN QUYỀN (ROLE-BASED DYNAMIC NAVIGATION) ---
   
   // 1. Quản lý Role người dùng hiện tại (Mặc định demo là 'HR', có thể switch đổi vai trò)
-  const [currentRole, setCurrentRole] = useState(() => localStorage.getItem('userRole') === 'ADMIN' ? 'ADMIN' : 'HR');
+  const [currentRole, setCurrentRole] = useState(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      if (user?.role === 'ADMIN' || user?.role === 'Quản trị viên') return 'ADMIN';
+      if (user?.role === 'INTERVIEWER') return 'INTERVIEWER';
+      if (user?.role === 'CANDIDATE') return 'CANDIDATE';
+    } catch { /* use the demo default when no session profile is stored */ }
+    return localStorage.getItem('userRole') === 'ADMIN' ? 'ADMIN' : 'HR';
+  });
 
   // 2. Định nghĩa danh sách các Menu kèm theo Quyền được truy cập (roles)
   const menuSections = [

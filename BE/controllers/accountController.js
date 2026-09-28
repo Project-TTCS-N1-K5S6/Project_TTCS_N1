@@ -11,7 +11,7 @@ const fieldsValid = ({ name, email, department, role }) =>
   typeof department === 'string' && department.trim() && ROLES.includes(role);
 
 function requireAdmin(req, res, next) {
-  if (req.headers['x-user-role'] !== 'ADMIN') {
+  if (!['ADMIN', 'Quản trị viên'].includes(req.user?.role)) {
     return res.status(403).json({ success: false, message: 'Chỉ Quản trị viên được quản lý tài khoản.' });
   }
   next();

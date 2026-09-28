@@ -129,7 +129,7 @@ class UserModel {
     if (!user) return false;
     
     // Check if tokenVersion matches current user tokenVersion
-    if (user.tokenVersion !== tokenVersion) {
+    if (user.tokenVersion !== tokenVersion || (user.status && user.status !== 'Đang hoạt động')) {
       return false;
     }
 

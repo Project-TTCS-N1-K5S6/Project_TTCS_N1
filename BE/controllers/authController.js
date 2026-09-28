@@ -30,10 +30,12 @@ class AuthController {
         });
       }
 
-      if (user.status === 'Đã khóa') {
+      if (user.status && user.status !== 'Đang hoạt động') {
         return res.status(403).json({
           success: false,
-          message: 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.'
+          message: user.status === 'Đã khóa'
+            ? 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.'
+            : 'Tài khoản chưa được kích hoạt. Vui lòng liên hệ quản trị viên.'
         });
       }
 
