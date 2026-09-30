@@ -14,7 +14,8 @@ import {
   Lock,
   ServerCrash,
   WifiOff,
-  UserCheck
+  UserCheck,
+  UserPlus
 } from 'lucide-react';
 
 export function AppShell({
@@ -47,7 +48,8 @@ export function AppShell({
     {
       title: 'Quản lý Tài khoản',
       items: [
-        { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE'] },
+        { id: 'register', label: 'Đăng ký tài khoản', icon: UserPlus, color: 'var(--accent-primary)', roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
+        { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
       ]
     },
     {

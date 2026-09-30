@@ -13,6 +13,7 @@ import {
 } from './components/SpecificErrorPages';
 import { ForgotPassword } from './components/ForgotPassword';
 import { ResetPassword } from './components/ResetPassword';
+import { Register } from './components/Register';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('role-management'); // Set role-management as default tab for KN-19 review!
@@ -82,6 +83,9 @@ export function App() {
 
       case 'forgot-password':
         return <ForgotPassword onBackToLogin={() => setActiveTab('role-management')} />;
+
+      case 'register':
+        return <Register onBackToLogin={() => setActiveTab('role-management')} />;
 
       case 'reset-password':
         const urlParams = new URLSearchParams(window.location.search);

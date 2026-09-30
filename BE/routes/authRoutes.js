@@ -30,6 +30,29 @@ const loginValidation = [
   body('password').notEmpty().withMessage('Vui lòng nhập mật khẩu.').isLength({ max: 128 }),
 ];
 
+const registerValidation = [
+  body('fullName')
+    .trim()
+    .notEmpty().withMessage('Vui lòng nhập họ và tên.')
+    .isLength({ min: 2, max: 150 }).withMessage('Họ và tên phải có độ dài từ 2 đến 150 ký tự.'),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Vui lòng nhập email.')
+    .isEmail().withMessage('Email không đúng định dạng.')
+    .normalizeEmail(),
+  body('password')
+    .notEmpty().withMessage('Vui lòng nhập mật khẩu.')
+    .isLength({ min: 8, max: 128 }).withMessage('Mật khẩu tối thiểu 8 ký tự.'),
+  body('confirmPassword')
+    .optional({ checkFalsy: true })
+    .custom((value, { req }) => {
+      if (req.body.confirmPassword && value !== req.body.password) {
+        throw new Error('Mật khẩu xác nhận không khớp.');
+      }
+      return true;
+    }),
+];
+
 const changePasswordValidation = [
   body('currentPassword').notEmpty().withMessage('Vui lòng nhập mật khẩu hiện tại.'),
   body('newPassword').notEmpty().isLength({ min: 8, max: 128 }).withMessage('Mật khẩu mới tối thiểu 8 ký tự.'),
@@ -56,6 +79,7 @@ function handleValidationErrors(req, res, next) {
 
 // Public routes
 router.post('/login', loginLimiter, loginValidation, handleValidationErrors, AuthController.login);
+router.post('/register', loginLimiter, registerValidation, handleValidationErrors, AuthController.register);
 router.post('/logout', AuthController.logout);  // Can be called even without valid session
 
 // Protected routes (require valid session)

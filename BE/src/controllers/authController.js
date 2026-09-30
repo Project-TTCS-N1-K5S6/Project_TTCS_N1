@@ -110,3 +110,48 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+let currentMaxPv = 1; // Khởi tạo mốc đếm bắt đầu từ PV001 đã có trong seed
+
+export const register = async (req, res, next) => {
+  try {
+    const { fullName, email, password } = req.body;
+
+    if (!fullName || !email || !password) {
+      throw new ValidationException('Họ tên, email và mật khẩu là bắt buộc.', null, 'Vui lòng điền đầy đủ thông tin.');
+    }
+
+    const existingUser = mockUsers.find(u => u.email === email);
+    if (existingUser) {
+      throw new ValidationException('Email này đã được sử dụng.', [{ field: 'email', value: email }], 'Vui lòng dùng email khác hoặc đăng nhập.');
+    }
+
+    currentMaxPv += 1;
+    const employeeCode = `PV${String(currentMaxPv).padStart(3, '0')}`;
+
+    const newUser = {
+      id: mockUsers.length + 1,
+      employeeCode,
+      name: fullName,
+      email,
+      password,
+      role: 'nguoi_phong_van'
+    };
+    mockUsers.push(newUser);
+
+    res.status(201).json({
+      success: true,
+      message: 'Đăng ký tài khoản thành công! Mã nhân sự của bạn đã được khởi tạo tự động.',
+      user: {
+        id: newUser.id,
+        employeeCode: newUser.employeeCode,
+        fullName: newUser.name,
+        email: newUser.email,
+        role: newUser.role
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
