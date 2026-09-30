@@ -8,7 +8,7 @@ import {
   triggerServerError,
   triggerServiceUnavailable
 } from '../controllers/recruitmentController.js';
-import { forgotPassword, resetPassword } from '../controllers/authController.js';
+import { forgotPassword, resetPassword, register } from '../controllers/authController.js';
 import {
   getRoles,
   getUsers,
@@ -27,6 +27,7 @@ router.get('/recruitment/admin/salary-reports', getSalaryReports);
 
 // Auth Routes
 router.get('/auth/verify-session', verifySession);
+router.post('/auth/register', register);
 router.post('/auth/forgot-password', forgotPassword);
 router.post('/auth/reset-password', resetPassword);
 

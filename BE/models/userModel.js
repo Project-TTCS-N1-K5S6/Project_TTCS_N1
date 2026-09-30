@@ -104,6 +104,56 @@ class UserModel {
     );
     return parseInt(res.rows[0].count, 10);
   }
+
+  /**
+   * Sinh mã nhân viên tự động tăng dạng PV001, PV002,...
+   * Bóc tách phần số MAX rồi ép kiểu INTEGER, tránh lỗi sắp xếp chuỗi (Phương án 2)
+   * @param {string} prefix Tiền tố mã nhân viên (mặc định 'PV')
+   * @param {object} client PostgreSQL client nếu đang chạy transaction
+   * @returns {Promise<string>} Mã nhân sự mới, ví dụ: 'PV002'
+   */
+  static async generateNextEmployeeCode(prefix = 'PV', client = null) {
+    const sql = `
+      SELECT MAX(SUBSTRING(employee_code FROM (length($1) + 1))::INTEGER) AS max_num
+      FROM users
+      WHERE employee_code ~ ('^' || $1 || '[0-9]+$')
+    `;
+    const res = client ? await client.query(sql, [prefix]) : await query(sql, [prefix]);
+    const maxNum = res.rows[0]?.max_num || 0;
+    const nextNum = maxNum + 1;
+    return `${prefix}${String(nextNum).padStart(3, '0')}`;
+  }
+
+  /**
+   * Tạo tài khoản người dùng mới kèm mã nhân viên tự tăng và cơ chế Retry chống Race Condition
+   */
+  static async create({ fullName, email, passwordHash, role = 'nguoi_phong_van', avatarUrl = null, prefix = 'PV' }) {
+    const maxRetries = 3;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+      attempt++;
+      try {
+        const employeeCode = await UserModel.generateNextEmployeeCode(prefix);
+
+        const res = await query(
+          `INSERT INTO users (employee_code, full_name, email, password_hash, role, avatar_url, must_change_pw)
+           VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+           RETURNING id, employee_code, full_name, email, role, avatar_url, must_change_pw, created_at`,
+          [employeeCode, fullName.trim(), email.toLowerCase().trim(), passwordHash, role, avatarUrl]
+        );
+
+        return res.rows[0];
+      } catch (err) {
+        // Mã lỗi PostgreSQL 23505: unique_violation trên employee_code do 2 request cùng lúc
+        if (err.code === '23505' && err.constraint === 'users_employee_code_key' && attempt < maxRetries) {
+          console.warn(`[UserModel.create] Trùng mã nhân viên trong lúc tranh chấp, đang thử lại lần ${attempt}...`);
+          continue;
+        }
+        throw err;
+      }
+    }
+  }
 }
 
 module.exports = UserModel;
