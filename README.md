@@ -1,123 +1,218 @@
-HỆ THỐNG TUYỂN DỤNG NỘI BỘ - TTCS T9/2026 (K5S6)
+# HỆ THỐNG QUẢN LÝ ĐĂNG NHẬP, PHIÊN LÀM VIỆC & CHẤM PHIẾU ĐÁNH GIÁ NHÂN SỰ (TTCS HR)
 
-Tài liệu hướng dẫn chi tiết về cấu trúc, quy trình vận hành và nguyên tắc quản lý dữ liệu cho file HỆ THỐNG TUYỂN DỤNG NỘI BỘ-TTCS_T926_K5S6.xlsx.
+> **Kiến trúc:** Session-based Authentication (HttpOnly Cookie + PostgreSQL Store) + RESTful API + Vanilla JS/Bootstrap 5 SPA + Auto-Save Drafts (JSONB).
 
-📌 1. Tổng quan Dự án (Project Overview)
+---
 
-Tên file dữ liệu: HỆ THỐNG TUYỂN DỤNG NỘI BỘ-TTCS_T926_K5S6.xlsx
+## 🎯 Mục Tiêu & Tính Năng Đạt Được
 
-Mục đích: Quản lý tập trung toàn bộ quy trình tuyển dụng nội bộ, thông tin ứng viên, lịch phỏng vấn và đo lường hiệu quả tuyển dụng theo thời gian thực.
+1. **Đăng nhập an toàn:**
+   - Hỗ trợ đăng nhập linh hoạt bằng **Email** hoặc **Mã nhân sự** kết hợp mật khẩu.
+   - Băm mật khẩu với **bcrypt salt rounds = 12**, chống tấn công từ điển và rainbow table.
+   - Phòng chống brute-force bằng **express-rate-limit** (tối đa 10 lần thử/15 phút).
+   - Chống Session Fixation bằng **session.regenerate()** ngay sau khi xác thực thành công.
 
-Phạm vi áp dụng: Bộ phận HR / Tuyển dụng, Trưởng bộ phận chuyên môn và Ban quản lý dự án TTCS (Kỳ T9/2026 - K5S6).
+2. **Quản lý Phiên làm việc (Session Management) cấp Enterprise:**
+   - **PostgreSQL Session Store (`connect-pg-simple`):** Lưu trữ tập trung, không dùng MemoryStore trong production.
+   - **Cookie HttpOnly, SameSite, Secure (Production):** Tuyệt đối không lưu token hay mật khẩu trong `localStorage`.
+   - **Idle Timeout (30 phút):** Tự động gia hạn (rolling renewal) khi người dùng còn hoạt động. Không gia hạn vô hạn nếu người dùng vắng mặt.
+   - **Absolute Timeout (8 giờ):** Giới hạn phiên tối đa, bắt buộc đăng nhập lại sau 8 tiếng dù có hoạt động liên tục.
+   - **Cảnh báo trước khi hết hạn:** Modal đếm ngược (60s) với nút *"Tiếp tục phiên"* để gia hạn chủ động.
+   - **Đăng xuất an toàn:** Vô hiệu hóa session ngay lập tức ở server (`is_active = FALSE` & xóa session record).
+   - **Đăng xuất tất cả thiết bị (`/api/v1/auth/logout-all`):** Thu hồi toàn bộ session đang mở của tài khoản trên mọi máy tính và thiết bị di động.
 
-🎯 2. Mục tiêu Hệ thống
+3. **Chấm phiếu đánh giá & Tự động lưu bản nháp (Draft Manager):**
+   - 6 tiêu chí đánh giá nhân sự: Kỷ luật & Tác phong, Chất lượng công việc, Tiến độ & Hiệu quả, Kỹ năng làm việc nhóm, Tinh thần chủ động, Giao tiếp.
+   - Tự động tính tổng điểm (thang 60) và xếp hạng thời gian thực (🏆 Xuất sắc, ⭐ Tốt, ✅ Đạt yêu cầu, ⚠️ Cần cải thiện).
+   - **Auto-save định kỳ (30s):** Tự động lưu bản nháp vào PostgreSQL dưới định dạng `JSONB` (`evaluation_drafts`).
+   - **Chống mất dữ liệu:** Lưu trữ fallback tại `sessionStorage` khi mạng gián đoạn, tự động khôi phục toàn bộ form khi đăng nhập lại hoặc tải lại trang.
 
-Chuẩn hóa dữ liệu: Quản lý tập trung thông tin ứng viên và định biên các vị trí tuyển dụng trên một nền tảng thống nhất.
+4. **Đổi mật khẩu & Thu hồi phiên (`change-password.html`):**
+   - Thanh đo độ mạnh mật khẩu (Password Strength Meter) theo thời gian thực.
+   - Kiểm tra 4 điều kiện nghiệp vụ: Tối thiểu 8 ký tự, có chữ cái, có chữ số, khác mật khẩu hiện tại.
+   - Tùy chọn thu hồi phiên trên toàn bộ thiết bị khác sau khi đổi mật khẩu thành công.
+   - Cập nhật cờ `must_change_pw = FALSE`.
 
-Theo dõi tiến độ realtime: Nắm bắt trạng thái từng ứng viên trong quy trình: Sàng lọc → Phỏng vấn → Offer → Onboarding.
+5. **Quản lý phiên đăng nhập trực quan (`sessions.html`):**
+   - Danh sách thiết bị, địa chỉ IP, thời gian đăng nhập và hoạt động gần nhất.
+   - Phân biệt rõ ràng phiên hiện tại (Current Session) và phiên trên các thiết bị khác.
+   - Nút thu hồi phiên từ xa cho từng thiết bị cụ thể.
 
-Phân tích & Báo cáo: Cung cấp chỉ số đo lường hiệu suất tuyển dụng (Time-to-Hire, Pass Rate, Nguồn tuyển dụng hiệu quả).
+---
 
-📊 3. Cấu trúc Bảng tính (Sheet Structure)
+## 🏗️ Kiến Trúc Công Nghệ
 
-3.1. Dashboard - Báo cáo & Thống kê
+### Backend (`/BE`)
+- **Runtime:** Node.js (Express.js 5.x)
+- **Cơ sở dữ liệu:** PostgreSQL (Driver `pg` + Pool connection)
+- **Session Engine:** `express-session` + `connect-pg-simple`
+- **Bảo mật:** `helmet`, `cors`, `express-rate-limit`, `bcryptjs`, `uuid`
+- **Validation:** `express-validator`
 
-Chức năng: Tổng hợp trực quan các chỉ số tuyển dụng chính (KPIs).
+### Frontend (`/FE`)
+- **Ngôn ngữ:** HTML5, CSS3, JavaScript ES Modules / Vanilla JS
+- **UI Framework:** Bootstrap 5.3 + Custom Luxury Dark Glassmorphism CSS
+- **Typography & Icons:** Font Inter (Google Fonts), SVG Icons tối ưu hóa
+- **Giao tiếp:** Fetch API (`credentials: 'include'` cho cookie session)
+- **Tuân thủ:** Không React/Vue/Angular, không `localStorage` cho token hay mật khẩu.
 
-Các chỉ số chính:
+---
 
-Tổng số Hồ sơ/CV tiếp nhận.
+## 📁 Cấu Trúc Thư Mục
 
-Số lượng vị trí đang tuyển (Open Vacancies).
+```text
+Project_TTCS_N1/
+├── BE/                               # Backend Node.js Express
+│   ├── config/
+│   │   └── config.js                 # Cấu hình biến môi trường và timeout
+│   ├── controllers/
+│   │   ├── authController.js         # Xử lý login, logout, refresh, đổi MK, quản lý session
+│   │   └── evaluationController.js   # Xử lý chấm điểm, nộp phiếu, lưu draft JSONB
+│   ├── database/
+│   │   ├── db.js                     # PostgreSQL connection pool & transaction helper
+│   │   ├── migrate.js                # Script chạy migration tự động
+│   │   └── migrations/
+│   │       └── 001_init.sql          # DDL tạo bảng users, sessions, drafts, forms + Seed data
+│   ├── middleware/
+│   │   └── authMiddleware.js         # Kiểm tra phiên hợp lệ, idle & absolute timeout
+│   ├── models/
+│   │   ├── userModel.js              # Truy vấn dữ liệu người dùng
+│   │   ├── sessionModel.js           # Truy vấn và quản lý bảng user_sessions
+│   │   └── evaluationDraftModel.js   # Quản lý JSONB draft trong evaluation_drafts
+│   ├── routes/
+│   │   ├── authRoutes.js             # Endpoints /api/v1/auth/*
+│   │   └── evaluationRoutes.js       # Endpoints /api/v1/evaluations/*
+│   ├── utils/
+│   │   ├── generateHash.js           # Tiện ích sinh hash mật khẩu bcrypt cost 12
+│   │   └── passwordValidator.js      # Kiểm tra quy tắc độ phức tạp mật khẩu
+│   ├── .env.example                  # Mẫu cấu hình môi trường
+│   ├── package.json
+│   └── server.js                     # Điểm khởi động Express server
+│
+├── FE/                               # Frontend Single Page / Multi-Page App
+│   ├── css/
+│   │   ├── style.css                 # Hệ thống design tokens, layout và dark glassmorphism
+│   │   └── toast.css                 # Hiệu ứng thông báo Toast
+│   ├── js/
+│   │   ├── auth.js                   # Module xác thực phiên, guard, fetchWithAuth
+│   │   ├── sessionManager.js         # Quản lý idle timeout, cảnh báo countdown, auto-renew
+│   │   ├── draftManager.js           # Auto-save draft định kỳ (JSONB) & khôi phục dữ liệu
+│   │   └── changePassword.js         # Realtime password validation & strength meter
+│   ├── login.html                    # Trang đăng nhập với danh sách tài khoản demo
+│   ├── index.html                    # Dashboard tổng quan, thống kê phiên & hành động nhanh
+│   ├── evaluation.html               # Trang chấm phiếu đánh giá nhân sự 6 tiêu chí
+│   ├── change-password.html          # Trang đổi mật khẩu bảo mật
+│   └── sessions.html                 # Trang quản lý các phiên & thiết bị đăng nhập
+└── README.md
+```
 
-Tỷ lệ chuyển đổi qua các vòng (Screening Pass Rate, Interview Pass Rate).
+---
 
-Tỷ lệ chốt Offer thành công.
+## 🚀 Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
 
-3.2. Danh_Sach_Ung_Vien - Cơ sở dữ liệu Ứng viên
+### 1. Chuẩn bị Cơ sở dữ liệu PostgreSQL
 
-Chức năng: Lưu trữ thông tin chi tiết của toàn bộ ứng viên.
+Tạo database trong PostgreSQL:
+```sql
+CREATE DATABASE ttcs_hr_db;
+```
 
-Các trường dữ liệu chính:
+Cấu hình file `BE/.env` (tham khảo `BE/.env.example`):
+```env
+PORT=5000
+NODE_ENV=development
 
-Mã UV: Mã định danh duy nhất (Ví dụ: UV-2026-001).
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ttcs_hr_db
+DB_USER=postgres
+DB_PASSWORD=your_postgres_password
+DB_SSL=false
 
-Họ và Tên, Email, Số điện thoại.
+SESSION_SECRET=ttcs_session_super_secret_key_2026_change_in_production_min_32_chars
+SESSION_IDLE_TIMEOUT_SECONDS=1800
+SESSION_ABSOLUTE_TIMEOUT_SECONDS=28800
+SESSION_RENEW_THRESHOLD_SECONDS=600
 
-Vị trí ứng tuyển, Phòng ban.
+CORS_ORIGIN=http://localhost:5000
+```
 
-Nguồn ứng viên: Nội bộ, Referral, Website, LinkedIn,...
+### 2. Cài đặt Dependencies & Chạy Migration
 
-Trạng thái Hồ sơ: Tiếp nhận → Sàng lọc → Phỏng vấn V1 → Phỏng vấn V2 → Trúng tuyển / Từ chối.
+```bash
+cd BE
+npm install
+npm run migrate
+```
 
-Ghi chú & Đánh giá: Nhận xét từ HR và Trưởng bộ phận.
+Lệnh `npm run migrate` sẽ tự động tạo cấu trúc các bảng:
+- `users`: Thông tin nhân viên, vai trò, hash mật khẩu bcrypt.
+- `user_sessions`: Theo dõi phiên đăng nhập chi tiết, thiết bị, IP, thời gian hết hạn.
+- `session`: Bảng lưu session store của `connect-pg-simple`.
+- `evaluation_forms`: Dữ liệu phiếu đánh giá sau khi hoàn tất nộp.
+- `evaluation_drafts`: Bản nháp tự động lưu dạng JSONB theo từng nhân viên.
+- Seed sẵn 3 tài khoản mẫu với mật khẩu chuẩn bcrypt cost 12.
 
-3.3. Vi_Tri_Tuyen_Dung - Quản lý Vị trí Tuyển dụng
+### 3. Khởi Động Server
 
-Chức năng: Quản lý định biên và nhu cầu tuyển dụng từ các phòng ban.
+```bash
+npm run dev
+# hoặc: npm start
+```
 
-Các trường dữ liệu chính:
+Server sẽ phục vụ cả API và static frontend tại:
+👉 **`http://localhost:5000/login.html`**
 
-Mã Vị trí, Tên Chức danh, Phòng ban yêu cầu.
+---
 
-Số lượng cần tuyển, Hạn chót tuyển dụng (Deadline).
+## 🔑 Tài Khoản Thử Nghiệm Mặc Định
 
-Trạng thái Vị trí: Mở (Open) / Tạm dừng (On-hold) / Đã đóng (Closed).
+Tất cả tài khoản mẫu có mật khẩu ban đầu là: `TempPassword123`
 
-3.4. Lich_Phong_Van - Lịch trình & Đánh giá
+| Họ và tên | Mã nhân sự | Email | Vai trò | Chức năng kiểm thử |
+| :--- | :--- | :--- | :--- | :--- |
+| **Hoàng Tiến Anh** | `NS001` | `hoang.ta@company.com` | `nhan_su` | Chấm phiếu, lưu draft, đổi mật khẩu |
+| **Sìn Văn Cương** | `QT001` | `cuong.sv@company.com` | `quan_tri` | Quản trị viên, quản lý nhiều phiên |
+| **Nguyễn Thị Mai** | `TP001` | `mai.nt@company.com` | `truong_phong` | Trưởng phòng đánh giá |
 
-Chức năng: Theo dõi thời gian, người phỏng vấn và kết quả chi tiết từng vòng.
+*(Trên giao diện `login.html`, có sẵn các nút bấm 1-click điền thông tin nhanh cho các tài khoản trên)*.
 
-Các trường dữ liệu chính:
+---
 
-Thời gian phỏng vấn: Ngày / Giờ.
+## 📡 Danh Sách RESTful API Endpoints
 
-Người phỏng vấn (Interviewer).
+### Xác thực & Phiên (`/api/v1/auth`)
 
-Hình thức: Online / Directly.
+| Method | Endpoint | Xác thực | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/api/v1/auth/login` | ❌ | Đăng nhập (Email/Mã NV + Mật khẩu), tạo session cookie |
+| `POST` | `/api/v1/auth/logout` | ❌ | Đăng xuất thiết bị hiện tại, revoke session |
+| `POST` | `/api/v1/auth/logout-all` | ✅ | Đăng xuất toàn bộ các thiết bị đang đăng nhập |
+| `POST` | `/api/v1/auth/refresh` | ✅ | Gia hạn phiên (Keep-alive) nếu đạt ngưỡng quy định |
+| `GET` | `/api/v1/auth/me` | ✅ | Lấy thông tin tài khoản người dùng hiện tại |
+| `GET` | `/api/v1/auth/sessions` | ✅ | Lấy danh sách toàn bộ phiên đang hoạt động |
+| `DELETE`| `/api/v1/auth/sessions/:id` | ✅ | Thu hồi một phiên cụ thể từ xa |
+| `POST` | `/api/v1/auth/change-password` | ✅ | Đổi mật khẩu, tùy chọn thu hồi phiên thiết bị khác |
 
-Kết quả & Phản hồi chi tiết.
+### Đánh giá & Bản nháp (`/api/v1/evaluations`)
 
-🔄 4. Quy trình Vận hành (Recruitment Workflow)
+| Method | Endpoint | Xác thực | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/api/v1/evaluations/drafts/:draftKey` | ✅ | Tự động lưu bản nháp dạng JSONB |
+| `GET` | `/api/v1/evaluations/drafts/:draftKey` | ✅ | Lấy dữ liệu bản nháp để khôi phục vào form |
+| `GET` | `/api/v1/evaluations/drafts` | ✅ | Lấy danh sách tất cả bản nháp của user |
+| `DELETE`| `/api/v1/evaluations/drafts/:draftKey` | ✅ | Xóa bản nháp sau khi đã nộp phiếu |
+| `POST` | `/api/v1/evaluations/submit` | ✅ | Nộp phiếu đánh giá hoàn chỉnh vào database |
+| `GET` | `/api/v1/evaluations/history` | ✅ | Xem lịch sử các phiếu đã đánh giá |
 
-flowchart LR
-    A[1. Tiếp nhận nhu cầu] --> B[2. Cập nhật vị trí]
-    B --> C[3. Nhập hồ sơ UV]
-    C --> D[4. Sàng lọc & Phỏng vấn]
-    D --> E[5. Đánh giá & Offer]
-    E --> F[6. Onboarding & Lưu trữ]
+---
 
+## 🛡️ Cam Kết Bảo Mật (Security Checklist)
 
-Bước 1: Tiếp nhận nhu cầu từ phòng ban → Cập nhật thông tin vào sheet Vi_Tri_Tuyen_Dung.
-
-Bước 2: Tiếp nhận CV → Nhập thông tin ứng viên mới vào sheet Danh_Sach_Ung_Vien.
-
-Bước 3: Sàng lọc CV → Lên lịch phỏng vấn và cập nhật vào sheet Lich_Phong_Van.
-
-Bước 4: Cập nhật kết quả phỏng vấn và chuyển trạng thái hồ sơ tương ứng.
-
-Bước 5: Tổng hợp dữ liệu báo cáo định kỳ trên sheet Dashboard.
-
-🛠️ 5. Hướng dẫn & Quy định Nhập liệu
-
-Định dạng dữ liệu:
-
-Ngày tháng: Sử dụng định dạng chuẩn DD/MM/YYYY.
-
-Trường danh mục: Các cột như Trạng thái, Nguồn ứng viên, Phòng ban sử dụng Data Validation (Dropdown list) để chọn, không gõ tự do nhằm tránh lỗi báo cáo.
-
-Bảo mật thông tin:
-
-File chứa thông tin cá nhân ứng viên và dữ liệu tuyển dụng nội bộ. Vui lòng chỉ chia sẻ cho nhân sự có thẩm quyền.
-
-Sao lưu dữ liệu:
-
-Thực hiện backup định kỳ theo cấu trúc tên file: HTTD_TTCS_YYYYMMDD.xlsx.
-
-📞 6. Thông tin Quản trị
-
-Dự án: Thực tập cơ sở (TTCS) - Kỳ T9/2026 (K5S6)
-
-Phiên bản: 1.0 (GitHub Ready)
-
-Loại tài liệu: README / Document Manual
+- [x] **No localStorage Secrets:** Không lưu password, access token hay session ID trong `localStorage`.
+- [x] **HttpOnly Cookie:** Cookie phiên `ttcs.sid` được đặt cờ `HttpOnly` ngăn chặn triệt để tấn công XSS trộm phiên.
+- [x] **SameSite Protection:** Giảm thiểu nguy cơ CSRF.
+- [x] **Session Fixation Prevention:** Tái tạo lại Session ID (`session.regenerate`) ngay sau khi đăng nhập.
+- [x] **Immediate Revocation:** Đăng xuất hoặc đổi mật khẩu sẽ đánh dấu session mất hiệu lực ngay trong DB, chặn đứng các request giả mạo tiếp theo.
+- [x] **Bcrypt Salt 12:** Thuật toán băm mật khẩu bảo mật cao.
+- [x] **Draft Resilience:** Tự động bảo vệ dữ liệu nhập dở, ngăn chặn mất dữ liệu do rớt mạng hoặc hết hạn phiên đột ngột.
