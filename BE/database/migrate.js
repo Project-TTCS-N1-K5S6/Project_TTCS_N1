@@ -14,18 +14,43 @@ async function runMigrations() {
 
   const client = await pool.connect();
   try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        migration_name VARCHAR(255) PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
     const migrationsDir = path.join(__dirname, 'migrations');
     const files = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
 
     for (const file of files) {
       const filePath = path.join(migrationsDir, file);
-      console.log(`📄 Đang thực thi: ${file}...`);
-      const sql = fs.readFileSync(filePath, 'utf8');
-
       await client.query('BEGIN');
-      await client.query(sql);
-      await client.query('COMMIT');
-      console.log(`✅ Thành công: ${file}`);
+      try {
+        const existing = await client.query(
+          'SELECT 1 FROM schema_migrations WHERE migration_name = $1',
+          [file]
+        );
+        if (existing.rowCount > 0) {
+          await client.query('COMMIT');
+          console.log(`⏭️ Đã áp dụng trước đó: ${file}`);
+          continue;
+        }
+
+        console.log(`📄 Đang thực thi: ${file}...`);
+        const sql = fs.readFileSync(filePath, 'utf8');
+        await client.query(sql);
+        await client.query(
+          'INSERT INTO schema_migrations (migration_name) VALUES ($1)',
+          [file]
+        );
+        await client.query('COMMIT');
+        console.log(`✅ Thành công: ${file}`);
+      } catch (err) {
+        await client.query('ROLLBACK').catch(() => { });
+        throw err;
+      }
     }
 
     console.log('────────────────────────────────────────────────────────');
