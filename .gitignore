@@ -1,4 +1,6 @@
 node_modules/
+BE/data/managed-users.json
+BE/.env
 dist/
 .DS_Store
 *.log
