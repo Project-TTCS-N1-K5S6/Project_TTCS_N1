@@ -6,6 +6,9 @@ const SessionModel = require('../models/sessionModel');
 const EvaluationDraftModel = require('../models/evaluationDraftModel');
 const config = require('../config/config');
 const { validatePasswordRules } = require('../utils/passwordValidator');
+const crypto = require('crypto');
+const PasswordResetModel = require('../models/passwordResetModel');
+const { sendResetPasswordEmail } = require('../utils/emailService');
 
 /**
  * AuthController - Handles all authentication flows with server-side sessions
@@ -383,62 +386,7 @@ class AuthController {
   }
 
   // ──────────────────────────────────────────────────────────
-  // POST /api/v1/auth/register
-  // Đăng ký tài khoản mới - Tự động sinh mã nhân viên PV... tăng dần
-  // ──────────────────────────────────────────────────────────
-  static async register(req, res) {
-    try {
-      const { fullName, email, password } = req.body;
 
-      if (!fullName || !email || !password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Vui lòng cung cấp đầy đủ Họ tên, Email và Mật khẩu.'
-        });
-      }
-
-      // Kiểm tra email đã tồn tại hay chưa
-      const existingUser = await UserModel.findByEmail(email);
-      if (existingUser) {
-        return res.status(409).json({
-          success: false,
-          field: 'email',
-          message: 'Địa chỉ email này đã được sử dụng. Vui lòng đăng nhập hoặc sử dụng email khác.'
-        });
-      }
-
-      // Băm mật khẩu an toàn với bcrypt salt cost 12
-      const passwordHash = await bcrypt.hash(password, 12);
-
-      // Tạo user mới (mã nhân sự tự sinh PV001, PV002... với vai trò nguoi_phong_van)
-      const newUser = await UserModel.create({
-        fullName,
-        email,
-        passwordHash,
-        role: 'nguoi_phong_van',
-        prefix: 'PV'
-      });
-
-      console.log(`[AuthController.register] Đăng ký thành công: user=${newUser.id}, code=${newUser.employee_code}, email=${newUser.email}`);
-
-      return res.status(201).json({
-        success: true,
-        message: 'Đăng ký tài khoản thành công! Mã nhân sự của bạn đã được khởi tạo tự động.',
-        user: {
-          id: newUser.id,
-          employeeCode: newUser.employee_code,
-          fullName: newUser.full_name,
-          email: newUser.email,
-          role: newUser.role,
-          createdAt: newUser.created_at
-        }
-      });
-    } catch (err) {
-      console.error('[AuthController.register] Error:', err);
-      return res.status(500).json({
-        success: false,
-        message: 'Lỗi hệ thống khi xử lý đăng ký tài khoản.'
-      });
     }
   }
 }
