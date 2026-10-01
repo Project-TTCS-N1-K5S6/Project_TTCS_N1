@@ -14,6 +14,7 @@ import {
 import { ForgotPassword } from './components/ForgotPassword';
 import { ResetPassword } from './components/ResetPassword';
 import { Register } from './components/Register';
+import { AccountManagement } from './components/AccountManagement';
 
 export function App() {
   const [activeTab, setActiveTab] = useState('role-management'); // Set role-management as default tab for KN-19 review!
@@ -62,6 +63,9 @@ export function App() {
     switch (activeTab) {
       case 'role-management':
         return <UserRoleManagement />;
+
+      case 'accounts':
+        return <AccountManagement onTriggerError={handleTriggerError} />;
 
       case 'dashboard':
         return <RecruitmentDashboard onTriggerError={handleTriggerError} />;

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const AuthController = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const AccountController = require('../controllers/accountController');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 const config = require('../config/config');
@@ -89,5 +90,10 @@ router.get('/me', authMiddleware, AuthController.getProfile);
 router.get('/sessions', authMiddleware, AuthController.getSessions);
 router.delete('/sessions/:id', authMiddleware, AuthController.revokeSession);
 router.post('/change-password', authMiddleware, changePasswordValidation, handleValidationErrors, AuthController.changePassword);
+
+// Internal account administration is restricted by server-side RBAC.
+router.get('/accounts', authMiddleware, AccountController.requireAccountPermission, AccountController.list);
+router.post('/accounts', authMiddleware, AccountController.requireAccountPermission, AccountController.create);
+router.patch('/accounts/:id', authMiddleware, AccountController.requireAccountPermission, AccountController.update);
 
 module.exports = router;

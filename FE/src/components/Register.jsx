@@ -90,7 +90,7 @@ export function Register({ onBackToLogin }) {
   return (
     <div className="error-page-wrapper" style={{ padding: '2rem 1rem' }}>
       <div className="error-card" style={{ maxWidth: '520px', padding: '2.5rem 2rem', textAlign: 'left' }}>
-        
+
         {/* Nút quay lại */}
         <button
           onClick={onBackToLogin}

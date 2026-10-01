@@ -8,9 +8,9 @@ export async function apiRequest(endpoint, options = {}) {
     'Content-Type': 'application/json',
     'x-user-role': localStorage.getItem('userRole') || 'EMPLOYEE'
   };
-
   const config = {
     ...options,
+    credentials: options.credentials || 'include',
     headers: {
       ...defaultHeaders,
       ...options.headers

@@ -15,7 +15,8 @@ import {
   ServerCrash,
   WifiOff,
   UserCheck,
-  UserPlus
+  UserPlus,
+  UserCog
 } from 'lucide-react';
 
 export function AppShell({
@@ -27,7 +28,15 @@ export function AppShell({
   children
 }) {
   // 1. Quản lý Role người dùng hiện tại (Mặc định demo là 'HR')
-  const [currentRole, setCurrentRole] = useState('HR'); 
+  const [currentRole, setCurrentRole] = useState(() => {
+    try {
+      const role = JSON.parse(sessionStorage.getItem('_ttcs_user') || 'null')?.role;
+      if (role === 'quan_tri' || role === 'ADMIN') return 'ADMIN';
+      if (role === 'nguoi_phong_van' || role === 'INTERVIEWER') return 'INTERVIEWER';
+      if (role) return 'HR';
+    } catch { /* Use the demo role when no user profile is available. */ }
+    return localStorage.getItem('userRole') === 'ADMIN' ? 'ADMIN' : 'HR';
+  });
 
   // 2. Định nghĩa danh sách các Menu kèm theo Quyền được truy cập (roles)
   const menuSections = [
@@ -49,6 +58,7 @@ export function AppShell({
       title: 'Quản lý Tài khoản',
       items: [
         { id: 'register', label: 'Đăng ký tài khoản', icon: UserPlus, color: 'var(--accent-primary)', roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
+        { id: 'accounts', label: 'Quản lý tài khoản', icon: UserCog, color: 'var(--accent-primary)', roles: ['ADMIN'] },
         { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
       ]
     },
@@ -146,7 +156,7 @@ export function AppShell({
               <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Role:</span>
               <select 
                 value={currentRole} 
-                onChange={(e) => setCurrentRole(e.target.value)}
+                onChange={(e) => { setCurrentRole(e.target.value); localStorage.setItem('userRole', e.target.value); }}
                 style={{ background: 'transparent', color: 'inherit', border: 'none', fontWeight: 'bold', cursor: 'pointer', outline: 'none' }}
               >
                 <option value="HR">HR (Nhân sự)</option>

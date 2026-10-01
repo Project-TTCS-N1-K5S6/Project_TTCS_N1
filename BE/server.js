@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 const config = require('./config/config');
 const { pool } = require('./database/db');
 const SessionModel = require('./models/sessionModel');
@@ -20,6 +21,10 @@ const jobRoutes = require('./routes/jobRoutes');
 const rbacRoutes = require('./routes/rbacRoutes');
 
 const app = express();
+const frontendDist = path.join(__dirname, '../FE/dist');
+const frontendRoot = fs.existsSync(path.join(frontendDist, 'index.html'))
+  ? frontendDist
+  : path.join(__dirname, '../FE');
 
 // ============================================================
 // 1. SECURITY HEADERS (helmet)
@@ -46,7 +51,7 @@ app.use(helmet({
 app.use(cors({
   origin: config.CORS_ORIGIN,
   credentials: true,  // Required for cookies to be sent cross-origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'X-Requested-With'],
 }));
 
@@ -102,7 +107,7 @@ app.use(session({
 // ============================================================
 // 6. SERVE STATIC FRONTEND FILES
 // ============================================================
-app.use(express.static(path.join(__dirname, '../FE')));
+app.use(express.static(frontendRoot));
 
 // ============================================================
 // 7. API ROUTES
@@ -134,7 +139,7 @@ app.get('/api/health', async (req, res) => {
 // ============================================================
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) return next();
-  res.sendFile(path.join(__dirname, '../FE/index.html'));
+  res.sendFile(path.join(frontendRoot, 'index.html'));
 });
 
 // ============================================================

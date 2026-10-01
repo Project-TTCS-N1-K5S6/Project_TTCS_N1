@@ -28,7 +28,6 @@ const getTransporter = async () => {
     },
   });
 };
-
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -154,4 +153,3 @@ export const register = async (req, res, next) => {
     next(error);
   }
 };
-
