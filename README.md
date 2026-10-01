@@ -216,3 +216,29 @@ Tất cả tài khoản mẫu có mật khẩu ban đầu là: `TempPassword123`
 - [x] **Immediate Revocation:** Đăng xuất hoặc đổi mật khẩu sẽ đánh dấu session mất hiệu lực ngay trong DB, chặn đứng các request giả mạo tiếp theo.
 - [x] **Bcrypt Salt 12:** Thuật toán băm mật khẩu bảo mật cao.
 - [x] **Draft Resilience:** Tự động bảo vệ dữ liệu nhập dở, ngăn chặn mất dữ liệu do rớt mạng hoặc hết hạn phiên đột ngột.
+
+## Quản lý tài khoản nội bộ
+
+Quản trị viên có quyền `permission.manage` có thể tạo, chỉnh sửa, tìm kiếm và lọc tài khoản tại mục **Quản lý tài khoản**. Danh sách dùng phân trang 20 dòng. Tài khoản mới nhận mật khẩu tạm qua email và được yêu cầu đổi mật khẩu ở lần đăng nhập đầu.
+
+### Chạy ứng dụng
+
+Yêu cầu Node.js 20 trở lên và PostgreSQL. Tạo cấu hình backend từ mẫu, sau đó điền thông tin PostgreSQL và SMTP:
+
+```powershell
+Copy-Item BE/.env.example BE/.env
+cd BE
+npm ci
+npm run migrate
+npm start
+```
+
+Ở cửa sổ terminal khác, chạy giao diện:
+
+```powershell
+cd FE
+npm ci
+npm run dev
+```
+
+Mở `http://localhost:3000`. Để gửi email kích hoạt, cần điền `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` và `SMTP_FROM` trong `BE/.env`.

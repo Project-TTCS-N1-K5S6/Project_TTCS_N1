@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const AuthController = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const AccountController = require('../controllers/accountController');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 const config = require('../config/config');
@@ -28,6 +29,29 @@ const loginLimiter = rateLimit({
 const loginValidation = [
   body('identifier').trim().notEmpty().withMessage('Vui lòng nhập Email hoặc Mã nhân sự.').isLength({ max: 255 }),
   body('password').notEmpty().withMessage('Vui lòng nhập mật khẩu.').isLength({ max: 128 }),
+];
+
+const registerValidation = [
+  body('fullName')
+    .trim()
+    .notEmpty().withMessage('Vui lòng nhập họ và tên.')
+    .isLength({ min: 2, max: 150 }).withMessage('Họ và tên phải có độ dài từ 2 đến 150 ký tự.'),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Vui lòng nhập email.')
+    .isEmail().withMessage('Email không đúng định dạng.')
+    .normalizeEmail(),
+  body('password')
+    .notEmpty().withMessage('Vui lòng nhập mật khẩu.')
+    .isLength({ min: 8, max: 128 }).withMessage('Mật khẩu tối thiểu 8 ký tự.'),
+  body('confirmPassword')
+    .optional({ checkFalsy: true })
+    .custom((value, { req }) => {
+      if (req.body.confirmPassword && value !== req.body.password) {
+        throw new Error('Mật khẩu xác nhận không khớp.');
+      }
+      return true;
+    }),
 ];
 
 const changePasswordValidation = [
@@ -56,7 +80,10 @@ function handleValidationErrors(req, res, next) {
 
 // Public routes
 router.post('/login', loginLimiter, loginValidation, handleValidationErrors, AuthController.login);
+// router.post('/register', loginLimiter, registerValidation, handleValidationErrors, AuthController.register);
 router.post('/logout', AuthController.logout);  // Can be called even without valid session
+router.post('/forgot-password', AuthController.forgotPassword);
+router.post('/reset-password', AuthController.resetPassword);
 
 // Protected routes (require valid session)
 router.post('/logout-all', authMiddleware, AuthController.logoutAll);
@@ -65,5 +92,10 @@ router.get('/me', authMiddleware, AuthController.getProfile);
 router.get('/sessions', authMiddleware, AuthController.getSessions);
 router.delete('/sessions/:id', authMiddleware, AuthController.revokeSession);
 router.post('/change-password', authMiddleware, changePasswordValidation, handleValidationErrors, AuthController.changePassword);
+
+// Internal account administration is restricted by server-side RBAC.
+router.get('/accounts', authMiddleware, AccountController.requireAccountPermission, AccountController.list);
+router.post('/accounts', authMiddleware, AccountController.requireAccountPermission, AccountController.create);
+router.patch('/accounts/:id', authMiddleware, AccountController.requireAccountPermission, AccountController.update);
 
 module.exports = router;

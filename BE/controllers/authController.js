@@ -6,6 +6,9 @@ const SessionModel = require('../models/sessionModel');
 const EvaluationDraftModel = require('../models/evaluationDraftModel');
 const config = require('../config/config');
 const { validatePasswordRules } = require('../utils/passwordValidator');
+const crypto = require('crypto');
+const PasswordResetModel = require('../models/passwordResetModel');
+const { sendResetPasswordEmail } = require('../utils/emailService');
 
 /**
  * AuthController - Handles all authentication flows with server-side sessions
@@ -381,6 +384,89 @@ class AuthController {
       return res.status(500).json({ success: false, message: 'Lỗi hệ thống khi đổi mật khẩu.' });
     }
   }
+
+  // ──────────────────────────────────────────────────────────
+  // POST /api/v1/auth/forgot-password
+  // ──────────────────────────────────────────────────────────
+  static async forgotPassword(req, res) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Vui lòng nhập email.' });
+      }
+
+      // Check if user exists
+      const user = await UserModel.findByEmail(email);
+      if (!user) {
+        // Requirement: Email không tồn tại vẫn hiển thị cùng một thông báo
+        return res.status(200).json({ success: true, message: 'Nếu email tồn tại trong hệ thống, bạn sẽ nhận được một liên kết đặt lại mật khẩu.' });
+      }
+
+      // Generate reset token (UUID or random string)
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      
+      // Save token to database with 30 min expiration
+      await PasswordResetModel.create(user.id, resetToken);
+
+      // Send email (Mock or actual implementation)
+      // Requirement: Nhập email nhận được liên kết đặt lại có hiệu lực 30 phút
+      if (typeof sendResetPasswordEmail === 'function') {
+        await sendResetPasswordEmail(user.email, resetToken);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Nếu email tồn tại trong hệ thống, bạn sẽ nhận được một liên kết đặt lại mật khẩu.'
+      });
+
+    } catch (err) {
+      console.error('[AuthController.forgotPassword] Error:', err);
+      return res.status(500).json({ success: false, message: 'Lỗi hệ thống.' });
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // POST /api/v1/auth/reset-password
+  // ──────────────────────────────────────────────────────────
+  static async resetPassword(req, res) {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword) {
+        return res.status(400).json({ success: false, message: 'Dữ liệu không hợp lệ.' });
+      }
+
+      // Validate password rules
+      const ruleCheck = validatePasswordRules(newPassword);
+      if (!ruleCheck.isValid) {
+        return res.status(400).json({ success: false, message: ruleCheck.message });
+      }
+
+      // Verify token
+      const resetRecord = await PasswordResetModel.findByToken(token);
+      if (!resetRecord) {
+        return res.status(400).json({ success: false, message: 'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.' });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update password
+      await UserModel.updatePassword(resetRecord.user_id, hashedNewPassword, true, null);
+
+      // Mark token as used
+      await PasswordResetModel.markAsUsed(resetRecord.id);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.'
+      });
+
+    } catch (err) {
+      console.error('[AuthController.resetPassword] Error:', err);
+      return res.status(500).json({ success: false, message: 'Lỗi hệ thống.' });
+    }
+  }
+
 }
 
 module.exports = AuthController;
