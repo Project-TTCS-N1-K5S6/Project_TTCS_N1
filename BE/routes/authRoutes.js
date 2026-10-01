@@ -80,7 +80,7 @@ function handleValidationErrors(req, res, next) {
 
 // Public routes
 router.post('/login', loginLimiter, loginValidation, handleValidationErrors, AuthController.login);
-router.post('/register', loginLimiter, registerValidation, handleValidationErrors, AuthController.register);
+// router.post('/register', loginLimiter, registerValidation, handleValidationErrors, AuthController.register);
 router.post('/logout', AuthController.logout);  // Can be called even without valid session
 router.post('/forgot-password', AuthController.forgotPassword);
 router.post('/reset-password', AuthController.resetPassword);
