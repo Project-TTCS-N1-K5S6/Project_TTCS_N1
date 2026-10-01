@@ -1,144 +1,237 @@
-const bcrypt = require('bcryptjs');
-const fs = require('fs');
-const path = require('path');
+'use strict';
+const { query, withTransaction } = require('../database/db');
 
-// Mock User Database with initial seed data
-const users = [
-  {
-    id: 'usr_001',
-    name: 'Hoàng Tiến Anh',
-    email: 'hoang.ta@company.com',
-    // Password: 'TempPassword123' hashed
-    password: bcrypt.hashSync('TempPassword123', 10),
-    role: 'Nhân sự nội bộ',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    tokenVersion: 1,
-    activeSessions: []
-  },
-  {
-    id: 'usr_002',
-    name: 'Sìn Văn Cương',
-    email: 'cuong.sv@company.com',
-    // Password: 'TempPassword123' hashed
-    password: bcrypt.hashSync('TempPassword123', 10),
-    role: 'Quản trị viên',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    tokenVersion: 1,
-    activeSessions: []
-  }
-];
-
-const managedUsersPath = path.join(__dirname, '..', 'data', 'managed-users.json');
-try {
-  const savedUsers = JSON.parse(fs.readFileSync(managedUsersPath, 'utf8'));
-  if (Array.isArray(savedUsers)) users.push(...savedUsers.filter(saved => !users.some(user => user.id === saved.id)));
-} catch (error) {
-  if (error.code !== 'ENOENT') console.error('Could not load managed users:', error.message);
-}
-
-function persistManagedUsers() {
-  const seededIds = new Set(['usr_001', 'usr_002']);
-  const managedUsers = users.filter(user => !seededIds.has(user.id)).map(user => ({
-    ...user,
-    activeSessions: []
-  }));
-  fs.mkdirSync(path.dirname(managedUsersPath), { recursive: true });
-  fs.writeFileSync(managedUsersPath, JSON.stringify(managedUsers, null, 2), { mode: 0o600 });
-}
-
+/**
+ * UserModel - PostgreSQL-backed user operations
+ */
 class UserModel {
-  static findByEmail(email) {
-    return users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  /**
+   * Find user by email (case-insensitive)
+   */
+  static async findByEmail(email) {
+    const res = await query(
+      `SELECT id, employee_code, full_name, email, password_hash, role, avatar_url,
+              is_active, must_change_pw, token_version, account_status, created_at, updated_at
+       FROM users
+       WHERE LOWER(email) = LOWER($1) AND is_active = TRUE AND account_status = 'active'
+       LIMIT 1`,
+      [email]
+    );
+    return res.rows[0] || null;
   }
 
-  static findById(id) {
-    return users.find(u => u.id === id);
+  /**
+   * Find user by employee code (case-insensitive)
+   */
+  static async findByEmployeeCode(code) {
+    const res = await query(
+      `SELECT id, employee_code, full_name, email, password_hash, role, avatar_url,
+              is_active, must_change_pw, token_version, account_status, created_at, updated_at
+       FROM users
+       WHERE UPPER(employee_code) = UPPER($1) AND is_active = TRUE AND account_status = 'active'
+       LIMIT 1`,
+      [code]
+    );
+    return res.rows[0] || null;
   }
 
-  static list({ query = '', role = '', status = '', page = 1, pageSize = 20 } = {}) {
-    const normalized = query.trim().toLowerCase();
-    const filtered = users.filter(user => {
-      const matchesQuery = !normalized || [user.name, user.email, user.department || '']
-        .some(value => value.toLowerCase().includes(normalized));
-      const accountRole = user.role === 'Quản trị viên' ? 'ADMIN' : user.role === 'Nhân sự nội bộ' ? 'HR' : user.role;
-      return matchesQuery && (!role || accountRole === role) && (!status || (user.status || 'Đang hoạt động') === status);
+  /**
+   * Find user by ID
+   */
+  static async findById(id) {
+    const res = await query(
+      `SELECT id, employee_code, full_name, email, role, avatar_url,
+              is_active, must_change_pw, token_version, account_status, created_at, updated_at
+       FROM users
+       WHERE id = $1 AND is_active = TRUE AND account_status = 'active'
+       LIMIT 1`,
+      [id]
+    );
+    return res.rows[0] || null;
+  }
+
+  /**
+   * Update password and optionally revoke all other sessions
+   */
+  static async updatePassword(userId, newHashedPassword, revokeOthers = true, currentSessionId = null) {
+    return withTransaction(async (client) => {
+      // Increment token_version to invalidate all existing JWT (if any) and server sessions
+      const res = await client.query(
+        `UPDATE users
+         SET password_hash = $1,
+             token_version  = CASE WHEN $2 THEN token_version + 1 ELSE token_version END,
+             updated_at     = NOW()
+         WHERE id = $3
+         RETURNING id, employee_code, full_name, email, role, avatar_url, token_version, must_change_pw`,
+        [newHashedPassword, revokeOthers, userId]
+      );
+
+      const updatedUser = res.rows[0];
+
+      if (revokeOthers) {
+        // Revoke all server-side sessions except the current one
+        if (currentSessionId) {
+          await client.query(
+            `UPDATE user_sessions
+             SET is_active = FALSE
+             WHERE user_id = $1 AND session_id != $2`,
+            [userId, currentSessionId]
+          );
+        } else {
+          await client.query(
+            `UPDATE user_sessions SET is_active = FALSE WHERE user_id = $1`,
+            [userId]
+          );
+        }
+      }
+
+      return updatedUser;
     });
-    const start = (page - 1) * pageSize;
-    return { total: filtered.length, data: filtered.slice(start, start + pageSize).map(this.toPublic) };
   }
 
-  static toPublic(user) {
-    const { password, ...safeUser } = user;
-    const accountRole = user.role === 'Quản trị viên' ? 'ADMIN' : user.role === 'Nhân sự nội bộ' ? 'HR' : user.role;
-    return { ...safeUser, role: accountRole, department: user.department || '', status: user.status || 'Đang hoạt động' };
+  /**
+   * Get active session count for a user
+   */
+  static async getActiveSessionCount(userId) {
+    const res = await query(
+      `SELECT COUNT(*) AS count
+       FROM user_sessions
+       WHERE user_id = $1
+         AND is_active = TRUE
+         AND expires_at > NOW()
+         AND absolute_expires_at > NOW()`,
+      [userId]
+    );
+    return parseInt(res.rows[0].count, 10);
   }
 
-  static create({ name, email, department, role, password }) {
-    if (this.findByEmail(email)) return null;
-    const user = {
-      id: 'usr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-      name: name.trim(), email: email.trim().toLowerCase(), department: department.trim(), role,
-      status: 'Đang hoạt động', password, avatar: '', tokenVersion: 1, activeSessions: [],
-      createdAt: new Date().toISOString()
-    };
-    users.push(user);
-    persistManagedUsers();
-    return this.toPublic(user);
+  /**
+   * Sinh mã nhân viên tự động tăng dạng PV001, PV002,...
+   * Bóc tách phần số MAX rồi ép kiểu INTEGER, tránh lỗi sắp xếp chuỗi (Phương án 2)
+   * @param {string} prefix Tiền tố mã nhân viên (mặc định 'PV')
+   * @param {object} client PostgreSQL client nếu đang chạy transaction
+   * @returns {Promise<string>} Mã nhân sự mới, ví dụ: 'PV002'
+   */
+  static async generateNextEmployeeCode(prefix = 'PV', client = null) {
+    const sql = `
+      SELECT MAX(SUBSTRING(employee_code FROM (length($1) + 1))::INTEGER) AS max_num
+      FROM users
+      WHERE employee_code ~ ('^' || $1 || '[0-9]+$')
+    `;
+    const res = client ? await client.query(sql, [prefix]) : await query(sql, [prefix]);
+    const maxNum = res.rows[0]?.max_num || 0;
+    const nextNum = maxNum + 1;
+    return `${prefix}${String(nextNum).padStart(3, '0')}`;
   }
 
-  static update(id, { name, email, department, role, status }) {
-    const user = this.findById(id);
-    if (!user) return null;
-    const duplicate = this.findByEmail(email);
-    if (duplicate && duplicate.id !== id) return false;
-    user.name = name.trim(); user.email = email.trim().toLowerCase();
-    user.department = department.trim(); user.role = role; user.status = status;
-    // Revoke old JWTs when identity, permissions, or account status changes.
-    user.tokenVersion += 1;
-    user.activeSessions = [];
-    persistManagedUsers();
-    return this.toPublic(user);
-  }
+  /**
+   * Tạo tài khoản người dùng mới kèm mã nhân viên tự tăng và cơ chế Retry chống Race Condition
+   */
+  static async create({ fullName, email, passwordHash, role = 'nguoi_phong_van', avatarUrl = null, prefix = 'PV' }) {
+    const maxRetries = 3;
+    let attempt = 0;
 
-  static updatePassword(userId, newHashedPassword, revokeOthers = true, currentSessionId = null) {
-    const user = this.findById(userId);
-    if (!user) return null;
+    while (attempt < maxRetries) {
+      attempt++;
+      try {
+        const employeeCode = await UserModel.generateNextEmployeeCode(prefix);
 
-    user.password = newHashedPassword;
+        const res = await query(
+          `INSERT INTO users (employee_code, full_name, email, password_hash, role, avatar_url, must_change_pw)
+           VALUES ($1, $2, $3, $4, $5, $6, FALSE)
+           RETURNING id, employee_code, full_name, email, role, avatar_url, must_change_pw, created_at`,
+          [employeeCode, fullName.trim(), email.toLowerCase().trim(), passwordHash, role, avatarUrl]
+        );
 
-    if (revokeOthers) {
-      // Increment token version to invalidate all previous JWT tokens
-      user.tokenVersion += 1;
-      
-      // If currentSessionId provided, keep only current session
-      if (currentSessionId) {
-        user.activeSessions = user.activeSessions.filter(s => s.sessionId === currentSessionId);
-      } else {
-        user.activeSessions = [];
+        return res.rows[0];
+      } catch (err) {
+        // Mã lỗi PostgreSQL 23505: unique_violation trên employee_code do 2 request cùng lúc
+        if (err.code === '23505' && err.constraint === 'users_employee_code_key' && attempt < maxRetries) {
+          console.warn(`[UserModel.create] Trùng mã nhân viên trong lúc tranh chấp, đang thử lại lần ${attempt}...`);
+          continue;
+        }
+        throw err;
       }
     }
-
-    persistManagedUsers();
-
-    return user;
   }
 
-  static addSession(userId, sessionData) {
-    const user = this.findById(userId);
-    if (!user) return;
-    user.activeSessions.push(sessionData);
+  static async findAccountByEmail(email) {
+    const res = await query(
+      `SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [email.trim()]
+    );
+    return res.rows[0] || null;
   }
 
-  static isTokenValid(userId, tokenVersion, sessionId = null) {
-    const user = this.findById(userId);
-    if (!user) return false;
-    
-    // Check if tokenVersion matches current user tokenVersion
-    if (user.tokenVersion !== tokenVersion || (user.status && user.status !== 'Đang hoạt động')) {
-      return false;
+  static async listAccounts({ query: search = '', role = '', status = '', page = 1, pageSize = 20 } = {}) {
+    const clauses = [];
+    const params = [];
+    if (search.trim()) {
+      params.push(`%${search.trim()}%`);
+      clauses.push(`(full_name ILIKE $${params.length} OR email ILIKE $${params.length} OR department ILIKE $${params.length})`);
     }
+    if (role) { params.push(role); clauses.push(`role = $${params.length}`); }
+    if (status) { params.push(status); clauses.push(`account_status = $${params.length}`); }
+    const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    const countResult = await query(`SELECT COUNT(*)::INTEGER AS total FROM users ${where}`, params);
+    const total = countResult.rows[0].total;
+    const offset = (page - 1) * pageSize;
+    const rows = await query(
+      `SELECT id, employee_code, full_name AS name, email, department, role,
+              account_status AS status, created_at
+       FROM users ${where}
+       ORDER BY created_at DESC, full_name ASC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, pageSize, offset]
+    );
+    return { data: rows.rows, total };
+  }
 
-    return true;
+  static async createManagedAccount({ fullName, email, department, passwordHash, role }) {
+    const prefixByRole = { nguoi_phong_van: 'PV', nhan_su: 'NS', quan_tri: 'QT' };
+    const prefix = prefixByRole[role];
+    if (!prefix) throw new Error('Vai trò tài khoản không hợp lệ.');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        return await withTransaction(async (client) => {
+          const employeeCode = await UserModel.generateNextEmployeeCode(prefix, client);
+          const result = await client.query(
+            `INSERT INTO users (employee_code, full_name, email, password_hash, role,
+                                department, account_status, is_active, must_change_pw)
+             VALUES ($1, $2, LOWER($3), $4, $5, $6, 'active', TRUE, TRUE)
+             RETURNING id, employee_code, full_name AS name, email, department, role,
+                       account_status AS status, created_at`,
+            [employeeCode, fullName.trim(), email.trim(), passwordHash, role, department.trim()]
+          );
+          return result.rows[0];
+        });
+      } catch (error) {
+        if (error.code === '23505' && error.constraint === 'users_employee_code_key' && attempt < 3) continue;
+        throw error;
+      }
+    }
+  }
+
+  static async deleteManagedAccount(id) {
+    await query('DELETE FROM users WHERE id = $1', [id]);
+  }
+
+  static async updateManagedAccount(id, { fullName, email, department, role, status }) {
+    return withTransaction(async (client) => {
+      const result = await client.query(
+        `UPDATE users
+         SET full_name = $1, email = LOWER($2), department = $3, role = $4,
+             account_status = $5, is_active = ($5 = 'active'),
+             token_version = token_version + 1, updated_at = NOW()
+         WHERE id = $6
+         RETURNING id, employee_code, full_name AS name, email, department, role,
+                   account_status AS status, created_at`,
+        [fullName.trim(), email.trim(), department.trim(), role, status, id]
+      );
+      if (!result.rows[0]) return null;
+      await client.query('UPDATE user_sessions SET is_active = FALSE WHERE user_id = $1', [id]);
+      return result.rows[0];
+    });
   }
 }
 

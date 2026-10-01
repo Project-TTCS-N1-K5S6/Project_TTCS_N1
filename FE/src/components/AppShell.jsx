@@ -3,7 +3,6 @@ import {
   Users,
   Briefcase,
   Calendar,
-  AlertTriangle,
   Moon,
   Sun,
   ShieldCheck,
@@ -16,6 +15,7 @@ import {
   ServerCrash,
   WifiOff,
   UserCheck,
+  UserPlus,
   UserCog
 } from 'lucide-react';
 
@@ -27,16 +27,14 @@ export function AppShell({
   onTriggerSimulatedError,
   children
 }) {
-  // --- KN-65: LOGIC ĐIỀU HƯỚNG ĐỘNG BẰNG PHÂN QUYỀN (ROLE-BASED DYNAMIC NAVIGATION) ---
-  
-  // 1. Quản lý Role người dùng hiện tại (Mặc định demo là 'HR', có thể switch đổi vai trò)
+  // 1. Quản lý Role người dùng hiện tại (Mặc định demo là 'HR')
   const [currentRole, setCurrentRole] = useState(() => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      if (user?.role === 'ADMIN' || user?.role === 'Quản trị viên') return 'ADMIN';
-      if (user?.role === 'INTERVIEWER') return 'INTERVIEWER';
-      if (user?.role === 'CANDIDATE') return 'CANDIDATE';
-    } catch { /* use the demo default when no session profile is stored */ }
+      const role = JSON.parse(sessionStorage.getItem('_ttcs_user') || 'null')?.role;
+      if (role === 'quan_tri' || role === 'ADMIN') return 'ADMIN';
+      if (role === 'nguoi_phong_van' || role === 'INTERVIEWER') return 'INTERVIEWER';
+      if (role) return 'HR';
+    } catch { /* Use the demo role when no user profile is available. */ }
     return localStorage.getItem('userRole') === 'ADMIN' ? 'ADMIN' : 'HR';
   });
 
@@ -51,10 +49,17 @@ export function AppShell({
       ]
     },
     {
+      title: 'Quản trị & Phân quyền (KN-19)',
+      items: [
+        { id: 'role-management', label: 'Gán & Thu hồi Vai trò', icon: UserCheck, color: 'var(--accent-primary)', roles: ['HR', 'ADMIN'] },
+      ]
+    },
+    {
       title: 'Quản lý Tài khoản',
       items: [
-        { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE'] },
-        { id: 'accounts', label: 'Quản lý tài khoản', icon: UserCog, roles: ['ADMIN'] },
+        { id: 'register', label: 'Đăng ký tài khoản', icon: UserPlus, color: 'var(--accent-primary)', roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
+        { id: 'accounts', label: 'Quản lý tài khoản', icon: UserCog, color: 'var(--accent-primary)', roles: ['ADMIN'] },
+        { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
       ]
     },
     {
@@ -68,6 +73,16 @@ export function AppShell({
       ]
     }
   ];
+
+  // Hàm tự động lấy tên breadcrumb theo tab đang active
+  const getBreadcrumbTitle = () => {
+    for (const section of menuSections) {
+      const found = section.items.find(item => item.id === activeTab);
+      if (found) return found.label;
+    }
+    if (activeTab === 'dashboard') return 'Tổng quan Dashboard';
+    return `Trang Kiểm thử ${activeTab.toUpperCase()}`;
+  };
 
   return (
     <div className="app-container" data-theme={theme}>
@@ -87,7 +102,7 @@ export function AppShell({
             // Lọc ra các item thuộc quyền của role hiện tại
             const visibleItems = section.items.filter(item => item.roles.includes(currentRole));
 
-            // Nếu không có item nào thỏa mãn quyền, không hiển thị tiêu đề nhóm này
+            // Nếu không có item nào thỏa mãn quyền, không hiển thị nhóm này
             if (visibleItems.length === 0) return null;
 
             return (
@@ -115,8 +130,8 @@ export function AppShell({
 
         <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            User Story: <strong>KN-65</strong><br />
-            Chức năng: <strong>Điều hướng Động (Dynamic Nav)</strong>
+            User Story: <strong>KN-19 & KN-65</strong><br />
+            Chức năng: <strong>Phân quyền & Điều hướng Động</strong>
           </div>
         </div>
       </aside>
@@ -130,12 +145,12 @@ export function AppShell({
             <span>Hệ thống Tuyển dụng Nội bộ</span>
             <ChevronRight size={14} color="var(--text-muted)" />
             <span style={{ color: 'var(--text-secondary)' }}>
-              {activeTab === 'dashboard' ? 'Tổng quan Dashboard' : activeTab === 'accounts' ? 'Quản lý tài khoản' : `Trang Kiểm thử ${activeTab.toUpperCase()}`}
+              {getBreadcrumbTitle()}
             </span>
           </div>
 
           <div className="header-actions">
-            {/* THÊM BỘ CHUYỂN ĐỔI ROLE ĐỂ ĐEM ĐI DEMO / TESTING THUẬN TIỆN */}
+            {/* Bộ chuyển đổi Role demo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem', background: 'var(--bg-card)', padding: '0.25rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
               <UserCheck size={16} color="var(--accent-primary)" />
               <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Role:</span>
@@ -173,10 +188,17 @@ export function AppShell({
         <div className="demo-control-bar">
           <div className="demo-title">
             <Sparkles size={16} />
-            <span>Thanh Điều Hướng Kiểm Thử Trực Tiếp KN-65 (Role: {currentRole}):</span>
+            <span>Thanh Điều Hướng Kiểm Thử KN-19 & KN-65 (Role: {currentRole}):</span>
           </div>
 
           <div className="demo-buttons">
+            <button
+              className={`demo-chip ${activeTab === 'role-management' ? 'active' : ''}`}
+              onClick={() => setActiveTab('role-management')}
+              style={{ backgroundColor: activeTab === 'role-management' ? 'var(--accent-primary)' : 'transparent', color: activeTab === 'role-management' ? '#fff' : 'inherit' }}
+            >
+              🛡️ Quản lý Vai trò (KN-19)
+            </button>
             <button
               className={`demo-chip ${activeTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveTab('dashboard')}
@@ -187,32 +209,32 @@ export function AppShell({
               className={`demo-chip ${activeTab === 'error-403' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-403')}
             >
-              Xem mẫu 403 (Không đủ quyền)
+              Mẫu 403 (Forbidden)
             </button>
             <button
               className={`demo-chip ${activeTab === 'error-404' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-404')}
             >
-              Xem mẫu 404 (Trang trống)
+              Mẫu 404 (Not Found)
             </button>
             <button
               className={`demo-chip ${activeTab === 'error-401' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-401')}
             >
-              Xem mẫu 401 (Hết phiên)
+              Mẫu 401 (Unauthorized)
             </button>
             <button
               className={`demo-chip ${activeTab === 'error-500' ? 'active' : ''}`}
               onClick={() => setActiveTab('error-500')}
             >
-              Xem mẫu 500 (Lỗi máy chủ)
+              Mẫu 500 (Internal Error)
             </button>
             <button
               className={`demo-chip`}
               onClick={() => onTriggerSimulatedError('REACT_CRASH')}
               style={{ borderColor: '#ef4444', color: '#ef4444' }}
             >
-              Thử React UI Crash (KN-75 Error Boundary)
+              React UI Crash (KN-75)
             </button>
           </div>
         </div>

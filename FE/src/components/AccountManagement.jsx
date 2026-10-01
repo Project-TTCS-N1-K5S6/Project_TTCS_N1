@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Search, UserPlus, Pencil, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { apiRequest } from '../services/apiClient';
 
-const ROLES = ['HR', 'INTERVIEWER', 'ADMIN'];
-const STATUSES = ['Chờ kích hoạt', 'Đang hoạt động', 'Đã khóa'];
-const ROLE_LABELS = { HR: 'Nhân sự', INTERVIEWER: 'Người phỏng vấn', ADMIN: 'Quản trị viên' };
-const emptyForm = { name: '', email: '', department: '', role: 'INTERVIEWER', status: 'Đang hoạt động' };
+const ROLES = ['nhan_su', 'nguoi_phong_van', 'quan_tri'];
+const STATUSES = ['pending', 'active', 'locked'];
+const ROLE_LABELS = { nhan_su: 'Nhân sự', nguoi_phong_van: 'Người phỏng vấn', quan_tri: 'Quản trị viên' };
+const STATUS_LABELS = { pending: 'Chờ kích hoạt', active: 'Đang hoạt động', locked: 'Đã khóa' };
+const emptyForm = { fullName: '', email: '', department: '', role: 'nguoi_phong_van', status: 'active' };
 
 export function AccountManagement({ onTriggerError }) {
   const [query, setQuery] = useState('');
@@ -26,7 +27,8 @@ export function AccountManagement({ onTriggerError }) {
       if (query.trim()) params.set('query', query.trim());
       if (roleFilter) params.set('role', roleFilter);
       if (statusFilter) params.set('status', statusFilter);
-      setResult(await apiRequest(`/api/v1/auth/accounts?${params}`));
+      const response = await apiRequest(`/api/v1/auth/accounts?${params}`);
+      setResult(response);
     } catch (err) {
       if (err.errorPayload?.status === 403) setError(err.message);
       else if (err.errorPayload) onTriggerError(err.errorPayload);
@@ -36,7 +38,7 @@ export function AccountManagement({ onTriggerError }) {
   useEffect(() => { load(); }, [page, query, roleFilter, statusFilter]);
   const totalPages = Math.max(1, Math.ceil(result.total / result.pageSize));
   const beginCreate = () => { setEditingId(null); setForm({ ...emptyForm }); setNotice(''); setError(''); };
-  const beginEdit = (user) => { setEditingId(user.id); setForm({ name: user.name, email: user.email, department: user.department || '', role: ROLES.includes(user.role) ? user.role : 'HR', status: user.status }); setNotice(''); setError(''); };
+  const beginEdit = (user) => { setEditingId(user.id); setForm({ fullName: user.name, email: user.email, department: user.department || '', role: ROLES.includes(user.role) ? user.role : 'nguoi_phong_van', status: user.status }); setNotice(''); setError(''); };
 
   async function save(event) {
     event.preventDefault(); setError(''); setNotice('');
@@ -57,16 +59,16 @@ export function AccountManagement({ onTriggerError }) {
     {notice && <div className="account-notice">{notice}</div>}
     <div className="account-filters"><label className="account-search"><Search size={17}/><input value={query} onChange={e => { setQuery(e.target.value); setPage(1); }} placeholder="Tìm tên, email hoặc phòng ban" /></label>
       <select value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }}><option value="">Tất cả vai trò</option>{ROLES.map(role => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}</select>
-      <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}><option value="">Tất cả trạng thái</option>{STATUSES.map(status => <option key={status}>{status}</option>)}</select>
+      <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}><option value="">Tất cả trạng thái</option>{STATUSES.map(status => <option key={status} value={status}>{STATUS_LABELS[status]}</option>)}</select>
     </div>
     {form && <form className="account-form" onSubmit={save}><div className="account-form-head"><h2>{editingId ? 'Sửa tài khoản' : 'Tạo tài khoản mới'}</h2><button type="button" className="account-close" onClick={() => setForm(null)} aria-label="Đóng"><X size={18}/></button></div>
-      <div className="account-form-grid"><label>Họ và tên<input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}/></label><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}/></label><label>Phòng ban<input required value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}/></label><label>Vai trò<select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>{ROLES.map(role => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}</select></label>
-        {editingId && <label>Trạng thái<select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>{STATUSES.map(status => <option key={status}>{status}</option>)}</select></label>}</div>
+      <div className="account-form-grid"><label>Họ và tên<input required minLength="2" value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })}/></label><label>Email<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}/></label><label>Phòng ban<input required value={form.department} onChange={e => setForm({ ...form, department: e.target.value })}/></label><label>Vai trò<select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>{ROLES.map(role => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}</select></label>
+        {editingId && <label>Trạng thái<select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>{STATUSES.map(status => <option key={status} value={status}>{STATUS_LABELS[status]}</option>)}</select></label>}</div>
       {!editingId && <p className="account-form-hint">Hệ thống tạo mật khẩu tạm thời và gửi đến email đã nhập.</p>}
       {error && <p className="account-error">{error}</p>}<div className="account-form-actions"><button type="button" className="account-secondary" onClick={() => setForm(null)}>Hủy</button><button className="account-primary" type="submit">{editingId ? 'Lưu thay đổi' : 'Tạo và gửi email'}</button></div>
     </form>}
     <div className="account-table-wrap"><table className="account-table"><thead><tr><th>Họ và tên</th><th>Email</th><th>Phòng ban</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-      {loading ? <tr><td colSpan="6" className="account-empty">Đang tải tài khoản…</td></tr> : result.data.length ? result.data.map(user => <tr key={user.id}><td className="account-name">{user.name}</td><td>{user.email}</td><td>{user.department || '—'}</td><td>{ROLE_LABELS[user.role] || user.role}</td><td><span className={`account-status ${user.status === 'Đang hoạt động' ? 'active' : user.status === 'Đã khóa' ? 'locked' : 'pending'}`}>{user.status}</span></td><td><button className="account-edit" onClick={() => beginEdit(user)} aria-label={`Sửa ${user.name}`}><Pencil size={16}/></button></td></tr>) : <tr><td colSpan="6" className="account-empty">Không tìm thấy tài khoản phù hợp.</td></tr>}
+      {loading ? <tr><td colSpan="6" className="account-empty">Đang tải tài khoản…</td></tr> : result.data.length ? result.data.map(user => <tr key={user.id}><td className="account-name">{user.name}</td><td>{user.email}</td><td>{user.department || '—'}</td><td>{ROLE_LABELS[user.role] || user.role}</td><td><span className={`account-status ${user.status === 'active' ? 'active' : user.status === 'locked' ? 'locked' : 'pending'}`}>{STATUS_LABELS[user.status] || user.status}</span></td><td><button className="account-edit" onClick={() => beginEdit(user)} aria-label={`Sửa ${user.name}`}><Pencil size={16}/></button></td></tr>) : <tr><td colSpan="6" className="account-empty">Không tìm thấy tài khoản phù hợp.</td></tr>}
     </tbody></table></div>
     <div className="account-pagination"><span>{result.total ? `${(page - 1) * 20 + 1}–${Math.min(page * 20, result.total)} trong ${result.total} tài khoản` : '0 tài khoản'}</span><div><button disabled={page <= 1} onClick={() => setPage(page - 1)} aria-label="Trang trước"><ChevronLeft size={18}/></button><span>Trang {page} / {totalPages}</span><button disabled={page >= totalPages} onClick={() => setPage(page + 1)} aria-label="Trang sau"><ChevronRight size={18}/></button></div></div>
   </section>;

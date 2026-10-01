@@ -1,13 +1,21 @@
-const jwt = require('jsonwebtoken');
+'use strict';
 const config = require('../config/config');
-const UserModel = require('../models/userModel');
+const SessionModel = require('../models/sessionModel');
 
 /**
- * Authentication middleware to verify JWT token and check tokenVersion for revoked sessions (KN-56)
+ * Session Authentication Middleware
+ *
+ * Validates server-side session stored in PostgreSQL.
+ * Handles:
+ * - Missing/invalid session
+ * - Idle timeout detection
+ * - Absolute timeout detection
+ * - Automatic session renewal when within threshold
+ * - Session fixation protection
  */
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+async function authMiddleware(req, res, next) {
+  // Check if user data exists in express-session
+  if (!req.session || !req.session.userId || !req.session.sessionId) {
     return res.status(401).json({
       success: false,
       code: 'UNAUTHORIZED',
@@ -15,56 +23,96 @@ function authMiddleware(req, res, next) {
     });
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, config.JWT_SECRET);
-    
-    // Verify user exists and token version is valid (KN-56)
-    const isValid = UserModel.isTokenValid(decoded.id, decoded.tokenVersion, decoded.sessionId);
-    if (!isValid) {
+    // Validate the session record in our user_sessions table
+    const sessionRecord = await SessionModel.findValid(req.session.sessionId);
+
+    if (!sessionRecord) {
+      // Session is invalid, expired, or revoked
+      req.session.destroy(() => { });
       return res.status(401).json({
         success: false,
-        code: 'SESSION_REVOKED',
-        message: 'Phiên đăng nhập này đã bị thu hồi do tài khoản đã đổi mật khẩu từ thiết bị khác. Vui lòng đăng nhập lại.'
+        code: 'SESSION_EXPIRED',
+        message: 'Phiên làm việc đã hết hạn hoặc bị thu hồi. Vui lòng đăng nhập lại.'
       });
     }
 
-    const user = UserModel.findById(decoded.id);
-    if (!user) {
+    // Verify session belongs to the authenticated user
+    if (sessionRecord.user_id !== req.session.userId) {
+      req.session.destroy(() => { });
       return res.status(401).json({
         success: false,
-        code: 'USER_NOT_FOUND',
-        message: 'Tài khoản người dùng không tồn tại.'
+        code: 'SESSION_MISMATCH',
+        message: 'Phiên đăng nhập không hợp lệ.'
       });
     }
 
-    // Attach user information to request
+    // Check absolute timeout (hard limit even if user is active)
+    const now = Date.now();
+    const absoluteExpiry = new Date(sessionRecord.absolute_expires_at).getTime();
+    if (now >= absoluteExpiry) {
+      await SessionModel.revoke(req.session.sessionId);
+      req.session.destroy(() => { });
+      return res.status(401).json({
+        success: false,
+        code: 'SESSION_ABSOLUTE_EXPIRED',
+        message: 'Phiên làm việc đã vượt quá thời gian tối đa cho phép. Vui lòng đăng nhập lại.'
+      });
+    }
+
+    // Auto-renew idle timeout when within renewal threshold
+    const idleExpiry = new Date(sessionRecord.expires_at).getTime();
+    const timeLeft = idleExpiry - now;
+
+    if (timeLeft < config.SESSION_RENEW_THRESHOLD_MS) {
+      await SessionModel.renew(req.session.sessionId, config.SESSION_IDLE_TIMEOUT_MS);
+      // Inform frontend that session was renewed
+      res.set('X-Session-Renewed', 'true');
+    }
+
+    // Attach user info to request
     req.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      tokenVersion: user.tokenVersion,
-      sessionId: decoded.sessionId
+      id: sessionRecord.user_id,
+      employeeCode: sessionRecord.employee_code || req.session.employeeCode,
+      name: req.session.userName,
+      email: req.session.userEmail,
+      role: req.session.userRole,
+      sessionId: req.session.sessionId,
     };
 
-    next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        code: 'TOKEN_EXPIRED',
-        message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
-      });
-    }
+    // Expose remaining session times in response headers for frontend timer
+    res.set('X-Session-Idle-Expires', new Date(sessionRecord.expires_at).toISOString());
+    res.set('X-Session-Absolute-Expires', new Date(sessionRecord.absolute_expires_at).toISOString());
 
-    return res.status(401).json({
+    next();
+  } catch (err) {
+    console.error('[AuthMiddleware] Error validating session:', err.message);
+    return res.status(500).json({
       success: false,
-      code: 'INVALID_TOKEN',
-      message: 'Token xác thực không hợp lệ.'
+      code: 'SERVER_ERROR',
+      message: 'Lỗi hệ thống khi xác thực phiên làm việc.'
     });
   }
 }
 
-module.exports = authMiddleware;
+/**
+ * Role-based Authorization Middleware Factory
+ * @param {...string} allowedRoles - roles allowed to access the route
+ */
+function requireRole(...allowedRoles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, code: 'UNAUTHORIZED', message: 'Chưa xác thực.' });
+    }
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN',
+        message: `Bạn không có quyền thực hiện hành động này. Yêu cầu vai trò: ${allowedRoles.join(', ')}.`
+      });
+    }
+    next();
+  };
+}
+
+module.exports = { authMiddleware, requireRole };
