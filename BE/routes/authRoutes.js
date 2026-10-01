@@ -95,5 +95,6 @@ router.post('/change-password', authMiddleware, changePasswordValidation, handle
 router.get('/accounts', authMiddleware, AccountController.requireAccountPermission, AccountController.list);
 router.post('/accounts', authMiddleware, AccountController.requireAccountPermission, AccountController.create);
 router.patch('/accounts/:id', authMiddleware, AccountController.requireAccountPermission, AccountController.update);
+router.delete('/accounts/:id', authMiddleware, AccountController.requireAccountPermission, AccountController.remove);
 
 module.exports = router;

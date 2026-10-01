@@ -102,6 +102,15 @@ class AccountController {
       throw error;
     }
   }
+
+  static async remove(req, res) {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ success: false, message: 'Bạn không thể xóa tài khoản đang đăng nhập.' });
+    }
+    const removed = await UserModel.archiveManagedAccount(req.params.id);
+    if (!removed) return res.status(404).json({ success: false, message: 'Không tìm thấy nhân viên.' });
+    return res.json({ success: true, message: 'Đã xóa nhân viên khỏi danh sách và thu hồi các phiên đăng nhập.' });
+  }
 }
 
 module.exports = AccountController;

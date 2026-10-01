@@ -164,7 +164,7 @@ class UserModel {
   }
 
   static async listAccounts({ query: search = '', role = '', status = '', page = 1, pageSize = 20 } = {}) {
-    const clauses = [];
+    const clauses = ['deleted_at IS NULL'];
     const params = [];
     if (search.trim()) {
       params.push(`%${search.trim()}%`);
@@ -214,6 +214,22 @@ class UserModel {
 
   static async deleteManagedAccount(id) {
     await query('DELETE FROM users WHERE id = $1', [id]);
+  }
+
+  static async archiveManagedAccount(id) {
+    return withTransaction(async (client) => {
+      const result = await client.query(
+        `UPDATE users
+         SET deleted_at = NOW(), account_status = 'locked', is_active = FALSE,
+             token_version = token_version + 1, updated_at = NOW()
+         WHERE id = $1 AND deleted_at IS NULL
+         RETURNING id`,
+        [id]
+      );
+      if (!result.rows[0]) return false;
+      await client.query('UPDATE user_sessions SET is_active = FALSE WHERE user_id = $1', [id]);
+      return true;
+    });
   }
 
   static async updateManagedAccount(id, { fullName, email, department, role, status }) {

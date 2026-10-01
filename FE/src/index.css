@@ -63,6 +63,8 @@
 .account-status.active { color:#047857; background:#d1fae5; }.account-status.pending { color:#a16207; background:#fef3c7; }.account-status.locked { color:#be123c; background:#ffe4e6; }
 .account-edit,.account-close,.account-pagination button { display:inline-grid; place-items:center; border:1px solid var(--border-color); border-radius:7px; background:var(--bg-surface); color:var(--text-secondary); padding:.45rem; cursor:pointer; }
 .account-edit:hover,.account-pagination button:not(:disabled):hover { color:var(--accent-primary); border-color:var(--accent-primary); }
+.account-row-actions { display:flex; gap:.45rem; }
+.account-delete:hover { color:#be123c; border-color:#be123c; }
 .account-empty { padding:2rem!important; text-align:center; color:var(--text-muted); }
 .account-pagination { display:flex; justify-content:space-between; align-items:center; padding:1rem .25rem; color:var(--text-secondary); font-size:.85rem; }
 .account-pagination div { display:flex; align-items:center; gap:.8rem; }.account-pagination button:disabled { opacity:.4; cursor:not-allowed; }

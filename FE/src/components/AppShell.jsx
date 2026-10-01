@@ -55,10 +55,10 @@ export function AppShell({
       ]
     },
     {
-      title: 'Quản lý Tài khoản',
+      title: 'Quản lý nhân viên',
       items: [
         { id: 'register', label: 'Đăng ký tài khoản', icon: UserPlus, color: 'var(--accent-primary)', roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
-        { id: 'accounts', label: 'Quản lý tài khoản', icon: UserCog, color: 'var(--accent-primary)', roles: ['ADMIN'] },
+        { id: 'accounts', label: 'Danh sách nhân viên', icon: UserCog, color: 'var(--accent-primary)', roles: ['ADMIN'] },
         { id: 'forgot-password', label: 'Quên mật khẩu (Demo)', icon: ShieldCheck, roles: ['HR', 'ADMIN', 'INTERVIEWER', 'CANDIDATE', 'EMPLOYEE'] },
       ]
     },

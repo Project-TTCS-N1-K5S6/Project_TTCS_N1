@@ -17,7 +17,13 @@ import { Register } from './components/Register';
 import { AccountManagement } from './components/AccountManagement';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState('role-management'); // Set role-management as default tab for KN-19 review!
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const user = JSON.parse(sessionStorage.getItem('_ttcs_user') || 'null');
+      if (user?.role === 'quan_tri' || user?.role === 'ADMIN') return 'accounts';
+    } catch { /* Fall back to the role-management review screen. */ }
+    return 'role-management';
+  });
   const [theme, setTheme] = useState('light');
   const [currentErrorPayload, setCurrentErrorPayload] = useState(null);
   const [simulateCrash, setSimulateCrash] = useState(false);
