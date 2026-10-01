@@ -1,5 +1,5 @@
 # HỆ THỐNG TUYỂN DỤNG NỘI BỘ (ATS - APPLICANT TRACKING SYSTEM)
-### Dự án thực tập · Nhóm 2 · Thời lượng 8 tuần · Tổng Story Points: 350 PT (76 User Stories)
+### Dự án thực tập · Nhóm 1 · Thời lượng 8 tuần · Tổng Story Points: 350 PT (76 User Stories)
 
 [![Sprint 1 Status](https://img.shields.io/badge/Sprint%201-100%25%20Completed-success.svg)](docs/sprint-1.md)
 [![Tests Passing](https://img.shields.io/badge/Integration%20Tests-29%2F29%20Passed-brightgreen.svg)](backend/tests/api.test.ts)
