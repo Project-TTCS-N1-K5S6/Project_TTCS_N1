@@ -1,0 +1,1 @@
+Đây là kiến trúc của frontend

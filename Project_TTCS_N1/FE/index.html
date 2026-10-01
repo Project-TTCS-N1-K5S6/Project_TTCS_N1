@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Hệ Thống Nhân Sự Nội Bộ TTCS</title>
+  <meta name="description" content="Hệ thống quản lý nhân sự nội bộ TTCS - Dashboard">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/toast.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">HR</div>
+        <div>
+          <div class="brand-title">TTCS HR</div>
+          <div class="brand-subtitle">Nhân Sự Nội Bộ K5S6</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu" aria-label="Điều hướng chính">
+        <a href="index.html" class="nav-item active" id="nav-dashboard" aria-current="page">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          Dashboard
+        </a>
+
+        <a href="evaluation.html" class="nav-item" id="nav-evaluation">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          Chấm phiếu đánh giá
+        </a>
+
+        <a href="#" class="nav-item nav-disabled">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          Danh sách Nhân viên
+          <span class="nav-badge">Sắp có</span>
+        </a>
+
+        <a href="#" class="nav-item nav-disabled">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          Lịch làm việc
+          <span class="nav-badge">Sắp có</span>
+        </a>
+
+        <div class="nav-section-label">Tài khoản</div>
+
+        <a href="change-password.html" class="nav-item" id="nav-change-pw">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Đổi mật khẩu
+        </a>
+
+        <a href="sessions.html" class="nav-item" id="nav-sessions">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          Phiên đăng nhập
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <!-- Session countdown display -->
+        <div class="session-timer" id="sessionTimerBar" title="Thời gian phiên còn lại">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span style="font-size:0.75rem; color:#64748b;">Phiên:</span>
+          <span id="session-countdown-display"
+            style="font-size:0.8rem; font-weight:600; color:#10b981; font-variant-numeric:tabular-nums;">--:--</span>
+        </div>
+
+        <!-- User card -->
+        <div class="user-card">
+          <img src="" alt="Avatar" class="user-avatar" id="sidebarAvatar" loading="lazy">
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Đang tải...</div>
+            <div class="user-role" id="sidebarUserRole">--</div>
+          </div>
+          <button class="btn-logout-icon" id="btnLogout" title="Đăng xuất" aria-label="Đăng xuất">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="page-breadcrumb">
+          <span>Hệ thống</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+          <span class="active">Dashboard</span>
+        </div>
+        <div class="top-actions">
+          <div class="session-info-badge" id="sessionInfoBadge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Phiên an toàn
+          </div>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner card mb-4">
+          <div class="d-flex align-items-center gap-4">
+            <img id="welcomeAvatar" src="" alt="Avatar"
+              style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);box-shadow:0 0 0 4px rgba(99,102,241,0.2);"
+              loading="lazy">
+            <div>
+              <h1 style="font-size:1.5rem;font-weight:800;color:#f8fafc;margin:0;">
+                Xin chào, <span id="welcomeName">--</span> 👋
+              </h1>
+              <p style="color:#64748b;margin:4px 0 0;font-size:0.9rem;">
+                <span id="welcomeRole">--</span> · <span id="welcomeCode">--</span>
+              </p>
+            </div>
+            <div class="ms-auto text-end d-none d-md-block">
+              <div style="font-size:0.75rem;color:#475569;">Đăng nhập lúc</div>
+              <div style="font-size:0.85rem;color:#94a3b8;" id="loginTimeDisplay">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon" style="background:rgba(99,102,241,0.15);color:#6366f1;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <div class="stat-value" id="statDrafts">--</div>
+              <div class="stat-label">Bản nháp đang lưu</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:#10b981;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+              </div>
+              <div class="stat-value" id="statSessions">--</div>
+              <div class="stat-label">Phiên đang hoạt động</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div class="stat-value" id="session-countdown-display2" style="font-variant-numeric:tabular-nums;">--:--
+              </div>
+              <div class="stat-label">Phiên còn lại (nghỉ)</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon" style="background:rgba(168,85,247,0.15);color:#a855f7;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <div class="stat-value" style="color:#10b981;font-size:1rem;">Đang bảo vệ</div>
+              <div class="stat-label">Trạng thái bảo mật</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-header-custom">
+                <h2 class="section-title">Hành động nhanh</h2>
+              </div>
+              <div class="quick-actions-grid">
+                <a href="evaluation.html" class="quick-action-item">
+                  <div class="qa-icon" style="background:rgba(99,102,241,0.15);color:#6366f1;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#f8fafc;">Chấm phiếu đánh giá</div>
+                    <div style="font-size:0.78rem;color:#64748b;">Tự động lưu bản nháp</div>
+                  </div>
+                </a>
+                <a href="change-password.html" class="quick-action-item">
+                  <div class="qa-icon" style="background:rgba(16,185,129,0.15);color:#10b981;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#f8fafc;">Đổi mật khẩu</div>
+                    <div style="font-size:0.78rem;color:#64748b;">Cập nhật bảo mật</div>
+                  </div>
+                </a>
+                <a href="sessions.html" class="quick-action-item">
+                  <div class="qa-icon" style="background:rgba(245,158,11,0.15);color:#f59e0b;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                      <line x1="8" y1="21" x2="16" y2="21" />
+                      <line x1="12" y1="17" x2="12" y2="21" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#f8fafc;">Quản lý phiên</div>
+                    <div style="font-size:0.78rem;color:#64748b;">Xem thiết bị đăng nhập</div>
+                  </div>
+                </a>
+                <button class="quick-action-item" id="btnLogoutAll"
+                  style="border:none;background:none;text-align:left;cursor:pointer;">
+                  <div class="qa-icon" style="background:rgba(239,68,68,0.15);color:#ef4444;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.9rem;color:#f87171;">Đăng xuất tất cả</div>
+                    <div style="font-size:0.78rem;color:#64748b;">Thoát tất cả thiết bị</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Session Security Info -->
+          <div class="col-md-6">
+            <div class="card h-100">
+              <div class="card-header-custom">
+                <h2 class="section-title">Thông tin phiên làm việc</h2>
+              </div>
+              <div class="session-info-list" id="sessionInfoList">
+                <div class="si-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span style="color:#64748b;font-size:0.85rem;">Hết hạn nghỉ ngơi:</span>
+                  <strong id="si-idle-expiry" style="color:#f8fafc;font-size:0.85rem;">--</strong>
+                </div>
+                <div class="si-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span style="color:#64748b;font-size:0.85rem;">Hết hạn tuyệt đối:</span>
+                  <strong id="si-abs-expiry" style="color:#f8fafc;font-size:0.85rem;">--</strong>
+                </div>
+                <div class="si-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span style="color:#64748b;font-size:0.85rem;">Cookie:</span>
+                  <strong style="color:#34d399;font-size:0.85rem;">HttpOnly · SameSite · Secure</strong>
+                </div>
+                <div class="si-item">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <span style="color:#64748b;font-size:0.85rem;">Lưu trữ token:</span>
+                  <strong style="color:#34d399;font-size:0.85rem;">Chỉ phía server (PostgreSQL)</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/sessionManager.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // ── Auth guard ──
+      const user = await Auth.checkAuth();
+      if (!user) {
+        sessionStorage.setItem('logoutReason', 'Vui lòng đăng nhập để truy cập hệ thống.');
+        window.location.href = '/login.html';
+        return;
+      }
+
+      // ── Populate UI ──
+      populateUserUI(user);
+
+      // ── Fetch profile + sessions ──
+      const [profileRes, sessionsRes, draftsRes] = await Promise.allSettled([
+        Auth.fetchWithAuth('/api/v1/auth/me'),
+        Auth.fetchWithAuth('/api/v1/auth/sessions'),
+        Auth.fetchWithAuth('/api/v1/evaluations/drafts'),
+      ]);
+
+      if (sessionsRes.status === 'fulfilled' && sessionsRes.value?.ok) {
+        const sessions = sessionsRes.value.data.sessions || [];
+        document.getElementById('statSessions').textContent = sessions.length;
+
+        // Show expiry info from current session
+        const current = sessions.find(s => s.isCurrent);
+        if (current) {
+          document.getElementById('si-idle-expiry').textContent = formatDateTime(current.expiresAt);
+        }
+      }
+
+      if (draftsRes.status === 'fulfilled' && draftsRes.value?.ok) {
+        const drafts = draftsRes.value.data.drafts || [];
+        document.getElementById('statDrafts').textContent = drafts.length;
+      }
+
+      // Initialize session manager for this tab
+      // Fetch session timeouts from server
+      const refreshRes = await Auth.fetchWithAuth('/api/v1/auth/refresh', { method: 'POST' });
+      if (refreshRes?.ok && refreshRes.data?.session) {
+        SessionManager.init(refreshRes.data.session);
+        const s = refreshRes.data.session;
+        document.getElementById('si-abs-expiry').textContent = formatDateTime(s.absoluteExpiresAt);
+        // Sync second countdown display
+        setInterval(() => {
+          const el2 = document.getElementById('session-countdown-display2');
+          const el1 = document.getElementById('session-countdown-display');
+          if (el2 && el1) el2.textContent = el1.textContent;
+        }, 1000);
+      }
+
+      document.getElementById('loginTimeDisplay').textContent = new Date().toLocaleString('vi-VN');
+
+      // ── Logout handlers ──
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        if (confirm('Bạn có chắc muốn đăng xuất không?')) await Auth.logout();
+      });
+      document.getElementById('btnLogoutAll').addEventListener('click', async () => {
+        if (confirm('Bạn có chắc muốn đăng xuất khỏi TẤT CẢ thiết bị không?')) await Auth.logoutAll();
+      });
+    });
+
+    function populateUserUI(user) {
+      document.getElementById('sidebarUserName').textContent = user.name || '--';
+      document.getElementById('sidebarUserRole').textContent = formatRole(user.role);
+      document.getElementById('welcomeName').textContent = user.name?.split(' ').pop() || user.name;
+      document.getElementById('welcomeRole').textContent = formatRole(user.role);
+      document.getElementById('welcomeCode').textContent = user.employeeCode || '';
+      const avatar = user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=6366f1&color=fff&size=150`;
+      document.getElementById('sidebarAvatar').src = avatar;
+      document.getElementById('welcomeAvatar').src = avatar;
+      document.title = `${user.name} - Dashboard · TTCS HR`;
+    }
+
+    function formatRole(role) {
+      const map = { nhan_su: 'Nhân sự nội bộ', quan_tri: 'Quản trị viên', truong_phong: 'Trưởng phòng', giam_doc: 'Giám đốc' };
+      return map[role] || role;
+    }
+
+    function formatDateTime(iso) {
+      if (!iso) return '--';
+      return new Date(iso).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+    }
+  </script>
+</body>
+
+</html>
