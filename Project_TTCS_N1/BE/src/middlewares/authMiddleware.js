@@ -53,4 +53,4 @@ const authorizeRoles = (...allowedRoles) => {
 module.exports = {
   verifyToken,
   authorizeRoles
-}:
+}
