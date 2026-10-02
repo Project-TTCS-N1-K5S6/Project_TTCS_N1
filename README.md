@@ -6,7 +6,7 @@
 
 ## 🎯 Mục Tiêu & Tính Năng Đạt Được
 
-1. **Đăng nhập an toàn:**
+1 **Đăng nhập an toàn:**
    - Hỗ trợ đăng nhập linh hoạt bằng **Email** hoặc **Mã nhân sự** kết hợp mật khẩu.
    - Băm mật khẩu với **bcrypt salt rounds = 12**, chống tấn công từ điển và rainbow table.
    - Phòng chống brute-force bằng **express-rate-limit** (tối đa 10 lần thử/15 phút).
