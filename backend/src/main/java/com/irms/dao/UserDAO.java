@@ -1,0 +1,408 @@
+package com.irms.dao;
+
+import com.irms.model.Role;
+import com.irms.model.User;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+
+/**
+ * Thao tác truy vấn dữ liệu Người dùng (bảng users)
+ */
+public class UserDAO extends BaseDAO {
+
+    public User findByEmail(String email) {
+        String sql = "SELECT u.*, d.name AS department_name FROM users u " +
+                     "LEFT JOIN departments d ON u.department_id = d.id " +
+                     "WHERE u.email = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                User user = mapResultSetToUser(rs);
+                loadUserRolesAndPermissions(conn, user);
+                return user;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo email: " + email, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
+    public User findById(String id) {
+        String sql = "SELECT u.*, d.name AS department_name FROM users u " +
+                     "LEFT JOIN departments d ON u.department_id = d.id " +
+                     "WHERE u.id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, id);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                User user = mapResultSetToUser(rs);
+                loadUserRolesAndPermissions(conn, user);
+                return user;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo id: " + id, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
+    public List<User> findAll(String search, String deptId, String status, int offset, int limit) {
+        List<User> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT u.*, d.name AS department_name FROM users u " +
+                "LEFT JOIN departments d ON u.department_id = d.id WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (u.full_name LIKE ? OR u.email LIKE ? OR u.employee_code LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (deptId != null && !deptId.trim().isEmpty()) {
+            sql.append("AND u.department_id = ? ");
+            params.add(deptId.trim());
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND u.status = ? ");
+            params.add(status.trim());
+        }
+
+        sql.append("ORDER BY u.created_at DESC LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                User u = mapResultSetToUser(rs);
+                loadUserRolesAndPermissions(conn, u);
+                list.add(u);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách người dùng", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    public int countAll(String search, String deptId, String status) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (u.full_name LIKE ? OR u.email LIKE ? OR u.employee_code LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (deptId != null && !deptId.trim().isEmpty()) {
+            sql.append("AND u.department_id = ? ");
+            params.add(deptId.trim());
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND u.status = ? ");
+            params.add(status.trim());
+        }
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số lượng người dùng", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
+    }
+
+    public boolean insert(User user, String roleId) {
+        String sqlUser = "INSERT INTO users (id, employee_code, full_name, email, phone, job_title, " +
+                "department_id, password_hash, status, must_change_password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlRole = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+
+        Connection conn = null;
+        PreparedStatement psUser = null;
+        PreparedStatement psRole = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            psUser = conn.prepareStatement(sqlUser);
+            psUser.setString(1, user.getId());
+            psUser.setString(2, user.getEmployeeCode());
+            psUser.setString(3, user.getFullName());
+            psUser.setString(4, user.getEmail());
+            psUser.setString(5, user.getPhone());
+            psUser.setString(6, user.getJobTitle());
+            psUser.setString(7, user.getDepartmentId());
+            psUser.setString(8, user.getPasswordHash());
+            psUser.setString(9, user.getStatus() != null ? user.getStatus() : "ACTIVE");
+            psUser.setBoolean(10, user.isMustChangePassword());
+            psUser.executeUpdate();
+
+            if (roleId != null && !roleId.trim().isEmpty()) {
+                psRole = conn.prepareStatement(sqlRole);
+                psRole.setString(1, user.getId());
+                psRole.setString(2, roleId.trim());
+                psRole.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { logger.log(Level.SEVERE, "Rollback failed", ex); }
+            }
+            logger.log(Level.SEVERE, "Lỗi thêm mới người dùng", e);
+            return false;
+        } finally {
+            close(null, psRole);
+            close(conn, psUser);
+        }
+    }
+
+    public boolean update(User user, String roleId) {
+        String sqlUser = "UPDATE users SET full_name = ?, phone = ?, job_title = ?, department_id = ?, status = ? WHERE id = ?";
+        String sqlDelRole = "DELETE FROM user_roles WHERE user_id = ?";
+        String sqlAddRole = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
+
+        Connection conn = null;
+        PreparedStatement psUser = null;
+        PreparedStatement psDelRole = null;
+        PreparedStatement psAddRole = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            psUser = conn.prepareStatement(sqlUser);
+            psUser.setString(1, user.getFullName());
+            psUser.setString(2, user.getPhone());
+            psUser.setString(3, user.getJobTitle());
+            psUser.setString(4, user.getDepartmentId());
+            psUser.setString(5, user.getStatus());
+            psUser.setString(6, user.getId());
+            psUser.executeUpdate();
+
+            if (roleId != null && !roleId.trim().isEmpty()) {
+                psDelRole = conn.prepareStatement(sqlDelRole);
+                psDelRole.setString(1, user.getId());
+                psDelRole.executeUpdate();
+
+                psAddRole = conn.prepareStatement(sqlAddRole);
+                psAddRole.setString(1, user.getId());
+                psAddRole.setString(2, roleId.trim());
+                psAddRole.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { logger.log(Level.SEVERE, "Rollback failed", ex); }
+            }
+            logger.log(Level.SEVERE, "Lỗi cập nhật người dùng", e);
+            return false;
+        } finally {
+            close(null, psDelRole);
+            close(null, psAddRole);
+            close(conn, psUser);
+        }
+    }
+
+    public boolean updatePassword(String userId, String passwordHash, boolean mustChangePassword) {
+        String sql = "UPDATE users SET password_hash = ?, must_change_password = ?, session_version = session_version + 1 WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, passwordHash);
+            ps.setBoolean(2, mustChangePassword);
+            ps.setString(3, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật mật khẩu cho userId: " + userId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    public boolean lockUser(String userId, String reason, String lockedBy) {
+        String sql = "UPDATE users SET status = 'LOCKED', locked_at = NOW(), lock_reason = ?, locked_by = ?, " +
+                     "session_version = session_version + 1 WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, reason);
+            ps.setString(2, lockedBy);
+            ps.setString(3, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi khóa tài khoản userId: " + userId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    public boolean unlockUser(String userId) {
+        String sql = "UPDATE users SET status = 'ACTIVE', failed_login_attempts = 0, locked_until = NULL, " +
+                     "locked_at = NULL, lock_reason = NULL, locked_by = NULL WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi mở khóa tài khoản userId: " + userId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    public void incrementFailedAttempts(String email, int maxAttempts, int lockoutMinutes) {
+        String sql = "UPDATE users SET failed_login_attempts = failed_login_attempts + 1, " +
+                     "locked_until = CASE WHEN failed_login_attempts + 1 >= ? THEN DATE_ADD(NOW(), INTERVAL ? MINUTE) ELSE locked_until END, " +
+                     "status = CASE WHEN failed_login_attempts + 1 >= ? THEN 'LOCKED' ELSE status END " +
+                     "WHERE email = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, maxAttempts);
+            ps.setInt(2, lockoutMinutes);
+            ps.setInt(3, maxAttempts);
+            ps.setString(4, email);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tăng failed_login_attempts cho email: " + email, e);
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    public void resetFailedAttempts(String email) {
+        String sql = "UPDATE users SET failed_login_attempts = 0, locked_until = NULL, last_login_at = NOW() WHERE email = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi reset failed_login_attempts", e);
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    private void loadUserRolesAndPermissions(Connection conn, User user) throws SQLException {
+        // Load roles
+        String sqlRoles = "SELECT r.* FROM roles r " +
+                          "INNER JOIN user_roles ur ON r.id = ur.role_id " +
+                          "WHERE ur.user_id = ?";
+        try (PreparedStatement psRoles = conn.prepareStatement(sqlRoles)) {
+            psRoles.setString(1, user.getId());
+            try (ResultSet rsRoles = psRoles.executeQuery()) {
+                List<Role> roles = new ArrayList<>();
+                while (rsRoles.next()) {
+                    roles.add(new Role(
+                            rsRoles.getString("id"),
+                            rsRoles.getString("code"),
+                            rsRoles.getString("name"),
+                            rsRoles.getString("description"),
+                            rsRoles.getBoolean("is_system_role")
+                    ));
+                }
+                user.setRoles(roles);
+            }
+        }
+
+        // Load distinct permissions
+        String sqlPerms = "SELECT DISTINCT p.code FROM permissions p " +
+                          "INNER JOIN role_permissions rp ON p.id = rp.permission_id " +
+                          "INNER JOIN user_roles ur ON rp.role_id = ur.role_id " +
+                          "WHERE ur.user_id = ?";
+        try (PreparedStatement psPerms = conn.prepareStatement(sqlPerms)) {
+            psPerms.setString(1, user.getId());
+            try (ResultSet rsPerms = psPerms.executeQuery()) {
+                List<String> perms = new ArrayList<>();
+                while (rsPerms.next()) {
+                    perms.add(rsPerms.getString("code"));
+                }
+                user.setPermissions(perms);
+            }
+        }
+    }
+
+    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+        User u = new User();
+        u.setId(rs.getString("id"));
+        u.setEmployeeCode(rs.getString("employee_code"));
+        u.setFullName(rs.getString("full_name"));
+        u.setEmail(rs.getString("email"));
+        u.setPhone(rs.getString("phone"));
+        u.setJobTitle(rs.getString("job_title"));
+        u.setDepartmentId(rs.getString("department_id"));
+        u.setDepartmentName(rs.getString("department_name"));
+        u.setPasswordHash(rs.getString("password_hash"));
+        u.setStatus(rs.getString("status"));
+        u.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
+        u.setLockedUntil(rs.getTimestamp("locked_until"));
+        u.setLockedAt(rs.getTimestamp("locked_at"));
+        u.setLockReason(rs.getString("lock_reason"));
+        u.setLockedBy(rs.getString("locked_by"));
+        u.setMustChangePassword(rs.getBoolean("must_change_password"));
+        u.setSessionVersion(rs.getInt("session_version"));
+        u.setLastLoginAt(rs.getTimestamp("last_login_at"));
+        u.setCreatedAt(rs.getTimestamp("created_at"));
+        u.setUpdatedAt(rs.getTimestamp("updated_at"));
+        return u;
+    }
+}

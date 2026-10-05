@@ -1,100 +1,102 @@
-# KIẾN TRÚC HỆ THỐNG IRMS — SPRINT 1
+# KIẾN TRÚC HỆ THỐNG IRMS (JAVA SERVLET, MYSQL & BOOTSTRAP 5 SASS)
 
 ## 1. TỔNG QUAN KIẾN TRÚC
 
-Hệ thống Tuyển dụng Nội bộ (IRMS) áp dụng mô hình **Clean Layered Architecture** tách biệt hoàn toàn giữa Frontend (React/TypeScript) và Backend (Node.js/Express/TypeScript) với cơ sở dữ liệu quan hệ PostgreSQL chuẩn enterprise.
+Hệ thống Tuyển dụng Nội bộ (IRMS) áp dụng mô hình **MVC (Model - View - Controller)** kinh điển kết hợp **Layered Architecture** chuẩn mực của hệ sinh thái Java Enterprise:
 
 ```
 +-------------------------------------------------------------------------+
-|                           CLIENT TẦNG FRONTEND                          |
-|             React 18 + Vite + Ant Design 5 + React Router 6             |
-|    - Permission-aware Sidebar & Header (Mobile Drawer down to 360px)    |
-|    - Silent Axios JWT Auto-Refresh Interceptor                          |
-|    - Client-side Route Guard (ProtectedRoute, PermissionRoute)          |
+|                           CLIENT / PRESENTATION                         |
+|             HTML5 + CSS3 + Bootstrap 5.3 + JavaScript + SASS            |
+|    - Giao diện Responsive chuẩn doanh nghiệp (Mobile drawer đến Desktop)|
+|    - SASS Design Tokens (_variables, _layout, _components, _tables)     |
+|    - AJAX Fetch API tương tác mượt mà không tải lại trang               |
+|    - Dynamic Modal: Thêm người dùng, Khóa tài khoản, Phân quyền         |
 +-------------------------------------------------------------------------+
-                                   |  HTTPS / JSON / HttpOnly Cookie
+                                   |  HTTP Request / Session / Cookie
                                    v
 +-------------------------------------------------------------------------+
-|                        API GATEWAY / SECURITY LAYER                     |
-|  - Helmet Security Headers                                              |
-|  - CORS Origin Validation                                               |
-|  - Structured Safe Logger (Never logs passwords/tokens)                 |
-|  - Global Exception Handler (No stack trace/SQL leak)                   |
-|  - JWT Bearer Authentication Middleware                                 |
-|  - RBAC Permission Enforcement Middleware (Deny-by-default)             |
+|                       FILTER & SECURITY LAYER (JAVA)                    |
+|  - EncodingFilter: Ép buộc UTF-8 request & response                     |
+|  - AuthFilter: Xác thực Session & Phân quyền truy cập 10 phân hệ        |
+|  - MustChangePasswordGuard: Chặn truy cập nếu chưa đổi mật khẩu khởi tạo|
+|  - InterviewerRestriction: Cấm người phỏng vấn xem dải lương ngân sách  |
 +-------------------------------------------------------------------------+
                                    |
                                    v
 +-------------------------------------------------------------------------+
-|                      APPLICATION / CONTROLLER LAYER                     |
-|  - AuthController, UsersController, RolesController, PermissionsCtrl    |
-|  - Zod DTO Request Body & Query Validation                              |
+|                      CONTROLLER LAYER (JAVA SERVLET)                    |
+|  - DashboardServlet: Thống kê số liệu KPI tổng quan (/dashboard)        |
+|  - AuthServlet: Đăng nhập, đăng xuất, đổi & cấp lại mật khẩu (/auth/*)  |
+|  - UserServlet: Quản trị tài khoản, khóa & mở khóa (/admin/users)       |
+|  - RoleServlet & PermissionMatrixServlet: Ma trận phân quyền RBAC       |
+|  - DepartmentServlet: Quản lý danh mục phòng ban (/admin/departments)   |
+|  - CandidateServlet: Quản lý pipeline ứng viên (/candidates)            |
+|  - SalaryRangeServlet: Quản lý dải lương ngân sách (/salary-ranges)     |
+|  - AuditLogServlet: Tra cứu nhật ký kiểm toán (/admin/audit-logs)       |
 +-------------------------------------------------------------------------+
                                    |
                                    v
 +-------------------------------------------------------------------------+
-|                        DOMAIN / SERVICE LAYER                           |
-|  - AuthService: Lockout (5 attempts/15m), Token Rotation, Revocation    |
-|  - UsersService: CRUD, Server-side pagination, Handover Requisition Chk |
-|  - RolesService: Multi-role Assignment, Self-admin Revoke Protection    |
-|  - AuditService: Security Activity Logs                                 |
-|  - EmailService: Async Outbox Dispatcher (Activation, Password Reset)   |
+|                       SERVICE LAYER (BUSINESS LOGIC)                    |
+|  - AuthService: Xác thực BCrypt, chống Brute-force (khóa 15p sau 5 lần) |
+|  - UserService: Xử lý nghiệp vụ người dùng, mã nhân viên                |
+|  - RolePermissionService: Xử lý ma trận phân quyền 10 phân hệ           |
+|  - CandidateService: Quản trị pipeline và giai đoạn ứng tuyển           |
+|  - AuditService: Ghi nhận nhật ký kiểm toán hệ thống                    |
 +-------------------------------------------------------------------------+
                                    |
                                    v
 +-------------------------------------------------------------------------+
-|                        DATA ACCESS & PERSISTENCE                        |
-|  - PostgreSQL 16+ (Database: ttcs_db)                                   |
-|  - Connection Pooling with pg.Pool                                      |
-|  - Flyway-style SQL Schema Migrations & Automated Seeding               |
-|  - Transactional Isolation (BEGIN ... COMMIT / ROLLBACK)                |
+|                       DATA ACCESS LAYER (DAO / JDBC)                    |
+|  - UserDAO, RoleDAO, PermissionDAO, DepartmentDAO, CandidateDAO...      |
+|  - BaseDAO: Quản lý vòng đời kết nối và giải phóng tài nguyên           |
+|  - HikariCP Connection Pool: Tối ưu hiệu năng kết nối cơ sở dữ liệu     |
+|  - MySQL 8.0 Database (ttcs_db): Charset utf8mb4_unicode_ci             |
 +-------------------------------------------------------------------------+
 ```
 
 ---
 
-## 2. BẢO MẬT & QUẢN LÝ PHIÊN (SECURITY ARCHITECTURE)
+## 2. CƠ CHẾ BẢO MẬT & QUẢN LÝ PHIÊN (SECURITY ARCHITECTURE)
 
-### A. Mô hình Token Kép (Access Token + Refresh Token)
-1. **Access Token:**
-   - Thời lượng ngắn (15 phút).
-   - Chứa định danh `userId`, `email`, danh sách mã `roles`, danh sách `permissions`.
-   - Được gửi qua HTTP Header: `Authorization: Bearer <accessToken>`.
-2. **Refresh Token:**
-   - Thời lượng dài hơn (7 ngày).
-   - Được mã hóa một chiều qua thuật toán **SHA-256** trước khi lưu vào bảng `refresh_tokens`. Tuyệt đối không lưu plaintext token trong cơ sở dữ liệu.
-   - Truyền tải qua **HttpOnly Cookie** (`irms_refresh_token`) với cờ `sameSite: 'lax'` và `path: '/api/auth'`, ngăn ngừa triệt để tấn công XSS trộm token.
-   - Hỗ trợ **Token Rotation**: Mỗi lần đổi token mới, token cũ bị thu hồi và liên kết tới token mới (`replaced_by_token_id`).
-   - Hỗ trợ thu hồi phiên từ phía server (`revoked_at`): Khi người dùng đăng xuất, đổi mật khẩu, hoặc tài khoản bị Admin khóa, các token đều lập tức bị vô hiệu hóa trong cơ sở dữ liệu.
+### A. Quản lý Phiên làm việc (Session Management)
+1. **HttpOnly Cookie & Session Timeout:**
+   - Phiên làm việc sử dụng `HttpSession` của Java Servlet, lưu ID phiên qua Cookie `JSESSIONID` với cờ `HttpOnly`, ngăn chặn mã độc JavaScript đánh cắp session.
+   - Thời gian sống mặc định của phiên: **60 phút** (cấu hình trong `web.xml`).
+2. **Cơ chế Vô hiệu hóa tức thời (Session Invalidation on Security Event):**
+   - Bảng `users` có cột `session_version INT NOT NULL DEFAULT 0`.
+   - Mỗi khi đổi mật khẩu, cấp lại mật khẩu hoặc khóa tài khoản: `session_version = session_version + 1`.
 
-### B. Kiểm soát Thử đăng nhập sai & Tạm khóa tài khoản (Brute-force Protection)
-- Mỗi lần người dùng nhập sai mật khẩu, `failed_login_attempts` tăng thêm 1.
-- Nếu đạt 5 lần liên tiếp:
-  - Thiết lập `locked_until = now() + 15 minutes`.
-  - Ghi nhật ký audit `ACCOUNT_TEMP_LOCKED`.
-  - Trả về mã HTTP 403 Forbidden: *"Tài khoản đang tạm khóa. Vui lòng thử lại sau."*.
-- Đăng nhập thành công: Tự động reset `failed_login_attempts = 0` và `locked_until = NULL`.
+### B. Kiểm soát Đăng nhập & Chống dò mật khẩu (Brute-force Protection)
+- Mỗi lần người dùng nhập sai mật khẩu:
+  - Cột `failed_login_attempts` trong bảng `users` tự động tăng 1.
+  - Ghi sự kiện `LOGIN_FAILED` vào bảng `audit_logs`.
+  - Thông báo số lần thử còn lại cho người dùng.
+- Nếu nhập sai liên tiếp **5 lần**:
+  - Đặt `locked_until = NOW() + INTERVAL 15 MINUTE`.
+  - Đặt `status = 'LOCKED'`.
+  - Người dùng bị khóa trong 15 phút, từ chối đăng nhập với thông báo rõ thời gian mở lại.
+- Khi đăng nhập thành công:
+  - Tự động reset `failed_login_attempts = 0`, `locked_until = NULL`.
+  - Cập nhật `last_login_at = NOW()`.
+  - Ghi sự kiện `LOGIN_SUCCESS` vào `audit_logs`.
 
-### C. Quên & Đặt lại mật khẩu an toàn
-- Phản hồi **Generic Response**: Bất kể email có tồn tại hay không, API luôn trả về: *"Nếu email tồn tại trong hệ thống, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu."*.
-- Token đặt lại mật khẩu sinh ngẫu nhiên 32 bytes qua `crypto.randomBytes(32)`, lưu hash SHA-256 vào `password_reset_tokens`.
-- Hiệu lực chính xác 30 phút, chỉ được sử dụng tối đa 01 lần duy nhất (`used_at IS NOT NULL`).
+### C. Đổi mật khẩu bắt buộc (Must Change Password Flow)
+- Áp dụng khi Quản trị viên tạo mới tài khoản hoặc Cấp lại mật khẩu tạm thời (`must_change_password = true`).
+- `AuthFilter` tự động phát hiện và chặn người dùng truy cập mọi trang chức năng khác, ép buộc chuyển hướng tới `/auth/change-password?required=true`.
+- Sau khi đổi thành công sang mật khẩu mới: `must_change_password` chuyển về `false`.
 
----
-
-## 3. MÔ HÌNH PHÂN QUYỀN (PERMISSION-BASED RBAC)
-
-Hệ thống áp dụng phân quyền dựa trên quyền hạn (Permission-based Authorization):
-- **User N-N Role** thông qua bảng `user_roles`.
-- **Role N-N Permission** thông qua bảng `role_permissions`.
-- Định dạng quyền: `MODULE.ACTION` (Ví dụ: `users.view`, `users.create`, `users.lock`, `roles.assign`, `audit.view`, v.v.).
-- Quy tắc **Deny by default**: Nếu người dùng không sở hữu quyền cụ thể hoặc vai trò của họ chưa được cấp quyền đó trong database, request lập tức bị từ chối với HTTP 403.
-- Vai trò `ADMIN` được trang bị cơ chế Superuser bypass để luôn có toàn quyền quản trị hệ thống.
-
----
-
-## 4. TÍNH SẴN SÀNG CHO SPRINT 2 - 8
-Kiến trúc này được thiết kế để tiếp tục mở rộng cho các Sprint tiếp theo (Danh mục vị trí, Yêu cầu tuyển dụng, Đăng tin, Hồ sơ ứng viên, Phỏng vấn, Offer & Onboarding):
-- Bảng `recruitment_requisitions` đã được chuẩn bị sẵn sàng và tích hợp kiểm tra ràng buộc bàn giao ở Sprint 1.
-- Danh mục permissions đã bao gồm sẵn các module mở rộng (`requisitions.*`, `candidates.*`, `interviews.*`, `salary.*`).
-- Frontend sử dụng cấu trúc module hóa theo tính năng (`features/` & `pages/`), giúp việc bổ sung trang mới không gây ảnh hưởng tới kiến trúc cốt lõi.
+### D. Ma trận phân quyền 10 Phân hệ chuẩn (RBAC Matrix)
+- 10 Phân hệ chuẩn nghiệp vụ:
+  1. `departments`: Tổ chức & vị trí
+  2. `requisitions`: Yêu cầu tuyển dụng
+  3. `job_postings`: Tin tuyển dụng
+  4. `candidates`: Hồ sơ ứng viên & Pipeline
+  5. `interviews`: Lịch phỏng vấn
+  6. `evaluations`: Phiếu đánh giá
+  7. `offers`: Thư mời nhận việc
+  8. `notifications`: Email & Thông báo
+  9. `reports`: Báo cáo & Thống kê
+  10. `users / roles / permissions / audit`: Quản trị hệ thống
+- `AuthFilter` kiểm tra quyền theo phương thức `currentUser.hasPermission("...")` trước khi cho phép vào Servlet xử lý.

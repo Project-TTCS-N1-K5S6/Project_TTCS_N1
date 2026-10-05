@@ -36,6 +36,7 @@ Quy ước:
 - `users.update`: Chỉnh sửa thông tin người dùng
 - `users.lock`: Khóa tài khoản người dùng
 - `users.unlock`: Mở khóa tài khoản người dùng
+- `users.reset-password`: Cấp lại mật khẩu tạm thời cho tài khoản (Chỉ dành cho ADMIN)
 
 ### Module `roles`
 - `roles.view`: Xem danh sách và chi tiết vai trò
@@ -45,7 +46,7 @@ Quy ước:
 - `roles.revoke`: Thu hồi vai trò của người dùng
 
 ### Module `permissions`
-- `permissions.view`: Xem danh sách quyền hệ thống
+- `permissions.view`: Xem danh sách quyền hệ thống / ma trận phân quyền
 - `permissions.manage`: Cấu hình ma trận quyền hạn cho vai trò
 
 ### Module `audit`
@@ -55,14 +56,51 @@ Quy ước:
 - `department.view`: Xem danh mục các phòng ban tổ chức
 
 ### Module nền tảng cho Sprint 2 - 8 (Extensible)
-- `requisitions.view`, `requisitions.create`, `requisitions.update`, `requisitions.approve`
-- `candidates.view`
-- `interviews.view`, `interviews.evaluate`
-- `salary.view`
+- `requisitions.view`: Xem yêu cầu tuyển dụng
+- `requisitions.create`: Tạo yêu cầu tuyển dụng
+- `requisitions.update`: Cập nhật yêu cầu tuyển dụng
+- `requisitions.approve`: Phê duyệt yêu cầu tuyển dụng
+- `candidates.view`: Xem ứng viên
+- `interviews.view`: Xem lịch phỏng vấn
+- `interviews.evaluate`: Đánh giá phỏng vấn
+- `salary.view`: Xem dải lương
 
 ---
 
-## 3. NGUYÊN TẮC BẢO MẬT & THI KỶ
+## 3. MA TRẬN BASELINE PERMISSION MAPPING (SEED)
+
+| Mã Quyền | ADMIN | HR_MANAGER | RECRUITER | HIRING_MANAGER | INTERVIEWER | APPROVER | CANDIDATE |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `users.view` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `users.create` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `users.update` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `users.lock` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `users.unlock` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `users.reset-password` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `roles.view` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `roles.create` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `roles.update` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `roles.assign` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `roles.revoke` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `permissions.view` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `permissions.manage` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `audit.view` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `department.view` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `requisitions.view` | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| `requisitions.create` | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `requisitions.update` | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| `requisitions.approve` | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| `candidates.view` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `interviews.view` | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| `interviews.evaluate` | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| `salary.view` | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Tổng số quyền** | **23** | **10** | **6** | **5** | **4** | **4** | **0** |
+
+---
+
+## 4. NGUYÊN TẮC BẢO MẬT & THI KỶ
 1. **Deny By Default:** Mọi endpoint đều mặc định từ chối truy cập nếu người dùng không có permission tương ứng trong database.
 2. **Ẩn menu ở frontend chỉ phục vụ UX:** Backend luôn là chốt chặn cuối cùng kiểm tra quyền hạn thực tế.
 3. **Quyền hạn quản trị tối cao:** Admin không thể tự tước đoạt quyền ADMIN của chính mình.
+4. **Quyền hiệu lực:** Khi người dùng có nhiều vai trò, quyền hiệu lực = Union toàn bộ quyền của các vai trò (không trùng lặp).
+5. **Hiệu lực tức thì:** Khi Admin cập nhật vai trò hoặc phân quyền, quyền mới có hiệu lực ở request tiếp theo do backend query DB trực tiếp.

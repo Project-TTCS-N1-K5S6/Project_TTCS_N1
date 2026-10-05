@@ -1,21 +1,23 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: irms-postgres
+  mysql:
+    image: mysql:8.0
+    container_name: irms-mysql
     restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      POSTGRES_DB: ${DB_NAME:-ttcs_db}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-ttcs_db}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_PORT:-3306}:3306"
     volumes:
-      - irms_pgdata:/var/lib/postgresql/data
+      - irms_mysqldata:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-ttcs_db}"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -24,11 +26,11 @@ services:
     container_name: irms-mailhog
     restart: unless-stopped
     ports:
-      - "1025:1025" # SMTP server
+      - "1025:1025" # SMTP
       - "8025:8025" # Web UI
     logging:
       driver: 'none'
 
 volumes:
-  irms_pgdata:
+  irms_mysqldata:
     driver: local

@@ -2,20 +2,16 @@
   "name": "irms-root",
   "version": "1.0.0",
   "private": true,
-  "description": "Internal Recruitment Management System (IRMS) - Sprint 1",
+  "description": "Internal Recruitment Management System (IRMS) - Java Servlet & JSP, MySQL, Bootstrap 5 & SASS",
   "scripts": {
-    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
-    "dev:backend": "npm --prefix backend run dev",
-    "dev:frontend": "npm --prefix frontend run dev",
-    "build": "npm --prefix backend run build && npm --prefix frontend run build",
-    "build:backend": "npm --prefix backend run build",
-    "build:frontend": "npm --prefix frontend run build",
-    "test:backend": "npm --prefix backend run test",
-    "migrate": "npm --prefix backend run migrate",
-    "seed": "npm --prefix backend run seed",
-    "db:setup": "npm --prefix backend run db:setup"
+    "start": "node server.js",
+    "sass:build": "sass src/main/webapp/assets/scss/main.scss src/main/webapp/assets/css/main.css --no-source-map",
+    "sass:watch": "sass --watch src/main/webapp/assets/scss/main.scss:src/main/webapp/assets/css/main.css",
+    "db:up": "docker compose up -d mysql",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d mysql"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "sass": "^1.85.0"
   }
 }

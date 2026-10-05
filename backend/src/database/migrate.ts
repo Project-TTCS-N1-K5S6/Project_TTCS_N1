@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { pool, withTransaction } from './db';
-
+/*Chạy cơ sở dữ liệu*/ 
 async function runMigrations() {
   console.log('[Migration] Starting database migration...');
 
