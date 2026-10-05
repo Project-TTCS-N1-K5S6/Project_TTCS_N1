@@ -1,144 +1,118 @@
-# TÀI LIỆU CƠ SỞ DỮ LIỆU IRMS — SPRINT 1
+# THIẾT KẾ CƠ SỞ DỮ LIỆU IRMS (MYSQL 8.0)
 
-Hệ quản trị cơ sở dữ liệu: **PostgreSQL 16+**  
-Tên Database: **ttcs_db**  
-Múi giờ lưu trữ: **UTC / TIMESTAMP WITH TIME ZONE (Hiển thị Asia/Ho_Chi_Minh)**  
+## 1. THÔNG SỐ CƠ BẢN
+- **Hệ quản trị CSDL:** MySQL 8.0+
+- **Database Name:** `ttcs_db`
+- **Charset:** `utf8mb4`
+- **Collation:** `utf8mb4_unicode_ci`
+- **Động cơ lưu trữ (Engine):** InnoDB (Hỗ trợ Giao dịch ACID và Ràng buộc Khóa ngoại)
+- **Tập tin khởi tạo:**
+  - `database/schema.sql`: Định nghĩa cấu trúc bảng (DDL), chỉ mục (Indexes) và ràng buộc toàn vẹn.
+  - `database/seed.sql`: Nạp dữ liệu mẫu ban đầu (DML): vai trò, 10 phân hệ quyền hạn, phòng ban, người dùng mẫu, ứng viên.
 
 ---
 
-## 1. DANH SÁCH BẢNG (TABLES)
+## 2. DANH SÁCH BẢNG DỮ LIỆU CHÍNH
 
 ### 1. `departments` (Phòng ban / Đơn vị tổ chức)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh phòng ban |
-| `code` | VARCHAR(50) | UNIQUE, NOT NULL | Mã phòng ban (HR, TECH, SALES, MKT) |
-| `name` | VARCHAR(255) | NOT NULL | Tên phòng ban |
-| `description` | TEXT | NULL | Mô tả chức năng |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời gian tạo |
-| `updated_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời gian cập nhật |
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `code` | VARCHAR(50) UNIQUE | Mã phòng ban (BGD, HR, TECH, SALES...) |
+| `name` | VARCHAR(255) | Tên phòng ban đầy đủ |
+| `description` | TEXT | Chức năng nhiệm vụ |
+| `created_at` | TIMESTAMP | Thời gian tạo |
+| `updated_at` | TIMESTAMP | Thời gian cập nhật |
 
-### 2. `roles` (Vai trò nghiệp vụ)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh vai trò |
-| `code` | VARCHAR(50) | UNIQUE, NOT NULL | Mã vai trò (ADMIN, RECRUITER, ...) |
-| `name` | VARCHAR(100) | NOT NULL | Tên hiển thị vai trò |
-| `description` | TEXT | NULL | Mô tả vai trò |
-| `is_system_role`| BOOLEAN | DEFAULT true | Vai trò hệ thống định sẵn |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời gian tạo |
-| `updated_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời gian cập nhật |
+### 2. `roles` (Danh mục vai trò)
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `code` | VARCHAR(50) UNIQUE | Mã vai trò (ADMIN, HR_MANAGER, RECRUITER...) |
+| `name` | VARCHAR(100) | Tên vai trò hiển thị |
+| `description` | TEXT | Mô tả quyền hạn của vai trò |
+| `is_system_role`| BOOLEAN | Cờ đánh dấu vai trò mặc định của hệ thống |
 
-### 3. `permissions` (Quyền hạn hệ thống)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh quyền |
-| `code` | VARCHAR(100) | UNIQUE, NOT NULL | Mã quyền dạng MODULE.ACTION |
-| `name` | VARCHAR(255) | NOT NULL | Tên hiển thị quyền |
-| `module` | VARCHAR(100) | NOT NULL | Tên phân hệ (users, roles, ...) |
-| `action` | VARCHAR(50) | NOT NULL | Hành động (view, create, lock, ...) |
-| `description` | TEXT | NULL | Mô tả chi tiết quyền hạn |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời gian tạo |
+### 3. `permissions` (Danh mục quyền hạn 10 phân hệ)
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `code` | VARCHAR(100) UNIQUE | Mã quyền (VD: users.view, candidates.manage) |
+| `name` | VARCHAR(255) | Tên quyền hiển thị |
+| `module` | VARCHAR(100) | Tên phân hệ (users, candidates, interviews...) |
+| `action` | VARCHAR(50) | Hành động (view, create, update, manage...) |
+| `description` | TEXT | Giải thích chức năng quyền hạn |
 
-### 4. `users` (Tài khoản người dùng nội bộ)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh người dùng |
-| `employee_code` | VARCHAR(50) | UNIQUE | Mã số nhân viên |
-| `full_name` | VARCHAR(255) | NOT NULL | Họ và tên |
-| `email` | VARCHAR(255) | UNIQUE, NOT NULL | Email công ty |
-| `phone` | VARCHAR(50) | NULL | Số điện thoại |
-| `job_title` | VARCHAR(100) | NULL | Chức danh công việc |
-| `department_id` | UUID | REFERENCES departments(id) | Phòng ban trực thuộc |
-| `password_hash` | VARCHAR(255) | NOT NULL | Mật khẩu băm bằng BCrypt |
-| `status` | VARCHAR(20) | NOT NULL, DEFAULT 'ACTIVE' | ACTIVE, LOCKED, INACTIVE |
-| `failed_login_attempts` | INT | DEFAULT 0 | Đếm số lần đăng nhập sai |
-| `locked_until` | TIMESTAMPTZ | NULL | Thời điểm hết hạn tạm khóa 15p |
-| `locked_at` | TIMESTAMPTZ | NULL | Thời điểm bị Admin khóa thủ công |
-| `lock_reason` | TEXT | NULL | Lý do khóa tài khoản |
-| `locked_by` | UUID | REFERENCES users(id) | Admin thực hiện khóa |
-| `must_change_password`| BOOLEAN | DEFAULT false | Yêu cầu đổi mật khẩu lần đầu |
-| `last_login_at` | TIMESTAMPTZ | NULL | Thời điểm đăng nhập gần nhất |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Ngày tạo tài khoản |
-| `updated_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Ngày cập nhật |
-| `created_by` | UUID | REFERENCES users(id) | Người tạo |
-| `updated_by` | UUID | REFERENCES users(id) | Người cập nhật |
+### 4. `users` (Tài khoản người dùng)
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `employee_code` | VARCHAR(50) UNIQUE | Mã nhân viên (EMP001...) |
+| `full_name` | VARCHAR(255) | Họ và tên nhân viên |
+| `email` | VARCHAR(255) UNIQUE | Địa chỉ email đăng nhập |
+| `phone` | VARCHAR(50) | Số điện thoại liên lạc |
+| `job_title` | VARCHAR(100) | Chức danh công việc |
+| `department_id` | VARCHAR(36) FK | Phòng ban trực thuộc |
+| `password_hash` | VARCHAR(255) | Mật khẩu mã hóa BCrypt |
+| `status` | VARCHAR(20) | Trạng thái (ACTIVE, LOCKED, INACTIVE) |
+| `failed_login_attempts` | INT | Số lần đăng nhập sai liên tiếp |
+| `locked_until` | TIMESTAMP NULL | Thời điểm hết hạn tạm khóa 15 phút |
+| `must_change_password` | BOOLEAN | Cờ bắt buộc đổi mật khẩu khi đăng nhập |
+| `session_version` | INT | Phiên bản bảo mật để vô hiệu hóa phiên cũ |
 
-### 5. `user_roles` (Liên kết N-N Người dùng - Vai trò)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `user_id` | UUID | REFERENCES users(id) ON DELETE CASCADE | ID người dùng |
-| `role_id` | UUID | REFERENCES roles(id) ON DELETE CASCADE | ID vai trò |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời điểm gán |
-| *Khóa chính:* | (user_id, role_id) | | Không trùng lặp vai trò |
+### 5. `user_roles` (Quan hệ Người dùng - Vai trò: N-N)
+- `user_id` VARCHAR(36) FK
+- `role_id` VARCHAR(36) FK
+- Khóa chính kết hợp: `(user_id, role_id)`
 
-### 6. `role_permissions` (Liên kết N-N Vai trò - Quyền hạn)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `role_id` | UUID | REFERENCES roles(id) ON DELETE CASCADE | ID vai trò |
-| `permission_id` | UUID | REFERENCES permissions(id) ON DELETE CASCADE | ID quyền |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời điểm gán |
-| *Khóa chính:* | (role_id, permission_id) | | Không trùng lặp quyền |
+### 6. `role_permissions` (Quan hệ Vai trò - Quyền hạn: N-N)
+- `role_id` VARCHAR(36) FK
+- `permission_id` VARCHAR(36) FK
+- Khóa chính kết hợp: `(role_id, permission_id)`
 
-### 7. `refresh_tokens` (Phiên làm việc & Token xoay vòng)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh bản ghi token |
-| `user_id` | UUID | REFERENCES users(id) ON DELETE CASCADE | Chủ sở hữu token |
-| `token_hash` | VARCHAR(255) | UNIQUE, NOT NULL | Giá trị băm SHA-256 của token |
-| `expires_at` | TIMESTAMPTZ | NOT NULL | Thời điểm hết hạn (7 ngày) |
-| `revoked_at` | TIMESTAMPTZ | NULL | Thời điểm bị thu hồi |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời điểm tạo |
-| `replaced_by_token_id` | UUID | REFERENCES refresh_tokens(id) | Token xoay vòng thay thế |
-| `ip_address` | VARCHAR(45) | NULL | Địa chỉ IP đăng nhập |
-| `user_agent` | TEXT | NULL | Trình duyệt / thiết bị |
+### 7. `candidates` (Hồ sơ ứng viên)
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `requisition_id`| VARCHAR(36) FK | Yêu cầu tuyển dụng gắn kèm |
+| `full_name` | VARCHAR(255) | Họ tên ứng viên |
+| `email` | VARCHAR(255) | Email ứng viên |
+| `phone` | VARCHAR(50) | Số điện thoại |
+| `status` | VARCHAR(50) | Vòng tuyển dụng: APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED |
+| `cv_url` | TEXT | Đường dẫn file CV ứng viên |
+| `notes` | TEXT | Ghi chú đánh giá |
 
-### 8. `password_reset_tokens` (Token đặt lại mật khẩu)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh reset token |
-| `user_id` | UUID | REFERENCES users(id) ON DELETE CASCADE | Người yêu cầu |
-| `token_hash` | VARCHAR(255) | UNIQUE, NOT NULL | Băm SHA-256 của reset token |
-| `expires_at` | TIMESTAMPTZ | NOT NULL | Thời điểm hết hạn (30 phút) |
-| `used_at` | TIMESTAMPTZ | NULL | Thời điểm đã sử dụng |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời điểm tạo |
+### 8. `salary_ranges` (Dải lương theo vị trí)
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `department_id` | VARCHAR(36) FK | Đơn vị áp dụng |
+| `position_title`| VARCHAR(255) | Tên vị trí tuyển dụng |
+| `min_salary` | DECIMAL(15, 2) | Mức lương tối thiểu |
+| `max_salary` | DECIMAL(15, 2) | Mức lương tối đa |
+| `currency` | VARCHAR(10) | Đơn vị tiền tệ (mặc định VND) |
 
-### 9. `audit_logs` (Nhật ký kiểm toán an ninh)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh audit log |
-| `user_id` | UUID | REFERENCES users(id) ON DELETE SET NULL | Người thực hiện hành động |
-| `action` | VARCHAR(100) | NOT NULL | Hành động (LOGIN_SUCCESS, USER_LOCKED, ...) |
-| `entity_type` | VARCHAR(100) | NOT NULL | Loại đối tượng (USER, AUTH, ROLE, ...) |
-| `entity_id` | VARCHAR(100) | NULL | ID đối tượng bị tác động |
-| `description` | TEXT | NULL | Mô tả chi tiết hành động |
-| `ip_address` | VARCHAR(45) | NULL | Địa chỉ IP của client |
-| `user_agent` | TEXT | NULL | Thông tin trình duyệt/OS |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời gian ghi nhận |
+### 9. `audit_logs` (Nhật ký kiểm toán bảo mật)
+| Cột | Kiểu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | VARCHAR(36) PK | Khóa chính (UUID) |
+| `user_id` | VARCHAR(36) FK | Người thực hiện thao tác |
+| `action` | VARCHAR(100) | Mã hành động (LOGIN_SUCCESS, USER_LOCKED...) |
+| `entity_type` | VARCHAR(100) | Đối tượng thao tác |
+| `entity_id` | VARCHAR(100) | ID đối tượng |
+| `description` | TEXT | Mô tả chi tiết hành động |
+| `ip_address` | VARCHAR(45) | Địa chỉ IP của Client |
+| `user_agent` | TEXT | Thông tin trình duyệt/thiết bị |
+| `created_at` | TIMESTAMP | Thời gian thực hiện |
 
-### 10. `email_outbox` (Hàng đợi email gửi đi)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh thư |
-| `recipient` | VARCHAR(255) | NOT NULL | Địa chỉ email người nhận |
-| `subject` | VARCHAR(255) | NOT NULL | Tiêu đề thư |
-| `template` | VARCHAR(100) | NOT NULL | Loại mẫu thư (ACCOUNT_ACTIVATION, ...) |
-| `payload` | JSONB | NOT NULL | Dữ liệu tham số nội dung thư |
-| `status` | VARCHAR(20) | DEFAULT 'PENDING' | PENDING, SENT, FAILED |
-| `retry_count` | INT | DEFAULT 0 | Số lần thử lại |
-| `last_error` | TEXT | NULL | Chi tiết lỗi gửi thư nếu có |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Thời điểm xếp hàng đợi |
-| `sent_at` | TIMESTAMPTZ | NULL | Thời điểm gửi thành công |
+---
 
-### 11. `recruitment_requisitions` (Yêu cầu tuyển dụng - Phục vụ cảnh báo bàn giao S1-10)
-| Cột | Kiểu dữ liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `id` | UUID | PRIMARY KEY, DEFAULT gen_random_uuid() | Định danh yêu cầu |
-| `code` | VARCHAR(50) | UNIQUE, NOT NULL | Mã yêu cầu (REQ-2026-001) |
-| `title` | VARCHAR(255) | NOT NULL | Tiêu đề vị trí tuyển dụng |
-| `department_id` | UUID | REFERENCES departments(id) | Phòng ban yêu cầu |
-| `recruiter_id` | UUID | REFERENCES users(id) | Chuyên viên tuyển dụng phụ trách |
-| `hiring_manager_id`| UUID | REFERENCES users(id) | Trưởng bộ phận tuyển dụng |
-| `status` | VARCHAR(50) | NOT NULL, DEFAULT 'OPEN' | OPEN, CLOSED, DRAFT |
-| `created_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Ngày tạo |
-| `updated_at` | TIMESTAMPTZ | DEFAULT CURRENT_TIMESTAMP | Ngày cập nhật |
+## 3. CÁC TÀI KHOẢN MẪU KHỞI TẠO (SEED ACCOUNTS)
+Mật khẩu chung cho tất cả tài khoản mặc định: `Admin@123456`
+- **Quản trị hệ thống (Admin):** `admin@company.local` (Sở hữu toàn bộ quyền hạn)
+- **Trưởng phòng Nhân sự (HR Manager):** `hr.manager@company.local`
+- **Chuyên viên Tuyển dụng (Recruiter):** `recruiter@company.local`
+- **Trưởng bộ phận kỹ thuật (Hiring Manager):** `hiring.mgr@company.local`
+- **Người phỏng vấn (Interviewer):** `interviewer@company.local`
+- **Người phê duyệt (Approver):** `approver@company.local`
+- **Tài khoản đang bị khóa (Locked):** `locked.user@company.local`

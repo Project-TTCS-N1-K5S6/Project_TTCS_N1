@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma trận phân quyền - IRMS Platform</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SASS Compiled Stylesheet -->
+    <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+</head>
+<body>
+<div id="app-wrapper">
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="brand-logo">
+                <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+                <span>IRMS PLATFORM</span>
+            </a>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-header">TỔNG QUAN</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html"><i class="bi bi-grid-fill"></i><span>Bảng điều khiển</span></a>
+                </li>
+            </ul>
+            <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="candidates.html"><i class="bi bi-people-fill"></i><span>Hồ sơ &amp; Pipeline</span></a>
+                </li>
+            </ul>
+            <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="users.html"><i class="bi bi-person-badge-fill"></i><span>Tài khoản người dùng</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="permissions.html"><i class="bi bi-diagram-3-fill"></i><span>Ma trận phân quyền</span></a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="app-main">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button"><i class="bi bi-list"></i></button>
+                <div class="page-breadcrumb">
+                    <span class="text-muted fs-6"><i class="bi bi-house-door me-1"></i> IRMS</span>
+                    <span class="text-muted mx-2">/</span>
+                    <span class="fw-semibold text-dark fs-6">Ma trận phân quyền 10 Phân hệ</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                        <div class="user-avatar">A</div>
+                        <div class="d-none d-md-block text-start lh-1">
+                            <div class="fw-semibold text-dark fs-6">Nguyễn Quản Trị</div>
+                            <small class="text-muted">Quản trị hệ thống</small>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
+                        <li><a class="dropdown-item py-2 text-danger" href="index.html"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">Ma trận phân quyền RBAC</h4>
+                    <p class="text-muted small mb-0">Cấu hình chi tiết quyền hạn thao tác cho 10 phân hệ nghiệp vụ chuẩn.</p>
+                </div>
+            </div>
+
+            <!-- Role Tabs -->
+            <ul class="nav nav-pills gap-2 mb-4 p-2 bg-white rounded-3 border shadow-sm">
+                <li class="nav-item"><a class="nav-link" href="#">ADMIN</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#">HR_MANAGER</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">RECRUITER</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">HIRING_MANAGER</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">INTERVIEWER</a></li>
+            </ul>
+
+            <!-- Table -->
+            <div class="card mb-4 shadow-sm border">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-shaded text-primary me-2"></i> Phân quyền cho vai trò: Trưởng phòng Nhân sự (HR_MANAGER)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table matrix-table mb-0">
+                            <thead>
+                                <tr><th>STT</th><th style="width: 45%;">Tên quyền &amp; Mã</th><th>Mô tả</th><th class="text-center">Được phép</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr class="module-header"><td colspan="4"><i class="bi bi-folder2-open me-2"></i> Phân hệ: DEPARTMENTS</td></tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td class="permission-label"><div class="perm-name">Xem phòng ban &amp; tổ chức</div><div class="perm-code">department.view</div></td>
+                                    <td>Xem danh sách và cơ cấu các phòng ban</td>
+                                    <td class="text-center"><input class="form-check-input" type="checkbox" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td class="permission-label"><div class="perm-name">Quản lý tổ chức &amp; vị trí</div><div class="perm-code">departments.manage</div></td>
+                                    <td>Thiết lập danh mục cơ cấu tổ chức</td>
+                                    <td class="text-center"><input class="form-check-input" type="checkbox" checked></td>
+                                </tr>
+                                <tr class="module-header"><td colspan="4"><i class="bi bi-folder2-open me-2"></i> Phân hệ: CANDIDATES</td></tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td class="permission-label"><div class="perm-name">Xem hồ sơ ứng viên</div><div class="perm-code">candidates.view</div></td>
+                                    <td>Tra cứu danh sách hồ sơ ứng viên</td>
+                                    <td class="text-center"><input class="form-check-input" type="checkbox" checked></td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td class="permission-label"><div class="perm-name">Quản lý ứng viên &amp; Pipeline</div><div class="perm-code">candidates.manage</div></td>
+                                    <td>Thêm mới, chuyển đổi vòng tuyển dụng</td>
+                                    <td class="text-center"><input class="form-check-input" type="checkbox" checked></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white p-3 text-end">
+                    <button class="btn btn-primary" onclick="alert('Đã lưu cấu hình phân quyền thành công!')"><i class="bi bi-save me-1"></i> Lưu cấu hình phân quyền</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <div>&copy; 2026 IRMS Platform. All rights reserved.</div>
+            <div class="text-muted">Frontend: <strong>Bootstrap 5 &amp; SASS</strong> &bull; Backend: <strong>Java Servlet &amp; MySQL</strong></div>
+        </footer>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../src/main/webapp/assets/js/main.js"></script>
+</body>
+</html>

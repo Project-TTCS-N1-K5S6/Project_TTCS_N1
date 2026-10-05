@@ -1,0 +1,13 @@
+// ============================================================
+// SASS LAYOUTS - Footer
+// File: frontend/assets/scss/layouts/_footer.scss
+// ============================================================
+
+.app-footer {
+  padding: 1rem 1.75rem;
+  border-top: 1px solid $border-color;
+  background-color: $card-bg;
+  color: $text-muted;
+  font-size: 0.85rem;
+  @include flex-between;
+}

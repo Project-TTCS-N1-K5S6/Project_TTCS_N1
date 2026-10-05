@@ -1,0 +1,30 @@
+// ============================================================
+// SASS COMPONENTS - Buttons
+// File: frontend/assets/scss/components/_buttons.scss
+// ============================================================
+
+.btn {
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  @include transition(all, 0.2s, ease);
+
+  &-primary {
+    background-color: $primary;
+    border-color: $primary;
+    color: #ffffff;
+    &:hover {
+      background-color: $primary-hover;
+      border-color: $primary-hover;
+    }
+  }
+
+  &-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.825rem;
+  }
+}

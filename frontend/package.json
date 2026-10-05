@@ -1,29 +1,17 @@
 {
   "name": "irms-frontend",
-  "private": true,
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
+  "description": "Internal Recruitment Management System (IRMS) - Frontend Bootstrap 5, HTML, CSS, JS, SASS",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "sass:build": "sass assets/scss/main.scss assets/css/main.css --no-source-map",
+    "sass:watch": "sass --watch assets/scss/main.scss:assets/css/main.css"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.5.2",
-    "antd": "^5.22.5",
-    "axios": "^1.7.9",
-    "dayjs": "^1.11.13",
-    "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0"
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.3"
+    "sass": "^1.85.0"
   }
 }
