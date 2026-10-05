@@ -207,9 +207,9 @@ public class EmailService {
      * In nội dung email ra màn hình Terminal phục vụ kiểm thử nhanh
      */
     private static void printConsoleEmail(String to, String subject, String htmlContent) {
-        System.out.println("\n" + "=".repeat(75));
+        System.out.println("\n===========================================================================");
         System.out.println("📧 [IRMS DEV EMAIL CONSOLE] - EMAIL MỚI ĐÃ ĐƯỢC TẠO RA");
-        System.out.println("-".repeat(75));
+        System.out.println("---------------------------------------------------------------------------");
         System.out.println("Gửi đến:  " + to);
         System.out.println("Tiêu đề:  " + subject);
         
@@ -236,7 +236,7 @@ public class EmailService {
                 }
             }
         }
-        System.out.println("=".repeat(75) + "\n");
+        System.out.println("===========================================================================\n");
     }
 
     /**
