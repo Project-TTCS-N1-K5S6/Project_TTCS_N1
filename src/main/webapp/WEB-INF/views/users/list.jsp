@@ -532,18 +532,18 @@
 
                         <!-- Bảng xem trước dữ liệu chi tiết -->
                         <div class="table-responsive border rounded-3 mb-3" style="max-height: 420px; overflow-y: auto;">
-                            <table class="table table-sm table-hover align-middle mb-0" id="previewTable">
+                            <table class="table table-sm table-hover align-middle mb-0" id="previewTable" style="min-width: 980px;">
                                 <thead class="table-light sticky-top">
-                                    <tr class="small text-muted">
+                                    <tr class="small text-muted text-nowrap">
                                         <th class="text-center" style="width: 50px;">STT</th>
                                         <th class="text-center" style="width: 60px;">Dòng</th>
                                         <th style="width: 100px;">Mã NV</th>
-                                        <th>Họ và tên</th>
-                                        <th>Email công ty</th>
-                                        <th>Phòng ban</th>
-                                        <th>Vai trò</th>
-                                        <th class="text-center" style="width: 90px;">Trạng thái</th>
-                                        <th style="min-width: 200px;">Chi tiết lỗi</th>
+                                        <th style="width: 160px;">Họ và tên</th>
+                                        <th style="width: 200px;">Email công ty</th>
+                                        <th style="width: 170px;">Phòng ban</th>
+                                        <th style="width: 180px;">Vai trò</th>
+                                        <th class="text-center" style="width: 110px;">Trạng thái</th>
+                                        <th style="min-width: 220px;">Chi tiết lỗi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="previewTableBody" class="small">

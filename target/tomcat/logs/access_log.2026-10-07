@@ -69,3 +69,12 @@
 0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:12:42 +0700] "GET /salary-ranges HTTP/1.1" 200 21625 http-bio-8080-exec-7 1302
 0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:12:46 +0700] "GET /admin/users HTTP/1.1" 200 145061 http-bio-8080-exec-4 104
 0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:12:57 +0700] "POST /admin/users/validate-excel HTTP/1.1" 200 7646 http-bio-8080-exec-4 99
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:49:46 +0700] "GET / HTTP/1.1" 302 - http-bio-8080-exec-1 30
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:49:47 +0700] "GET /auth/login HTTP/1.1" 200 5169 http-bio-8080-exec-3 891
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:49:49 +0700] "POST /auth/login HTTP/1.1" 302 - http-bio-8080-exec-4 122
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:49:50 +0700] "GET /dashboard HTTP/1.1" 200 27219 http-bio-8080-exec-5 657
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:49:57 +0700] "GET /admin/users HTTP/1.1" 200 145061 http-bio-8080-exec-6 258
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:49:57 +0700] "GET /assets/js/users.js HTTP/1.1" 200 17608 http-bio-8080-exec-7 3
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:50:00 +0700] "GET /admin/users/excel-template HTTP/1.1" 200 4180 http-bio-8080-exec-8 528
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:50:12 +0700] "POST /admin/users/validate-excel HTTP/1.1" 200 1508 http-bio-8080-exec-9 147
+0:0:0:0:0:0:0:1 - - [07/Oct/2026:17:50:38 +0700] "POST /admin/users/validate-excel HTTP/1.1" 200 7646 http-bio-8080-exec-10 143

@@ -280,18 +280,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let statusBadge = row.valid
                 ? '<span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Hợp lệ</span>'
-                : '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Lỗi</span>';
+                : '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="bi bi-exclamation-circle-fill me-1"></i>Lỗi (' + row.errors.length + ')</span>';
 
             tr.innerHTML = `
-                <td class="text-center text-muted">\${idx + 1}</td>
-                <td class="text-center font-monospace fw-bold text-secondary">\${row.rowNumber}</td>
-                <td class="font-monospace fw-bold">\${escapeHtml(row.employeeCode || '-')}</td>
-                <td class="fw-semibold text-dark">\${escapeHtml(row.fullName || '-')}</td>
-                <td>\${escapeHtml(row.email || '-')}</td>
-                <td>\${escapeHtml(row.departmentName || 'Chưa gán')}</td>
-                <td><span class="badge bg-light text-dark border">\${escapeHtml(row.rolesRaw || '-')}</span></td>
-                <td class="text-center">\${statusBadge}</td>
-                <td>\${errorHtml}</td>
+                <td class="text-center text-muted">${idx + 1}</td>
+                <td class="text-center font-monospace fw-bold text-secondary">${row.rowNumber}</td>
+                <td class="font-monospace fw-bold">${escapeHtml(row.employeeCode || '-')}</td>
+                <td class="fw-semibold text-dark">${escapeHtml(row.fullName || '-')}</td>
+                <td>${escapeHtml(row.email || '-')}</td>
+                <td>${escapeHtml(row.departmentName || 'Chưa gán')}</td>
+                <td><span class="badge bg-light text-dark border">${escapeHtml(row.rolesRaw || '-')}</span></td>
+                <td class="text-center">${statusBadge}</td>
+                <td>${errorHtml}</td>
             `;
             previewTableBody.appendChild(tr);
         });
@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const div = document.createElement('div');
                 div.className = 'border-bottom py-1';
                 const errText = (item.errors && item.errors.length > 0) ? item.errors.join('; ') : 'Lỗi không xác định';
-                div.innerHTML = `<strong>Dòng \${item.rowNumber}:</strong> \${escapeHtml(item.fullName || item.email || item.employeeCode || 'Không tên')} - <span class="text-danger">\${escapeHtml(errText)}</span>`;
+                div.innerHTML = `<strong>Dòng ${item.rowNumber}:</strong> ${escapeHtml(item.fullName || item.email || item.employeeCode || 'Không tên')} - <span class="text-danger">${escapeHtml(errText)}</span>`;
                 resFailedList.appendChild(div);
             });
         } else {

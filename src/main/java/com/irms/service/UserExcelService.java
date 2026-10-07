@@ -20,13 +20,13 @@ import java.util.regex.Pattern;
  * DỊCH VỤ XỬ LÝ NHẬP DANH SÁCH NHÂN SỰ TỪ FILE EXCEL (UserExcelService)
  * ==============================================================================
  * Tuân thủ nghiêm ngặt các nguyên tắc:
- * 1. Đọc và tạo đúng chuẩn file Excel .xlsx.
+ * 1. Đọc và tạo đúng chuẩn file Excel .xlsx gồm 2 sheet: DanhSachNhanSu & HuongDan.
  * 2. Validate 2 lớp: trùng lặp trong file và trùng lặp trong cơ sở dữ liệu.
- * 3. Đối chiếu danh mục vai trò và phòng ban với database; hỗ trợ nhiều vai trò (cách nhau bởi ';').
- * 4. Không tạo role/department mới nếu không tồn tại.
+ * 3. Đối chiếu danh mục vai trò và phòng ban với database; hỗ trợ nhiều vai trò (phân tách bởi ',' hoặc ';').
+ * 4. Không tự tạo role/department mới nếu không tồn tại.
  * 5. Báo lỗi chi tiết theo từng dòng; cho phép Import Partial Success (nhập các dòng hợp lệ, bỏ qua dòng lỗi).
- * 6. Tái sử dụng 100% logic userService.createUser(...) hiện tại để tạo tài khoản, sinh mật khẩu tạm,
- *    gửi email kích hoạt và ghi nhật ký kiểm toán.
+ * 6. Tái sử dụng 100% logic userService.createUser(...) để đảm bảo tạo tài khoản, sinh mật khẩu tạm,
+ *    gửi email kích hoạt và ghi nhật ký kiểm toán giống hệt tạo thủ công.
  * ==============================================================================
  */
 public class UserExcelService {
@@ -42,12 +42,16 @@ public class UserExcelService {
 
     /**
      * Tạo file Excel mẫu chính thức (.xlsx) phục vụ tải về
+     * Gồm Sheet 1 "DanhSachNhanSu" và Sheet 2 "HuongDan"
      */
     public void generateTemplate(OutputStream out) throws Exception {
         try (Workbook workbook = new XSSFWorkbook()) {
+            // ==========================================
+            // SHEET 1: DANH SÁCH NHÂN SỰ CẦN NHẬP
+            // ==========================================
             Sheet sheet = workbook.createSheet("DanhSachNhanSu");
 
-            // Tạo Header Style
+            // Header Style
             CellStyle headerStyle = workbook.createCellStyle();
             Font headerFont = workbook.createFont();
             headerFont.setBold(true);
@@ -63,7 +67,7 @@ public class UserExcelService {
             headerStyle.setBorderLeft(BorderStyle.THIN);
             headerStyle.setBorderRight(BorderStyle.THIN);
 
-            // Tạo Data Style (Text format cho Mã NV và Phone để không mất số 0)
+            // Data Style (Text format cho Mã NV và SĐT để bảo toàn số 0 ở đầu)
             DataFormat dataFormat = workbook.createDataFormat();
             CellStyle textStyle = workbook.createCellStyle();
             textStyle.setDataFormat(dataFormat.getFormat("@"));
@@ -78,7 +82,7 @@ public class UserExcelService {
             normalStyle.setBorderLeft(BorderStyle.THIN);
             normalStyle.setBorderRight(BorderStyle.THIN);
 
-            // 1. Dòng Header
+            // Dòng Tiêu đề (Header)
             Row headerRow = sheet.createRow(0);
             headerRow.setHeightInPoints(28);
 
@@ -98,34 +102,43 @@ public class UserExcelService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // 2. Dòng dữ liệu mẫu minh họa
+            // Dữ liệu mẫu tham khảo
             String[][] sampleData = {
                     {
-                            "EMP010",
-                            "Quản trị hệ thống",
+                            "EMP020",
+                            "Chuyên viên tuyển dụng",
                             "Nguyễn Văn An",
                             "an.nv@company.local",
-                            "0901000010",
-                            "Chuyên viên Quản trị Hệ thống",
-                            "Khối Công nghệ Thông tin"
-                    },
-                    {
-                            "EMP011",
-                            "Chuyên viên tuyển dụng;Người phỏng vấn",
-                            "Trần Minh Châu",
-                            "chau.tm@company.local",
-                            "0901000011",
-                            "Senior IT Recruiter",
+                            "0901000020",
+                            "Chuyên viên tuyển dụng",
                             "Ban Nhân sự & Tuyển dụng"
                     },
                     {
-                            "EMP012",
-                            "Trưởng bộ phận chuyên môn",
-                            "Lê Hoàng Long",
-                            "long.lh@company.local",
-                            "0901000012",
-                            "Tech Lead / Solution Architect",
+                            "EMP021",
+                            "Người phỏng vấn",
+                            "Trần Minh Châu",
+                            "chau.tm@company.local",
+                            "0901000021",
+                            "Chuyên viên chuyên môn",
                             "Khối Công nghệ Thông tin"
+                    },
+                    {
+                            "EMP022",
+                            "Chuyên viên tuyển dụng, Người phỏng vấn",
+                            "Bùi Ngọc Ánh",
+                            "anh.bn@company.local",
+                            "0901000022",
+                            "Senior Recruiter & Interviewer",
+                            "Ban Nhân sự & Tuyển dụng"
+                    },
+                    {
+                            "EMP023",
+                            "Ứng viên",
+                            "Đỗ Minh Khang",
+                            "khang.dm@company.local",
+                            "0901000023",
+                            "Ứng viên",
+                            ""
                     }
             };
 
@@ -143,24 +156,98 @@ public class UserExcelService {
                 }
             }
 
-            // Thiết lập độ rộng cột hợp lý
-            int[] colWidths = {15, 38, 25, 30, 18, 30, 32};
+            int[] colWidths = {16, 38, 25, 32, 18, 30, 32};
             for (int i = 0; i < colWidths.length; i++) {
                 sheet.setColumnWidth(i, colWidths[i] * 256);
             }
+
+            // ==========================================
+            // SHEET 2: HƯỚNG DẪN VÀ DANH MỤC THAM CHIẾU
+            // ==========================================
+            Sheet guideSheet = workbook.createSheet("HuongDan");
+
+            CellStyle titleStyle = workbook.createCellStyle();
+            Font titleFont = workbook.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 13);
+            titleFont.setColor(IndexedColors.DARK_BLUE.getIndex());
+            titleStyle.setFont(titleFont);
+
+            CellStyle boldStyle = workbook.createCellStyle();
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            boldStyle.setFont(boldFont);
+
+            int gRow = 0;
+            Row rTitle = guideSheet.createRow(gRow++);
+            Cell cTitle = rTitle.createCell(0);
+            cTitle.setCellValue("HƯỚNG DẪN ĐIỀN THÔNG TIN TẬP TIN NHẬP NHÂN SỰ");
+            cTitle.setCellStyle(titleStyle);
+
+            gRow++; // Blank row
+
+            Row rNote1 = guideSheet.createRow(gRow++);
+            rNote1.createCell(0).setCellValue("1. QUY TẮC CÁC CỘT DỮ LIỆU:");
+            rNote1.getCell(0).setCellStyle(boldStyle);
+
+            String[][] colRules = {
+                    {"Mã NV", "Bắt buộc. Định dạng chuỗi (ví dụ: EMP010). Không được trùng trong file và trong hệ thống."},
+                    {"Vai trò phân quyền", "Bắt buộc. Tên hoặc Mã vai trò. Có thể gán nhiều vai trò bằng cách ngăn cách bởi dấu phẩy (,) hoặc chấm phẩy (;)."},
+                    {"Họ và tên", "Bắt buộc. Họ và tên đầy đủ của nhân sự."},
+                    {"Email công ty", "Bắt buộc. Định dạng email hợp lệ (ví dụ: user@company.local). Không được trùng lặp."},
+                    {"Số điện thoại", "Tùy chọn. Chuỗi số điện thoại liên hệ."},
+                    {"Chức vụ / Vị trí", "Tùy chọn. Tên chức vụ chuyên môn (ví dụ: Trưởng nhóm, Recruiter)."},
+                    {"Phòng ban trực thuộc", "Tùy chọn (với ứng viên có thể để trống). Tên hoặc Mã phòng ban hợp lệ trong hệ thống."}
+            };
+
+            for (String[] cr : colRules) {
+                Row rRule = guideSheet.createRow(gRow++);
+                rRule.createCell(0).setCellValue("- " + cr[0] + ":");
+                rRule.getCell(0).setCellStyle(boldStyle);
+                rRule.createCell(1).setCellValue(cr[1]);
+            }
+
+            gRow++; // Blank row
+
+            Row rNote2 = guideSheet.createRow(gRow++);
+            rNote2.createCell(0).setCellValue("2. DANH MỤC VAI TRÒ HỢP LỆ TRONG HỆ THỐNG:");
+            rNote2.getCell(0).setCellStyle(boldStyle);
+
+            List<Role> dbRoles = roleDAO.findAll();
+            for (Role role : dbRoles) {
+                Row rR = guideSheet.createRow(gRow++);
+                rR.createCell(0).setCellValue("  • " + role.getName() + " (" + role.getCode() + ")");
+                rR.createCell(1).setCellValue(role.getDescription() != null ? role.getDescription() : "");
+            }
+
+            gRow++; // Blank row
+
+            Row rNote3 = guideSheet.createRow(gRow++);
+            rNote3.createCell(0).setCellValue("3. DANH MỤC PHÒNG BAN HỢP LỆ TRONG HỆ THỐNG:");
+            rNote3.getCell(0).setCellStyle(boldStyle);
+
+            List<Department> dbDepts = departmentDAO.findAll();
+            for (Department dept : dbDepts) {
+                Row rD = guideSheet.createRow(gRow++);
+                rD.createCell(0).setCellValue("  • " + dept.getName() + " (" + dept.getCode() + ")");
+                rD.createCell(1).setCellValue(dept.getDescription() != null ? dept.getDescription() : "");
+            }
+
+            guideSheet.setColumnWidth(0, 42 * 256);
+            guideSheet.setColumnWidth(1, 65 * 256);
 
             workbook.write(out);
         }
     }
 
     /**
-     * Đọc file Excel, validate 2 lớp và trả về danh sách kết quả Preview
+     * Đọc file Excel, validate 2 lớp và trả về danh sách kết quả Preview chi tiết
      */
     public Map<String, Object> parseAndValidate(InputStream inputStream) throws Exception {
         List<ExcelUserRow> resultRows = new ArrayList<>();
         DataFormatter formatter = new DataFormatter();
 
-        // 1. Tải trước danh mục Role và Department từ DB vào RAM
+        // 1. Tải danh mục Role và Department từ DB vào RAM để tra cứu nhanh
         List<Role> allRoles = roleDAO.findAll();
         List<Department> allDepts = departmentDAO.findAll();
 
@@ -178,17 +265,31 @@ public class UserExcelService {
             if (d.getCode() != null) deptByCodeMap.put(normalize(d.getCode()), d);
         }
 
-        // 2. Tải toàn bộ Mã NV và Email hiện có trong DB (đáp ứng Mục 14: gom kiểm tra trong RAM)
+        // 2. Tải toàn bộ Mã NV và Email hiện có trong DB (gom kiểm tra trong RAM)
         Set<String> dbEmployeeCodes = userDAO.getAllEmployeeCodes();
         Set<String> dbEmails = userDAO.getAllEmails();
 
-        // 3. Set lưu trữ để phát hiện trùng lặp ngay trong file Excel
+        // 3. Set phát hiện trùng lặp ngay trong file Excel
         Set<String> fileEmployeeCodes = new HashSet<>();
         Set<String> fileEmails = new HashSet<>();
 
         // 4. Mở và đọc workbook
         try (Workbook workbook = WorkbookFactory.create(inputStream)) {
-            Sheet sheet = workbook.getSheetAt(0);
+            // Tìm sheet "DanhSachNhanSu" hoặc sheet đầu tiên phù hợp
+            Sheet sheet = workbook.getSheet("DanhSachNhanSu");
+            if (sheet == null) {
+                for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+                    String sName = workbook.getSheetName(i).toLowerCase();
+                    if (sName.contains("nhansu") || sName.contains("danhsach") || sName.contains("nhân sự")) {
+                        sheet = workbook.getSheetAt(i);
+                        break;
+                    }
+                }
+            }
+            if (sheet == null) {
+                sheet = workbook.getSheetAt(0);
+            }
+
             if (sheet == null || sheet.getPhysicalNumberOfRows() == 0) {
                 throw new Exception("File Excel không có dữ liệu.");
             }
@@ -211,6 +312,11 @@ public class UserExcelService {
                 String phone = getCellString(row.getCell(4), formatter);
                 String jobTitle = getCellString(row.getCell(5), formatter);
                 String deptName = getCellString(row.getCell(6), formatter);
+
+                // Chuẩn hóa định dạng số điện thoại nếu bị mất số 0 ở đầu
+                if (phone.matches("^[1-9][0-9]{8}$")) {
+                    phone = "0" + phone;
+                }
 
                 // Nếu dòng hoàn toàn trống thì bỏ qua
                 if (empCode.isEmpty() && rolesRaw.isEmpty() && fullName.isEmpty() &&
@@ -271,11 +377,12 @@ public class UserExcelService {
                     }
                 }
 
-                // 4. Vai trò phân quyền (Hỗ trợ nhiều vai trò: 'Vai trò 1;Vai trò 2')
+                // 4. Vai trò phân quyền (Hỗ trợ nhiều vai trò phân tách bởi ',' hoặc ';')
                 if (rolesRaw.isEmpty()) {
                     rowData.addError("Thiếu Vai trò phân quyền");
                 } else {
-                    String[] roleParts = rolesRaw.split(";");
+                    // Hỗ trợ cả dấu phẩy, chấm phẩy và xuống dòng
+                    String[] roleParts = rolesRaw.split("[,;\\n/]+");
                     List<String> matchedRoleIds = new ArrayList<>();
                     List<String> matchedRoleNames = new ArrayList<>();
                     boolean allRolesFound = true;
@@ -377,11 +484,24 @@ public class UserExcelService {
 
                 try {
                     User u = new User();
-                    u.setEmployeeCode(row.getEmployeeCode());
-                    u.setFullName(row.getFullName());
-                    u.setEmail(row.getEmail());
-                    u.setPhone(row.getPhone());
-                    u.setJobTitle(row.getJobTitle());
+                    String empCode = row.getEmployeeCode() != null ? row.getEmployeeCode().trim() : null;
+                    if (empCode != null && empCode.isEmpty()) empCode = null;
+                    u.setEmployeeCode(empCode);
+
+                    u.setFullName(row.getFullName() != null ? row.getFullName().trim() : "");
+                    u.setEmail(row.getEmail() != null ? row.getEmail().trim() : "");
+
+                    String phone = row.getPhone() != null ? row.getPhone().trim() : null;
+                    if (phone != null && phone.isEmpty()) phone = null;
+                    if (phone != null && phone.matches("^[1-9][0-9]{8}$")) {
+                        phone = "0" + phone;
+                    }
+                    u.setPhone(phone);
+
+                    String jobTitle = row.getJobTitle() != null ? row.getJobTitle().trim() : null;
+                    if (jobTitle != null && jobTitle.isEmpty()) jobTitle = null;
+                    u.setJobTitle(jobTitle);
+
                     u.setDepartmentId(row.getDepartmentId());
                     u.setStatus("ACTIVE");
 
@@ -427,6 +547,9 @@ public class UserExcelService {
 
     private String normalize(String s) {
         if (s == null) return "";
-        return s.trim().toLowerCase().replaceAll("\\s+", " ");
+        return s.replace('\u00A0', ' ')
+                .trim()
+                .toLowerCase()
+                .replaceAll("\\s+", " ");
     }
 }
