@@ -33,6 +33,12 @@
             <div>${successMessage}</div>
         </div>
     </c:if>
+    <c:if test="${not empty errorMessage}">
+        <div class="alert alert-danger py-2 px-3 mb-4 small d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>${errorMessage}</div>
+        </div>
+    </c:if>
 
     <form action="${pageContext.request.contextPath}/auth/forgot-password" method="POST">
         <div class="form-floating mb-4">
