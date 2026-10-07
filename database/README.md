@@ -13,8 +13,10 @@
 
 ```text
 database/
-├── schema.sql    <- DDL: Lược đồ tạo Database, 13 bảng quan hệ, ràng buộc FK và Index
+├── schema.sql    <- DDL: Lược đồ tạo Database, 14 bảng quan hệ, ràng buộc FK và Index
 ├── seed.sql      <- DML: Dữ liệu mẫu ban đầu (30 quyền hạn, 7 vai trò, người dùng, dải lương)
+├── migrations/
+│   └── 20261007_shared_catalogs.sql <- Nâng cấp CSDL hiện có cho danh mục dùng chung
 └── README.md     <- Tài liệu hướng dẫn cài đặt & lược đồ dữ liệu
 ```
 
@@ -46,9 +48,12 @@ database/
 8. **`password_reset_tokens`**: Token cấp lại mật khẩu tạm thời (`id`, `user_id`, `token_hash`, `expires_at`, `used_at`).
 9. **`audit_logs`**: Nhật ký kiểm toán bảo mật truy vết mọi thao tác (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `description`, `ip_address`, `user_agent`, `created_at`).
 10. **`email_outbox`**: Hòm thư lưu vết các email hệ thống gửi đi (`id`, `recipient`, `subject`, `template`, `payload`, `status`).
-11. **`recruitment_requisitions`**: Yêu cầu tuyển dụng nhân sự (`id`, `code`, `title`, `department_id`, `recruiter_id`, `hiring_manager_id`, `status`).
-12. **`candidates`**: Hồ sơ ứng viên & Pipeline (`id`, `requisition_id`, `full_name`, `email`, `phone`, `status`, `cv_url`, `notes`).
-13. **`salary_ranges`**: Dải lương ngân sách theo vị trí (`id`, `department_id`, `position_title`, `min_salary`, `max_salary`, `currency`).
+11. **`shared_catalogs`**: Nguồn ứng viên, lý do loại hồ sơ, địa điểm làm việc và hình thức làm việc; thứ tự hiển thị được quản lý theo từng loại.
+12. **`recruitment_requisitions`**: Yêu cầu tuyển dụng nhân sự (`id`, `code`, `title`, `department_id`, `recruiter_id`, `hiring_manager_id`, `work_location_id`, `work_mode_id`, `status`).
+13. **`candidates`**: Hồ sơ ứng viên & Pipeline (`id`, `requisition_id`, `application_source_id`, `rejection_reason_id`, `full_name`, `email`, `phone`, `status`, `cv_url`, `notes`).
+14. **`salary_ranges`**: Dải lương ngân sách theo vị trí (`id`, `department_id`, `position_title`, `min_salary`, `max_salary`, `currency`).
+
+Giá trị danh mục đang được ứng viên hoặc yêu cầu tuyển dụng tham chiếu không thể bị xóa nhờ kiểm tra ứng dụng và khóa ngoại `ON DELETE RESTRICT`.
 
 ---
 
@@ -61,7 +66,7 @@ docker compose up -d mysql
 ```
 Container `irms-mysql` sẽ tự động:
 1. Tạo database `ttcs_db` với charset `utf8mb4`.
-2. Thực thi `schema.sql` để tạo toàn bộ 13 bảng và chỉ mục.
+2. Thực thi `schema.sql` để tạo toàn bộ 14 bảng và chỉ mục.
 3. Thực thi `seed.sql` để nạp dữ liệu mẫu ban đầu.
 
 ### Cách 2: Sử dụng MySQL Server cục bộ (MySQL Workbench / Command Line)
@@ -72,6 +77,8 @@ USE ttcs_db;
 SOURCE database/schema.sql;
 SOURCE database/seed.sql;
 ```
+
+Với CSDL đã được khởi tạo trước đó, chạy một lần `database/migrations/20261007_shared_catalogs.sql` thay vì chạy lại `schema.sql` (schema sẽ tạo lại bảng và làm mất dữ liệu hiện có).
 
 ---
 

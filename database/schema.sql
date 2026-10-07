@@ -154,7 +154,20 @@ CREATE TABLE email_outbox (
     sent_at TIMESTAMP NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 11. Bảng Yêu cầu tuyển dụng (recruitment_requisitions)
+-- 11. Danh mục dùng chung cho các biểu mẫu tuyển dụng
+DROP TABLE IF EXISTS shared_catalogs;
+CREATE TABLE shared_catalogs (
+    id VARCHAR(36) PRIMARY KEY,
+    type_code ENUM('APPLICATION_SOURCE', 'REJECTION_REASON', 'WORK_LOCATION', 'WORK_MODE') NOT NULL,
+    value VARCHAR(255) NOT NULL,
+    display_order INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uq_shared_catalog_type_value UNIQUE (type_code, value),
+    INDEX idx_shared_catalog_order (type_code, display_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Bảng Yêu cầu tuyển dụng (recruitment_requisitions)
 DROP TABLE IF EXISTS recruitment_requisitions;
 CREATE TABLE recruitment_requisitions (
     id VARCHAR(36) PRIMARY KEY,
@@ -163,19 +176,25 @@ CREATE TABLE recruitment_requisitions (
     department_id VARCHAR(36) NULL,
     recruiter_id VARCHAR(36) NULL,
     hiring_manager_id VARCHAR(36) NULL,
+    work_location_id VARCHAR(36) NULL,
+    work_mode_id VARCHAR(36) NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'OPEN', -- 'OPEN', 'CLOSED', 'DRAFT'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_req_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
     CONSTRAINT fk_req_recruiter FOREIGN KEY (recruiter_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_req_manager FOREIGN KEY (hiring_manager_id) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_req_manager FOREIGN KEY (hiring_manager_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_req_work_location FOREIGN KEY (work_location_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_req_work_mode FOREIGN KEY (work_mode_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 12. Bảng Ứng viên (candidates)
+-- 13. Bảng Ứng viên (candidates)
 DROP TABLE IF EXISTS candidates;
 CREATE TABLE candidates (
     id VARCHAR(36) PRIMARY KEY,
     requisition_id VARCHAR(36) NULL,
+    application_source_id VARCHAR(36) NULL,
+    rejection_reason_id VARCHAR(36) NULL,
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
@@ -184,10 +203,12 @@ CREATE TABLE candidates (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL
+    CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL,
+    CONSTRAINT fk_cand_application_source FOREIGN KEY (application_source_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_cand_rejection_reason FOREIGN KEY (rejection_reason_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 13. Bảng Dải lương theo vị trí (salary_ranges)
+-- 14. Bảng Dải lương theo vị trí (salary_ranges)
 DROP TABLE IF EXISTS salary_ranges;
 CREATE TABLE salary_ranges (
     id VARCHAR(36) PRIMARY KEY,

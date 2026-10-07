@@ -70,6 +70,14 @@
                         </a>
                     </li>
                 </c:if>
+                <c:if test="${currentUser.hasRole('ADMIN')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'shared-catalogs' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/shared-catalogs">
+                            <i class="bi bi-list-check"></i>
+                            <span>Danh mục dùng chung</span>
+                        </a>
+                    </li>
+                </c:if>
                 <c:if test="${currentUser.hasPermission('roles.view') || currentUser.hasRole('ADMIN')}">
                     <li class="nav-item">
                         <a class="nav-link ${activeMenu == 'roles' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/roles">

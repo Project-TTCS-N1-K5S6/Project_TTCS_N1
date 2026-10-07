@@ -68,7 +68,7 @@
                                 <th>Vị trí &amp; Hồ sơ</th>
                                 <th class="d-none d-md-table-cell">Liên hệ</th>
                                 <th>Giai đoạn Pipeline</th>
-                                <th class="d-none d-xl-table-cell">Ghi chú</th>
+                                <th class="d-none d-xl-table-cell">Lý do loại / ghi chú</th>
                                 <th class="text-end pe-3" style="min-width: 140px;">Chuyển vòng</th>
                             </tr>
                         </thead>
@@ -78,6 +78,9 @@
                                     <td>
                                         <div class="fw-bold text-dark">${c.fullName}</div>
                                         <small class="text-muted d-block">Nộp: <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy" /></small>
+                                        <c:if test="${not empty c.applicationSourceName}">
+                                            <small class="text-muted d-block"><i class="bi bi-globe2 me-1"></i><c:out value="${c.applicationSourceName}" /></small>
+                                        </c:if>
                                         <!-- Mobile contact info -->
                                         <div class="d-md-none text-muted small mt-1">
                                             <div><i class="bi bi-envelope me-1"></i> ${c.email}</div>
@@ -103,12 +106,17 @@
                                         <span class="badge ${c.getStatusBadgeClass()}">${c.getStatusLabel()}</span>
                                     </td>
                                     <td class="small text-muted text-wrap-break d-none d-xl-table-cell" style="max-width: 180px;">
-                                        ${c.notes != null ? c.notes : '-'}
+                                        <c:if test="${not empty c.rejectionReasonName}">
+                                            <div class="mb-1"><strong>Lý do loại:</strong> <c:out value="${c.rejectionReasonName}" /></div>
+                                        </c:if>
+                                        <c:out value="${empty c.notes ? '-' : c.notes}" />
                                     </td>
                                     <td class="text-end pe-3">
-                                        <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST" class="d-inline-flex gap-1 align-items-center justify-content-end">
+                                        <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST"
+                                              class="candidate-status-form d-inline-flex flex-column gap-1 align-items-end"
+                                              data-current-status="${c.status}" data-current-reason="${c.rejectionReasonId}">
                                             <input type="hidden" name="candidateId" value="${c.id}">
-                                            <select class="form-select form-select-sm" name="status" onchange="this.form.submit()" style="width: 130px; font-size: 0.8rem;">
+                                            <select class="form-select form-select-sm" name="status" onchange="toggleCandidateStatusForm(this)" style="width: 140px; font-size: 0.8rem;">
                                                 <option value="APPLIED" ${c.status == 'APPLIED' ? 'selected' : ''}>Mới ứng tuyển</option>
                                                 <option value="SCREENING" ${c.status == 'SCREENING' ? 'selected' : ''}>Sàng lọc CV</option>
                                                 <option value="INTERVIEWING" ${c.status == 'INTERVIEWING' ? 'selected' : ''}>Phỏng vấn</option>
@@ -116,6 +124,20 @@
                                                 <option value="HIRED" ${c.status == 'HIRED' ? 'selected' : ''}>Trúng tuyển</option>
                                                 <option value="REJECTED" ${c.status == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
                                             </select>
+                                            <div class="rejection-reason-field ${c.status == 'REJECTED' ? '' : 'd-none'}">
+                                                <select class="form-select form-select-sm" name="rejectionReasonId"
+                                                        aria-label="Lý do loại hồ sơ" onchange="toggleCandidateStatusForm(this)">
+                                                    <option value="">Chọn lý do loại</option>
+                                                    <c:forEach var="reason" items="${rejectionReasons}">
+                                                        <option value="${reason.id}" ${c.rejectionReasonId == reason.id ? 'selected' : ''}>
+                                                            <c:out value="${reason.value}" />
+                                                        </option>
+                                                    </c:forEach>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary candidate-status-submit" hidden>
+                                                <i class="bi bi-check-lg me-1"></i>Lưu
+                                            </button>
                                         </form>
                                     </td>
                                 </tr>
@@ -159,6 +181,15 @@
                                 <input type="text" class="form-control" name="phone" placeholder="0901234567">
                             </div>
                             <div class="col-12">
+                                <label class="form-label small fw-semibold">Nguồn ứng viên</label>
+                                <select class="form-select" name="applicationSourceId">
+                                    <option value="">Chưa xác định</option>
+                                    <c:forEach var="source" items="${applicationSources}">
+                                        <option value="${source.id}"><c:out value="${source.value}" /></option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold">Đường dẫn CV (Link PDF)</label>
                                 <input type="url" class="form-control" name="cvUrl" placeholder="https://storage.cloud/cv.pdf">
                             </div>
@@ -185,4 +216,26 @@
         </div>
     </div>
 
+<script>
+function toggleCandidateStatusForm(control) {
+    var form = control.closest('.candidate-status-form');
+    var status = form.querySelector('[name="status"]');
+    var reasonBox = form.querySelector('.rejection-reason-field');
+    var reason = form.querySelector('[name="rejectionReasonId"]');
+    var submit = form.querySelector('.candidate-status-submit');
+    var rejected = status.value === 'REJECTED';
+
+    reasonBox.classList.toggle('d-none', !rejected);
+    reason.required = rejected;
+    if (!rejected) {
+        reason.value = '';
+    }
+    submit.hidden = status.value === form.dataset.currentStatus
+        && (!rejected || reason.value === form.dataset.currentReason);
+}
+
+document.querySelectorAll('.candidate-status-form').forEach(function (form) {
+    toggleCandidateStatusForm(form.querySelector('[name="status"]'));
+});
+</script>
 <jsp:include page="../common/footer.jsp" />

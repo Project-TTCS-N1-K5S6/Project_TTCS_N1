@@ -1,7 +1,10 @@
 package com.irms.controller;
 
 import com.irms.model.Candidate;
+import com.irms.model.SharedCatalogItem;
+import com.irms.model.SharedCatalogType;
 import com.irms.service.CandidateService;
+import com.irms.service.SharedCatalogService;
 
 import com.irms.model.User;
 
@@ -31,6 +34,7 @@ import java.util.List;
 })
 public class CandidateServlet extends HttpServlet {
     private final CandidateService candidateService = new CandidateService();
+    private final SharedCatalogService catalogService = new SharedCatalogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -53,6 +57,12 @@ public class CandidateServlet extends HttpServlet {
         request.setAttribute("candidates", list);
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
+        List<SharedCatalogItem> applicationSources =
+                catalogService.getItems(SharedCatalogType.APPLICATION_SOURCE);
+        List<SharedCatalogItem> rejectionReasons =
+                catalogService.getItems(SharedCatalogType.REJECTION_REASON);
+        request.setAttribute("applicationSources", applicationSources);
+        request.setAttribute("rejectionReasons", rejectionReasons);
 
         request.getRequestDispatcher("/WEB-INF/views/candidates/list.jsp").forward(request, response);
     }
@@ -76,15 +86,20 @@ public class CandidateServlet extends HttpServlet {
                 c.setFullName(request.getParameter("fullName"));
                 c.setEmail(request.getParameter("email"));
                 c.setPhone(request.getParameter("phone"));
+                c.setApplicationSourceId(request.getParameter("applicationSourceId"));
                 c.setStatus(request.getParameter("status"));
                 c.setCvUrl(request.getParameter("cvUrl"));
                 c.setNotes(request.getParameter("notes"));
-                candidateService.createCandidate(c);
+                if (!candidateService.createCandidate(c)) {
+                    throw new IllegalStateException("Không thể thêm hồ sơ ứng viên.");
+                }
                 if (session != null) session.setAttribute("flashSuccess", "Thêm hồ sơ ứng viên thành công!");
             } else if ("/candidates/update-status".equals(path)) {
                 String id = request.getParameter("candidateId");
                 String newStatus = request.getParameter("status");
-                candidateService.updateStatus(id, newStatus);
+                if (!candidateService.updateStatus(id, newStatus, request.getParameter("rejectionReasonId"))) {
+                    throw new IllegalStateException("Không thể cập nhật trạng thái hồ sơ ứng viên.");
+                }
                 if (session != null) session.setAttribute("flashSuccess", "Đã cập nhật trạng thái ứng viên thành công!");
             }
         } catch (Exception e) {
