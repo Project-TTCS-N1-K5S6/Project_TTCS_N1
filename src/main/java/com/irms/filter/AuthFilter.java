@@ -174,6 +174,14 @@ public class AuthFilter implements Filter {
             }
         }
 
+        // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create hoặc ADMIN
+        if (path.startsWith("/recruitment-requests")) {
+            if (!currentUser.hasPermission("requisitions.view") && !currentUser.hasPermission("requisitions.create") && !currentUser.hasRole("ADMIN")) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // 6. Phân hệ Hồ sơ ứng viên (/candidates) - Yêu cầu quyền candidates.view hoặc ADMIN
         if (path.startsWith("/candidates") && !currentUser.hasPermission("candidates.view") && !currentUser.hasRole("ADMIN")) {
             request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);

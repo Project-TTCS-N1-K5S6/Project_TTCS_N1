@@ -43,4 +43,4 @@ lerna-debug.log*
 *.sw?
 Thumbs.db
 ehthumbs.db
-
+run.bat
