@@ -38,6 +38,80 @@ public class UserDAO extends BaseDAO {
         return null;
     }
 
+    public User findByEmployeeCode(String employeeCode) {
+        if (employeeCode == null || employeeCode.trim().isEmpty()) return null;
+        String sql = "SELECT u.*, d.name AS department_name FROM users u " +
+                     "LEFT JOIN departments d ON u.department_id = d.id " +
+                     "WHERE u.employee_code = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, employeeCode.trim());
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                User user = mapResultSetToUser(rs);
+                loadUserRolesAndPermissions(conn, user);
+                return user;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo mã nhân viên: " + employeeCode, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
+    public java.util.Set<String> getAllEmployeeCodes() {
+        java.util.Set<String> set = new java.util.HashSet<>();
+        String sql = "SELECT employee_code FROM users WHERE employee_code IS NOT NULL";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String code = rs.getString(1);
+                if (code != null && !code.trim().isEmpty()) {
+                    set.add(code.trim().toUpperCase());
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách mã nhân viên", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return set;
+    }
+
+    public java.util.Set<String> getAllEmails() {
+        java.util.Set<String> set = new java.util.HashSet<>();
+        String sql = "SELECT email FROM users WHERE email IS NOT NULL";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String email = rs.getString(1);
+                if (email != null && !email.trim().isEmpty()) {
+                    set.add(email.trim().toLowerCase());
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách email", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return set;
+    }
+
     public User findById(String id) {
         String sql = "SELECT u.*, d.name AS department_name FROM users u " +
                      "LEFT JOIN departments d ON u.department_id = d.id " +

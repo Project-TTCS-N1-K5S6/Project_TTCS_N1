@@ -70,6 +70,11 @@ public class UserService {
         if (userDAO.findByEmail(user.getEmail()) != null) {
             throw new Exception("Email '" + user.getEmail() + "' đã tồn tại trong hệ thống.");
         }
+        if (user.getEmployeeCode() != null && !user.getEmployeeCode().trim().isEmpty()) {
+            if (userDAO.findByEmployeeCode(user.getEmployeeCode()) != null) {
+                throw new Exception("Mã nhân viên '" + user.getEmployeeCode() + "' đã tồn tại trong hệ thống.");
+            }
+        }
 
         user.setId(SecurityUtil.generateUUID());
 

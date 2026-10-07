@@ -20,9 +20,14 @@
                 <h4 class="fw-bold mb-1">Quản lý tài khoản người dùng</h4>
                 <p class="text-muted small mb-0">Quản trị danh sách nhân viên, gán vai trò, khóa tài khoản và cấp lại mật khẩu.</p>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="bi bi-person-plus-fill"></i> Thêm tài khoản mới
-            </button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Nhập từ Excel
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Thêm tài khoản mới
+                </button>
+            </div>
         </div>
 
         <!-- 
@@ -432,6 +437,188 @@
                         <button type="submit" class="btn btn-warning"><i class="bi bi-arrow-repeat"></i> Cấp lại mật khẩu</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        ======================================================================
+        MODAL NHẬP DANH SÁCH NHÂN SỰ TỪ FILE EXCEL
+        - Luồng 3 bước: Chọn file -> Xem trước & Kiểm tra dữ liệu -> Kết quả nhập
+        - Hỗ trợ kéo thả, kiểm tra 2 lớp trùng, báo lỗi theo dòng, nhập Partial Success
+        ======================================================================
+    -->
+    <div class="modal fade" id="importExcelModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-file-earmark-excel text-success me-2"></i> Nhập danh sách nhân sự từ Excel
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btnCloseImportModal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <!-- BƯỚC 1: CHỌN / KÉO THẢ FILE EXCEL -->
+                    <div id="excelStepSelect">
+                        <div class="alert alert-light border d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill text-primary fs-5 me-2"></i>
+                                <div>
+                                    <div class="fw-semibold text-dark">File mẫu Excel chính thức của hệ thống</div>
+                                    <small class="text-muted">Vui lòng sử dụng đúng định dạng cột: Mã NV, Vai trò, Họ tên, Email, SĐT, Chức vụ, Phòng ban.</small>
+                                </div>
+                            </div>
+                            <a href="${pageContext.request.contextPath}/admin/users/excel-template" class="btn btn-sm btn-outline-primary fw-medium">
+                                <i class="bi bi-download me-1"></i> Tải file Excel mẫu
+                            </a>
+                        </div>
+
+                        <!-- Vùng kéo thả file (Dropzone) -->
+                        <div id="excelDropzone" class="border border-2 border-dashed rounded-3 p-5 text-center bg-light" style="cursor: pointer; transition: all 0.2s ease;">
+                            <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 3rem;"></i>
+                            <h6 class="fw-bold mt-2 mb-1">Kéo và thả file Excel vào đây, hoặc <span class="text-primary text-decoration-underline">chọn từ máy tính</span></h6>
+                            <p class="text-muted small mb-0">Chỉ chấp nhận file định dạng <strong>.xlsx</strong> (Dung lượng tối đa 5MB)</p>
+                            <input type="file" id="excelFileInput" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="d-none">
+                        </div>
+
+                        <!-- Thông tin file đã chọn -->
+                        <div id="selectedFileInfo" class="mt-3 p-3 border rounded-3 bg-white d-none">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="p-2 bg-success-subtle text-success rounded-3">
+                                        <i class="bi bi-file-earmark-excel fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark" id="selectedFileName">ten_file.xlsx</div>
+                                        <small class="text-muted" id="selectedFileSize">0 KB</small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnRemoveFile">
+                                    <i class="bi bi-trash3 me-1"></i> Bỏ chọn file
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Thông báo lỗi chọn file -->
+                        <div id="fileSelectAlert" class="alert alert-danger mt-3 d-none mb-0"></div>
+
+                        <!-- Spinner Loading khi kiểm tra dữ liệu -->
+                        <div id="excelLoading" class="text-center py-4 d-none">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted small fw-medium" id="excelLoadingText">Đang đọc và kiểm tra dữ liệu từ file Excel...</p>
+                        </div>
+                    </div>
+
+                    <!-- BƯỚC 2: XEM TRƯỚC DỮ LIỆU & BÁO LỖI (PREVIEW) -->
+                    <div id="excelStepPreview" class="d-none">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">Kết quả kiểm tra dữ liệu</h6>
+                                <p class="text-muted small mb-0">Vui lòng rà soát lại thông tin trước khi xác nhận nhập vào hệ thống.</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-secondary px-3 py-2 fs-6">Tổng số: <strong id="previewTotal">0</strong></span>
+                                <span class="badge bg-success px-3 py-2 fs-6">Hợp lệ: <strong id="previewValid">0</strong></span>
+                                <span class="badge bg-danger px-3 py-2 fs-6">Lỗi: <strong id="previewErrors">0</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Cảnh báo nếu có dòng lỗi -->
+                        <div id="previewWarningAlert" class="alert alert-warning py-2 px-3 small mb-3 d-none">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <strong>Chú ý:</strong> Những dòng bị đánh dấu lỗi sẽ bị bỏ qua khi nhập dữ liệu. Hệ thống vẫn cho phép nhập các dòng hợp lệ (Partial Success).
+                        </div>
+
+                        <!-- Bảng xem trước dữ liệu chi tiết -->
+                        <div class="table-responsive border rounded-3 mb-3" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle mb-0" id="previewTable">
+                                <thead class="table-light sticky-top">
+                                    <tr class="small text-muted">
+                                        <th class="text-center" style="width: 50px;">STT</th>
+                                        <th class="text-center" style="width: 60px;">Dòng</th>
+                                        <th style="width: 100px;">Mã NV</th>
+                                        <th>Họ và tên</th>
+                                        <th>Email công ty</th>
+                                        <th>Phòng ban</th>
+                                        <th>Vai trò</th>
+                                        <th class="text-center" style="width: 90px;">Trạng thái</th>
+                                        <th style="min-width: 200px;">Chi tiết lỗi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewTableBody" class="small">
+                                    <!-- Render động qua JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- BƯỚC 3: KẾT QUẢ SAU KHI NHẬP -->
+                    <div id="excelStepResult" class="d-none text-center py-3">
+                        <div class="mb-3">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 3.5rem;"></i>
+                            <h5 class="fw-bold mt-2">Hoàn tất xử lý nhập danh sách nhân sự!</h5>
+                        </div>
+
+                        <div class="row g-3 justify-content-center mb-4">
+                            <div class="col-6 col-md-3">
+                                <div class="border rounded-3 p-3 bg-light">
+                                    <div class="text-muted small">Tổng số dòng</div>
+                                    <div class="fs-4 fw-bold text-dark" id="resTotal">0</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border rounded-3 p-3 bg-success-subtle text-success">
+                                    <div class="small fw-semibold">Nhập thành công</div>
+                                    <div class="fs-4 fw-bold" id="resSuccess">0</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="border rounded-3 p-3 bg-danger-subtle text-danger">
+                                    <div class="small fw-semibold">Bỏ qua do lỗi</div>
+                                    <div class="fs-4 fw-bold" id="resSkipped">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách dòng bị bỏ qua nếu có -->
+                        <div id="resFailedContainer" class="text-start border rounded-3 p-3 bg-light d-none text-xs">
+                            <div class="fw-bold text-danger mb-2">
+                                <i class="bi bi-x-circle me-1"></i> Danh sách các dòng bị bỏ qua không tạo tài khoản:
+                            </div>
+                            <div id="resFailedList" style="max-height: 180px; overflow-y: auto;">
+                                <!-- Render danh sách dòng bị bỏ qua -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <!-- Nút bấm cho Bước 1 -->
+                    <div id="footerStepSelect" class="d-flex justify-content-end gap-2 w-100">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="btnValidateExcel" disabled>
+                            <i class="bi bi-search me-1"></i> Kiểm tra dữ liệu
+                        </button>
+                    </div>
+
+                    <!-- Nút bấm cho Bước 2 -->
+                    <div id="footerStepPreview" class="d-none justify-content-between align-items-center w-100">
+                        <button type="button" class="btn btn-outline-secondary" id="btnBackToSelect">
+                            <i class="bi bi-arrow-left me-1"></i> Chọn lại file khác
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnExecuteImport">
+                            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Xác nhận nhập dữ liệu (<span id="btnValidCount">0</span> dòng hợp lệ)
+                        </button>
+                    </div>
+
+                    <!-- Nút bấm cho Bước 3 -->
+                    <div id="footerStepResult" class="d-none justify-content-end w-100">
+                        <button type="button" class="btn btn-primary" id="btnFinishReload">
+                            <i class="bi bi-check-lg me-1"></i> Hoàn tất &amp; Cập nhật danh sách
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
