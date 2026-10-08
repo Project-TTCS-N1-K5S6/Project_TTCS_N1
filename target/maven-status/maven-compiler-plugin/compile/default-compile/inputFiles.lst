@@ -2,6 +2,7 @@ E:\ttcs_n1\src\main\java\com\irms\controller\PlaceholderServlet.java
 E:\ttcs_n1\src\main\java\com\irms\controller\RecruitmentRequestServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\Question.java
 E:\ttcs_n1\src\main\java\com\irms\controller\PermissionMatrixServlet.java
+E:\ttcs_n1\src\main\java\com\irms\dao\CompanyProfileDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\AuditLog.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AvatarServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\PositionCompetencyFramework.java
@@ -35,6 +36,7 @@ E:\ttcs_n1\src\main\java\com\irms\controller\DashboardServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\SalaryRangeDAO.java
 E:\ttcs_n1\src\main\java\com\irms\controller\QuestionBankServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\Role.java
+E:\ttcs_n1\src\main\java\com\irms\model\CompanyProfile.java
 E:\ttcs_n1\src\main\java\com\irms\controller\UserServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\AuditDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyCriterion.java
@@ -49,6 +51,7 @@ E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
 E:\ttcs_n1\src\main\java\com\irms\dao\QuestionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyCriterionService.java
 E:\ttcs_n1\src\main\java\com\irms\service\QuestionService.java
+E:\ttcs_n1\src\main\java\com\irms\controller\CompanyProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\service\RecruitmentRequestService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AuthServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
@@ -56,6 +59,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\DepartmentService.java
 E:\ttcs_n1\src\main\java\com\irms\service\RolePermissionService.java
 E:\ttcs_n1\src\main\java\com\irms\config\AppConfig.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFrameworkCriterion.java
+E:\ttcs_n1\src\main\java\com\irms\service\CompanyProfileService.java
 E:\ttcs_n1\src\main\java\com\irms\dao\BaseDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyCriterionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\ProfileService.java
