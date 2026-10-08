@@ -147,6 +147,9 @@ mvn tomcat7:run
 ```
 Ứng dụng sẽ khởi chạy tại: **http://localhost:8080**
 
+**Chạy database IRMS cục bộ trên Windows (nếu đã được chuẩn bị):**
+Chạy `run-local.bat` để dùng database riêng `irms_local_dev_20261008` trên MySQL tại máy hiện tại. Database này được nạp từ `database/schema.sql` và `database/seed.sql`, không ghi vào database `irms_db` cũ hoặc DB chung. Đăng nhập mẫu: `admin@company.local` / `Admin@123456`. Chạy `run.bat` không có tham số để dùng cấu hình DB trong `.env`.
+
 ### Bước 3: Xem giao diện Frontend độc lập (Tùy chọn)
 Nếu muốn xem trước các màn hình HTML/CSS/JS/Bootstrap tĩnh mà không cần bật máy chủ Java:
 - Mở thư mục `frontend/` và nhấp đúp vào `index.html` hoặc chạy với Visual Studio Code **Live Server**.

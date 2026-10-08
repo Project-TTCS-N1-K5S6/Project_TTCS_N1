@@ -13,7 +13,7 @@ import java.util.logging.Level;
  */
 public class UserDAO extends BaseDAO {
 
-    public User findByEmail(String email) {
+    public User findByEmail(String email) throws SQLException {
         String sql = "SELECT u.*, d.name AS department_name FROM users u " +
                      "LEFT JOIN departments d ON u.department_id = d.id " +
                      "WHERE u.email = ?";
@@ -31,7 +31,8 @@ public class UserDAO extends BaseDAO {
                 return user;
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo email: " + email, e);
+            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo email", e);
+            throw e;
         } finally {
             close(conn, ps, rs);
         }
@@ -135,6 +136,26 @@ public class UserDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return null;
+    }
+
+    public boolean updatePersonalProfile(String userId, String fullName, String phone, String jobTitle) {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, job_title = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, fullName);
+            ps.setString(2, phone);
+            ps.setString(3, jobTitle);
+            ps.setString(4, userId);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật hồ sơ cá nhân", e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
     }
 
     public List<User> findAll(String search, String deptId, String status, int offset, int limit) {

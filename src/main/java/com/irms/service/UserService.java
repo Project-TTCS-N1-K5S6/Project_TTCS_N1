@@ -8,6 +8,7 @@ import com.irms.util.PasswordUtil;
 import com.irms.util.SecurityUtil;
 
 import java.util.List;
+import java.sql.SQLException;
 
 /**
  * ==============================================================================
@@ -67,7 +68,13 @@ public class UserService {
      *   + Hỗ trợ gán nhiều vai trò cùng lúc (roleIds).
      */
     public boolean createUser(User user, List<String> roleIds, String adminId, String ip, String userAgent) throws Exception {
-        if (userDAO.findByEmail(user.getEmail()) != null) {
+        User existingUser;
+        try {
+            existingUser = userDAO.findByEmail(user.getEmail());
+        } catch (SQLException e) {
+            throw new Exception("Hệ thống tạm thời không thể kiểm tra tài khoản. Vui lòng thử lại sau.", e);
+        }
+        if (existingUser != null) {
             throw new Exception("Email '" + user.getEmail() + "' đã tồn tại trong hệ thống.");
         }
         if (user.getEmployeeCode() != null && !user.getEmployeeCode().trim().isEmpty()) {

@@ -71,6 +71,11 @@
                     </a>
                 </li>
                 <li>
+                    <a class="dropdown-item py-2" href="${pageContext.request.contextPath}/profile">
+                        <i class="bi bi-person-lines-fill me-2 text-primary"></i> Hồ sơ cá nhân
+                    </a>
+                </li>
+                <li>
                     <a class="dropdown-item py-2" href="${pageContext.request.contextPath}/auth/change-password">
                         <i class="bi bi-key me-2 text-primary"></i> Đổi mật khẩu
                     </a>

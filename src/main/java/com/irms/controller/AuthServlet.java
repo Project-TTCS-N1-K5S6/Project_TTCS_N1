@@ -203,7 +203,13 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         String email = request.getParameter("email");
         String appUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        authService.requestPasswordReset(email, appUrl);
+        try {
+            authService.requestPasswordReset(email, appUrl);
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(request, response);
+            return;
+        }
 
         // Generic Safe Response chống User Enumeration
         request.setAttribute("successMessage",
