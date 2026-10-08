@@ -86,11 +86,11 @@
                         </a>
                     </li>
                 </c:if>
-                <c:if test="${currentUser.hasPermission('department.view') || currentUser.hasRole('ADMIN')}">
+                <c:if test="${currentUser.hasPermission('department.view') || currentUser.hasPermission('departments.view') || currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER')}">
                     <li class="nav-item">
                         <a class="nav-link ${activeMenu == 'departments' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/departments">
                             <i class="bi bi-building-fill"></i>
-                            <span>Cơ cấu phòng ban</span>
+                            <span>Khai báo phòng ban</span>
                         </a>
                     </li>
                 </c:if>

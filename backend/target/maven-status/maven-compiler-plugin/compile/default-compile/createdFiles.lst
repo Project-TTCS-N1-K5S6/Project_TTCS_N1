@@ -50,6 +50,7 @@ com\irms\dao\UserDAO.class
 com\irms\service\DepartmentService.class
 com\irms\dao\PasswordResetDAO.class
 com\irms\model\Permission.class
+com\irms\service\DepartmentService$DeleteCheckResult.class
 com\irms\dao\SalaryRangeDAO.class
 com\irms\service\RolePermissionService.class
 com\irms\dao\AuditDAO.class

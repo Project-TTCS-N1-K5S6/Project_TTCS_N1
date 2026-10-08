@@ -188,9 +188,17 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 7. Phân hệ Cơ cấu phòng ban (/admin/departments) - Yêu cầu quyền department.view hoặc ADMIN
-        if (path.startsWith("/admin/departments") && !currentUser.hasPermission("department.view") && !currentUser.hasRole("ADMIN")) {
-            request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+        // 7. Phân hệ Khai báo phòng ban (/admin/departments) - Yêu cầu quyền department.view / departments.view hoặc ADMIN / HR_MANAGER
+        if (path.startsWith("/admin/departments")) {
+            boolean isAuthorizedDept = currentUser.hasRole("ADMIN")
+                    || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("department.view")
+                    || currentUser.hasPermission("departments.view");
+            if (!isAuthorizedDept) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+            chain.doFilter(request, response);
             return;
         }
 
