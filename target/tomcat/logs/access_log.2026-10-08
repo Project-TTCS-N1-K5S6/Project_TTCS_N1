@@ -37,3 +37,8 @@
 0:0:0:0:0:0:0:1 - - [08/Oct/2026:14:49:37 +0700] "GET /auth/login?loggedOut=true HTTP/1.1" 200 5436 http-bio-8080-exec-8 8
 0:0:0:0:0:0:0:1 - - [08/Oct/2026:14:49:53 +0700] "POST /auth/login HTTP/1.1" 302 - http-bio-8080-exec-8 208
 0:0:0:0:0:0:0:1 - - [08/Oct/2026:14:49:53 +0700] "GET /dashboard HTTP/1.1" 200 41408 http-bio-8080-exec-8 51
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:18:27:59 +0700] "GET /profile HTTP/1.1" 302 - http-bio-8080-exec-1 32
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:18:27:59 +0700] "GET /auth/login?redirect=/profile HTTP/1.1" 200 5509 http-bio-8080-exec-3 149
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:18:28:03 +0700] "POST /auth/login HTTP/1.1" 200 5774 http-bio-8080-exec-4 2293
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:18:28:07 +0700] "POST /auth/login HTTP/1.1" 200 5774 http-bio-8080-exec-5 2337
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:18:28:19 +0700] "POST /auth/login HTTP/1.1" 200 5774 http-bio-8080-exec-6 2449
