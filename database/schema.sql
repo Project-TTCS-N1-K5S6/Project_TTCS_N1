@@ -266,8 +266,11 @@ CREATE INDEX idx_sr_dept ON salary_ranges(department_id);
 DROP TABLE IF EXISTS competency_criteria;
 CREATE TABLE competency_criteria (
     id VARCHAR(36) PRIMARY KEY,
+    code VARCHAR(50) NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
+    evaluation_guideline TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -289,4 +292,57 @@ CREATE TABLE questions (
 CREATE INDEX idx_q_criterion ON questions(criterion_id);
 CREATE INDEX idx_q_job_title ON questions(job_title);
 
+-- 16. Bảng Khung năng lực (competency_frameworks)
+DROP TABLE IF EXISTS competency_frameworks;
+CREATE TABLE competency_frameworks (
+    id VARCHAR(36) PRIMARY KEY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT', -- 'DRAFT', 'ACTIVE', 'INACTIVE'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(36) NULL,
+    updated_by VARCHAR(36) NULL,
+    CONSTRAINT fk_cf_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_cf_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_cf_code ON competency_frameworks(code);
+CREATE INDEX idx_cf_status ON competency_frameworks(status);
+
+-- 17. Bảng liên kết Khung năng lực - Tiêu chí (competency_framework_criteria)
+DROP TABLE IF EXISTS competency_framework_criteria;
+CREATE TABLE competency_framework_criteria (
+    id VARCHAR(36) PRIMARY KEY,
+    framework_id VARCHAR(36) NOT NULL,
+    criterion_id VARCHAR(36) NOT NULL,
+    weight DECIMAL(5, 2) NOT NULL,
+    display_order INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cfc_framework FOREIGN KEY (framework_id) REFERENCES competency_frameworks(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cfc_criterion FOREIGN KEY (criterion_id) REFERENCES competency_criteria(id) ON DELETE RESTRICT,
+    CONSTRAINT uq_cfc_framework_criterion UNIQUE (framework_id, criterion_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_cfc_framework ON competency_framework_criteria(framework_id);
+CREATE INDEX idx_cfc_criterion ON competency_framework_criteria(criterion_id);
+
+-- 18. Bảng liên kết Chức danh - Khung năng lực (position_competency_frameworks)
+DROP TABLE IF EXISTS position_competency_frameworks;
+CREATE TABLE position_competency_frameworks (
+    id VARCHAR(36) PRIMARY KEY,
+    position_id VARCHAR(36) NOT NULL UNIQUE,
+    framework_id VARCHAR(36) NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by VARCHAR(36) NULL,
+    CONSTRAINT fk_pcf_position FOREIGN KEY (position_id) REFERENCES salary_ranges(id) ON DELETE CASCADE,
+    CONSTRAINT fk_pcf_framework FOREIGN KEY (framework_id) REFERENCES competency_frameworks(id) ON DELETE CASCADE,
+    CONSTRAINT fk_pcf_user FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_pcf_framework ON position_competency_frameworks(framework_id);
+CREATE INDEX idx_pcf_position ON position_competency_frameworks(position_id);
+
 SET FOREIGN_KEY_CHECKS = 1;
+

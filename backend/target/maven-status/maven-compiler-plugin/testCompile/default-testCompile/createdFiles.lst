@@ -1,2 +1,3 @@
 com\irms\SalaryRangeTest.class
 com\irms\RBACPermissionTest.class
+com\irms\CompetencyFrameworkTest.class
