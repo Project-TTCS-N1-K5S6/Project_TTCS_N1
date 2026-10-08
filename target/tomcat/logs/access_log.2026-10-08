@@ -32,3 +32,14 @@
 0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:39:15 +0700] "GET /admin/shared-catalogs?type=WORK_MODE HTTP/1.1" 200 30413 http-bio-8080-exec-5 12
 0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:39:24 +0700] "GET /admin/permissions HTTP/1.1" 200 75732 http-bio-8080-exec-5 142
 0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:39:24 +0700] "GET /assets/js/matrix.js HTTP/1.1" 304 - http-bio-8080-exec-5 27
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:42:59 +0700] "GET /admin/permissions HTTP/1.1" 302 - http-bio-8080-exec-1 36
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:42:59 +0700] "GET /auth/login?redirect=/admin/permissions HTTP/1.1" 200 5519 http-bio-8080-exec-3 121
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:23 +0700] "POST /auth/login HTTP/1.1" 302 - http-bio-8080-exec-4 132
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:24 +0700] "GET /admin/permissions HTTP/1.1" 200 75392 http-bio-8080-exec-5 1227
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:32 +0700] "GET /admin/roles HTTP/1.1" 200 24441 http-bio-8080-exec-6 142
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:34 +0700] "GET /admin/departments HTTP/1.1" 200 30921 http-bio-8080-exec-7 202
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:35 +0700] "GET /admin/roles HTTP/1.1" 200 24441 http-bio-8080-exec-8 14
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:39 +0700] "GET /admin/users HTTP/1.1" 200 80073 http-bio-8080-exec-9 215
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:50 +0700] "GET /candidates HTTP/1.1" 200 36229 http-bio-8080-exec-10 132
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:51 +0700] "GET /salary-ranges HTTP/1.1" 200 22589 http-bio-8080-exec-10 129
+0:0:0:0:0:0:0:1 - - [08/Oct/2026:17:43:54 +0700] "GET /recruitment-requests HTTP/1.1" 200 12666 http-bio-8080-exec-10 59
