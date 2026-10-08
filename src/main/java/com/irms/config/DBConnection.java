@@ -10,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Quản lý kết nối Cơ sở dữ liệu MySQL sử dụng HikariCP Connection Pool
+ * Quản lý kết nối Cơ sở dữ liệu (PostgreSQL / MySQL) sử dụng HikariCP Connection Pool
  */
 public class DBConnection {
     private static final Logger LOGGER = Logger.getLogger(DBConnection.class.getName());
@@ -23,7 +23,7 @@ public class DBConnection {
 
             HikariConfig config = new HikariConfig();
             config.setDriverClassName(driver);
-            config.setJdbcUrl(AppConfig.get("db.url", "jdbc:mysql://localhost:3306/test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8"));
+            config.setJdbcUrl(AppConfig.get("db.url", "jdbc:mysql://127.0.0.1:3306/test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8"));
             config.setUsername(AppConfig.get("db.user", "root"));
             config.setPassword(AppConfig.get("db.password", ""));
 
@@ -33,14 +33,16 @@ public class DBConnection {
             config.setConnectionTimeout(AppConfig.getInt("db.pool.connectionTimeout", 10000));
             config.setMaxLifetime(AppConfig.getInt("db.pool.maxLifetime", 1800000));
 
-            // Tối ưu hóa hiệu năng kết nối MySQL
-            config.addDataSourceProperty("cachePrepStmts", "true");
-            config.addDataSourceProperty("prepStmtCacheSize", "250");
-            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            config.addDataSourceProperty("useServerPrepStmts", "true");
+            // Cấu hình tối ưu nếu là MySQL
+            if (driver.contains("mysql")) {
+                config.addDataSourceProperty("cachePrepStmts", "true");
+                config.addDataSourceProperty("prepStmtCacheSize", "250");
+                config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+                config.addDataSourceProperty("useServerPrepStmts", "true");
+            }
 
             dataSource = new HikariDataSource(config);
-            LOGGER.info("[DBConnection] Đã khởi tạo thành công HikariCP Connection Pool kết nối MySQL.");
+            LOGGER.info("[DBConnection] Đã khởi tạo thành công HikariCP Connection Pool kết nối CSDL (" + driver + ").");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "[DBConnection] Lỗi khởi tạo HikariCP, sẽ sử dụng DriverManager dự phòng", e);
         }
@@ -54,7 +56,7 @@ public class DBConnection {
             return dataSource.getConnection();
         }
         // Dự phòng kết nối trực tiếp nếu pool gặp sự cố
-        String url = AppConfig.get("db.url", "jdbc:mysql://localhost:3306/test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8");
+        String url = AppConfig.get("db.url", "jdbc:mysql://127.0.0.1:3306/test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8");
         String user = AppConfig.get("db.user", "root");
         String pass = AppConfig.get("db.password", "");
         return DriverManager.getConnection(url, user, pass);

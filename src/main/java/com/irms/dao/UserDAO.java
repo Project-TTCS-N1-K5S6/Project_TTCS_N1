@@ -325,7 +325,7 @@ public class UserDAO extends BaseDAO {
      *   + Cập nhật vai trò có hiệu lực ngay ở thao tác kế tiếp (US 9).
      */
     public User findSessionStateById(String userId) {
-        String sql = "SELECT id, status, session_version, must_change_password FROM users WHERE id = ?";
+        String sql = "SELECT id, status, session_version, must_change_password, avatar_url FROM users WHERE id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -340,6 +340,7 @@ public class UserDAO extends BaseDAO {
                 u.setStatus(rs.getString("status"));
                 u.setSessionVersion(rs.getInt("session_version"));
                 u.setMustChangePassword(rs.getBoolean("must_change_password"));
+                u.setAvatarUrl(rs.getString("avatar_url"));
                 loadUserRolesAndPermissions(conn, u);
                 return u;
             }
@@ -374,6 +375,27 @@ public class UserDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return 0;
+    }
+
+    /**
+     * Cập nhật ảnh đại diện người dùng
+     */
+    public boolean updateAvatar(String userId, String avatarUrl) {
+        String sql = "UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, avatarUrl);
+            ps.setString(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật avatar cho userId: " + userId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
     }
 
     /**
@@ -529,6 +551,11 @@ public class UserDAO extends BaseDAO {
         u.setJobTitle(rs.getString("job_title"));
         u.setDepartmentId(rs.getString("department_id"));
         u.setDepartmentName(rs.getString("department_name"));
+        try {
+            u.setAvatarUrl(rs.getString("avatar_url"));
+        } catch (SQLException ignored) {
+            u.setAvatarUrl(null);
+        }
         u.setPasswordHash(rs.getString("password_hash"));
         u.setStatus(rs.getString("status"));
         u.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));
