@@ -28,43 +28,48 @@
         <div class="card mb-4 shadow-sm border">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-custom">
+                    <table class="table table-custom table-fit">
                         <thead>
                             <tr>
-                                <th style="width: 120px;">Mã phòng</th>
+                                <th style="width: 90px;">Mã phòng</th>
                                 <th>Tên phòng ban</th>
-                                <th>Mô tả chức năng</th>
+                                <th class="d-none d-md-table-cell">Mô tả chức năng</th>
                                 <th>Quy mô nhân sự</th>
-                                <th>Ngày thành lập</th>
-                                <th class="text-end pe-3">Thao tác</th>
+                                <th class="d-none d-lg-table-cell">Ngày tạo</th>
+                                <th class="text-end pe-3" style="width: 120px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="d" items="${departments}">
                                 <tr>
                                     <td><span class="badge bg-light text-dark border font-monospace">${d.code}</span></td>
-                                    <td><strong class="text-dark">${d.name}</strong></td>
-                                    <td class="text-muted small">${d.description}</td>
+                                    <td>
+                                        <strong class="text-dark">${d.name}</strong>
+                                        <div class="d-md-none text-muted text-xs mt-1 text-wrap-break">${d.description}</div>
+                                    </td>
+                                    <td class="text-muted small text-wrap-break d-none d-md-table-cell" style="max-width: 250px;">${d.description}</td>
                                     <td>
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                            <i class="bi bi-people me-1"></i> ${d.userCount} thành viên
+                                            <i class="bi bi-people me-1"></i> ${d.userCount}
                                         </span>
                                     </td>
-                                    <td class="text-muted text-xs">
+                                    <td class="text-muted text-xs d-none d-lg-table-cell">
                                         <fmt:formatDate value="${d.createdAt}" pattern="dd/MM/yyyy" />
                                     </td>
                                     <td class="text-end pe-3">
-                                        <button class="btn btn-sm btn-outline-secondary me-1" 
-                                                onclick="openEditDeptModal('${d.id}', '${d.code}', '${d.name}', '${d.description}')">
-                                            <i class="bi bi-pencil"></i> Sửa
-                                        </button>
-                                        <form action="${pageContext.request.contextPath}/admin/departments/delete" method="POST" style="display:inline;"
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa phòng ban này?')">
-                                            <input type="hidden" name="id" value="${d.id}">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-trash"></i>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-outline-secondary" 
+                                                    onclick="openEditDeptModal('${d.id}', '${d.code}', '${d.name}', '${d.description}')" title="Sửa">
+                                                <i class="bi bi-pencil"></i>
                                             </button>
-                                        </form>
+                                            <form action="${pageContext.request.contextPath}/admin/departments/delete" method="POST" style="display:inline; margin:0;"
+                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa phòng ban này?')">
+                                                <input type="hidden" name="id" value="${d.id}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             </c:forEach>

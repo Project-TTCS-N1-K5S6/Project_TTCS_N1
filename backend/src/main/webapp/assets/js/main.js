@@ -1,13 +1,18 @@
 /**
- * ============================================================
- * IRMS - Internal Recruitment Management System
- * Client-Side JavaScript: Core Layout & Interactivity
- * File: src/main/webapp/assets/js/main.js
- * ============================================================
+ * ==============================================================================
+ * JAVASCRIPT GIAO DIỆN CHUNG & TƯƠNG TÁC HỆ THỐNG (main.js)
+ * ==============================================================================
+ * Phục vụ các User Story:
+ * - US 6: Điều hướng menu, hỗ trợ trải nghiệm di động responsive trên màn hình 360px.
+ * - US 7: Tương tác thông báo và trải nghiệm người dùng.
+ * ==============================================================================
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Sidebar Toggle trên thiết bị di động / màn hình nhỏ
+    // --------------------------------------------------------------------------
+    // [US 6 - Đạt]: Sidebar Toggle trên thiết bị di động (hỗ trợ màn hình 360px)
+    // Cho phép mở Sidebar dạng Drawer trượt và đóng lại khi chạm vào Backdrop.
+    // --------------------------------------------------------------------------
     const toggleBtn = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('app-sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');

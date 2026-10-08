@@ -15,11 +15,16 @@
         <div class="display-1 text-danger fw-bold mb-3"><i class="bi bi-shield-slash"></i> 403</div>
         <h2 class="fw-bold mb-2">Quyền truy cập bị từ chối</h2>
         <p class="text-muted mb-4">
-            Tài khoản của bạn không có đủ thẩm quyền hạn hoặc vai trò để truy cập vào phân hệ này theo ma trận phân quyền.
+            Tài khoản của bạn không có đủ thẩm quyền hạn hoặc vai trò để truy cập vào phân hệ này theo ma trận phân quyền. Nếu bạn cần truy cập, vui lòng liên hệ Quản trị viên hệ thống để được cấp quyền.
         </p>
-        <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-primary px-4 py-2">
-            <i class="bi bi-house-door me-1"></i> Quay về Bảng điều khiển
-        </a>
+        <div class="d-flex justify-content-center gap-2">
+            <button onclick="window.history.back()" class="btn btn-outline-secondary px-4 py-2">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại trang trước
+            </button>
+            <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-primary px-4 py-2">
+                <i class="bi bi-house-door me-1"></i> Về Bảng điều khiển
+            </a>
+        </div>
     </div>
 </body>
 </html>

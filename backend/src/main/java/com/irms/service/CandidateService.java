@@ -13,7 +13,14 @@ public class CandidateService {
     private final CandidateDAO candidateDAO = new CandidateDAO();
 
     public List<Candidate> getCandidates(String search, String status) {
-        return candidateDAO.findAll(search, status);
+        return candidateDAO.findAll(search, status, null);
+    }
+
+    /**
+     * [US 5]: Lấy danh sách ứng viên có kiểm tra quyền hạn của Recruiter
+     */
+    public List<Candidate> getCandidates(String search, String status, String recruiterId) {
+        return candidateDAO.findAll(search, status, recruiterId);
     }
 
     public boolean createCandidate(Candidate c) {

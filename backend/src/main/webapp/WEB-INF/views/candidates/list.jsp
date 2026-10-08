@@ -61,16 +61,15 @@
         <div class="card mb-4 shadow-sm border">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-custom">
+                    <table class="table table-custom table-fit">
                         <thead>
                             <tr>
                                 <th>Ứng viên</th>
-                                <th>Liên hệ</th>
-                                <th>Vị trí ứng tuyển</th>
-                                <th>CV đính kèm</th>
+                                <th>Vị trí &amp; Hồ sơ</th>
+                                <th class="d-none d-md-table-cell">Liên hệ</th>
                                 <th>Giai đoạn Pipeline</th>
-                                <th>Ghi chú</th>
-                                <th class="text-end pe-3">Chuyển vòng</th>
+                                <th class="d-none d-xl-table-cell">Ghi chú</th>
+                                <th class="text-end pe-3" style="min-width: 140px;">Chuyển vòng</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,35 +77,38 @@
                                 <tr>
                                     <td>
                                         <div class="fw-bold text-dark">${c.fullName}</div>
-                                        <small class="text-muted">Nộp ngày: <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy" /></small>
+                                        <small class="text-muted d-block">Nộp: <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy" /></small>
+                                        <!-- Mobile contact info -->
+                                        <div class="d-md-none text-muted small mt-1">
+                                            <div><i class="bi bi-envelope me-1"></i> ${c.email}</div>
+                                            <c:if test="${not empty c.phone}"><div><i class="bi bi-telephone me-1"></i> ${c.phone}</div></c:if>
+                                        </div>
                                     </td>
                                     <td>
-                                        <div class="small"><i class="bi bi-envelope text-muted me-1"></i> ${c.email}</div>
-                                        <div class="small text-muted"><i class="bi bi-telephone text-muted me-1"></i> ${c.phone}</div>
-                                    </td>
-                                    <td>
-                                        <span class="fw-semibold text-dark">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn yêu cầu'}</span>
-                                    </td>
-                                    <td>
+                                        <div class="fw-semibold text-dark">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn yêu cầu'}</div>
                                         <c:choose>
                                             <c:when test="${not empty c.cvUrl}">
-                                                <a href="${c.cvUrl}" target="_blank" class="btn btn-xs btn-outline-primary py-1 px-2 text-xs">
+                                                <a href="${c.cvUrl}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2 mt-1 text-xs d-inline-flex align-items-center gap-1">
                                                     <i class="bi bi-file-earmark-pdf"></i> Xem CV
                                                 </a>
                                             </c:when>
-                                            <c:otherwise><span class="text-muted text-xs">Không có file</span></c:otherwise>
+                                            <c:otherwise><span class="text-muted text-xs">Chưa có CV</span></c:otherwise>
                                         </c:choose>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <div class="small"><i class="bi bi-envelope text-muted me-1"></i> ${c.email}</div>
+                                        <div class="small text-muted"><i class="bi bi-telephone text-muted me-1"></i> ${c.phone != null ? c.phone : '-'}</div>
                                     </td>
                                     <td>
                                         <span class="badge ${c.getStatusBadgeClass()}">${c.getStatusLabel()}</span>
                                     </td>
-                                    <td class="small text-muted" style="max-width: 200px;">
+                                    <td class="small text-muted text-wrap-break d-none d-xl-table-cell" style="max-width: 180px;">
                                         ${c.notes != null ? c.notes : '-'}
                                     </td>
                                     <td class="text-end pe-3">
-                                        <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST" class="d-inline-flex gap-1 align-items-center">
+                                        <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST" class="d-inline-flex gap-1 align-items-center justify-content-end">
                                             <input type="hidden" name="candidateId" value="${c.id}">
-                                            <select class="form-select form-select-sm" name="status" onchange="this.form.submit()" style="width: 140px;">
+                                            <select class="form-select form-select-sm" name="status" onchange="this.form.submit()" style="width: 130px; font-size: 0.8rem;">
                                                 <option value="APPLIED" ${c.status == 'APPLIED' ? 'selected' : ''}>Mới ứng tuyển</option>
                                                 <option value="SCREENING" ${c.status == 'SCREENING' ? 'selected' : ''}>Sàng lọc CV</option>
                                                 <option value="INTERVIEWING" ${c.status == 'INTERVIEWING' ? 'selected' : ''}>Phỏng vấn</option>
@@ -120,7 +122,7 @@
                             </c:forEach>
                             <c:if test="${empty candidates}">
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="6" class="text-center py-5 text-muted">
                                         <i class="bi bi-person-x fs-2 d-block mb-2 text-secondary"></i>
                                         Không có ứng viên nào trong giai đoạn này.
                                     </td>
@@ -135,7 +137,7 @@
 
     <!-- Modal Thêm Ứng Viên -->
     <div class="modal fade" id="addCandidateModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <form action="${pageContext.request.contextPath}/candidates/create" method="POST">
                     <div class="modal-header">
@@ -148,11 +150,11 @@
                                 <label class="form-label small fw-semibold">Họ và tên ứng viên <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="fullName" required placeholder="VD: Nguyễn Văn B">
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-semibold">Email liên hệ <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" name="email" required placeholder="candidate@email.com">
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-semibold">Số điện thoại</label>
                                 <input type="text" class="form-control" name="phone" placeholder="0901234567">
                             </div>

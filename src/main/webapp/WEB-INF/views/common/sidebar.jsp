@@ -48,12 +48,12 @@
                     </a>
                 </li>
             </c:if>
-            <!-- [US 5 & US 6]: Cấm tuyệt đối Người phỏng vấn (INTERVIEWER) và chỉ hiển thị khi có quyền salary.view hoặc ADMIN -->
-            <c:if test="${(currentUser.hasPermission('salary.view') || currentUser.hasRole('ADMIN')) && !currentUser.hasRole('INTERVIEWER')}">
+            <!-- [KN-103]: CHỈ Trưởng phòng Nhân sự (HR_MANAGER) và Quản trị hệ thống (ADMIN) mới thấy menu Khai báo dải lương -->
+            <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('salary.view')}">
                 <li class="nav-item">
                     <a class="nav-link ${activeMenu == 'salary' ? 'active' : ''}" href="${pageContext.request.contextPath}/salary-ranges">
                         <i class="bi bi-cash-stack"></i>
-                        <span>Dải lương ngân sách</span>
+                        <span>Khai báo dải lương</span>
                     </a>
                 </li>
             </c:if>

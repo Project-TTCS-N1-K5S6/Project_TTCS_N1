@@ -165,13 +165,10 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 5. Phân hệ Dải lương: Cấm tuyệt đối Người phỏng vấn (INTERVIEWER) & yêu cầu quyền salary.view hoặc ADMIN (US 5)
+        // 5. Phân hệ Dải lương [KN-103]: CHỈ Trưởng phòng Nhân sự (HR_MANAGER) và Quản trị hệ thống (ADMIN) mới xem & quản lý được
         if (path.startsWith("/salary-ranges")) {
-            if (currentUser.hasRole("INTERVIEWER") && !currentUser.hasRole("ADMIN")) {
-                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
-                return;
-            }
-            if (!currentUser.hasPermission("salary.view") && !currentUser.hasRole("ADMIN")) {
+            boolean isAuthorizedSalary = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER");
+            if (!isAuthorizedSalary) {
                 request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                 return;
             }
