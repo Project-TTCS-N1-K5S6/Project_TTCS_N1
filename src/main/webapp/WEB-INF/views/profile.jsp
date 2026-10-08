@@ -30,8 +30,8 @@
                         <label for="phone" class="form-label">Số điện thoại</label>
                         <input type="tel" class="form-control" id="phone" name="phone"
                                value="<c:out value='${profile.phone}'/>" maxlength="12" autocomplete="tel"
-                               inputmode="tel" pattern="(?:0|\+84)(?:3[2-9]|5[25689]|7[0-9]|8[1-9]|9[0-9])[0-9]{7}"
-                               title="Nhập số di động Việt Nam 10 số bắt đầu bằng 03, 05, 07, 08, 09 hoặc dạng +84.">
+                               inputmode="tel" pattern="(?:0|\+84)(?:3[2-9]|5(?:2|5|6|8|9)|7[06789]|8[1-9]|9[0-9])[0-9]{7}"
+                               title="Nhập số di động Việt Nam hợp lệ (đầu số 03, 05, 07, 08, 09 hoặc dạng +84).">
                     </div>
                     <div class="mb-4">
                         <label for="jobTitle" class="form-label">Chức danh hiển thị</label>
