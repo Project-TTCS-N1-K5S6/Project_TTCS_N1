@@ -174,19 +174,30 @@ CREATE TABLE recruitment_requisitions (
     id VARCHAR(36) PRIMARY KEY,
     code VARCHAR(50) NOT NULL UNIQUE,
     title VARCHAR(255) NOT NULL,
+    position_title VARCHAR(255) NOT NULL,
     department_id VARCHAR(36) NULL,
+    headcount INT NOT NULL DEFAULT 1,
+    recruitment_reason VARCHAR(50) NOT NULL DEFAULT 'NEW_HEADCOUNT', -- 'REPLACEMENT' (Thay thế), 'NEW_HEADCOUNT' (Tăng mới)
+    min_salary DECIMAL(15, 2) NULL,
+    max_salary DECIMAL(15, 2) NULL,
+    currency VARCHAR(10) NOT NULL DEFAULT 'VND',
+    deadline DATE NOT NULL, -- Ngày cần người (không được ở quá khứ)
+    job_description LONGTEXT NULL, -- Soạn mô tả công việc
+    job_requirements LONGTEXT NULL, -- Soạn yêu cầu ứng viên
+    salary_explanation TEXT NULL, -- Bắt buộc nếu dải lương đề xuất nằm ngoài dải chuẩn của chức danh
+    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', -- 'DRAFT', 'PENDING_APPROVAL', 'OPEN', 'CLOSED', 'REJECTED'
     recruiter_id VARCHAR(36) NULL,
-    hiring_manager_id VARCHAR(36) NULL,
     work_location_id VARCHAR(36) NULL,
     work_mode_id VARCHAR(36) NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'OPEN', -- 'OPEN', 'CLOSED', 'DRAFT'
+    created_by VARCHAR(36) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_req_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
     CONSTRAINT fk_req_recruiter FOREIGN KEY (recruiter_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_req_manager FOREIGN KEY (hiring_manager_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_req_work_location FOREIGN KEY (work_location_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_req_work_mode FOREIGN KEY (work_mode_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT
+    CONSTRAINT fk_req_work_mode FOREIGN KEY (work_mode_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_req_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 13. Bảng Ứng viên (candidates)

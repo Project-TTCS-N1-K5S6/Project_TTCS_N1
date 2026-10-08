@@ -11,7 +11,6 @@ import java.io.IOException;
  * Controller hiển thị giao diện Placeholder cho các phân hệ theo lộ trình mở rộng
  */
 @WebServlet(name = "PlaceholderServlet", urlPatterns = {
-        "/recruitment-requests/*",
         "/job-postings/*",
         "/interviews/*",
         "/offers/*",

@@ -30,6 +30,15 @@
 
         <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
         <ul class="nav flex-column mb-3">
+            <!-- Menu Yêu cầu tuyển dụng -->
+            <c:if test="${currentUser.hasPermission('requisitions.view') || currentUser.hasPermission('requisitions.create') || currentUser.hasRole('ADMIN')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'requisitions' ? 'active' : ''}" href="${pageContext.request.contextPath}/recruitment-requests">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+            </c:if>
             <!-- [US 6 Tiêu chí 1]: Menu Hồ sơ ứng viên hiển thị cho người có quyền candidates.view hoặc ADMIN -->
             <c:if test="${currentUser.hasPermission('candidates.view') || currentUser.hasRole('ADMIN')}">
                 <li class="nav-item">
@@ -107,13 +116,6 @@
 
         <div class="menu-header">MỞ RỘNG (PHASE 2)</div>
         <ul class="nav flex-column mb-3">
-            <li class="nav-item">
-                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/recruitment-requests">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span>Yêu cầu tuyển dụng</span>
-                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
-                </a>
-            </li>
             <li class="nav-item">
                 <a class="nav-link text-muted" href="${pageContext.request.contextPath}/interviews">
                     <i class="bi bi-calendar-check"></i>

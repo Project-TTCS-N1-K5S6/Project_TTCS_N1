@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yêu cầu tuyển dụng - IRMS Platform</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SASS Compiled Stylesheet -->
+    <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+</head>
+<body>
+<div id="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="brand-logo">
+                <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+                <span>IRMS PLATFORM</span>
+            </a>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-header">TỔNG QUAN</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Bảng điều khiển</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="recruitment-requests.html">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="candidates.html">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Hồ sơ &amp; Pipeline</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="salary.html">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Dải lương ngân sách</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="users.html">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Tài khoản người dùng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="departments.html">
+                        <i class="bi bi-building-fill"></i>
+                        <span>Cơ cấu phòng ban</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="roles.html">
+                        <i class="bi bi-person-gear"></i>
+                        <span>Danh mục vai trò</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="permissions.html">
+                        <i class="bi bi-diagram-3-fill"></i>
+                        <span>Ma trận phân quyền</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                <i class="bi bi-circle-fill" style="font-size: 6px;"></i> Hệ thống sẵn sàng
+            </span>
+        </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button"><i class="bi bi-list"></i></button>
+                <div class="page-breadcrumb">
+                    <span class="text-muted fs-6"><i class="bi bi-house-door me-1"></i> IRMS</span>
+                    <span class="text-muted mx-2">/</span>
+                    <span class="fw-semibold text-dark fs-6">Yêu cầu tuyển dụng</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                        <div class="user-avatar">A</div>
+                        <div class="d-none d-md-block text-start lh-1">
+                            <div class="fw-semibold text-dark fs-6">Nguyễn Quản Trị</div>
+                            <small class="text-muted">Quản trị hệ thống</small>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
+                        <li><a class="dropdown-item py-2 text-danger" href="index.html"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <!-- Toast thông báo -->
+            <div id="toastNotification" class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" style="display:none;" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <span id="toastMessage">Thao tác thành công!</span>
+                </div>
+                <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'"></button>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i>Yêu cầu tuyển dụng
+                    </h4>
+                    <p class="text-muted small mb-0">
+                        Khai báo chức danh, phòng ban, định biên, dải lương đề xuất và tiêu chuẩn tuyển dụng.
+                    </p>
+                </div>
+                <a href="recruitment-request-create.html" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
+                </a>
+            </div>
+
+            <!-- Bộ lọc trạng thái -->
+            <div class="card mb-3 border shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm theo mã, chức danh..." oninput="renderTable()">
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <select id="statusFilter" class="form-select form-select-sm" onchange="renderTable()">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="DRAFT">Lưu nháp (Draft)</option>
+                                <option value="PENDING_APPROVAL">Chờ phê duyệt</option>
+                                <option value="OPEN">Đang tuyển</option>
+                                <option value="CLOSED">Đã đóng</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4 text-end">
+                            <span class="text-muted small">Tổng số: <b id="totalCount" class="text-dark">0</b> phiếu yêu cầu</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách yêu cầu -->
+            <div class="card mb-4 shadow-sm border">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 130px;">Mã yêu cầu</th>
+                                    <th>Chức danh &amp; Tiêu đề</th>
+                                    <th>Phòng ban</th>
+                                    <th class="text-center" style="width: 100px;">SL tuyển</th>
+                                    <th>Lý do tuyển</th>
+                                    <th>Dải lương đề xuất</th>
+                                    <th>Ngày cần người</th>
+                                    <th class="text-center" style="width: 130px;">Trạng thái</th>
+                                    <th class="text-end pe-3" style="width: 100px;">Xem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requisitionTableBody">
+                                <!-- Render dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal xem chi tiết -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <div>
+                    <h5 class="modal-title fw-bold" id="mPosition"></h5>
+                    <span class="badge bg-secondary" id="mCode"></span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3 mb-4 p-3 bg-light rounded border">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Phòng ban</small>
+                        <span class="fw-semibold" id="mDept"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Số lượng</small>
+                        <span class="badge bg-primary-subtle text-primary border" id="mHeadcount"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Lý do tuyển</small>
+                        <span class="fw-semibold" id="mReason"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Dải lương đề xuất</small>
+                        <span class="fw-bold text-success fs-6" id="mSalary"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Ngày cần người</small>
+                        <span class="fw-semibold text-danger" id="mDeadline"></span>
+                    </div>
+                </div>
+
+                <div id="mExplanationBox" class="mb-4 p-3 bg-warning-subtle border border-warning rounded" style="display:none;">
+                    <h6 class="fw-bold text-warning-emphasis mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Giải trình dải lương ngoài chuẩn:
+                    </h6>
+                    <div id="mExplanation" class="small text-dark" style="white-space: pre-line;"></div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary border-bottom pb-2">
+                        <i class="bi bi-file-earmark-text me-1"></i> Mô tả công việc (Job Description)
+                    </h6>
+                    <div id="mJD" class="p-3 bg-white rounded border small" style="white-space: pre-line;"></div>
+                </div>
+
+                <div class="mb-2">
+                    <h6 class="fw-bold text-primary border-bottom pb-2">
+                        <i class="bi bi-person-check me-1"></i> Yêu cầu ứng viên (Candidate Requirements)
+                    </h6>
+                    <div id="mReq" class="p-3 bg-white rounded border small" style="white-space: pre-line;"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+var defaultRequisitions = [
+    {
+        id: "req-001",
+        code: "REQ-2026-001",
+        title: "Tuyển dụng Kỹ sư Java Backend Senior",
+        positionTitle: "Kỹ sư Java Backend (Senior)",
+        departmentName: "Khối Công nghệ Thông tin",
+        headcount: 2,
+        recruitmentReason: "NEW_HEADCOUNT",
+        minSalary: 25000000,
+        maxSalary: 45000000,
+        deadline: "2026-11-30",
+        salaryExplanation: "",
+        status: "OPEN",
+        jobDescription: "- Thiết kế kiến trúc dịch vụ và RESTful APIs hiệu năng cao.\n- Quản trị CSDL MySQL, tối ưu truy vấn phân tán.\n- Hướng dẫn lập trình viên junior và review code chất lượng.",
+        jobRequirements: "- Tối thiểu 4 năm kinh nghiệm với Java Core & Servlet/Spring Boot.\n- Hiểu sâu về MySQL, Transaction, HikariCP, Indexing.\n- Khả năng đọc hiểu tài liệu tiếng Anh tốt."
+    },
+    {
+        id: "req-002",
+        code: "REQ-2026-002",
+        title: "Tuyển dụng Chuyên viên Tuyển dụng Nhân sự",
+        positionTitle: "Chuyên viên Tuyển dụng (Recruiter)",
+        departmentName: "Ban Nhân sự & Tuyển dụng",
+        headcount: 1,
+        recruitmentReason: "REPLACEMENT",
+        minSalary: 10000000,
+        maxSalary: 18000000,
+        deadline: "2026-11-15",
+        salaryExplanation: "",
+        status: "OPEN",
+        jobDescription: "- Tìm kiếm nguồn ứng viên tiềm năng cho các vị trí công nghệ.\n- Sàng lọc CV, điều phối lịch phỏng vấn và gửi Offer Letter.\n- Xây dựng thương hiệu tuyển dụng trên các kênh.",
+        jobRequirements: "- Tối thiểu 1 năm kinh nghiệm tuyển dụng IT/Tech.\n- Kỹ năng giao tiếp xuất sắc, chủ động và khéo léo."
+    },
+    {
+        id: "req-003",
+        code: "REQ-2026-003",
+        title: "Tuyển dụng Trưởng nhóm Kinh doanh B2B",
+        positionTitle: "Trưởng nhóm Kinh doanh B2B",
+        departmentName: "Khối Kinh doanh & Thị trường",
+        headcount: 1,
+        recruitmentReason: "REPLACEMENT",
+        minSalary: 25000000,
+        maxSalary: 42000000,
+        deadline: "2026-12-01",
+        salaryExplanation: "Đề xuất mức lương 25 - 42M vượt dải chuẩn (20 - 35M) do yêu cầu chuyên gia có sẵn mạng lưới khách hàng doanh nghiệp Enterprise cao cấp.",
+        status: "PENDING_APPROVAL",
+        jobDescription: "- Quản lý đội ngũ kinh doanh 8 nhân sự, phụ trách KPI doanh số.\n- Tiếp cận khách hàng doanh nghiệp và đối tác chiến lược.\n- Đàm phán và ký kết hợp đồng dịch vụ lớn.",
+        jobRequirements: "- Tối thiểu 3 năm kinh nghiệm Sales B2B phần mềm/SaaS.\n- Khả năng thương thuyết và dẫn dắt đội ngũ tốt."
+    },
+    {
+        id: "req-004",
+        code: "REQ-2026-004",
+        title: "Tuyển dụng Kỹ sư Java Backend Junior (Bản nháp)",
+        positionTitle: "Kỹ sư Java Backend (Junior)",
+        departmentName: "Khối Công nghệ Thông tin",
+        headcount: 3,
+        recruitmentReason: "NEW_HEADCOUNT",
+        minSalary: 12000000,
+        maxSalary: 18000000,
+        deadline: "2026-12-15",
+        salaryExplanation: "",
+        status: "DRAFT",
+        jobDescription: "- Tham gia phát triển các tính năng phân hệ người dùng theo tài liệu thiết kế.\n- Viết unit test và sửa lỗi hệ thống.",
+        jobRequirements: "- Sinh viên mới tốt nghiệp hoặc có dưới 1 năm kinh nghiệm Java.\n- Nắm vững kiến thức OOP, cấu trúc dữ liệu và giải thuật."
+    }
+];
+
+function getStoredRequisitions() {
+    var stored = localStorage.getItem('irms_requisitions');
+    if (!stored) {
+        localStorage.setItem('irms_requisitions', JSON.stringify(defaultRequisitions));
+        return defaultRequisitions;
+    }
+    return JSON.parse(stored);
+}
+
+function formatVND(val) {
+    if (!val) return "Thỏa thuận";
+    return new Intl.NumberFormat('vi-VN').format(val) + " VND";
+}
+
+function getStatusBadge(st) {
+    if (st === 'DRAFT') return '<span class="badge bg-secondary text-white px-2 py-1">Bản nháp</span>';
+    if (st === 'PENDING_APPROVAL') return '<span class="badge bg-warning text-dark px-2 py-1">Chờ phê duyệt</span>';
+    if (st === 'OPEN') return '<span class="badge bg-success text-white px-2 py-1">Đang tuyển</span>';
+    if (st === 'CLOSED') return '<span class="badge bg-dark text-white px-2 py-1">Đã đóng</span>';
+    return '<span class="badge bg-secondary">' + st + '</span>';
+}
+
+function renderTable() {
+    var list = getStoredRequisitions();
+    var search = document.getElementById('searchInput').value.trim().toLowerCase();
+    var status = document.getElementById('statusFilter').value;
+
+    var filtered = list.filter(function(item) {
+        var matchSearch = !search || item.code.toLowerCase().includes(search) || item.positionTitle.toLowerCase().includes(search) || (item.title && item.title.toLowerCase().includes(search));
+        var matchStatus = !status || item.status === status;
+        return matchSearch && matchStatus;
+    });
+
+    document.getElementById('totalCount').textContent = filtered.length;
+    var tbody = document.getElementById('requisitionTableBody');
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Không tìm thấy yêu cầu tuyển dụng nào.</td></tr>';
+        return;
+    }
+
+    filtered.forEach(function(r) {
+        var reasonBadge = (r.recruitmentReason === 'REPLACEMENT') 
+            ? '<span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-arrow-repeat me-1"></i>Thay thế</span>'
+            : '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-person-plus me-1"></i>Tăng mới</span>';
+
+        var hasExplanation = r.salaryExplanation && r.salaryExplanation.trim().length > 0;
+        var expBadge = hasExplanation ? '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-xs ms-1"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Có giải trình</span>' : '';
+
+        var salText = (r.minSalary && r.maxSalary) ? (new Intl.NumberFormat('vi-VN').format(r.minSalary) + ' - ' + new Intl.NumberFormat('vi-VN').format(r.maxSalary) + ' VND') : 'Thỏa thuận';
+
+        var tr = document.createElement('tr');
+        tr.innerHTML = 
+            '<td><span class="badge bg-light text-dark border font-monospace px-2 py-1">' + r.code + '</span></td>' +
+            '<td><div class="fw-bold text-dark">' + r.positionTitle + '</div><small class="text-muted">' + (r.title || '') + '</small></td>' +
+            '<td><span class="fw-semibold text-secondary"><i class="bi bi-building me-1 small"></i>' + (r.departmentName || 'Chưa gán') + '</span></td>' +
+            '<td class="text-center"><span class="badge bg-primary-subtle text-primary border">' + r.headcount + ' người</span></td>' +
+            '<td>' + reasonBadge + '</td>' +
+            '<td><div class="fw-semibold text-dark">' + salText + '</div>' + expBadge + '</td>' +
+            '<td><span class="text-dark fw-semibold"><i class="bi bi-calendar-event me-1 text-muted"></i>' + (r.deadline || 'Chưa đặt') + '</span></td>' +
+            '<td class="text-center">' + getStatusBadge(r.status) + '</td>' +
+            '<td class="text-end pe-3">' +
+                '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="showDetail(\'' + r.id + '\')"><i class="bi bi-eye"></i></button>' +
+            '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function showDetail(id) {
+    var list = getStoredRequisitions();
+    var r = list.find(function(item) { return item.id === id; });
+    if (!r) return;
+
+    document.getElementById('mPosition').textContent = r.positionTitle;
+    document.getElementById('mCode').textContent = r.code + ' - ' + (r.status === 'DRAFT' ? 'Bản nháp' : (r.status === 'OPEN' ? 'Đang tuyển' : 'Chờ phê duyệt'));
+    document.getElementById('mDept').textContent = r.departmentName || 'Chưa gán';
+    document.getElementById('mHeadcount').textContent = r.headcount + ' nhân sự';
+    document.getElementById('mReason').textContent = r.recruitmentReason === 'REPLACEMENT' ? 'Thay thế' : 'Tăng mới';
+    document.getElementById('mSalary').textContent = (r.minSalary && r.maxSalary) ? (new Intl.NumberFormat('vi-VN').format(r.minSalary) + ' - ' + new Intl.NumberFormat('vi-VN').format(r.maxSalary) + ' VND') : 'Thỏa thuận';
+    document.getElementById('mDeadline').textContent = r.deadline || 'Chưa đặt';
+
+    document.getElementById('mJD').textContent = r.jobDescription || '(Chưa có mô tả công việc)';
+    document.getElementById('mReq').textContent = r.jobRequirements || '(Chưa có yêu cầu ứng viên)';
+
+    var expBox = document.getElementById('mExplanationBox');
+    if (r.salaryExplanation && r.salaryExplanation.trim().length > 0) {
+        document.getElementById('mExplanation').textContent = r.salaryExplanation;
+        expBox.style.display = 'block';
+    } else {
+        expBox.style.display = 'none';
+    }
+
+    var modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    modal.show();
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    var toastMsg = sessionStorage.getItem('irms_toast');
+    if (toastMsg) {
+        document.getElementById('toastMessage').textContent = toastMsg;
+        document.getElementById('toastNotification').style.display = 'block';
+        sessionStorage.removeItem('irms_toast');
+    }
+    renderTable();
+});
+</script>
+</body>
+</html>

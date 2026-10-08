@@ -22,6 +22,14 @@
 
         <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
         <ul class="nav flex-column mb-3">
+            <c:if test="${currentUser.hasPermission('requisitions.view') || currentUser.hasPermission('requisitions.create') || currentUser.hasRole('ADMIN')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'requisitions' ? 'active' : ''}" href="${pageContext.request.contextPath}/recruitment-requests">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+            </c:if>
             <li class="nav-item">
                 <a class="nav-link ${activeMenu == 'candidates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates">
                     <i class="bi bi-people-fill"></i>

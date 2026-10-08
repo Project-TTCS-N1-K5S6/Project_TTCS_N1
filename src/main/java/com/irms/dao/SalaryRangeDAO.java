@@ -48,6 +48,58 @@ public class SalaryRangeDAO extends BaseDAO {
         return list;
     }
 
+    public SalaryRange findByDepartmentAndPosition(String departmentId, String positionTitle) {
+        if (positionTitle == null || positionTitle.trim().isEmpty()) return null;
+        String sql;
+        boolean hasDept = (departmentId != null && !departmentId.trim().isEmpty());
+        if (hasDept) {
+            sql = "SELECT s.*, d.name AS department_name FROM salary_ranges s " +
+                  "LEFT JOIN departments d ON s.department_id = d.id " +
+                  "WHERE LOWER(TRIM(s.position_title)) = LOWER(TRIM(?)) AND s.department_id = ? " +
+                  "LIMIT 1";
+        } else {
+            sql = "SELECT s.*, d.name AS department_name FROM salary_ranges s " +
+                  "LEFT JOIN departments d ON s.department_id = d.id " +
+                  "WHERE LOWER(TRIM(s.position_title)) = LOWER(TRIM(?)) " +
+                  "LIMIT 1";
+        }
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, positionTitle.trim());
+            if (hasDept) {
+                ps.setString(2, departmentId);
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                SalaryRange sr = new SalaryRange();
+                sr.setId(rs.getString("id"));
+                sr.setDepartmentId(rs.getString("department_id"));
+                sr.setDepartmentName(rs.getString("department_name"));
+                sr.setPositionTitle(rs.getString("position_title"));
+                sr.setMinSalary(rs.getBigDecimal("min_salary"));
+                sr.setMaxSalary(rs.getBigDecimal("max_salary"));
+                sr.setCurrency(rs.getString("currency"));
+                sr.setCreatedAt(rs.getTimestamp("created_at"));
+                sr.setUpdatedAt(rs.getTimestamp("updated_at"));
+                return sr;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm dải lương theo vị trí", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+
+        // Nếu có truyền dept mà không khớp, thử tìm fallback chỉ theo positionTitle
+        if (hasDept) {
+            return findByDepartmentAndPosition(null, positionTitle);
+        }
+        return null;
+    }
+
     public boolean insert(SalaryRange sr) {
         String sql = "INSERT INTO salary_ranges (id, department_id, position_title, min_salary, max_salary, currency) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
