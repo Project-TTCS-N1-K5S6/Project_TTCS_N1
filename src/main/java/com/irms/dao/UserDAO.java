@@ -466,7 +466,7 @@ public class UserDAO extends BaseDAO {
 
     public void incrementFailedAttempts(String email, int maxAttempts, int lockoutMinutes) {
         String sql = "UPDATE users SET failed_login_attempts = failed_login_attempts + 1, " +
-                     "locked_until = CASE WHEN failed_login_attempts + 1 >= ? THEN NOW() + INTERVAL '15 minutes' ELSE locked_until END, " +
+                     "locked_until = CASE WHEN failed_login_attempts + 1 >= ? THEN DATE_ADD(NOW(), INTERVAL ? MINUTE) ELSE locked_until END, " +
                      "status = CASE WHEN failed_login_attempts + 1 >= ? THEN 'LOCKED' ELSE status END " +
                      "WHERE email = ?";
         Connection conn = null;
@@ -475,8 +475,9 @@ public class UserDAO extends BaseDAO {
             conn = getConnection();
             ps = conn.prepareStatement(sql);
             ps.setInt(1, maxAttempts);
-            ps.setInt(2, maxAttempts);
-            ps.setString(3, email);
+            ps.setInt(2, lockoutMinutes);
+            ps.setInt(3, maxAttempts);
+            ps.setString(4, email);
             ps.executeUpdate();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi tăng failed_login_attempts cho email: " + email, e);
@@ -550,7 +551,11 @@ public class UserDAO extends BaseDAO {
         u.setJobTitle(rs.getString("job_title"));
         u.setDepartmentId(rs.getString("department_id"));
         u.setDepartmentName(rs.getString("department_name"));
-        u.setAvatarUrl(rs.getString("avatar_url"));
+        try {
+            u.setAvatarUrl(rs.getString("avatar_url"));
+        } catch (SQLException ignored) {
+            u.setAvatarUrl(null);
+        }
         u.setPasswordHash(rs.getString("password_hash"));
         u.setStatus(rs.getString("status"));
         u.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));

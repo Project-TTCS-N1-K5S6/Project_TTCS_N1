@@ -53,6 +53,7 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(50),
     job_title VARCHAR(100),
+    avatar_url VARCHAR(255),
     department_id VARCHAR(36),
     password_hash VARCHAR(255) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE', 'LOCKED', 'INACTIVE'

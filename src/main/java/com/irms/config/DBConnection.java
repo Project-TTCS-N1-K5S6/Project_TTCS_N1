@@ -18,14 +18,14 @@ public class DBConnection {
 
     static {
         try {
-            String driver = AppConfig.get("db.driver", "org.postgresql.Driver");
+            String driver = AppConfig.get("db.driver", "com.mysql.cj.jdbc.Driver");
             Class.forName(driver);
 
             HikariConfig config = new HikariConfig();
             config.setDriverClassName(driver);
-            config.setJdbcUrl(AppConfig.get("db.url", "jdbc:postgresql://localhost:5432/myapp"));
-            config.setUsername(AppConfig.get("db.user", "postgres"));
-            config.setPassword(AppConfig.get("db.password", "180506"));
+            config.setJdbcUrl(AppConfig.get("db.url", "jdbc:mysql://127.0.0.1:3306/test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8"));
+            config.setUsername(AppConfig.get("db.user", "root"));
+            config.setPassword(AppConfig.get("db.password", ""));
 
             config.setMinimumIdle(AppConfig.getInt("db.pool.minIdle", 5));
             config.setMaximumPoolSize(AppConfig.getInt("db.pool.maximumPoolSize", 20));
@@ -56,9 +56,9 @@ public class DBConnection {
             return dataSource.getConnection();
         }
         // Dự phòng kết nối trực tiếp nếu pool gặp sự cố
-        String url = AppConfig.get("db.url", "jdbc:postgresql://localhost:5432/myapp");
-        String user = AppConfig.get("db.user", "postgres");
-        String pass = AppConfig.get("db.password", "180506");
+        String url = AppConfig.get("db.url", "jdbc:mysql://127.0.0.1:3306/test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8");
+        String user = AppConfig.get("db.user", "root");
+        String pass = AppConfig.get("db.password", "");
         return DriverManager.getConnection(url, user, pass);
     }
 
