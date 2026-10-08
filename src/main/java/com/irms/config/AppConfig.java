@@ -100,6 +100,9 @@ public class AppConfig {
             if ("5432".equals(port) || url.startsWith("jdbc:postgresql:")) {
                 return "org.postgresql.Driver";
             }
+            if ("3306".equals(port) || url.startsWith("jdbc:mysql:")) {
+                return "com.mysql.cj.jdbc.Driver";
+            }
         } else if ("db.user".equals(key)) {
             String user = get("DB_USER", null);
             if (user != null) return user;
