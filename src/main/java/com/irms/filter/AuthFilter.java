@@ -174,6 +174,17 @@ public class AuthFilter implements Filter {
             }
         }
 
+        // 5.1 Phân hệ Khung năng lực (/competency-frameworks): Kiểm tra quyền competencies.view hoặc ADMIN hoặc HR_MANAGER
+        if (path.startsWith("/competency-frameworks")) {
+            boolean isAuthorizedCompetency = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("competencies.view")
+                    || currentUser.hasPermission("evaluations.manage");
+            if (!isAuthorizedCompetency) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create hoặc ADMIN
         if (path.startsWith("/recruitment-requests")) {
             if (!currentUser.hasPermission("requisitions.view") && !currentUser.hasPermission("requisitions.create") && !currentUser.hasRole("ADMIN")) {

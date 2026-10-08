@@ -4,6 +4,8 @@ E:\ttcs_n1\src\main\java\com\irms\model\Question.java
 E:\ttcs_n1\src\main\java\com\irms\controller\PermissionMatrixServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\AuditLog.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AvatarServlet.java
+E:\ttcs_n1\src\main\java\com\irms\model\PositionCompetencyFramework.java
+E:\ttcs_n1\src\main\java\com\irms\controller\CompetencyFrameworkServlet.java
 E:\ttcs_n1\src\main\java\com\irms\service\SalaryRangeService.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PasswordResetDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\UserExcelService.java
@@ -40,6 +42,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\UserService.java
 E:\ttcs_n1\src\main\java\com\irms\dao\RoleDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\EmailTemplateUtil.java
 E:\ttcs_n1\src\main\java\com\irms\model\Department.java
+E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyFrameworkDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PermissionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\JsonUtil.java
 E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
@@ -52,12 +55,15 @@ E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\DepartmentService.java
 E:\ttcs_n1\src\main\java\com\irms\service\RolePermissionService.java
 E:\ttcs_n1\src\main\java\com\irms\config\AppConfig.java
+E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFrameworkCriterion.java
 E:\ttcs_n1\src\main\java\com\irms\dao\BaseDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyCriterionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\ProfileService.java
+E:\ttcs_n1\src\main\java\com\irms\service\CompetencyFrameworkService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\ProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\RecruitmentRequestDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\Candidate.java
+E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFramework.java
 E:\ttcs_n1\src\main\java\com\irms\listener\AppContextListener.java
 E:\ttcs_n1\src\main\java\com\irms\util\SecurityUtil.java
 E:\ttcs_n1\src\main\java\com\irms\model\Permission.java

@@ -98,7 +98,13 @@ INSERT INTO permissions (id, code, name, module, action, description) VALUES
 ('p-027', 'permissions.view', 'Xem ma trận phân quyền', 'permissions', 'view', 'Xem ma trận quyền hạn các vai trò'),
 ('p-028', 'permissions.manage', 'Cấu hình ma trận quyền hạn', 'permissions', 'manage', 'Cập nhật phân quyền cho từng vai trò'),
 ('p-029', 'audit.view', 'Xem nhật ký kiểm toán', 'audit', 'view', 'Xem lịch sử các thao tác bảo mật và biến động dữ liệu'),
-('p-030', 'salary.view', 'Xem dải lương cơ bản', 'salary', 'view', 'Xem thông tin dải ngân sách lương vị trí');
+('p-030', 'salary.view', 'Xem dải lương cơ bản', 'salary', 'view', 'Xem thông tin dải ngân sách lương vị trí'),
+-- 11. Khung năng lực & Tiêu chí đánh giá
+('p-031', 'competencies.view', 'Xem khung năng lực', 'competencies', 'view', 'Tra cứu danh sách, chi tiết và chức danh sử dụng khung năng lực'),
+('p-032', 'competencies.create', 'Tạo khung năng lực', 'competencies', 'create', 'Tạo mới bộ khung năng lực đánh giá nhân sự'),
+('p-033', 'competencies.update', 'Chỉnh sửa khung năng lực', 'competencies', 'update', 'Cập nhật nội dung tiêu chí và cơ cấu trọng số khung năng lực'),
+('p-034', 'competencies.status', 'Kích hoạt / Ngừng áp dụng', 'competencies', 'status', 'Kích hoạt hoặc ngừng áp dụng khung năng lực'),
+('p-035', 'competencies.assign', 'Gán khung cho chức danh', 'competencies', 'assign', 'Thiết lập khung năng lực áp dụng cho từng chức danh vị trí');
 
 -- 4. Gán quyền hạn cho từng vai trò (Role Permissions)
 DELETE FROM role_permissions;
@@ -120,7 +126,8 @@ WHERE code IN (
     'offers.view', 'offers.manage',
     'notifications.view', 'notifications.send',
     'reports.view', 'reports.export',
-    'users.view', 'roles.view', 'permissions.view', 'audit.view', 'salary.view'
+    'users.view', 'roles.view', 'permissions.view', 'audit.view', 'salary.view',
+    'competencies.view', 'competencies.create', 'competencies.update', 'competencies.status', 'competencies.assign'
 );
 
 -- RECRUITER: Chuyên sâu pipeline tuyển dụng, KHÔNG có salary.view và quản trị người dùng
@@ -234,11 +241,15 @@ INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, description
 
 -- 11. Khởi tạo danh mục tiêu chí năng lực (Competency Criteria)
 DELETE FROM competency_criteria;
-INSERT INTO competency_criteria (id, name, description) VALUES
-('crit-001', 'Kỹ năng lập trình Java', 'Khả năng sử dụng Java, Spring Boot, Hibernate...'),
-('crit-002', 'Tư duy logic thuật toán', 'Khả năng giải quyết vấn đề, cấu trúc dữ liệu và thuật toán'),
-('crit-003', 'Kỹ năng làm việc nhóm', 'Khả năng giao tiếp, phối hợp với các thành viên khác'),
-('crit-004', 'Giải quyết vấn đề', 'Khả năng phân tích và đưa ra giải pháp trong tình huống khó khăn');
+INSERT INTO competency_criteria (id, code, name, description, evaluation_guideline, status) VALUES
+('crit-001', 'CRIT-JAVA', 'Kỹ năng lập trình Java', 'Khả năng sử dụng Java, Spring Boot, Hibernate...', 'Đánh giá qua bài test code thực hành và kiến trúc JVM', 'ACTIVE'),
+('crit-002', 'CRIT-LOGIC', 'Tư duy logic thuật toán', 'Khả năng giải quyết vấn đề, cấu trúc dữ liệu và thuật toán', 'Đánh giá qua các bài toán tối ưu độ phức tạp không gian và thời gian', 'ACTIVE'),
+('crit-003', 'CRIT-TEAM', 'Kỹ năng làm việc nhóm', 'Khả năng giao tiếp, phối hợp với các thành viên khác', 'Đánh giá qua tình huống xử lý xung đột và tinh thần chia sẻ', 'ACTIVE'),
+('crit-004', 'CRIT-PROB', 'Giải quyết vấn đề', 'Khả năng phân tích và đưa ra giải pháp trong tình huống khó khăn', 'Đánh giá cách tiếp cận sự cố hệ thống và tư duy root-cause', 'ACTIVE'),
+('crit-005', 'CRIT-COMM', 'Kỹ năng giao tiếp chuyên nghiệp', 'Khả năng truyền đạt thông tin rõ ràng, thuyết phục và lắng nghe tích cực.', 'Đánh giá qua cách ứng viên trả lời câu hỏi tình huống, sự tự tin và diễn đạt mạch lạc.', 'ACTIVE'),
+('crit-006', 'CRIT-LEAD', 'Năng lực lãnh đạo & Quản lý', 'Khả năng định hướng mục tiêu, truyền cảm hứng và phân công công việc hiệu quả.', 'Đánh giá qua kinh nghiệm quản lý đội ngũ và xử lý bất đồng nội bộ.', 'ACTIVE'),
+('crit-007', 'CRIT-SALES', 'Kỹ năng đàm phán & Bán hàng', 'Năng lực thấu hiểu nhu cầu khách hàng, xử lý từ chối và chốt hợp đồng B2B.', 'Đánh giá qua số liệu thành tích bán hàng trong quá khứ và cách xử lý tình huống phản biện của khách hàng.', 'ACTIVE'),
+('crit-008', 'CRIT-ADAPT', 'Khả năng thích ứng & Học hỏi', 'Sự nhanh nhạy trong tiếp thu công nghệ mới và linh hoạt trước thay đổi.', 'Đánh giá qua các dự án ứng viên tự học kỹ năng mới trong thời gian ngắn.', 'ACTIVE');
 
 -- 12. Khởi tạo Ngân hàng câu hỏi (Questions)
 DELETE FROM questions;
@@ -249,4 +260,40 @@ INSERT INTO questions (id, content, difficulty_level, good_answer_suggestion, cr
 ('q-004', 'Cho một mảng chưa sắp xếp, hãy tìm phần tử lớn thứ K trong mảng với độ phức tạp tối ưu nhất.', 'HARD', 'Sử dụng Min-Heap (O(N log K)) hoặc thuật toán QuickSelect (O(N) trung bình).', 'crit-002', 'Lập trình viên Java'),
 ('q-005', 'Nếu hệ thống đang chạy bị lỗi dẫn đến ngắt dịch vụ, bạn sẽ thực hiện các bước xử lý nào?', 'HARD', '1. Tái thiết lập dịch vụ/Rollback để giảm ảnh hưởng. 2. Thu thập log. 3. Phân tích nguyên nhân gốc (Root Cause). 4. Cập nhật bản vá và viết post-mortem.', 'crit-004', 'DevOps / Backend Senior');
 
+-- 13. Khởi tạo Khung năng lực mẫu (Competency Frameworks)
+DELETE FROM position_competency_frameworks;
+DELETE FROM competency_framework_criteria;
+DELETE FROM competency_frameworks;
+
+INSERT INTO competency_frameworks (id, code, name, description, status, created_by) VALUES
+('cf-001', 'KNL-DEV-SR', 'Khung năng lực Kỹ sư Backend Senior', 'Bộ tiêu chí đánh giá kỹ năng chuyên môn và phối hợp dành cho lập trình viên Backend cấp cao', 'ACTIVE', 'usr-001'),
+('cf-002', 'KNL-SALES-B2B', 'Khung năng lực Chuyên viên Kinh doanh B2B', 'Bộ tiêu chí đánh giá năng lực đàm phán, giao tiếp và kỹ năng giải quyết vấn đề khách hàng', 'ACTIVE', 'usr-001'),
+('cf-003', 'KNL-DEV-JR', 'Khung năng lực Kỹ sư Java Backend Junior', 'Bộ tiêu chí dành cho các lập trình viên Java mới ra trường hoặc dưới 1 năm kinh nghiệm', 'DRAFT', 'usr-002');
+
+-- Tiêu chí KNL-DEV-SR: 30% + 25% + 25% + 20% = 100%
+INSERT INTO competency_framework_criteria (id, framework_id, criterion_id, weight, display_order) VALUES
+('cfc-001', 'cf-001', 'crit-001', 30.00, 1),
+('cfc-002', 'cf-001', 'crit-002', 25.00, 2),
+('cfc-003', 'cf-001', 'crit-004', 25.00, 3),
+('cfc-004', 'cf-001', 'crit-003', 20.00, 4);
+
+-- Tiêu chí KNL-SALES-B2B: 35% + 25% + 20% + 20% = 100%
+INSERT INTO competency_framework_criteria (id, framework_id, criterion_id, weight, display_order) VALUES
+('cfc-005', 'cf-002', 'crit-007', 35.00, 1),
+('cfc-006', 'cf-002', 'crit-005', 25.00, 2),
+('cfc-007', 'cf-002', 'crit-004', 20.00, 3),
+('cfc-008', 'cf-002', 'crit-003', 20.00, 4);
+
+-- Tiêu chí KNL-DEV-JR: 40% + 30% + 30% = 100%
+INSERT INTO competency_framework_criteria (id, framework_id, criterion_id, weight, display_order) VALUES
+('cfc-009', 'cf-003', 'crit-001', 40.00, 1),
+('cfc-010', 'cf-003', 'crit-002', 30.00, 2),
+('cfc-011', 'cf-003', 'crit-008', 30.00, 3);
+
+-- Gán khung năng lực cho chức danh trong bảng salary_ranges
+INSERT INTO position_competency_frameworks (id, position_id, framework_id, assigned_by) VALUES
+('pcf-001', 'sal-002', 'cf-001', 'usr-001'), -- DEV-BE-SR (Kỹ sư Java Backend Senior) dùng KNL-DEV-SR
+('pcf-002', 'sal-005', 'cf-002', 'usr-001'); -- SALES-LEAD-01 (Trưởng nhóm Kinh doanh B2B) dùng KNL-SALES-B2B
+
 SET FOREIGN_KEY_CHECKS = 1;
+

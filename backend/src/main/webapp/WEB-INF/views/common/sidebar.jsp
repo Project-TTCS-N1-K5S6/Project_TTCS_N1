@@ -57,6 +57,15 @@
                     </a>
                 </li>
             </c:if>
+            <!-- Khai báo khung năng lực -->
+            <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('competencies.view') || currentUser.hasPermission('evaluations.manage')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'competencies' ? 'active' : ''}" href="${pageContext.request.contextPath}/competency-frameworks">
+                        <i class="bi bi-award-fill"></i>
+                        <span>Khai báo khung năng lực</span>
+                    </a>
+                </li>
+            </c:if>
             <li class="nav-item">
                 <a class="nav-link ${activeMenu == 'questions' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/questions">
                     <i class="bi bi-question-square-fill"></i>
