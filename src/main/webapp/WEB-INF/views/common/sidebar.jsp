@@ -57,6 +57,12 @@
                     </a>
                 </li>
             </c:if>
+            <li class="nav-item">
+                <a class="nav-link ${activeMenu == 'questions' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/questions">
+                    <i class="bi bi-question-square-fill"></i>
+                    <span>Ngân hàng câu hỏi</span>
+                </a>
+            </li>
         </ul>
 
         <!-- [US 6 Tiêu chí 1]: Menu Quản trị chỉ hiển thị khi tài khoản có ít nhất 1 quyền thuộc phân hệ Quản trị -->

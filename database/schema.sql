@@ -259,4 +259,31 @@ CREATE INDEX idx_cand_status ON candidates(status);
 
 CREATE INDEX idx_sr_dept ON salary_ranges(department_id);
 
+-- 14. Bảng Tiêu chí năng lực (competency_criteria)
+DROP TABLE IF EXISTS competency_criteria;
+CREATE TABLE competency_criteria (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 15. Bảng Ngân hàng câu hỏi (questions)
+DROP TABLE IF EXISTS questions;
+CREATE TABLE questions (
+    id VARCHAR(36) PRIMARY KEY,
+    content TEXT NOT NULL,
+    difficulty_level VARCHAR(20) NOT NULL, -- EASY, MEDIUM, HARD
+    good_answer_suggestion TEXT,
+    criterion_id VARCHAR(36) NOT NULL,
+    job_title VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_q_criterion FOREIGN KEY (criterion_id) REFERENCES competency_criteria(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_q_criterion ON questions(criterion_id);
+CREATE INDEX idx_q_job_title ON questions(job_title);
+
 SET FOREIGN_KEY_CHECKS = 1;
