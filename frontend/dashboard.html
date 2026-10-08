@@ -11,15 +11,56 @@
     <!-- Bootstrap 5.3.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- SASS Compiled Stylesheet -->
-    <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        .stat-card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .stat-icon.primary { background: #eff6ff; color: #2563eb; }
+        .stat-icon.success { background: #ecfdf5; color: #059669; }
+        .stat-icon.warning { background: #fffbeb; color: #d97706; }
+        .stat-icon.purple  { background: #faf5ff; color: #9333ea; }
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+        .stat-title {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
 <div id="app-wrapper">
     <!-- Sidebar -->
     <aside class="app-sidebar" id="app-sidebar">
         <div class="sidebar-header">
-            <a href="dashboard.html" class="brand-logo">
+            <a href="dashboard.html" class="brand-logo text-decoration-none">
                 <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
                 <span>IRMS PLATFORM</span>
             </a>
@@ -57,6 +98,30 @@
                         <span>Ma trận phân quyền</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="departments.html">
+                        <i class="bi bi-building"></i>
+                        <span>Cơ cấu phòng ban</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="roles.html">
+                        <i class="bi bi-person-gear"></i>
+                        <span>Danh mục vai trò</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="salary.html">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Dải lương ngân sách</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="audit.html">
+                        <i class="bi bi-journal-text"></i>
+                        <span>Nhật ký kiểm toán</span>
+                    </a>
+                </li>
             </ul>
         </div>
         <div class="sidebar-footer">
@@ -80,31 +145,33 @@
                     <span class="fw-semibold text-dark fs-6">Bảng điều khiển tổng quan</span>
                 </div>
             </div>
-            <div class="header-right">
+            <div class="header-right d-flex align-items-center gap-3">
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                        <div class="user-avatar">A</div>
+                        <div class="user-avatar" id="headerAvatar">A</div>
                         <div class="d-none d-md-block text-start lh-1">
-                            <div class="fw-semibold text-dark fs-6">Nguyễn Quản Trị</div>
-                            <small class="text-muted">Quản trị hệ thống</small>
+                            <div class="fw-semibold text-dark fs-6" id="headerUserName">Nguyễn Quản Trị</div>
+                            <small class="text-muted" id="headerUserRole">Quản trị hệ thống</small>
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
-                        <li><a class="dropdown-item py-2 text-danger" href="index.html"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                        <li><a class="dropdown-item py-2" href="change-password.html"><i class="bi bi-key me-2 text-warning"></i> Đổi mật khẩu</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
                     </ul>
                 </div>
             </div>
         </header>
 
-        <div class="app-content">
+        <div class="app-content p-4">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
                 <div>
-                    <h4 class="fw-bold mb-1">Xin chào, Nguyễn Quản Trị! 👋</h4>
-                    <p class="text-muted small mb-0">Hệ thống quản lý tuyển dụng nội bộ IRMS - Phiên bản Bootstrap 5 &amp; SASS.</p>
+                    <h4 class="fw-bold mb-1" id="welcomeHeading">Xin chào, Quản trị viên! 👋</h4>
+                    <p class="text-muted small mb-0">Hệ thống Quản lý Tuyển dụng Nội bộ IRMS - Cơ sở dữ liệu và API hoạt động bình thường.</p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="candidates.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-person-plus-fill"></i> Ứng viên</a>
-                    <a href="users.html" class="btn btn-primary btn-sm"><i class="bi bi-people-fill"></i> Quản trị tài khoản</a>
+                    <a href="candidates.html" class="btn btn-outline-primary"><i class="bi bi-person-lines-fill me-1"></i> Xem ứng viên</a>
+                    <a href="users.html" class="btn btn-primary"><i class="bi bi-people-fill me-1"></i> Quản trị tài khoản (CRUD)</a>
                 </div>
             </div>
 
@@ -114,35 +181,35 @@
                     <div class="stat-card">
                         <div class="stat-icon primary"><i class="bi bi-people-fill"></i></div>
                         <div class="stat-content">
-                            <div class="stat-title">Tổng người dùng</div>
-                            <div class="stat-value">7</div>
+                            <div class="stat-title">Tổng tài khoản</div>
+                            <div class="stat-value" id="statTotalUsers">25</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="stat-card">
-                        <div class="stat-icon success"><i class="bi bi-person-lines-fill"></i></div>
+                        <div class="stat-icon success"><i class="bi bi-person-check-fill"></i></div>
                         <div class="stat-content">
-                            <div class="stat-title">Hồ sơ ứng viên</div>
-                            <div class="stat-value">5</div>
+                            <div class="stat-title">Đang hoạt động</div>
+                            <div class="stat-value" id="statActiveUsers">23</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="stat-card">
-                        <div class="stat-icon info"><i class="bi bi-building"></i></div>
+                        <div class="stat-icon warning"><i class="bi bi-person-x-fill"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-title">Tài khoản bị khóa</div>
+                            <div class="stat-value" id="statLockedUsers">2</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="bi bi-building"></i></div>
                         <div class="stat-content">
                             <div class="stat-title">Cơ cấu phòng ban</div>
-                            <div class="stat-value">5</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="stat-card">
-                        <div class="stat-icon purple"><i class="bi bi-shield-check"></i></div>
-                        <div class="stat-content">
-                            <div class="stat-title">Nhật ký bảo mật</div>
-                            <div class="stat-value">3</div>
+                            <div class="stat-value" id="statDepartments">5</div>
                         </div>
                     </div>
                 </div>
@@ -151,34 +218,24 @@
             <!-- Details -->
             <div class="row g-4">
                 <div class="col-12 col-lg-7">
-                    <div class="card h-100 mb-0">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-person-vcard text-primary"></i> Ứng viên gần đây</h5>
-                            <a href="candidates.html" class="btn btn-sm btn-link text-decoration-none">Xem tất cả <i class="bi bi-chevron-right"></i></a>
+                    <div class="card shadow-sm border h-100 mb-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="card-title fw-bold mb-0 text-dark"><i class="bi bi-people text-primary me-2"></i> Tài khoản mới thêm gần đây</h6>
+                            <a href="users.html" class="btn btn-sm btn-link text-decoration-none">Quản lý tài khoản <i class="bi bi-chevron-right"></i></a>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-custom">
-                                    <thead>
-                                        <tr><th>Ứng viên</th><th>Vị trí</th><th>Trạng thái</th></tr>
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã NV</th>
+                                            <th>Họ và tên</th>
+                                            <th>Chức danh</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <div class="fw-semibold">Nguyễn Văn An</div>
-                                                <div class="text-muted text-xs">an.nguyen@email.test</div>
-                                            </td>
-                                            <td>Tuyển dụng Kỹ sư Java Backend Senior</td>
-                                            <td><span class="badge bg-warning text-dark">Đang phỏng vấn</span></td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="fw-semibold">Lê Hữu Cường</div>
-                                                <div class="text-muted text-xs">cuong.le@email.test</div>
-                                            </td>
-                                            <td>Tuyển dụng Kỹ sư Java Backend Senior</td>
-                                            <td><span class="badge bg-purple">Đã gửi Offer</span></td>
-                                        </tr>
+                                    <tbody id="recentUsersBody">
+                                        <!-- Rendered dynamically -->
                                     </tbody>
                                 </table>
                             </div>
@@ -187,26 +244,14 @@
                 </div>
 
                 <div class="col-12 col-lg-5">
-                    <div class="card h-100 mb-0">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="bi bi-clock-history text-info"></i> Sự kiện hệ thống</h5>
+                    <div class="card shadow-sm border h-100 mb-0">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="card-title fw-bold mb-0 text-dark"><i class="bi bi-clock-history text-info me-2"></i> Nhật ký hoạt động gần đây</h6>
+                            <a href="audit.html" class="btn btn-sm btn-link text-decoration-none">Xem tất cả <i class="bi bi-chevron-right"></i></a>
                         </div>
                         <div class="card-body p-3">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item px-0 py-2 border-bottom">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="badge bg-success text-xs">LOGIN_SUCCESS</span>
-                                        <small class="text-muted text-xs">Vừa xong</small>
-                                    </div>
-                                    <div class="small">Đăng nhập tài khoản Quản trị hệ thống</div>
-                                </li>
-                                <li class="list-group-item px-0 py-2">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="badge bg-primary text-xs">ROLE_PERMISSIONS_UPDATE</span>
-                                        <small class="text-muted text-xs">Hôm nay</small>
-                                    </div>
-                                    <div class="small">Cập nhật ma trận phân quyền HR_MANAGER</div>
-                                </li>
+                            <ul class="list-group list-group-flush" id="recentLogsList">
+                                <!-- Rendered dynamically -->
                             </ul>
                         </div>
                     </div>
@@ -216,12 +261,82 @@
 
         <footer class="app-footer">
             <div>&copy; 2026 IRMS Platform. All rights reserved.</div>
-            <div class="text-muted">Frontend: <strong>Bootstrap 5 &amp; SASS</strong> &bull; Backend: <strong>Java Servlet &amp; MySQL</strong></div>
+            <div class="text-muted">Frontend: <strong>Bootstrap 5 &amp; SASS</strong> &bull; Quản trị Tuyển dụng Nội bộ</div>
         </footer>
     </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../src/main/webapp/assets/js/main.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Init User
+        const raw = localStorage.getItem('irms_user');
+        if (raw) {
+            try {
+                const u = JSON.parse(raw);
+                document.getElementById('headerUserName').innerText = u.fullName || 'Quản trị viên';
+                document.getElementById('headerUserRole').innerText = (u.roles && u.roles[0]) ? u.roles[0].name : (u.jobTitle || 'Quản trị hệ thống');
+                document.getElementById('headerAvatar').innerText = (u.fullName || 'A').charAt(0).toUpperCase();
+                document.getElementById('welcomeHeading').innerText = `Xin chào, ${u.fullName}! 👋`;
+            } catch (e) {}
+        }
+
+        // Fetch stats
+        try {
+            const res = await fetch('/api/dashboard/stats');
+            const resData = await res.json();
+            if (resData.success) {
+                const s = resData.data;
+                document.getElementById('statTotalUsers').innerText = s.totalUsers;
+                document.getElementById('statActiveUsers').innerText = s.activeUsers;
+                document.getElementById('statLockedUsers').innerText = s.lockedUsers;
+                document.getElementById('statDepartments').innerText = s.totalDepartments;
+
+                // Render recent users
+                const usersTbody = document.getElementById('recentUsersBody');
+                if (s.recentUsers && s.recentUsers.length > 0) {
+                    usersTbody.innerHTML = s.recentUsers.map(u => `
+                        <tr>
+                            <td><span class="badge bg-light text-dark border font-monospace">${u.employeeCode}</span></td>
+                            <td>
+                                <div class="fw-semibold text-dark">${u.fullName}</div>
+                                <small class="text-muted">${u.email}</small>
+                            </td>
+                            <td><small>${u.jobTitle || '-'}</small></td>
+                            <td>
+                                ${u.status === 'ACTIVE' 
+                                    ? '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i> Hoạt động</span>' 
+                                    : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-lock-fill me-1"></i> Khóa</span>'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Render recent logs
+                const logsList = document.getElementById('recentLogsList');
+                if (s.recentLogs && s.recentLogs.length > 0) {
+                    logsList.innerHTML = s.recentLogs.map(l => `
+                        <li class="list-group-item px-0 py-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace">${l.action}</span>
+                                <small class="text-muted text-xs">${l.createdAt}</small>
+                            </div>
+                            <div class="small text-secondary">${l.description}</div>
+                        </li>
+                    `).join('');
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi tải thống kê dashboard:', e);
+        }
+    });
+
+    function handleLogout() {
+        localStorage.removeItem('irms_user');
+        localStorage.removeItem('irms_token');
+        window.location.href = 'index.html';
+    }
+</script>
 </body>
 </html>

@@ -2,7 +2,7 @@
  * ============================================================
  * IRMS - Internal Recruitment Management System
  * Client-Side JavaScript: Core Layout & Interactivity
- * File: src/main/webapp/assets/js/main.js
+ * File: frontend/assets/js/main.js
  * ============================================================
  */
 
@@ -46,4 +46,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Khởi tạo toàn bộ Bootstrap Tooltip nếu có
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+    // 5. Cập nhật thông tin User trên Header từ LocalStorage
+    try {
+        const raw = localStorage.getItem('irms_user');
+        if (raw) {
+            const u = JSON.parse(raw);
+            const nameEl = document.getElementById('headerUserName');
+            const roleEl = document.getElementById('headerUserRole');
+            const avatarEl = document.getElementById('headerAvatar');
+
+            if (nameEl) nameEl.innerText = u.fullName || 'Quản trị viên';
+            if (roleEl) roleEl.innerText = (u.roles && u.roles[0]) ? u.roles[0].name : (u.jobTitle || 'Quản trị hệ thống');
+            if (avatarEl) avatarEl.innerText = (u.fullName || 'A').charAt(0).toUpperCase();
+        }
+    } catch (e) {}
 });
+
+function handleLogout() {
+    localStorage.removeItem('irms_user');
+    localStorage.removeItem('irms_token');
+    window.location.href = 'index.html';
+}
