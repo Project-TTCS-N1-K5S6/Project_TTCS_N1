@@ -18,6 +18,24 @@ INSERT INTO departments (id, code, name, description) VALUES
 ('dept-004', 'SALES', 'Khối Kinh doanh & Thị trường', 'Phát triển khách hàng doanh nghiệp và đối tác chiến lược'),
 ('dept-005', 'MKT', 'Phòng Truyền thông & Marketing', 'Xây dựng thương hiệu nhà tuyển dụng và truyền thông nội bộ');
 
+-- 1.1. Danh mục dùng chung
+DELETE FROM shared_catalogs;
+INSERT INTO shared_catalogs (id, type_code, value, display_order) VALUES
+('cat-src-referral', 'APPLICATION_SOURCE', 'Nhân viên giới thiệu', 0),
+('cat-src-linkedin', 'APPLICATION_SOURCE', 'LinkedIn', 1),
+('cat-src-career-site', 'APPLICATION_SOURCE', 'Trang tuyển dụng công ty', 2),
+('cat-src-job-board', 'APPLICATION_SOURCE', 'Trang việc làm', 3),
+('cat-rej-experience', 'REJECTION_REASON', 'Kinh nghiệm chưa phù hợp', 0),
+('cat-rej-skill', 'REJECTION_REASON', 'Kỹ năng chưa đáp ứng yêu cầu', 1),
+('cat-rej-salary', 'REJECTION_REASON', 'Mức lương chưa phù hợp', 2),
+('cat-rej-other', 'REJECTION_REASON', 'Lý do khác', 3),
+('cat-loc-hanoi', 'WORK_LOCATION', 'Hà Nội', 0),
+('cat-loc-hcm', 'WORK_LOCATION', 'Thành phố Hồ Chí Minh', 1),
+('cat-loc-danang', 'WORK_LOCATION', 'Đà Nẵng', 2),
+('cat-mode-office', 'WORK_MODE', 'Làm việc tại văn phòng', 0),
+('cat-mode-hybrid', 'WORK_MODE', 'Làm việc kết hợp', 1),
+('cat-mode-remote', 'WORK_MODE', 'Làm việc từ xa', 2);
+
 -- 2. Khởi tạo danh mục vai trò chuẩn (Roles)
 DELETE FROM roles;
 INSERT INTO roles (id, code, name, description, is_system_role) VALUES
@@ -183,19 +201,19 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 
 -- 7. Khởi tạo một số yêu cầu tuyển dụng mẫu (Recruitment Requisitions)
 DELETE FROM recruitment_requisitions;
-INSERT INTO recruitment_requisitions (id, code, title, department_id, recruiter_id, hiring_manager_id, status) VALUES
-('req-001', 'REQ-2026-001', 'Tuyển dụng Kỹ sư Java Backend Senior', 'dept-003', 'usr-003', 'usr-004', 'OPEN'),
-('req-002', 'REQ-2026-002', 'Tuyển dụng Chuyên viên Tuyển dụng Nhân sự', 'dept-002', 'usr-003', 'usr-002', 'OPEN'),
-('req-003', 'REQ-2026-003', 'Tuyển dụng Trưởng nhóm Kinh doanh Doanh nghiệp', 'dept-004', 'usr-003', 'usr-006', 'CLOSED');
+INSERT INTO recruitment_requisitions (id, code, title, department_id, recruiter_id, hiring_manager_id, work_location_id, work_mode_id, status) VALUES
+('req-001', 'REQ-2026-001', 'Tuyển dụng Kỹ sư Java Backend Senior', 'dept-003', 'usr-003', 'usr-004', 'cat-loc-hanoi', 'cat-mode-hybrid', 'OPEN'),
+('req-002', 'REQ-2026-002', 'Tuyển dụng Chuyên viên Tuyển dụng Nhân sự', 'dept-002', 'usr-003', 'usr-002', 'cat-loc-hanoi', 'cat-mode-office', 'OPEN'),
+('req-003', 'REQ-2026-003', 'Tuyển dụng Trưởng nhóm Kinh doanh Doanh nghiệp', 'dept-004', 'usr-003', 'usr-006', 'cat-loc-hcm', 'cat-mode-office', 'CLOSED');
 
 -- 8. Khởi tạo danh sách ứng viên mẫu (Candidates)
 DELETE FROM candidates;
-INSERT INTO candidates (id, requisition_id, full_name, email, phone, status, cv_url, notes) VALUES
-('cand-001', 'req-001', 'Nguyễn Văn An', 'an.nguyen@email.test', '0912345671', 'INTERVIEWING', 'https://cv.storage/an_nguyen_java.pdf', 'Ứng viên có 4 năm kinh nghiệm Java Servlet & Spring Boot'),
-('cand-002', 'req-001', 'Trần Bảo Bình', 'binh.tran@email.test', '0912345672', 'SCREENING', 'https://cv.storage/binh_tran_backend.pdf', 'Điểm đồ án tốt nghiệp xuất sắc, tiếng Anh TOEIC 850'),
-('cand-003', 'req-001', 'Lê Hữu Cường', 'cuong.le@email.test', '0912345673', 'OFFER', 'https://cv.storage/cuong_le_senior.pdf', 'Đã pass vòng phỏng vấn kỹ thuật, đề xuất mức lương 32M'),
-('cand-004', 'req-002', 'Phạm Minh Dung', 'dung.pham@email.test', '0912345674', 'APPLIED', 'https://cv.storage/dung_pham_hr.pdf', 'Kinh nghiệm 2 năm tuyển dụng IT & Headhunter'),
-('cand-005', 'req-003', 'Hoàng Gia Long', 'long.hoang@email.test', '0912345675', 'HIRED', 'https://cv.storage/long_hoang_sales.pdf', 'Đã nhận việc từ ngày 01/10/2026');
+INSERT INTO candidates (id, requisition_id, application_source_id, full_name, email, phone, status, cv_url, notes) VALUES
+('cand-001', 'req-001', 'cat-src-linkedin', 'Nguyễn Văn An', 'an.nguyen@email.test', '0912345671', 'INTERVIEWING', 'https://cv.storage/an_nguyen_java.pdf', 'Ứng viên có 4 năm kinh nghiệm Java Servlet & Spring Boot'),
+('cand-002', 'req-001', 'cat-src-referral', 'Trần Bảo Bình', 'binh.tran@email.test', '0912345672', 'SCREENING', 'https://cv.storage/binh_tran_backend.pdf', 'Điểm đồ án tốt nghiệp xuất sắc, tiếng Anh TOEIC 850'),
+('cand-003', 'req-001', 'cat-src-career-site', 'Lê Hữu Cường', 'cuong.le@email.test', '0912345673', 'OFFER', 'https://cv.storage/cuong_le_senior.pdf', 'Đã pass vòng phỏng vấn kỹ thuật, đề xuất mức lương 32M'),
+('cand-004', 'req-002', 'cat-src-job-board', 'Phạm Minh Dung', 'dung.pham@email.test', '0912345674', 'APPLIED', 'https://cv.storage/dung_pham_hr.pdf', 'Kinh nghiệm 2 năm tuyển dụng IT & Headhunter'),
+('cand-005', 'req-003', 'cat-src-referral', 'Hoàng Gia Long', 'long.hoang@email.test', '0912345675', 'HIRED', 'https://cv.storage/long_hoang_sales.pdf', 'Đã nhận việc từ ngày 01/10/2026');
 
 -- 9. Khởi tạo dải lương chuẩn theo vị trí (Salary Ranges)
 DELETE FROM salary_ranges;

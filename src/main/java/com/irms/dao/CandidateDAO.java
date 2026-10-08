@@ -27,8 +27,11 @@ public class CandidateDAO extends BaseDAO {
     public List<Candidate> findAll(String search, String status, String recruiterId) {
         List<Candidate> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT c.*, r.title AS requisition_title FROM candidates c " +
-                "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id WHERE 1=1 ");
+                "SELECT c.*, r.title AS requisition_title, source.value AS application_source_name, " +
+                "reason.value AS rejection_reason_name FROM candidates c " +
+                "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
         if (recruiterId != null && !recruiterId.trim().isEmpty()) {
@@ -64,6 +67,10 @@ public class CandidateDAO extends BaseDAO {
                 c.setId(rs.getString("id"));
                 c.setRequisitionId(rs.getString("requisition_id"));
                 c.setRequisitionTitle(rs.getString("requisition_title"));
+                c.setApplicationSourceId(rs.getString("application_source_id"));
+                c.setApplicationSourceName(rs.getString("application_source_name"));
+                c.setRejectionReasonId(rs.getString("rejection_reason_id"));
+                c.setRejectionReasonName(rs.getString("rejection_reason_name"));
                 c.setFullName(rs.getString("full_name"));
                 c.setEmail(rs.getString("email"));
                 c.setPhone(rs.getString("phone"));
@@ -83,8 +90,8 @@ public class CandidateDAO extends BaseDAO {
     }
 
     public boolean insert(Candidate c) {
-        String sql = "INSERT INTO candidates (id, requisition_id, full_name, email, phone, status, cv_url, notes) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO candidates (id, requisition_id, application_source_id, rejection_reason_id, " +
+                     "full_name, email, phone, status, cv_url, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
@@ -92,12 +99,14 @@ public class CandidateDAO extends BaseDAO {
             ps = conn.prepareStatement(sql);
             ps.setString(1, c.getId());
             ps.setString(2, c.getRequisitionId());
-            ps.setString(3, c.getFullName());
-            ps.setString(4, c.getEmail());
-            ps.setString(5, c.getPhone());
-            ps.setString(6, c.getStatus() != null ? c.getStatus() : "APPLIED");
-            ps.setString(7, c.getCvUrl());
-            ps.setString(8, c.getNotes());
+            ps.setString(3, c.getApplicationSourceId());
+            ps.setString(4, c.getRejectionReasonId());
+            ps.setString(5, c.getFullName());
+            ps.setString(6, c.getEmail());
+            ps.setString(7, c.getPhone());
+            ps.setString(8, c.getStatus() != null ? c.getStatus() : "APPLIED");
+            ps.setString(9, c.getCvUrl());
+            ps.setString(10, c.getNotes());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi thêm ứng viên mới", e);
@@ -108,14 +117,19 @@ public class CandidateDAO extends BaseDAO {
     }
 
     public boolean updateStatus(String candidateId, String newStatus) {
-        String sql = "UPDATE candidates SET status = ? WHERE id = ?";
+        return updateStatus(candidateId, newStatus, null);
+    }
+
+    public boolean updateStatus(String candidateId, String newStatus, String rejectionReasonId) {
+        String sql = "UPDATE candidates SET status = ?, rejection_reason_id = ? WHERE id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
             conn = getConnection();
             ps = conn.prepareStatement(sql);
             ps.setString(1, newStatus);
-            ps.setString(2, candidateId);
+            ps.setString(2, rejectionReasonId);
+            ps.setString(3, candidateId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi cập nhật trạng thái ứng viên", e);

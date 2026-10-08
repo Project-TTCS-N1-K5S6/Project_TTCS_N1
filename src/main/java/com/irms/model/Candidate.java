@@ -12,6 +12,10 @@ public class Candidate implements Serializable {
     private String id;
     private String requisitionId;
     private String requisitionTitle;
+    private String applicationSourceId;
+    private String applicationSourceName;
+    private String rejectionReasonId;
+    private String rejectionReasonName;
     private String fullName;
     private String email;
     private String phone;
@@ -31,6 +35,18 @@ public class Candidate implements Serializable {
 
     public String getRequisitionTitle() { return requisitionTitle; }
     public void setRequisitionTitle(String requisitionTitle) { this.requisitionTitle = requisitionTitle; }
+
+    public String getApplicationSourceId() { return applicationSourceId; }
+    public void setApplicationSourceId(String applicationSourceId) { this.applicationSourceId = applicationSourceId; }
+
+    public String getApplicationSourceName() { return applicationSourceName; }
+    public void setApplicationSourceName(String applicationSourceName) { this.applicationSourceName = applicationSourceName; }
+
+    public String getRejectionReasonId() { return rejectionReasonId; }
+    public void setRejectionReasonId(String rejectionReasonId) { this.rejectionReasonId = rejectionReasonId; }
+
+    public String getRejectionReasonName() { return rejectionReasonName; }
+    public void setRejectionReasonName(String rejectionReasonName) { this.rejectionReasonName = rejectionReasonName; }
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
