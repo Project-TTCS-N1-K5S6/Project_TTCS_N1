@@ -47,8 +47,8 @@ public class AuthFilter implements Filter {
         // [US 1 & US 6]: Bỏ qua các tài nguyên tĩnh để tải giao diện (CSS, JS, Fonts, Images)
         // Đảm bảo giao diện responsive (360px) và icon hiển thị đầy đủ ngay cả khi chưa login.
         // ----------------------------------------------------------------------
-        if (path.startsWith("/assets/") || path.startsWith("/static/") || path.endsWith(".css") ||
-            path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".svg") ||
+        if (path.startsWith("/assets/") || path.startsWith("/static/") || path.startsWith("/uploads/") || path.endsWith(".css") ||
+            path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".webp") || path.endsWith(".svg") ||
             path.endsWith(".ico") || path.endsWith(".woff") || path.endsWith(".woff2")) {
             chain.doFilter(request, response);
             return;
@@ -119,10 +119,13 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // Đồng bộ quyền hạn và trạng thái mới nhất từ DB vào currentUser trong RAM (US 9)
+        // Đồng bộ quyền hạn, avatar và trạng thái mới nhất từ DB vào currentUser trong RAM (US 9)
         currentUser.setRoles(currentState.getRoles());
         currentUser.setPermissions(currentState.getPermissions());
         currentUser.setMustChangePassword(currentState.isMustChangePassword());
+        if (currentState.getAvatarUrl() != null) {
+            currentUser.setAvatarUrl(currentState.getAvatarUrl());
+        }
 
         // ----------------------------------------------------------------------
         // [US 4]: Bắt buộc đổi mật khẩu nếu tài khoản được cấp mật khẩu tạm

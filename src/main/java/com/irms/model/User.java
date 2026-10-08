@@ -19,6 +19,7 @@ public class User implements Serializable {
     private String jobTitle;
     private String departmentId;
     private String departmentName;
+    private String avatarUrl;
     private String passwordHash;
     private String status; // ACTIVE, LOCKED, INACTIVE
     private int failedLoginAttempts;
@@ -61,6 +62,9 @@ public class User implements Serializable {
 
     public String getDepartmentName() { return departmentName; }
     public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
