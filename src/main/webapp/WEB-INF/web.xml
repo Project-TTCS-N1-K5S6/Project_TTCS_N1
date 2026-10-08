@@ -11,6 +11,8 @@
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
+    <!-- Company Profile & Public Portals enabled -->
+
     <!-- Cấu hình thời gian hết hạn phiên làm việc (Session Timeout: 30 phút) [US 2] -->
     <session-config>
         <session-timeout>30</session-timeout>

@@ -16,12 +16,25 @@ import java.util.logging.Level;
 public class CandidateDAO extends BaseDAO {
 
     public List<Candidate> findAll(String search, String status) {
+        return findAll(search, status, null);
+    }
+
+    /**
+     * [US 5]: Tra cứu danh sách ứng viên, hỗ trợ ràng buộc quyền sở hữu vị trí tuyển dụng của Recruiter.
+     * - Nếu recruiterId != null: Chỉ trả về ứng viên nộp vào các vị trí do recruiter này phụ trách (r.recruiter_id = ?).
+     * - Nếu recruiterId == null (Admin / HR Manager): Xem toàn bộ ứng viên của hệ thống.
+     */
+    public List<Candidate> findAll(String search, String status, String recruiterId) {
         List<Candidate> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT c.*, r.title AS requisition_title FROM candidates c " +
                 "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
+        if (recruiterId != null && !recruiterId.trim().isEmpty()) {
+            sql.append("AND r.recruiter_id = ? ");
+            params.add(recruiterId.trim());
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND (c.full_name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?) ");
             String kw = "%" + search.trim() + "%";

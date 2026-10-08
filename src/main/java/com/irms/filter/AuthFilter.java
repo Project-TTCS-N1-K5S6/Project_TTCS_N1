@@ -47,8 +47,8 @@ public class AuthFilter implements Filter {
         // [US 1 & US 6]: Bỏ qua các tài nguyên tĩnh để tải giao diện (CSS, JS, Fonts, Images)
         // Đảm bảo giao diện responsive (360px) và icon hiển thị đầy đủ ngay cả khi chưa login.
         // ----------------------------------------------------------------------
-        if (path.startsWith("/assets/") || path.startsWith("/static/") || path.endsWith(".css") ||
-            path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".svg") ||
+        if (path.startsWith("/assets/") || path.startsWith("/static/") || path.startsWith("/uploads/") || path.endsWith(".css") ||
+            path.endsWith(".js") || path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || path.endsWith(".webp") || path.endsWith(".svg") ||
             path.endsWith(".ico") || path.endsWith(".woff") || path.endsWith(".woff2")) {
             chain.doFilter(request, response);
             return;
@@ -59,9 +59,10 @@ public class AuthFilter implements Filter {
         // - /auth/login: Trang đăng nhập hệ thống
         // - /auth/forgot-password: Quên mật khẩu qua email
         // - /auth/reset-password: Xác thực token và đặt lại mật khẩu mới
+        // - /about-us, /company/about: Trang giới thiệu công ty công khai
         // ----------------------------------------------------------------------
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
-            path.startsWith("/auth/reset-password")) {
+            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about")) {
             chain.doFilter(request, response);
             return;
         }
@@ -186,7 +187,19 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 8. [US 5]: Cơ chế từ chối mặc định (Deny-by-default) cho toàn bộ các endpoint /admin/ nếu không có vai trò ADMIN
+        // 8. Phân hệ Cấu hình trang giới thiệu công ty (/admin/company-profile)
+        if (path.startsWith("/admin/company-profile")) {
+            boolean isAuthorizedCompany = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("company.manage") || currentUser.hasPermission("company.view");
+            if (!isAuthorizedCompany) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 9. [US 5]: Cơ chế từ chối mặc định (Deny-by-default) cho toàn bộ các endpoint /admin/ nếu không có vai trò ADMIN
         if (path.startsWith("/admin/") && !currentUser.hasRole("ADMIN")) {
             request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
             return;

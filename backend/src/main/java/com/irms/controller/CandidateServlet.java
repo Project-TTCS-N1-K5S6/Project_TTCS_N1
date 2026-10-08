@@ -3,6 +3,8 @@ package com.irms.controller;
 import com.irms.model.Candidate;
 import com.irms.service.CandidateService;
 
+import com.irms.model.User;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -13,7 +15,14 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Controller quản lý Hồ sơ ứng viên và Pipeline tuyển dụng
+ * ==============================================================================
+ * BỘ ĐIỀU KHIỂN HỒ SƠ ỨNG VIÊN & PIPELINE (CandidateServlet)
+ * ==============================================================================
+ * Phục vụ User Story:
+ * - US 5: Đảm bảo Recruiter không xem được ứng viên của vị trí không thuộc mình.
+ *   + Chỉ trả về ứng viên của các vị trí do chính Recruiter đó phụ trách nếu user không phải ADMIN hoặc HR_MANAGER.
+ *   + Kiểm tra thẩm quyền thao tác sửa đổi ứng viên (candidates.manage) ở tầng Server.
+ * ==============================================================================
  */
 @WebServlet(name = "CandidateServlet", urlPatterns = {
         "/candidates",
@@ -26,10 +35,21 @@ public class CandidateServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+
         String search = request.getParameter("search");
         String status = request.getParameter("status");
 
-        List<Candidate> list = candidateService.getCandidates(search, status);
+        // [US 5]: Phân tách dữ liệu ứng viên theo vai trò:
+        // Nếu là Chuyên viên tuyển dụng (RECRUITER) và không phải Quản trị viên/Trưởng phòng HR,
+        // hệ thống chỉ tải các ứng viên nộp vào vị trí mà nhân sự này phụ trách.
+        String recruiterId = null;
+        if (currentUser != null && currentUser.hasRole("RECRUITER") && !currentUser.hasRole("ADMIN") && !currentUser.hasRole("HR_MANAGER")) {
+            recruiterId = currentUser.getId();
+        }
+
+        List<Candidate> list = candidateService.getCandidates(search, status, recruiterId);
         request.setAttribute("candidates", list);
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
@@ -42,6 +62,13 @@ public class CandidateServlet extends HttpServlet {
             throws ServletException, IOException {
         String path = request.getServletPath();
         HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+
+        // [US 5]: Kiểm tra quyền thay đổi trạng thái và thêm mới ứng viên ở tầng Server
+        if (currentUser == null || (!currentUser.hasPermission("candidates.manage") && !currentUser.hasRole("ADMIN"))) {
+            request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+            return;
+        }
 
         try {
             if ("/candidates/create".equals(path)) {

@@ -64,12 +64,31 @@ public class UserDAO extends BaseDAO {
     }
 
     public List<User> findAll(String search, String deptId, String status, int offset, int limit) {
+        return findAll(search, deptId, status, null, offset, limit);
+    }
+
+    /**
+     * [US 8]: Tìm kiếm và lọc người dùng:
+     * - Tìm theo tên, email, mã nhân viên
+     * - Lọc theo phòng ban
+     * - Lọc theo vai trò (roleId)
+     * - Lọc theo trạng thái
+     */
+    public List<User> findAll(String search, String deptId, String status, String roleId, int offset, int limit) {
         List<User> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT u.*, d.name AS department_name FROM users u " +
-                "LEFT JOIN departments d ON u.department_id = d.id WHERE 1=1 ");
+                "SELECT DISTINCT u.*, d.name AS department_name FROM users u " +
+                "LEFT JOIN departments d ON u.department_id = d.id ");
+
+        if (roleId != null && !roleId.trim().isEmpty()) {
+            sql.append("INNER JOIN user_roles ur_filter ON u.id = ur_filter.user_id AND ur_filter.role_id = ? ");
+        }
+        sql.append("WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
+        if (roleId != null && !roleId.trim().isEmpty()) {
+            params.add(roleId.trim());
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND (u.full_name LIKE ? OR u.email LIKE ? OR u.employee_code LIKE ?) ");
             String kw = "%" + search.trim() + "%";
@@ -114,8 +133,23 @@ public class UserDAO extends BaseDAO {
     }
 
     public int countAll(String search, String deptId, String status) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM users u WHERE 1=1 ");
+        return countAll(search, deptId, status, null);
+    }
+
+    /**
+     * [US 8]: Đếm tổng số người dùng có lọc theo vai trò
+     */
+    public int countAll(String search, String deptId, String status, String roleId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(DISTINCT u.id) FROM users u ");
+        if (roleId != null && !roleId.trim().isEmpty()) {
+            sql.append("INNER JOIN user_roles ur_filter ON u.id = ur_filter.user_id AND ur_filter.role_id = ? ");
+        }
+        sql.append("WHERE 1=1 ");
+
         List<Object> params = new ArrayList<>();
+        if (roleId != null && !roleId.trim().isEmpty()) {
+            params.add(roleId.trim());
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND (u.full_name LIKE ? OR u.email LIKE ? OR u.employee_code LIKE ?) ");
             String kw = "%" + search.trim() + "%";
@@ -154,6 +188,17 @@ public class UserDAO extends BaseDAO {
     }
 
     public boolean insert(User user, String roleId) {
+        List<String> roleIds = new ArrayList<>();
+        if (roleId != null && !roleId.trim().isEmpty()) {
+            roleIds.add(roleId.trim());
+        }
+        return insert(user, roleIds);
+    }
+
+    /**
+     * [US 8 & US 9]: Thêm mới người dùng hỗ trợ gán nhiều vai trò cùng lúc
+     */
+    public boolean insert(User user, List<String> roleIds) {
         String sqlUser = "INSERT INTO users (id, employee_code, full_name, email, phone, job_title, " +
                 "department_id, password_hash, status, must_change_password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String sqlRole = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
@@ -178,11 +223,16 @@ public class UserDAO extends BaseDAO {
             psUser.setBoolean(10, user.isMustChangePassword());
             psUser.executeUpdate();
 
-            if (roleId != null && !roleId.trim().isEmpty()) {
+            if (roleIds != null && !roleIds.isEmpty()) {
                 psRole = conn.prepareStatement(sqlRole);
-                psRole.setString(1, user.getId());
-                psRole.setString(2, roleId.trim());
-                psRole.executeUpdate();
+                for (String rId : roleIds) {
+                    if (rId != null && !rId.trim().isEmpty()) {
+                        psRole.setString(1, user.getId());
+                        psRole.setString(2, rId.trim());
+                        psRole.addBatch();
+                    }
+                }
+                psRole.executeBatch();
             }
 
             conn.commit();
@@ -200,6 +250,19 @@ public class UserDAO extends BaseDAO {
     }
 
     public boolean update(User user, String roleId) {
+        List<String> roleIds = new ArrayList<>();
+        if (roleId != null && !roleId.trim().isEmpty()) {
+            roleIds.add(roleId.trim());
+        }
+        return update(user, roleIds);
+    }
+
+    /**
+     * [US 9]: Cập nhật thông tin tài khoản và gán nhiều vai trò cùng lúc
+     * - Một người dùng có thể giữ nhiều vai trò cùng lúc (Ví dụ: Trưởng bộ phận kiêm Người phỏng vấn).
+     * - Cập nhật tức thì vào bảng user_roles.
+     */
+    public boolean update(User user, List<String> roleIds) {
         String sqlUser = "UPDATE users SET full_name = ?, phone = ?, job_title = ?, department_id = ?, status = ? WHERE id = ?";
         String sqlDelRole = "DELETE FROM user_roles WHERE user_id = ?";
         String sqlAddRole = "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)";
@@ -221,15 +284,22 @@ public class UserDAO extends BaseDAO {
             psUser.setString(6, user.getId());
             psUser.executeUpdate();
 
-            if (roleId != null && !roleId.trim().isEmpty()) {
+            if (roleIds != null) {
                 psDelRole = conn.prepareStatement(sqlDelRole);
                 psDelRole.setString(1, user.getId());
                 psDelRole.executeUpdate();
 
-                psAddRole = conn.prepareStatement(sqlAddRole);
-                psAddRole.setString(1, user.getId());
-                psAddRole.setString(2, roleId.trim());
-                psAddRole.executeUpdate();
+                if (!roleIds.isEmpty()) {
+                    psAddRole = conn.prepareStatement(sqlAddRole);
+                    for (String rId : roleIds) {
+                        if (rId != null && !rId.trim().isEmpty()) {
+                            psAddRole.setString(1, user.getId());
+                            psAddRole.setString(2, rId.trim());
+                            psAddRole.addBatch();
+                        }
+                    }
+                    psAddRole.executeBatch();
+                }
             }
 
             conn.commit();
@@ -247,6 +317,69 @@ public class UserDAO extends BaseDAO {
         }
     }
 
+    /**
+     * [US 2, US 4, US 9, US 10]: Lấy trạng thái phiên và quyền mới nhất của người dùng
+     * - Dùng trong AuthFilter để kiểm tra:
+     *   + Tài khoản có bị khóa không (status == 'LOCKED') -> Thu hồi phiên ngay lập tức (US 10).
+     *   + Phiên có bị hủy do đổi mật khẩu không (session_version khác nhau) (US 4).
+     *   + Cập nhật vai trò có hiệu lực ngay ở thao tác kế tiếp (US 9).
+     */
+    public User findSessionStateById(String userId) {
+        String sql = "SELECT id, status, session_version, must_change_password FROM users WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, userId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                User u = new User();
+                u.setId(rs.getString("id"));
+                u.setStatus(rs.getString("status"));
+                u.setSessionVersion(rs.getInt("session_version"));
+                u.setMustChangePassword(rs.getBoolean("must_change_password"));
+                loadUserRolesAndPermissions(conn, u);
+                return u;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi kiểm tra session state cho userId: " + userId, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
+    /**
+     * [US 10]: Đếm số lượng vị trí tuyển dụng (Requisitions) đang mở mà nhân sự này phụ trách
+     * - Dùng để cảnh báo cần bàn giao trước khi khóa tài khoản.
+     */
+    public int countActiveRequisitionsByRecruiter(String userId) {
+        String sql = "SELECT COUNT(*) FROM recruitment_requisitions WHERE recruiter_id = ? AND status = 'OPEN'";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, userId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số vị trí tuyển dụng phụ trách", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
+    }
+
+    /**
+     * [US 4]: Cập nhật mật khẩu và tăng session_version
+     * - session_version = session_version + 1 nhằm mục đích thu hồi các phiên đăng nhập cũ trên thiết bị khác.
+     */
     public boolean updatePassword(String userId, String passwordHash, boolean mustChangePassword) {
         String sql = "UPDATE users SET password_hash = ?, must_change_password = ?, session_version = session_version + 1 WHERE id = ?";
         Connection conn = null;
@@ -266,6 +399,11 @@ public class UserDAO extends BaseDAO {
         }
     }
 
+    /**
+     * [US 10]: Khóa tài khoản nhân sự
+     * - Cập nhật status = 'LOCKED', ghi nhận thời gian, lý do và admin thực hiện.
+     * - Tăng session_version để chuẩn bị cho việc thu hồi phiên đang mở.
+     */
     public boolean lockUser(String userId, String reason, String lockedBy) {
         String sql = "UPDATE users SET status = 'LOCKED', locked_at = NOW(), lock_reason = ?, locked_by = ?, " +
                      "session_version = session_version + 1 WHERE id = ?";
