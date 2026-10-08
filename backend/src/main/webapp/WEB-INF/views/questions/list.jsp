@@ -81,8 +81,14 @@
                                     </td>
                                     <td class="text-muted small">${q.goodAnswerSuggestion}</td>
                                     <td class="text-end pe-3">
-                                        <button class="btn btn-sm btn-outline-secondary me-1" 
-                                                onclick="openEditQuestionModal('${q.id}', '${q.content.replace("'", "\\'")}', '${q.difficultyLevel}', '${q.goodAnswerSuggestion.replace("'", "\\'")}', '${q.criterionId}', '${q.jobTitle.replace("'", "\\'")}')">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary me-1" 
+                                                data-id="${q.id}"
+                                                data-jobtitle="<c:out value='${q.jobTitle}'/>"
+                                                data-criterionid="${q.criterionId}"
+                                                data-content="<c:out value='${q.content}'/>"
+                                                data-difficulty="${q.difficultyLevel}"
+                                                data-answer="<c:out value='${q.goodAnswerSuggestion}'/>"
+                                                onclick="handleEditClick(this)">
                                             <i class="bi bi-pencil"></i> Sửa
                                         </button>
                                         <form action="${pageContext.request.contextPath}/admin/questions/delete" method="POST" style="display:inline;"
@@ -124,11 +130,20 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label small fw-semibold">Tiêu chí năng lực <span class="text-danger">*</span></label>
-                                <select class="form-select" name="criterionId" required>
-                                    <c:forEach var="c" items="${criteria}">
-                                        <option value="${c.id}">${c.name}</option>
-                                    </c:forEach>
-                                </select>
+                                <c:choose>
+                                    <c:when test="${empty criteria}">
+                                        <div class="alert alert-warning py-1 px-2 mb-0 small">
+                                            <i class="bi bi-exclamation-triangle"></i> Vui lòng tạo Tiêu chí trước.
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <select class="form-select" name="criterionId" required>
+                                            <c:forEach var="c" items="${criteria}">
+                                                <option value="${c.id}">${c.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -150,7 +165,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Thêm mới</button>
+                        <button type="submit" class="btn btn-primary" ${empty criteria ? 'disabled' : ''}><i class="bi bi-check-lg"></i> Thêm mới</button>
                     </div>
                 </form>
             </div>
@@ -239,7 +254,7 @@
                                 <tr>
                                     <th>Tên tiêu chí</th>
                                     <th>Mô tả</th>
-                                    <th style="width:100px" class="text-center">Xóa</th>
+                                    <th style="width:120px" class="text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -248,9 +263,13 @@
                                         <td>${c.name}</td>
                                         <td>${c.description}</td>
                                         <td class="text-center">
-                                            <form action="${pageContext.request.contextPath}/admin/criteria/delete" method="POST" onsubmit="return confirm('Xóa tiêu chí sẽ xóa tất cả câu hỏi liên quan. Chắc chắn?')">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 me-1"
+                                                    onclick="openEditCriterionModal('${c.id}', '<c:out value="${c.name}"/>', '<c:out value="${c.description}"/>')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form action="${pageContext.request.contextPath}/admin/criteria/delete" method="POST" class="d-inline" onsubmit="return confirm('Xóa tiêu chí sẽ xóa tất cả câu hỏi liên quan. Chắc chắn?')">
                                                 <input type="hidden" name="id" value="${c.id}">
-                                                <button type="submit" class="btn btn-sm btn-danger py-0 px-2"><i class="bi bi-trash"></i></button>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </td>
                                     </tr>
@@ -263,7 +282,49 @@
         </div>
     </div>
 
+    <!-- Modal Sửa Tiêu chí -->
+    <div class="modal fade" id="editCriteriaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="${pageContext.request.contextPath}/admin/criteria/edit" method="POST">
+                    <input type="hidden" name="id" id="editCritId">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Sửa Tiêu chí</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Tên tiêu chí <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" id="editCritName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Mô tả</label>
+                            <textarea class="form-control" name="description" id="editCritDesc" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Cập nhật</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 <script>
+function openEditCriterionModal(id, name, desc) {
+    var criteriaModalEl = document.getElementById('criteriaModal');
+    if (criteriaModalEl) {
+        var criteriaModal = bootstrap.Modal.getInstance(criteriaModalEl);
+        if (criteriaModal) criteriaModal.hide();
+    }
+    
+    document.getElementById('editCritId').value = id;
+    document.getElementById('editCritName').value = name;
+    document.getElementById('editCritDesc').value = desc || '';
+    new bootstrap.Modal(document.getElementById('editCriteriaModal')).show();
+}
+
 function openEditQuestionModal(id, content, diff, answer, critId, jobTitle) {
     document.getElementById('editQuestionId').value = id;
     document.getElementById('editQJobTitle').value = jobTitle;
@@ -272,6 +333,17 @@ function openEditQuestionModal(id, content, diff, answer, critId, jobTitle) {
     document.getElementById('editQDifficulty').value = diff;
     document.getElementById('editQGoodAnswer').value = answer || '';
     new bootstrap.Modal(document.getElementById('editQuestionModal')).show();
+}
+
+function handleEditClick(btn) {
+    var id = btn.getAttribute('data-id');
+    var jobTitle = btn.getAttribute('data-jobtitle');
+    var critId = btn.getAttribute('data-criterionid');
+    var content = btn.getAttribute('data-content');
+    var diff = btn.getAttribute('data-difficulty');
+    var answer = btn.getAttribute('data-answer');
+    
+    openEditQuestionModal(id, content, diff, answer, critId, jobTitle);
 }
 </script>
 <jsp:include page="../common/footer.jsp" />
