@@ -6,6 +6,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\SalaryRangeService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AuthServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PasswordResetDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
+E:\ttcs_n1\src\main\java\com\irms\service\UserExcelService.java
 E:\ttcs_n1\src\main\java\com\irms\model\User.java
 E:\ttcs_n1\src\main\java\com\irms\config\DBConnection.java
 E:\ttcs_n1\src\main\java\com\irms\filter\EncodingFilter.java
@@ -15,6 +16,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\DepartmentService.java
 E:\ttcs_n1\src\main\java\com\irms\service\RolePermissionService.java
 E:\ttcs_n1\src\main\java\com\irms\util\PasswordUtil.java
 E:\ttcs_n1\src\main\java\com\irms\model\SalaryRange.java
+E:\ttcs_n1\src\main\java\com\irms\model\ExcelUserRow.java
 E:\ttcs_n1\src\main\java\com\irms\config\AppConfig.java
 E:\ttcs_n1\src\main\java\com\irms\model\EmailOutboxItem.java
 E:\ttcs_n1\src\main\java\com\irms\dao\DepartmentDAO.java

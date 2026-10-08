@@ -21,6 +21,61 @@
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
 
+    <!--
+        [BUG FIX]: Khai báo UserServlet trong web.xml với <multipart-config>
+        để Tomcat 7 Maven Plugin nhận diện và kích hoạt xử lý multipart form-data.
+        @MultipartConfig annotation đôi khi không được tomcat7-maven-plugin:2.2 xử lý
+        đúng cách, gây ra lỗi HTTP 500 khi gọi request.getPart() trong validate-excel.
+    -->
+    <servlet>
+        <servlet-name>UserServlet</servlet-name>
+        <servlet-class>com.irms.controller.UserServlet</servlet-class>
+        <multipart-config>
+            <!-- 2MB file size threshold trước khi ghi ra disk -->
+            <file-size-threshold>2097152</file-size-threshold>
+            <!-- Max 5MB mỗi file -->
+            <max-file-size>5242880</max-file-size>
+            <!-- Max 10MB toàn bộ request -->
+            <max-request-size>10485760</max-request-size>
+        </multipart-config>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/create</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/edit</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/lock</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/unlock</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/reset-password</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/excel-template</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/validate-excel</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UserServlet</servlet-name>
+        <url-pattern>/admin/users/import-excel</url-pattern>
+    </servlet-mapping>
+
     <!-- Định nghĩa các trang thông báo lỗi tùy biến -->
     <error-page>
         <error-code>403</error-code>
