@@ -213,4 +213,21 @@ INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, description
 ('aud-002', 'usr-001', 'LOGIN_SUCCESS', 'AUTH', 'usr-001', 'Đăng nhập thành công tài khoản Quản trị hệ thống', '127.0.0.1', 'Mozilla/5.0'),
 ('aud-003', 'usr-001', 'ROLE_PERMISSIONS_UPDATE', 'ROLE', 'role-002', 'Cập nhật danh sách phân quyền cho vai trò HR_MANAGER', '127.0.0.1', 'Mozilla/5.0');
 
+-- 11. Khởi tạo danh mục tiêu chí năng lực (Competency Criteria)
+DELETE FROM competency_criteria;
+INSERT INTO competency_criteria (id, name, description) VALUES
+('crit-001', 'Kỹ năng lập trình Java', 'Khả năng sử dụng Java, Spring Boot, Hibernate...'),
+('crit-002', 'Tư duy logic thuật toán', 'Khả năng giải quyết vấn đề, cấu trúc dữ liệu và thuật toán'),
+('crit-003', 'Kỹ năng làm việc nhóm', 'Khả năng giao tiếp, phối hợp với các thành viên khác'),
+('crit-004', 'Giải quyết vấn đề', 'Khả năng phân tích và đưa ra giải pháp trong tình huống khó khăn');
+
+-- 12. Khởi tạo Ngân hàng câu hỏi (Questions)
+DELETE FROM questions;
+INSERT INTO questions (id, content, difficulty_level, good_answer_suggestion, criterion_id, job_title) VALUES
+('q-001', 'Nêu sự khác biệt giữa ArrayList và LinkedList trong Java?', 'MEDIUM', 'Ứng viên cần giải thích được sự khác biệt về cấu trúc dữ liệu bên dưới (mảng động vs danh sách liên kết kép) và hiệu năng khi truy cập, chèn, xóa.', 'crit-001', 'Lập trình viên Java'),
+('q-002', 'Hãy mô tả một tình huống bạn phải giải quyết xung đột ý kiến với đồng nghiệp. Bạn đã xử lý thế nào?', 'MEDIUM', 'Ứng viên thể hiện sự lắng nghe, tôn trọng ý kiến người khác, tìm kiếm điểm chung và hướng tới mục tiêu chung của dự án.', 'crit-003', 'Tất cả chức danh'),
+('q-003', 'Bạn làm thế nào để tối ưu hóa hiệu năng của một ứng dụng Spring Boot bị chậm?', 'HARD', 'Nhắc đến các yếu tố như: Database index, N+1 query problem, Caching (Redis), Connection Pool, JVM Tuning, Profiling tools.', 'crit-001', 'Lập trình viên Java'),
+('q-004', 'Cho một mảng chưa sắp xếp, hãy tìm phần tử lớn thứ K trong mảng với độ phức tạp tối ưu nhất.', 'HARD', 'Sử dụng Min-Heap (O(N log K)) hoặc thuật toán QuickSelect (O(N) trung bình).', 'crit-002', 'Lập trình viên Java'),
+('q-005', 'Nếu hệ thống đang chạy bị lỗi dẫn đến ngắt dịch vụ, bạn sẽ thực hiện các bước xử lý nào?', 'HARD', '1. Tái thiết lập dịch vụ/Rollback để giảm ảnh hưởng. 2. Thu thập log. 3. Phân tích nguyên nhân gốc (Root Cause). 4. Cập nhật bản vá và viết post-mortem.', 'crit-004', 'DevOps / Backend Senior');
+
 SET FOREIGN_KEY_CHECKS = 1;

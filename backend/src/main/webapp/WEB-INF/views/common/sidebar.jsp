@@ -36,6 +36,12 @@
                     </a>
                 </li>
             </c:if>
+            <li class="nav-item">
+                <a class="nav-link ${activeMenu == 'questions' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/questions">
+                    <i class="bi bi-question-square-fill"></i>
+                    <span>Ngân hàng câu hỏi</span>
+                </a>
+            </li>
         </ul>
 
         <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
