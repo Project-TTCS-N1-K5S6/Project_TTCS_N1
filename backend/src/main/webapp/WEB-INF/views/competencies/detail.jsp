@@ -298,7 +298,6 @@
             </div>
         </div>
     </div>
-</main>
 
 <!-- Modal Gán Chức Danh Sử Dụng Khung Năng Lực -->
 <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">

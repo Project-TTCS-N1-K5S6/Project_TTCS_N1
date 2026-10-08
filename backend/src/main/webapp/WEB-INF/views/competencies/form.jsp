@@ -190,7 +190,6 @@
             </div>
         </form>
     </div>
-</main>
 
 <!-- Modal 1: Chọn tiêu chí từ Ngân hàng tiêu chí -->
 <div class="modal fade" id="catalogModal" tabindex="-1" aria-labelledby="catalogModalLabel" aria-hidden="true">

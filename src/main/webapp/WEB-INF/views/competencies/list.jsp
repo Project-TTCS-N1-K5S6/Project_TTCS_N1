@@ -10,6 +10,39 @@
 <jsp:include page="../common/header.jsp" />
 <jsp:include page="../common/sidebar.jsp" />
 
+<style>
+    /* Tối ưu layout 1 trang vừa khít 100%, tuyệt đối không bị cuộn ngang */
+    .table-framework {
+        table-layout: fixed;
+        width: 100%;
+        margin-bottom: 0;
+    }
+    .table-framework th,
+    .table-framework td {
+        padding: 0.65rem 0.5rem !important;
+        vertical-align: middle;
+        overflow: hidden;
+    }
+    .table-framework thead th {
+        white-space: nowrap !important;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        color: #475569;
+    }
+    .table-framework tbody td {
+        font-size: 0.8125rem;
+    }
+    @media (min-width: 992px) {
+        .framework-table-responsive {
+            overflow-x: hidden !important;
+        }
+    }
+</style>
+
 <main class="app-main">
     <jsp:include page="../common/navbar.jsp" />
 
@@ -17,34 +50,34 @@
         <jsp:include page="../common/alerts.jsp" />
 
         <!-- Tiêu đề trang & Nút thêm mới -->
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
             <div>
                 <h4 class="fw-bold mb-1">
                     <i class="bi bi-award-fill text-primary me-2"></i>Khai báo Khung Năng Lực
                 </h4>
                 <p class="text-muted small mb-0">
-                    Quản lý các bộ tiêu chí đánh giá nhân sự và ứng viên theo từng chức danh. Tổng trọng số mỗi khung bắt buộc bằng 100%.
+                    Quản lý các bộ tiêu chí đánh giá nhân sự theo từng chức danh. Tổng trọng số mỗi khung bắt buộc bằng 100%.
                 </p>
             </div>
             <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('competencies.create')}">
-                <a href="${pageContext.request.contextPath}/competency-frameworks/create" class="btn btn-primary shadow-sm">
+                <a href="${pageContext.request.contextPath}/competency-frameworks/create" class="btn btn-primary shadow-sm btn-sm px-3">
                     <i class="bi bi-plus-circle-fill me-1"></i> Thêm khung năng lực
                 </a>
             </c:if>
         </div>
 
         <!-- Thống kê nhanh theo trạng thái -->
-        <div class="row g-3 mb-4">
+        <div class="row g-2 mb-3">
             <div class="col-6 col-md-3">
                 <div class="card border shadow-sm h-100">
-                    <div class="card-body py-3">
+                    <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <span class="text-muted small fw-medium">Tổng số khung</span>
-                                <h3 class="fw-bold mb-0 text-dark">${totalCount}</h3>
+                                <span class="text-muted text-xs fw-medium d-block">Tổng số khung</span>
+                                <h4 class="fw-bold mb-0 text-dark">${totalCount}</h4>
                             </div>
                             <div class="p-2 bg-primary-subtle rounded-3 text-primary">
-                                <i class="bi bi-layers-fill fs-4"></i>
+                                <i class="bi bi-layers-fill fs-5"></i>
                             </div>
                         </div>
                     </div>
@@ -52,14 +85,14 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="card border shadow-sm h-100">
-                    <div class="card-body py-3">
+                    <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <span class="text-muted small fw-medium">Đang áp dụng</span>
-                                <h3 class="fw-bold mb-0 text-success">${activeCount}</h3>
+                                <span class="text-muted text-xs fw-medium d-block">Đang áp dụng</span>
+                                <h4 class="fw-bold mb-0 text-success">${activeCount}</h4>
                             </div>
                             <div class="p-2 bg-success-subtle rounded-3 text-success">
-                                <i class="bi bi-check-circle-fill fs-4"></i>
+                                <i class="bi bi-check-circle-fill fs-5"></i>
                             </div>
                         </div>
                     </div>
@@ -67,14 +100,14 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="card border shadow-sm h-100">
-                    <div class="card-body py-3">
+                    <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <span class="text-muted small fw-medium">Bản nháp</span>
-                                <h3 class="fw-bold mb-0 text-secondary">${draftCount}</h3>
+                                <span class="text-muted text-xs fw-medium d-block">Bản nháp</span>
+                                <h4 class="fw-bold mb-0 text-secondary">${draftCount}</h4>
                             </div>
                             <div class="p-2 bg-secondary-subtle rounded-3 text-secondary">
-                                <i class="bi bi-pencil-square fs-4"></i>
+                                <i class="bi bi-pencil-square fs-5"></i>
                             </div>
                         </div>
                     </div>
@@ -82,14 +115,14 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="card border shadow-sm h-100">
-                    <div class="card-body py-3">
+                    <div class="card-body py-2 px-3">
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
-                                <span class="text-muted small fw-medium">Ngừng áp dụng</span>
-                                <h3 class="fw-bold mb-0 text-warning">${inactiveCount}</h3>
+                                <span class="text-muted text-xs fw-medium d-block">Ngừng áp dụng</span>
+                                <h4 class="fw-bold mb-0 text-warning">${inactiveCount}</h4>
                             </div>
                             <div class="p-2 bg-warning-subtle rounded-3 text-warning">
-                                <i class="bi bi-pause-circle-fill fs-4"></i>
+                                <i class="bi bi-pause-circle-fill fs-5"></i>
                             </div>
                         </div>
                     </div>
@@ -98,8 +131,8 @@
         </div>
 
         <!-- Bộ lọc tìm kiếm -->
-        <div class="card mb-4 border shadow-sm">
-            <div class="card-body py-3">
+        <div class="card mb-3 border shadow-sm">
+            <div class="card-body py-2 px-3">
                 <form method="get" action="${pageContext.request.contextPath}/competency-frameworks" class="row g-2 align-items-center">
                     <div class="col-12 col-md-6">
                         <div class="input-group input-group-sm">
@@ -133,37 +166,36 @@
 
         <!-- Bảng danh sách khung năng lực -->
         <div class="card border shadow-sm">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-dark">
+            <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark small">
                     <i class="bi bi-list-task me-2 text-primary"></i>Danh sách Khung Năng Lực
                 </h6>
-                <span class="text-muted small">Hiển thị <strong>${frameworks.size()}</strong> khung</span>
+                <span class="text-muted text-xs">Hiển thị <strong>${frameworks.size()}</strong> khung</span>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                <div class="table-responsive framework-table-responsive">
+                    <table class="table table-hover table-framework align-middle mb-0">
+                        <thead>
                             <tr>
-                                <th style="width: 50px;" class="text-center">STT</th>
-                                <th style="width: 140px;">Mã khung</th>
-                                <th style="min-width: 220px;">Tên &amp; Mô tả khung năng lực</th>
-                                <th style="width: 120px;" class="text-center">Số tiêu chí</th>
-                                <th style="width: 120px;" class="text-center">Tổng trọng số</th>
-                                <th style="min-width: 180px;">Chức danh đang áp dụng</th>
-                                <th style="width: 140px;" class="text-center">Trạng thái</th>
-                                <th style="width: 110px;" class="text-center">Ngày tạo</th>
-                                <th style="width: 140px;" class="text-center">Thao tác</th>
+                                <th style="width: 5%;" class="text-center">STT</th>
+                                <th style="width: 14%;">Mã khung</th>
+                                <th style="width: 25%;">Tên &amp; Mô tả khung</th>
+                                <th style="width: 10%;" class="text-center">Số tiêu chí</th>
+                                <th style="width: 10%;" class="text-center">Tổng trọng số</th>
+                                <th style="width: 16%;">Chức danh áp dụng</th>
+                                <th style="width: 11%;" class="text-center">Trạng thái</th>
+                                <th style="width: 9%;" class="text-center">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:choose>
                                 <c:when test="${empty frameworks}">
                                     <tr>
-                                        <td colspan="9" class="text-center py-5 text-muted">
-                                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
-                                            <p class="mb-1">Không tìm thấy khung năng lực nào phù hợp.</p>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                            <p class="mb-1 small">Không tìm thấy khung năng lực nào phù hợp.</p>
                                             <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('competencies.create')}">
-                                                <a href="${pageContext.request.contextPath}/competency-frameworks/create" class="btn btn-sm btn-outline-primary mt-2">
+                                                <a href="${pageContext.request.contextPath}/competency-frameworks/create" class="btn btn-xs btn-outline-primary mt-1">
                                                     <i class="bi bi-plus-circle me-1"></i> Tạo khung năng lực mới
                                                 </a>
                                             </c:if>
@@ -176,14 +208,15 @@
                                             <td class="text-center text-muted small">${loop.count}</td>
                                             <td>
                                                 <a href="${pageContext.request.contextPath}/competency-frameworks/detail?id=${f.id}" 
-                                                   class="fw-bold text-decoration-none font-monospace text-primary">
+                                                   class="fw-bold text-decoration-none font-monospace text-primary text-truncate d-block"
+                                                   title="${f.code}">
                                                     ${f.code}
                                                 </a>
                                             </td>
                                             <td>
-                                                <div class="fw-bold text-dark">${f.name}</div>
+                                                <div class="fw-bold text-dark text-truncate" title="${f.name}">${f.name}</div>
                                                 <c:if test="${not empty f.description}">
-                                                    <small class="text-muted text-truncate d-block" style="max-width: 280px;" title="${f.description}">
+                                                    <small class="text-muted text-truncate d-block" title="${f.description}">
                                                         ${f.description}
                                                     </small>
                                                 </c:if>
@@ -211,7 +244,8 @@
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${f.assignedPositionsCount > 0}">
-                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-1">
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-block text-truncate" 
+                                                              style="max-width: 100%;" title="${f.assignedPositionTitles}">
                                                             <i class="bi bi-person-badge-fill me-1"></i>${f.assignedPositionsCount} chức danh
                                                         </span>
                                                     </c:when>
@@ -220,7 +254,7 @@
                                                     </c:otherwise>
                                                 </c:choose>
                                                 <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('competencies.assign')}">
-                                                    <button type="button" class="btn btn-link btn-sm p-0 d-block text-xs text-primary" 
+                                                    <button type="button" class="btn btn-link btn-xs p-0 d-block text-xs text-primary text-decoration-none mt-1" 
                                                             onclick="openAssignModal('${f.id}', '${f.code}', '${f.name}', ${f.isActive()})">
                                                         <i class="bi bi-gear-fill me-1"></i>Gán chức danh
                                                     </button>
@@ -245,31 +279,28 @@
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td class="text-center text-muted small">
-                                                <fmt:formatDate value="${f.createdAt}" pattern="dd/MM/yyyy" />
-                                            </td>
                                             <td class="text-center">
                                                 <div class="btn-group btn-group-sm">
                                                     <a href="${pageContext.request.contextPath}/competency-frameworks/detail?id=${f.id}" 
-                                                       class="btn btn-outline-secondary" title="Xem chi tiết">
+                                                       class="btn btn-outline-secondary btn-sm p-1" title="Xem chi tiết">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('competencies.update')}">
                                                         <a href="${pageContext.request.contextPath}/competency-frameworks/edit?id=${f.id}" 
-                                                           class="btn btn-outline-primary" title="Chỉnh sửa">
+                                                           class="btn btn-outline-primary btn-sm p-1" title="Chỉnh sửa">
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
                                                     </c:if>
                                                     <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('competencies.status')}">
                                                         <c:choose>
                                                             <c:when test="${f.isActive()}">
-                                                                <button type="button" class="btn btn-outline-warning" title="Ngừng áp dụng"
+                                                                <button type="button" class="btn btn-outline-warning btn-sm p-1" title="Ngừng áp dụng"
                                                                         onclick="changeStatus('${f.id}', 'INACTIVE', '${f.code}')">
                                                                     <i class="bi bi-pause-circle"></i>
                                                                 </button>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <button type="button" class="btn btn-outline-success" title="Kích hoạt áp dụng"
+                                                                <button type="button" class="btn btn-outline-success btn-sm p-1" title="Kích hoạt áp dụng"
                                                                         onclick="changeStatus('${f.id}', 'ACTIVE', '${f.code}')">
                                                                     <i class="bi bi-check-circle"></i>
                                                                 </button>
@@ -287,97 +318,97 @@
                 </div>
             </div>
         </div>
-    </div>
-</main>
 
-<!-- Modal Gán Chức Danh Sử Dụng Khung Năng Lực -->
-<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow">
-            <form action="${pageContext.request.contextPath}/competency-frameworks/assign-positions" method="post" id="assignForm">
-                <input type="hidden" name="frameworkId" id="modalFrameworkId">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="assignModalLabel">
-                        <i class="bi bi-person-badge-fill me-2"></i>Gán Chức Danh Cho Khung Năng Lực
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="alert alert-info py-2 px-3 small mb-3">
-                        <i class="bi bi-info-circle-fill me-1"></i>
-                        Đang thiết lập cho khung: <strong id="modalFrameworkName"></strong> (<span id="modalFrameworkCode" class="font-monospace"></span>).
-                        <br>
-                        <em>Lưu ý: Mỗi chức danh chỉ gắn một khung năng lực duy nhất. Chọn để gán hoặc bỏ chọn để hủy liên kết.</em>
-                    </div>
-
-                    <div id="assignAlertContainer"></div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold small text-dark">Danh sách chức danh trên hệ thống:</span>
-                        <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-outline-secondary" onclick="checkAllPositions(true)">Chọn tất cả</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="checkAllPositions(false)">Bỏ chọn tất cả</button>
+        <!-- Modal Gán Chức Danh Sử Dụng Khung Năng Lực -->
+        <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <form action="${pageContext.request.contextPath}/competency-frameworks/assign-positions" method="post" id="assignForm">
+                        <input type="hidden" name="frameworkId" id="modalFrameworkId">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fs-6 fw-bold" id="assignModalLabel">
+                                <i class="bi bi-person-badge-fill me-2"></i>Gán Chức Danh Cho Khung Năng Lực
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                    </div>
+                        <div class="modal-body p-3">
+                            <div class="alert alert-info py-2 px-3 small mb-3">
+                                <i class="bi bi-info-circle-fill me-1"></i>
+                                Đang thiết lập cho khung: <strong id="modalFrameworkName"></strong> (<span id="modalFrameworkCode" class="font-monospace"></span>).
+                                <br>
+                                <em>Lưu ý: Mỗi chức danh chỉ gắn một khung năng lực duy nhất. Chọn để gán hoặc bỏ chọn để hủy liên kết.</em>
+                            </div>
 
-                    <div class="table-responsive border rounded-3" style="max-height: 340px; overflow-y: auto;">
-                        <table class="table table-hover align-middle mb-0 small">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th style="width: 45px;" class="text-center">Gán</th>
-                                    <th>Mã CD</th>
-                                    <th>Tên chức danh</th>
-                                    <th>Cấp bậc</th>
-                                    <th>Phòng ban</th>
-                                    <th>Khung hiện tại</th>
-                                </tr>
-                            </thead>
-                            <tbody id="positionsTableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">
-                                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                                        Đang nạp danh sách chức danh...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                            <div id="assignAlertContainer"></div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold small text-dark">Danh sách chức danh trên hệ thống:</span>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="checkAllPositions(true)">Chọn tất cả</button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="checkAllPositions(false)">Bỏ chọn tất cả</button>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive border rounded-3" style="max-height: 320px; overflow-y: auto;">
+                                <table class="table table-hover align-middle mb-0 small">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th style="width: 45px;" class="text-center">Gán</th>
+                                            <th>Mã CD</th>
+                                            <th>Tên chức danh</th>
+                                            <th>Cấp bậc</th>
+                                            <th>Phòng ban</th>
+                                            <th>Khung hiện tại</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="positionsTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                                Đang nạp danh sách chức danh...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light py-2">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-primary btn-sm" id="btnSaveAssign">
+                                <i class="bi bi-save me-1"></i> Lưu thiết lập chức danh
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-primary" id="btnSaveAssign">
-                        <i class="bi bi-save me-1"></i> Lưu thiết lập chức danh
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
 
-<!-- Modal xác nhận thay đổi trạng thái -->
-<div class="modal fade" id="statusConfirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <form action="${pageContext.request.contextPath}/competency-frameworks/status" method="post" id="statusForm">
-                <input type="hidden" name="id" id="statusModalId">
-                <input type="hidden" name="status" id="statusModalValue">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="statusModalTitle">Xác nhận thay đổi trạng thái</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Modal xác nhận thay đổi trạng thái -->
+        <div class="modal fade" id="statusConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <form action="${pageContext.request.contextPath}/competency-frameworks/status" method="post" id="statusForm">
+                        <input type="hidden" name="id" id="statusModalId">
+                        <input type="hidden" name="status" id="statusModalValue">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold fs-6" id="statusModalTitle">Xác nhận thay đổi trạng thái</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body py-3" id="statusModalBody">
+                            Bạn có chắc chắn muốn thay đổi trạng thái khung năng lực này?
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary btn-sm" id="statusModalBtn">Xác nhận</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="modal-body" id="statusModalBody">
-                    Bạn có chắc chắn muốn thay đổi trạng thái khung năng lực này?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-primary" id="statusModalBtn">Xác nhận</button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
 
-<jsp:include page="../common/footer.jsp" />
+    </div> <!-- closes app-content -->
+
+    <jsp:include page="../common/footer.jsp" />
 
 <script>
 function changeStatus(id, newStatus, code) {
@@ -388,15 +419,20 @@ function changeStatus(id, newStatus, code) {
     var btn = document.getElementById('statusModalBtn');
 
     if (newStatus === 'ACTIVE') {
-        title.innerText = 'Kích hoạt Khung năng lực';
-        body.innerHTML = 'Bạn có chắc chắn muốn kích hoạt áp dụng khung năng lực <strong>' + code + '</strong>?<br><span class="text-muted small">Hệ thống sẽ kiểm tra tổng trọng số 100% trước khi kích hoạt.</span>';
-        btn.className = 'btn btn-success';
+        title.innerText = 'Kích hoạt Khung Năng Lực';
+        body.innerHTML = 'Bạn có chắc chắn muốn kích hoạt áp dụng khung <strong>' + code + '</strong>?<br><small class="text-muted">Lưu ý: Khung phải có đầy đủ tiêu chí và tổng trọng số bằng đúng 100%.</small>';
+        btn.className = 'btn btn-success btn-sm';
         btn.innerText = 'Kích hoạt ngay';
-    } else {
-        title.innerText = 'Ngừng áp dụng Khung năng lực';
-        body.innerHTML = 'Bạn có chắc chắn muốn ngừng áp dụng khung năng lực <strong>' + code + '</strong>?<br><span class="text-danger small">Các quy trình đánh giá mới sẽ không thể chọn khung năng lực này.</span>';
-        btn.className = 'btn btn-warning';
+    } else if (newStatus === 'INACTIVE') {
+        title.innerText = 'Ngừng áp dụng Khung Năng Lực';
+        body.innerHTML = 'Bạn có chắc chắn muốn ngừng áp dụng khung <strong>' + code + '</strong>?<br><small class="text-danger">Khung này sẽ không thể dùng để tạo phiếu phỏng vấn mới.</small>';
+        btn.className = 'btn btn-warning btn-sm';
         btn.innerText = 'Ngừng áp dụng';
+    } else {
+        title.innerText = 'Chuyển về Bản nháp';
+        body.innerHTML = 'Bạn có chắc chắn muốn chuyển khung <strong>' + code + '</strong> về trạng thái Bản nháp?';
+        btn.className = 'btn btn-secondary btn-sm';
+        btn.innerText = 'Xác nhận';
     }
 
     var modal = new bootstrap.Modal(document.getElementById('statusConfirmModal'));
@@ -436,7 +472,6 @@ function openAssignModal(frameworkId, code, name, isActive) {
 
             data.forEach(function(pos) {
                 var isChecked = (pos.frameworkId === frameworkId);
-                var isOther = (pos.frameworkId && pos.frameworkId !== frameworkId);
 
                 var tr = document.createElement('tr');
                 tr.innerHTML = 
