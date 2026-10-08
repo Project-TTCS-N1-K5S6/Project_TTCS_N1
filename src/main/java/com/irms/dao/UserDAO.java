@@ -64,28 +64,8 @@ public class UserDAO extends BaseDAO {
         return null;
     }
 
-    public boolean emailExistsForAnotherUser(String email, String userId) {
-        String sql = "SELECT 1 FROM users WHERE email = ? AND id <> ? LIMIT 1";
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, email);
-            ps.setString(2, userId);
-            rs = ps.executeQuery();
-            return rs.next();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi kiểm tra email hồ sơ người dùng", e);
-            return true;
-        } finally {
-            close(conn, ps, rs);
-        }
-    }
-
-    public boolean updatePersonalProfile(String userId, String fullName, String phone, String email) {
-        String sql = "UPDATE users SET full_name = ?, phone = ?, email = ? WHERE id = ?";
+    public boolean updatePersonalProfile(String userId, String fullName, String phone, String jobTitle) {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, job_title = ? WHERE id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
@@ -93,10 +73,9 @@ public class UserDAO extends BaseDAO {
             ps = conn.prepareStatement(sql);
             ps.setString(1, fullName);
             ps.setString(2, phone);
-            ps.setString(3, email);
+            ps.setString(3, jobTitle);
             ps.setString(4, userId);
-            ps.executeUpdate();
-            return true;
+            return ps.executeUpdate() == 1;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi cập nhật hồ sơ cá nhân", e);
             return false;

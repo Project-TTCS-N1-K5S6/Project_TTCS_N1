@@ -49,23 +49,27 @@ public class ProfileServlet extends HttpServlet {
 
         String fullName = request.getParameter("fullName");
         String phone = request.getParameter("phone");
-        String email = request.getParameter("email");
+        String jobTitle = request.getParameter("jobTitle");
 
         try {
             User updatedUser = profileService.updateProfile(
-                    currentUser.getId(), fullName, phone, email,
+                    currentUser.getId(), fullName, phone, jobTitle,
                     SecurityUtil.getClientIp(request), request.getHeader("User-Agent"));
             currentUser.setFullName(updatedUser.getFullName());
             currentUser.setPhone(updatedUser.getPhone());
-            currentUser.setEmail(updatedUser.getEmail());
+            currentUser.setJobTitle(updatedUser.getJobTitle());
             session.setAttribute("currentUser", currentUser);
             session.setAttribute("flashSuccess", "Hồ sơ cá nhân đã được cập nhật.");
             response.sendRedirect(request.getContextPath() + "/profile");
         } catch (Exception e) {
-            User profile = new User();
+            User profile = profileService.getProfile(currentUser.getId());
+            if (profile == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
             profile.setFullName(fullName);
             profile.setPhone(phone);
-            profile.setEmail(email);
+            profile.setJobTitle(jobTitle);
             request.setAttribute("profile", profile);
             request.setAttribute("errorMessage", e.getMessage());
             request.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(request, response);

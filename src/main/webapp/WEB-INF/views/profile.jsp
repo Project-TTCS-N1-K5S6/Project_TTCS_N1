@@ -29,12 +29,29 @@
                     <div class="mb-3">
                         <label for="phone" class="form-label">Số điện thoại</label>
                         <input type="tel" class="form-control" id="phone" name="phone"
-                               value="<c:out value='${profile.phone}'/>" maxlength="50" autocomplete="tel">
+                               value="<c:out value='${profile.phone}'/>" maxlength="12" autocomplete="tel"
+                               inputmode="tel" pattern="(?:0|\+84)(?:3[2-9]|5[25689]|7[0-9]|8[1-9]|9[0-9])[0-9]{7}"
+                               title="Nhập số di động Việt Nam 10 số bắt đầu bằng 03, 05, 07, 08, 09 hoặc dạng +84.">
                     </div>
                     <div class="mb-4">
+                        <label for="jobTitle" class="form-label">Chức danh hiển thị</label>
+                        <input type="text" class="form-control" id="jobTitle" name="jobTitle"
+                               value="<c:out value='${profile.jobTitle}'/>" maxlength="100" autocomplete="organization-title">
+                    </div>
+                    <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email"
-                               value="<c:out value='${profile.email}'/>" maxlength="255" required autocomplete="email">
+                        <input type="text" class="form-control" id="email"
+                               value="<c:out value='${profile.email}'/>" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="department" class="form-label">Phòng ban</label>
+                        <input type="text" class="form-control" id="department"
+                               value="<c:out value='${profile.departmentName}'/>" readonly>
+                    </div>
+                    <div class="mb-4">
+                        <label for="roles" class="form-label">Vai trò</label>
+                        <input type="text" class="form-control" id="roles"
+                               value="<c:out value='${profile.rolesDisplay}'/>" readonly>
                     </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg me-1"></i> Lưu thay đổi
