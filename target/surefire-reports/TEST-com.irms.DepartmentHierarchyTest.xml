@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.irms.SalaryRangeTest" time="0.021" tests="4" errors="0" skipped="0" failures="0" flakes="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.irms.DepartmentHierarchyTest" time="0.257" tests="10" errors="0" skipped="0" failures="0" flakes="0">
   <properties>
     <property name="java.specification.version" value="27"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -60,8 +60,24 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="71.0"/>
   </properties>
-  <testcase name="testOfferLimitValidationLogic" classname="com.irms.SalaryRangeTest" time="0.002"/>
-  <testcase name="testEdgeCaseOfferSalaries" classname="com.irms.SalaryRangeTest" time="0.002"/>
-  <testcase name="testLevelBadgeStyles" classname="com.irms.SalaryRangeTest" time="0.002"/>
-  <testcase name="testSalaryRangeAttributes" classname="com.irms.SalaryRangeTest" time="0.009"/>
+  <testcase name="testExcludedSubtreeFromParentDropdown" classname="com.irms.DepartmentHierarchyTest" time="0.224">
+    <system-err><![CDATA[Oct 09, 2026 1:02:31 AM com.irms.dao.DepartmentDAO ensureSchemaUpToDate
+INFO: [DepartmentDAO] Đã thêm cột parent_id vào bảng departments
+Oct 09, 2026 1:02:31 AM com.irms.dao.DepartmentDAO ensureSchemaUpToDate
+INFO: [DepartmentDAO] Đã thêm cột manager_id vào bảng departments
+Oct 09, 2026 1:02:31 AM com.irms.dao.DepartmentDAO ensureSchemaUpToDate
+INFO: [DepartmentDAO] Đã thêm cột status vào bảng departments
+Oct 09, 2026 1:02:31 AM com.irms.dao.DepartmentDAO ensureSchemaUpToDate
+INFO: [DepartmentDAO] Đã thêm cột created_by, updated_by vào bảng departments
+]]></system-err>
+  </testcase>
+  <testcase name="testDeactivateAllowedForDepartment" classname="com.irms.DepartmentHierarchyTest" time="0.003"/>
+  <testcase name="testDeleteBlockedWhenChildDepartmentsExist" classname="com.irms.DepartmentHierarchyTest" time="0.001"/>
+  <testcase name="testCyclePreventionDirectLoop" classname="com.irms.DepartmentHierarchyTest" time="0.01"/>
+  <testcase name="testDepartmentManagerAssignment" classname="com.irms.DepartmentHierarchyTest" time="0.001"/>
+  <testcase name="testReactivateDepartment" classname="com.irms.DepartmentHierarchyTest" time="0.002"/>
+  <testcase name="testCanDeleteLeafDepartmentWithoutDependencies" classname="com.irms.DepartmentHierarchyTest" time="0.0"/>
+  <testcase name="testDepartmentTreeStructureAndLevels" classname="com.irms.DepartmentHierarchyTest" time="0.002"/>
+  <testcase name="testDeleteBlockedWhenOpenRecruitmentRequestsExist" classname="com.irms.DepartmentHierarchyTest" time="0.001"/>
+  <testcase name="testCyclePreventionSelfParent" classname="com.irms.DepartmentHierarchyTest" time="0.0"/>
 </testsuite>

@@ -9,14 +9,24 @@ USE test;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. Khởi tạo danh mục phòng ban (Departments)
+-- 1. Khởi tạo danh mục phòng ban (Departments: Cấu trúc cây nhiều cấp)
 DELETE FROM departments;
-INSERT INTO departments (id, code, name, description) VALUES
-('dept-001', 'BGD', 'Ban Giám đốc', 'Hội đồng quản trị và Ban Tổng giám đốc điều hành'),
-('dept-002', 'HR', 'Ban Nhân sự & Tuyển dụng', 'Quản trị nhân lực, tuyển dụng và chế độ đãi ngộ nội bộ'),
-('dept-003', 'TECH', 'Khối Công nghệ Thông tin', 'Phát triển phần mềm, hạ tầng hệ thống và bảo mật thông tin'),
-('dept-004', 'SALES', 'Khối Kinh doanh & Thị trường', 'Phát triển khách hàng doanh nghiệp và đối tác chiến lược'),
-('dept-005', 'MKT', 'Phòng Truyền thông & Marketing', 'Xây dựng thương hiệu nhà tuyển dụng và truyền thông nội bộ');
+INSERT INTO departments (id, code, name, description, parent_id, manager_id, status) VALUES
+-- Cấp 1 (Root): Ban Giám đốc
+('dept-001', 'BGD', 'Ban Giám đốc', 'Hội đồng quản trị và Ban Tổng giám đốc điều hành', NULL, 'u-admin', 'ACTIVE'),
+-- Cấp 2: Các Khối nghiệp vụ trực thuộc Ban Giám đốc
+('dept-002', 'HR', 'Ban Nhân sự & Tuyển dụng', 'Quản trị nhân lực, tuyển dụng và chế độ đãi ngộ nội bộ', 'dept-001', 'u-hr', 'ACTIVE'),
+('dept-003', 'TECH', 'Khối Công nghệ Thông tin', 'Phát triển phần mềm, hạ tầng hệ thống và bảo mật thông tin', 'dept-001', 'u-admin', 'ACTIVE'),
+('dept-004', 'SALES', 'Khối Kinh doanh & Thị trường', 'Phát triển khách hàng doanh nghiệp và đối tác chiến lược', 'dept-001', 'u-admin', 'ACTIVE'),
+('dept-005', 'MKT', 'Phòng Truyền thông & Marketing', 'Xây dựng thương hiệu nhà tuyển dụng và truyền thông nội bộ', 'dept-001', 'u-admin', 'ACTIVE'),
+-- Cấp 3: Các phòng ban chuyên môn trực thuộc Khối Công nghệ (TECH)
+('dept-006', 'TECH-DEV', 'Phòng Phát triển phần mềm', 'Nghiên cứu và phát triển các sản phẩm phần mềm nội bộ', 'dept-003', 'u-admin', 'ACTIVE'),
+('dept-007', 'TECH-QA', 'Phòng Kiểm thử & Đảm bảo chất lượng', 'Kiểm thử chức năng, tự động hóa và đảm bảo chất lượng phần mềm', 'dept-003', 'u-admin', 'ACTIVE'),
+-- Cấp 3: Các phòng ban trực thuộc Khối Kinh doanh (SALES)
+('dept-008', 'SALES-MB', 'Phòng Kinh doanh miền Bắc', 'Phụ trách doanh số và khách hàng khu vực miền Bắc', 'dept-004', 'u-admin', 'ACTIVE'),
+('dept-009', 'SALES-MN', 'Phòng Kinh doanh miền Nam', 'Phụ trách thị trường và đối tác chiến lược miền Nam', 'dept-004', 'u-admin', 'ACTIVE'),
+-- Cấp 3: Phòng ban trực thuộc Ban Nhân sự (HR)
+('dept-010', 'HR-REC', 'Phòng Tuyển dụng & Thu hút nhân tài', 'Chuyên trách tìm nguồn, sàng lọc và tiếp nhận nhân sự', 'dept-002', 'u-hr', 'ACTIVE');
 
 -- 1.1. Danh mục dùng chung
 DELETE FROM shared_catalogs;
@@ -53,6 +63,11 @@ INSERT INTO permissions (id, code, name, module, action, description) VALUES
 -- 1. Tổ chức & vị trí
 ('p-001', 'department.view', 'Xem phòng ban & tổ chức', 'departments', 'view', 'Xem danh sách và cơ cấu các phòng ban trong tổ chức'),
 ('p-002', 'departments.manage', 'Quản lý tổ chức & vị trí', 'departments', 'manage', 'Thiết lập danh mục cơ cấu tổ chức, phòng ban và chức danh'),
+('p-dept-view', 'departments.view', 'Xem cơ cấu phòng ban', 'departments', 'view', 'Xem danh sách và sơ đồ cây cơ cấu tổ chức phòng ban'),
+('p-dept-create', 'departments.create', 'Tạo mới phòng ban', 'departments', 'create', 'Thêm mới phòng ban và đơn vị trực thuộc'),
+('p-dept-update', 'departments.update', 'Chỉnh sửa phòng ban', 'departments', 'update', 'Cập nhật thông tin, thay đổi cấp bậc và người phụ trách phòng ban'),
+('p-dept-delete', 'departments.delete', 'Xóa phòng ban', 'departments', 'delete', 'Xóa phòng ban khi không có ràng buộc yêu cầu tuyển dụng mở hoặc con'),
+('p-dept-status', 'departments.status', 'Đổi trạng thái phòng ban', 'departments', 'status', 'Kích hoạt hoặc ngừng áp dụng phòng ban'),
 
 -- 2. Yêu cầu tuyển dụng
 ('p-003', 'requisitions.view', 'Xem yêu cầu tuyển dụng', 'requisitions', 'view', 'Xem danh sách các phiếu yêu cầu tuyển dụng'),
@@ -127,7 +142,8 @@ WHERE code IN (
     'notifications.view', 'notifications.send',
     'reports.view', 'reports.export',
     'users.view', 'roles.view', 'permissions.view', 'audit.view', 'salary.view',
-    'competencies.view', 'competencies.create', 'competencies.update', 'competencies.status', 'competencies.assign'
+    'competencies.view', 'competencies.create', 'competencies.update', 'competencies.status', 'competencies.assign',
+    'departments.view', 'departments.create', 'departments.update', 'departments.delete', 'departments.status'
 );
 
 -- RECRUITER: Chuyên sâu pipeline tuyển dụng, KHÔNG có salary.view và quản trị người dùng
