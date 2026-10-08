@@ -69,22 +69,50 @@
             </div>
         </div>
 
+<style>
+.table-req-custom {
+    table-layout: fixed;
+    width: 100%;
+}
+.table-req-custom th,
+.table-req-custom td {
+    padding: 0.65rem 0.5rem;
+    font-size: 0.84rem;
+    vertical-align: middle;
+}
+.table-req-custom thead th {
+    white-space: nowrap;
+    background-color: #f8fafc;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border-bottom: 2px solid #e2e8f0;
+}
+.table-req-custom .truncate-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
+
         <!-- Bảng danh sách yêu cầu tuyển dụng -->
         <div class="card mb-4 shadow-sm border">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-custom table-hover align-middle mb-0">
+                    <table class="table table-custom table-hover table-req-custom align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 140px;">Mã yêu cầu</th>
-                                <th>Chức danh &amp; Tiêu đề</th>
-                                <th>Phòng ban</th>
-                                <th class="text-center" style="width: 100px;">SL tuyển</th>
-                                <th>Lý do tuyển</th>
-                                <th>Dải lương đề xuất</th>
-                                <th>Ngày cần người</th>
-                                <th class="text-center" style="width: 130px;">Trạng thái</th>
-                                <th class="text-end pe-3" style="width: 130px;">Thao tác</th>
+                                <th style="width: 11%;">Mã yêu cầu</th>
+                                <th style="width: 21%;">Chức danh &amp; Tiêu đề</th>
+                                <th style="width: 13%;">Phòng ban</th>
+                                <th class="text-center" style="width: 7%;">SL</th>
+                                <th style="width: 10%;">Lý do</th>
+                                <th style="width: 14%;">Dải lương</th>
+                                <th style="width: 10%;">Ngày cần</th>
+                                <th class="text-center" style="width: 8%;">Trạng thái</th>
+                                <th class="text-end pe-2" style="width: 6%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -93,70 +121,69 @@
                                     <c:forEach var="r" items="${requisitions}">
                                         <tr>
                                             <td>
-                                                <span class="badge bg-light text-dark border font-monospace px-2 py-1">${r.code}</span>
-                                                <div class="text-xs text-muted mt-1">
+                                                <span class="badge bg-light text-dark border font-monospace px-1 py-0.5" style="font-size: 0.75rem;">${r.code}</span>
+                                                <div class="text-muted mt-0.5" style="font-size: 0.72rem;">
                                                     <fmt:formatDate value="${r.createdAt}" pattern="dd/MM/yyyy" />
                                                 </div>
                                             </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">${r.positionTitle}</div>
-                                                <small class="text-muted text-truncate d-inline-block" style="max-width: 280px;">${r.title}</small>
+                                            <td class="truncate-cell">
+                                                <div class="fw-bold text-dark text-truncate" title="${r.positionTitle}">${r.positionTitle}</div>
+                                                <small class="text-muted text-truncate d-block" title="${r.title}">${r.title}</small>
                                             </td>
-                                            <td>
-                                                <span class="fw-semibold text-secondary">
-                                                    <i class="bi bi-building me-1 small text-muted"></i>${r.departmentName != null ? r.departmentName : 'Chưa gán'}
+                                            <td class="truncate-cell">
+                                                <span class="fw-semibold text-secondary small" title="${r.departmentName}">
+                                                    <i class="bi bi-building me-1 text-muted"></i>${r.departmentName != null ? r.departmentName : 'Chưa gán'}
                                                 </span>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
-                                                    ${r.headcount} người
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-1.5 py-1" style="font-size: 0.75rem;">
+                                                    ${r.headcount}
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td class="truncate-cell">
                                                 <c:choose>
                                                     <c:when test="${r.recruitmentReason == 'REPLACEMENT'}">
-                                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
+                                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle text-nowrap" style="font-size: 0.72rem;">
                                                             <i class="bi bi-arrow-repeat me-1"></i>Thay thế
                                                         </span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle text-nowrap" style="font-size: 0.72rem;">
                                                             <i class="bi bi-person-plus me-1"></i>Tăng mới
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td>
-                                                <div class="fw-semibold text-dark">${r.formattedSalaryRange}</div>
+                                            <td class="truncate-cell">
+                                                <div class="fw-semibold text-dark text-truncate" style="font-size: 0.82rem;" title="${r.formattedSalaryRange}">${r.formattedSalaryRange}</div>
                                                 <c:if test="${not empty r.salaryExplanation}">
-                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-xs" title="Đã có văn bản giải trình lương vượt khung chuẩn">
-                                                        <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>Có giải trình
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-nowrap" style="font-size: 0.68rem;" title="Đã có văn bản giải trình lương vượt khung chuẩn">
+                                                        <i class="bi bi-exclamation-triangle-fill text-warning me-0.5"></i>Giải trình
                                                     </span>
                                                 </c:if>
                                             </td>
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${r.deadline != null}">
-                                                        <span class="text-dark fw-semibold">
-                                                            <i class="bi bi-calendar-event me-1 text-muted"></i>
-                                                            <fmt:formatDate value="${r.deadline}" pattern="dd/MM/yyyy" />
+                                                        <span class="text-dark fw-semibold text-nowrap" style="font-size: 0.8rem;">
+                                                            <i class="bi bi-calendar-event me-1 text-muted"></i><fmt:formatDate value="${r.deadline}" pattern="dd/MM/yyyy" />
                                                         </span>
                                                     </c:when>
-                                                    <c:otherwise><span class="text-muted">Chưa đặt</span></c:otherwise>
+                                                    <c:otherwise><span class="text-muted small">--</span></c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge ${r.statusBadgeClass} px-2 py-1">${r.statusLabel}</span>
+                                                <span class="badge ${r.statusBadgeClass} text-nowrap" style="font-size: 0.72rem; padding: 0.35rem 0.45rem;">${r.statusLabel}</span>
                                             </td>
-                                            <td class="text-end pe-3">
+                                            <td class="text-end pe-2">
                                                 <div class="btn-group btn-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary" 
+                                                    <button type="button" class="btn btn-outline-secondary p-1" style="line-height: 1;" 
                                                             onclick="viewDetails('${r.id}', '${r.code}', '${r.positionTitle}', '${r.departmentName}', '${r.headcount}', '${r.recruitmentReasonLabel}', '${r.formattedSalaryRange}', '${r.deadline}', '${r.statusLabel}')"
                                                             title="Xem chi tiết JD & Yêu cầu">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
                                                     <a href="${pageContext.request.contextPath}/recruitment-requests/edit?id=${r.id}" 
-                                                       class="btn btn-outline-primary" title="Chỉnh sửa yêu cầu">
+                                                       class="btn btn-outline-primary p-1" style="line-height: 1;" title="Chỉnh sửa yêu cầu">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                 </div>
@@ -188,7 +215,6 @@
             </div>
         </div>
     </div>
-</main>
 
 <!-- Modal xem chi tiết yêu cầu tuyển dụng -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
