@@ -75,7 +75,7 @@
         </ul>
 
         <!-- [US 6 Tiêu chí 1]: Menu Quản trị chỉ hiển thị khi tài khoản có ít nhất 1 quyền thuộc phân hệ Quản trị -->
-        <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasPermission('users.view') || currentUser.hasPermission('department.view') || currentUser.hasPermission('roles.view') || currentUser.hasPermission('permissions.view') || currentUser.hasPermission('audit.view')}">
+        <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('users.view') || currentUser.hasPermission('department.view') || currentUser.hasPermission('roles.view') || currentUser.hasPermission('permissions.view') || currentUser.hasPermission('audit.view') || currentUser.hasPermission('company.view') || currentUser.hasPermission('company.manage')}">
             <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
             <ul class="nav flex-column mb-3">
                 <c:if test="${currentUser.hasPermission('users.view') || currentUser.hasRole('ADMIN')}">
@@ -123,6 +123,15 @@
                         <a class="nav-link ${activeMenu == 'audit' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">
                             <i class="bi bi-clock-history"></i>
                             <span>Nhật ký kiểm toán</span>
+                        </a>
+                    </li>
+                </c:if>
+                <!-- [Cấu hình trang giới thiệu công ty] -->
+                <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('company.manage') || currentUser.hasPermission('company.view')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'company-profile' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/company-profile">
+                            <i class="bi bi-globe-americas"></i>
+                            <span>Cấu hình trang giới thiệu công ty</span>
                         </a>
                     </li>
                 </c:if>

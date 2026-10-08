@@ -91,7 +91,7 @@
             <version>${jbcrypt.version}</version>
         </dependency>
 
-        <!-- JUnit: Kiểm thử tự động phân quyền và dải lương -->
+        <!-- JUnit: Kiểm thử tự động -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

@@ -59,9 +59,10 @@ public class AuthFilter implements Filter {
         // - /auth/login: Trang đăng nhập hệ thống
         // - /auth/forgot-password: Quên mật khẩu qua email
         // - /auth/reset-password: Xác thực token và đặt lại mật khẩu mới
+        // - /about-us, /company/about: Trang giới thiệu công ty công khai
         // ----------------------------------------------------------------------
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
-            path.startsWith("/auth/reset-password")) {
+            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about")) {
             chain.doFilter(request, response);
             return;
         }
@@ -215,6 +216,18 @@ public class AuthFilter implements Filter {
 
         // 8. Phân hệ Ngân hàng câu hỏi theo năng lực (/admin/questions, /admin/criteria)
         if (path.startsWith("/admin/questions") || path.startsWith("/admin/criteria")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 9. Phân hệ Cấu hình trang giới thiệu công ty (/admin/company-profile)
+        if (path.startsWith("/admin/company-profile")) {
+            boolean isAuthorizedCompany = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("company.manage") || currentUser.hasPermission("company.view");
+            if (!isAuthorizedCompany) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
             chain.doFilter(request, response);
             return;
         }
