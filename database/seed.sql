@@ -199,12 +199,12 @@ INSERT INTO candidates (id, requisition_id, full_name, email, phone, status, cv_
 
 -- 9. Khởi tạo dải lương chuẩn theo vị trí (Salary Ranges)
 DELETE FROM salary_ranges;
-INSERT INTO salary_ranges (id, department_id, position_title, min_salary, max_salary, currency) VALUES
-('sal-001', 'dept-003', 'Kỹ sư Java Backend (Junior)', 12000000.00, 18000000.00, 'VND'),
-('sal-002', 'dept-003', 'Kỹ sư Java Backend (Senior)', 25000000.00, 45000000.00, 'VND'),
-('sal-003', 'dept-002', 'Chuyên viên Tuyển dụng (Recruiter)', 10000000.00, 18000000.00, 'VND'),
-('sal-004', 'dept-002', 'Trưởng phòng Nhân sự (HR Manager)', 30000000.00, 50000000.00, 'VND'),
-('sal-005', 'dept-004', 'Trưởng nhóm Kinh doanh B2B', 20000000.00, 35000000.00, 'VND');
+INSERT INTO salary_ranges (id, position_code, position_title, level, department_id, min_salary, max_salary, currency, note) VALUES
+('sal-001', 'DEV-BE-JR', 'Kỹ sư Java Backend', 'Junior', 'dept-003', 12000000.00, 18000000.00, 'VND', 'Hạn mức duyệt offer cho lập trình viên Java dưới 2 năm kinh nghiệm'),
+('sal-002', 'DEV-BE-SR', 'Kỹ sư Java Backend', 'Senior', 'dept-003', 25000000.00, 45000000.00, 'VND', 'Hạn mức duyệt offer cho kỹ sư Java Senior từ 4 năm kinh nghiệm'),
+('sal-003', 'HR-REC-01', 'Chuyên viên Tuyển dụng', 'Chuyên viên', 'dept-002', 10000000.00, 18000000.00, 'VND', 'Hạn mức cho vị trí Recruiter phụ trách mảng IT & kỹ thuật'),
+('sal-004', 'HR-MGR-01', 'Trưởng phòng Nhân sự', 'Trưởng phòng', 'dept-002', 30000000.00, 50000000.00, 'VND', 'Hạn mức ngân sách vị trí Trưởng phòng Nhân sự cấp quản lý'),
+('sal-005', 'SALES-LEAD-01', 'Trưởng nhóm Kinh doanh B2B', 'Trưởng nhóm', 'dept-004', 20000000.00, 35000000.00, 'VND', 'Hạn mức lương cứng cho vị trí Team Lead B2B Sales');
 
 -- 10. Khởi tạo một số nhật ký kiểm toán ban đầu (Audit Logs)
 DELETE FROM audit_logs;

@@ -62,13 +62,13 @@
 
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table matrix-table mb-0">
+                        <table class="table matrix-table table-fit mb-0">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px;">STT</th>
-                                    <th style="width: 40%;">Tên quyền hạn &amp; Mã nghiệp vụ</th>
+                                    <th style="width: 50px;">STT</th>
+                                    <th style="width: 35%;">Tên quyền hạn &amp; Mã nghiệp vụ</th>
                                     <th>Mô tả chi tiết</th>
-                                    <th style="width: 120px;" class="text-center">Được phép</th>
+                                    <th style="width: 100px;" class="text-center">Được phép</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -94,11 +94,11 @@
                                         <c:set var="isAssigned" value="${assignedPerms != null && assignedPerms.contains(p.id)}" />
                                         <tr>
                                             <td class="text-center text-muted small">${counter}</td>
-                                            <td class="permission-label">
+                                            <td class="permission-label text-wrap-break">
                                                 <div class="perm-name">${p.name}</div>
                                                 <div class="perm-code">${p.code}</div>
                                             </td>
-                                            <td class="text-muted small">${p.description}</td>
+                                            <td class="text-muted small text-wrap-break">${p.description}</td>
                                             <td class="text-center">
                                                 <div class="form-check d-inline-block">
                                                     <input class="form-check-input" type="checkbox" name="permissionIds" 

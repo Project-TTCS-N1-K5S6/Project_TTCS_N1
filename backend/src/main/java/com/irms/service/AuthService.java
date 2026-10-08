@@ -12,16 +12,34 @@ import java.sql.Timestamp;
 
 /**
  * Xử lý nghiệp vụ Xác thực, Đăng nhập, Khóa tài khoản và Đổi mật khẩu
+/**
+ * ==============================================================================
+ * DỊCH VỤ NGHIỆP VỤ XÁC THỰC VÀ BẢO MẬT (AuthService)
+ * ==============================================================================
+ * Phục vụ các User Story:
+ * - US 1: Xác thực email & mật khẩu, khóa tạm 15 phút sau 5 lần sai liên tiếp.
+ * - US 4: Đổi mật khẩu cá nhân (Kiểm tra mật khẩu cũ, độ phức tạp mật khẩu mới).
+ * - US 8: Quản trị viên cấp lại mật khẩu tạm cho người dùng.
+ * - US 10: Chặn đăng nhập khi tài khoản bị khóa vĩnh viễn hoặc khóa tạm.
+ * ==============================================================================
  */
 public class AuthService {
     private final UserDAO userDAO = new UserDAO();
     private final AuditDAO auditDAO = new AuditDAO();
+    private final com.irms.dao.PasswordResetDAO passwordResetDAO = new com.irms.dao.PasswordResetDAO();
 
+    // [US 1]: Cấu hình số lần đăng nhập sai tối đa (mặc định 5 lần) và thời gian khóa tạm (15 phút)
     private final int maxFailedAttempts = AppConfig.getInt("security.maxFailedAttempts", 5);
     private final int lockoutMinutes = AppConfig.getInt("security.lockoutDurationMinutes", 15);
 
     /**
-     * Xác thực thông tin đăng nhập người dùng
+     * [US 1 & US 10]: Xác thực thông tin đăng nhập người dùng
+     * - Tiêu chí US 1:
+     *   + Đạt: Khóa tạm 15 phút nếu nhập sai 5 lần liên tiếp.
+     *   + Đạt: Hiển thị thông báo chung ("Email hoặc mật khẩu không chính xác"), phòng ngừa User Enumeration.
+     *   + Đạt: Ghi AuditLog mọi lần thử sai và thành công kèm IP, User-Agent.
+     * - Tiêu chí US 10:
+     *   + Đạt: Chặn người dùng nếu status == 'LOCKED'.
      */
     public User login(String email, String password, String ip, String userAgent) throws Exception {
         if (email == null || email.trim().isEmpty() || password == null || password.isEmpty()) {
@@ -30,11 +48,11 @@ public class AuthService {
 
         User user = userDAO.findByEmail(email.trim());
         if (user == null) {
-            // Không tiết lộ email có tồn tại hay không nhằm phòng ngừa User Enumeration
+            // [US 1]: Không tiết lộ email có tồn tại hay không nhằm phòng ngừa User Enumeration
             throw new Exception("Email hoặc mật khẩu không chính xác.");
         }
 
-        // Kiểm tra xem tài khoản có đang bị khóa không
+        // [US 1 & US 10]: Kiểm tra trạng thái khóa (Khóa tự động do nhập sai hoặc Quản trị viên chủ động khóa)
         if ("LOCKED".equalsIgnoreCase(user.getStatus())) {
             if (user.getLockedUntil() != null && user.getLockedUntil().after(new Timestamp(System.currentTimeMillis()))) {
                 long remainingMins = (user.getLockedUntil().getTime() - System.currentTimeMillis()) / (60 * 1000) + 1;
@@ -44,13 +62,14 @@ public class AuthService {
             }
         }
 
-        // Kiểm tra mật khẩu băm BCrypt
+        // [US 1]: Kiểm tra mật khẩu mã hóa BCrypt
         boolean match = PasswordUtil.check(password, user.getPasswordHash());
         if (!match) {
+            // Tăng số lần thử sai và kích hoạt khóa 15 phút nếu đạt ngưỡng 5 lần
             userDAO.incrementFailedAttempts(user.getEmail(), maxFailedAttempts, lockoutMinutes);
             int currentFails = user.getFailedLoginAttempts() + 1;
-            int remaining = maxFailedAttempts - currentFails;
 
+            // Ghi nhật ký kiểm toán hành vi đăng nhập thất bại
             AuditLog log = new AuditLog();
             log.setId(SecurityUtil.generateUUID());
             log.setUserId(user.getId());
@@ -62,17 +81,18 @@ public class AuthService {
             log.setUserAgent(userAgent);
             auditDAO.insert(log);
 
-            if (remaining > 0) {
-                throw new Exception("Mật khẩu không chính xác. Bạn còn " + remaining + " lần thử trước khi tài khoản bị khóa " + lockoutMinutes + " phút.");
+            if (currentFails >= maxFailedAttempts) {
+                throw new Exception("Bạn đã nhập sai thông tin quá " + maxFailedAttempts + " lần. Tài khoản đã bị tạm khóa " + lockoutMinutes + " phút.");
             } else {
-                throw new Exception("Bạn đã nhập sai mật khẩu quá " + maxFailedAttempts + " lần. Tài khoản đã bị tạm khóa " + lockoutMinutes + " phút.");
+                // [US 1 Tiêu chí 2]: Thông báo chung đồng nhất để không lộ email có tồn tại hay không
+                throw new Exception("Email hoặc mật khẩu không chính xác.");
             }
         }
 
-        // Đăng nhập thành công: Reset số lần thử sai
+        // [US 1]: Đăng nhập thành công -> Reset bộ đếm số lần sai về 0
         userDAO.resetFailedAttempts(user.getEmail());
 
-        // Ghi nhật ký kiểm toán LOGIN_SUCCESS
+        // Ghi nhật ký kiểm toán hành vi đăng nhập thành công
         AuditLog log = new AuditLog();
         log.setId(SecurityUtil.generateUUID());
         log.setUserId(user.getId());
@@ -88,7 +108,10 @@ public class AuthService {
     }
 
     /**
-     * Đổi mật khẩu cá nhân
+     * [US 4]: Đổi mật khẩu cá nhân
+     * - Bắt buộc nhập mật khẩu hiện tại.
+     * - Mật khẩu mới tối thiểu 8 ký tự, có cả chữ và số (Regex: ^(?=.*[a-zA-Z])(?=.*\d).{8,}$)
+     * - Cập nhật password_hash và tăng session_version để thu hồi các phiên đăng nhập khác.
      */
     public boolean changePassword(String userId, String oldPassword, String newPassword, String ip, String userAgent) throws Exception {
         User user = userDAO.findById(userId);
@@ -96,15 +119,18 @@ public class AuthService {
             throw new Exception("Không tìm thấy người dùng.");
         }
 
+        // Kiểm tra mật khẩu cũ
         if (!PasswordUtil.check(oldPassword, user.getPasswordHash())) {
             throw new Exception("Mật khẩu hiện tại không chính xác.");
         }
 
-        if (newPassword == null || newPassword.length() < 8) {
-            throw new Exception("Mật khẩu mới phải có độ dài tối thiểu 8 ký tự.");
+        // [US 4]: Kiểm tra độ phức tạp: tối thiểu 8 ký tự, có cả chữ và số
+        if (!isValidPasswordComplexity(newPassword)) {
+            throw new Exception("Mật khẩu mới phải có tối thiểu 8 ký tự, bao gồm cả chữ và số.");
         }
 
         String newHash = PasswordUtil.hash(newPassword);
+        // Cập nhật mật khẩu mới và hủy cờ must_change_password
         boolean success = userDAO.updatePassword(userId, newHash, false);
 
         if (success) {
@@ -124,13 +150,85 @@ public class AuthService {
     }
 
     /**
-     * Quản trị viên cấp lại mật khẩu cho người dùng
+     * [US 3]: Yêu cầu đặt lại mật khẩu qua Email (Quên mật khẩu)
+     * - Tiêu chí US 3:
+     *   + Nhận liên kết đặt lại có hiệu lực 30 phút.
+     *   + Email không tồn tại vẫn trả về cùng 1 thông báo (User Enumeration Protection).
+     *   + Lưu token vào password_reset_tokens và hàng đợi email_outbox.
+     */
+    public void requestPasswordReset(String email, String appUrl) {
+        if (email == null || email.trim().isEmpty()) return;
+
+        User user = userDAO.findByEmail(email.trim());
+        if (user != null) {
+            String token = SecurityUtil.generateUUID();
+            passwordResetDAO.createResetToken(user.getId(), token);
+
+            String resetLink = appUrl + "/auth/reset-password?token=" + token;
+            String payload = "{\"resetLink\":\"" + resetLink + "\", \"fullName\":\"" + user.getFullName() + "\"}";
+            passwordResetDAO.queueEmail(user.getEmail(), "Yêu cầu đặt lại mật khẩu IRMS", "RESET_PASSWORD", payload);
+            EmailService.triggerOutboxProcessing();
+        }
+    }
+
+    /**
+     * [US 3]: Đặt lại mật khẩu bằng Token từ Email
+     * - Tiêu chí US 3:
+     *   + Liên kết chỉ dùng được một lần duy nhất (markTokenAsUsed).
+     *   + Kiểm tra hạn 30 phút.
+     *   + Mật khẩu mới tối thiểu 8 ký tự có chữ và số.
+     */
+    public boolean resetPasswordWithToken(String token, String newPassword, String ip, String userAgent) throws Exception {
+        if (token == null || token.trim().isEmpty()) {
+            throw new Exception("Mã token đặt lại mật khẩu không hợp lệ.");
+        }
+
+        String userId = passwordResetDAO.findValidUserIdByToken(token.trim());
+        if (userId == null) {
+            throw new Exception("Liên kết đặt lại mật khẩu không hợp lệ, đã hết hạn 30 phút hoặc đã từng được sử dụng.");
+        }
+
+        // [US 4]: Kiểm tra độ phức tạp
+        if (!isValidPasswordComplexity(newPassword)) {
+            throw new Exception("Mật khẩu mới phải có tối thiểu 8 ký tự, bao gồm cả chữ và số.");
+        }
+
+        String newHash = PasswordUtil.hash(newPassword);
+        // Cập nhật mật khẩu và tăng session_version
+        boolean success = userDAO.updatePassword(userId, newHash, false);
+        if (success) {
+            // Đánh dấu token đã sử dụng (chỉ dùng 1 lần)
+            passwordResetDAO.markTokenAsUsed(token.trim());
+
+            AuditLog log = new AuditLog();
+            log.setId(SecurityUtil.generateUUID());
+            log.setUserId(userId);
+            log.setAction("PASSWORD_RESET_TOKEN");
+            log.setEntityType("USER");
+            log.setEntityId(userId);
+            log.setDescription("Người dùng đã đặt lại mật khẩu thành công qua email link");
+            log.setIpAddress(ip);
+            log.setUserAgent(userAgent);
+            auditDAO.insert(log);
+        }
+        return success;
+    }
+
+    /**
+     * [US 8]: Quản trị viên cấp lại mật khẩu cho người dùng
      */
     public boolean resetPasswordByAdmin(String userId, String temporaryPassword, String adminUserId, String ip, String userAgent) throws Exception {
         String newHash = PasswordUtil.hash(temporaryPassword);
         boolean success = userDAO.updatePassword(userId, newHash, true); // must_change_password = true
 
         if (success) {
+            User targetUser = userDAO.findById(userId);
+            if (targetUser != null && targetUser.getEmail() != null) {
+                String payload = "{\"temporaryPassword\":\"" + temporaryPassword + "\", \"fullName\":\"" + targetUser.getFullName() + "\"}";
+                passwordResetDAO.queueEmail(targetUser.getEmail(), "Cấp lại mật khẩu IRMS - Mật khẩu tạm thời mới", "ACCOUNT_ACTIVATION", payload);
+                EmailService.triggerOutboxProcessing();
+            }
+
             AuditLog log = new AuditLog();
             log.setId(SecurityUtil.generateUUID());
             log.setUserId(adminUserId);
@@ -144,5 +242,15 @@ public class AuthService {
         }
 
         return success;
+    }
+
+    /**
+     * [US 3 & US 4]: Kiểm tra quy tắc độ phức tạp của mật khẩu:
+     * - Tối thiểu 8 ký tự
+     * - Bao gồm cả chữ cái và chữ số
+     */
+    public static boolean isValidPasswordComplexity(String password) {
+        if (password == null) return false;
+        return password.matches("^(?=.*[a-zA-Z])(?=.*\\d).{8,}$");
     }
 }

@@ -191,11 +191,14 @@ CREATE TABLE candidates (
 DROP TABLE IF EXISTS salary_ranges;
 CREATE TABLE salary_ranges (
     id VARCHAR(36) PRIMARY KEY,
-    department_id VARCHAR(36) NULL,
+    position_code VARCHAR(50) NOT NULL UNIQUE,
     position_title VARCHAR(255) NOT NULL,
+    level VARCHAR(50) NOT NULL,
+    department_id VARCHAR(36) NULL,
     min_salary DECIMAL(15, 2) NOT NULL,
     max_salary DECIMAL(15, 2) NOT NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'VND',
+    note TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_sr_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL

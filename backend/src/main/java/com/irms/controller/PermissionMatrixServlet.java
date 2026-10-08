@@ -17,7 +17,15 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Controller quản lý Ma trận Phân quyền 10 Phân hệ nghiệp vụ IRMS
+ * ==============================================================================
+ * BỘ ĐIỀU KHIỂN MA TRẬN PHÂN QUYỀN (PermissionMatrixServlet)
+ * ==============================================================================
+ * Phục vụ User Story:
+ * - US 5: Phân quyền theo vai trò cho toàn hệ thống:
+ *   + Tiêu chí 1: Khai báo được quyền cho từng vai trò trong bảy (7) vai trò nghiệp vụ chuẩn.
+ *   + Tiêu chí 2: Thiết lập ma trận phân quyền 10 phân hệ nghiệp vụ, lưu bảng role_permissions.
+ *   + Hỗ trợ cập nhật qua AJAX và ghi nhận nhật ký kiểm toán (AuditLog).
+ * ==============================================================================
  */
 @WebServlet(name = "PermissionMatrixServlet", urlPatterns = {"/admin/permissions"})
 public class PermissionMatrixServlet extends HttpServlet {

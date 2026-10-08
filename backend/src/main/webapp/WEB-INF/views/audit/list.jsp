@@ -45,14 +45,14 @@
         <div class="card mb-4 shadow-sm border">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-custom">
+                    <table class="table table-custom table-fit">
                         <thead>
                             <tr>
-                                <th style="width: 170px;">Thời gian</th>
+                                <th style="width: 135px;">Thời gian</th>
                                 <th>Hành động</th>
-                                <th>Đối tượng</th>
+                                <th class="d-none d-md-table-cell">Đối tượng</th>
                                 <th>Người thực hiện</th>
-                                <th>Địa chỉ IP</th>
+                                <th class="d-none d-lg-table-cell" style="width: 110px;">Địa chỉ IP</th>
                                 <th>Nội dung chi tiết</th>
                             </tr>
                         </thead>
@@ -61,20 +61,21 @@
                                 <tr>
                                     <td class="text-muted text-xs">
                                         <i class="bi bi-clock me-1"></i>
-                                        <fmt:formatDate value="${l.createdAt}" pattern="yyyy-MM-dd HH:mm:ss" />
+                                        <fmt:formatDate value="${l.createdAt}" pattern="dd/MM/yyyy HH:mm" />
                                     </td>
                                     <td>
                                         <span class="badge ${l.getActionBadgeClass()}">${l.action}</span>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <span class="badge bg-light text-secondary border font-monospace text-xs">${l.entityType}</span>
                                     </td>
                                     <td>
                                         <div class="fw-semibold text-dark">${l.userFullName != null ? l.userFullName : 'Hệ thống'}</div>
                                         <small class="text-muted text-xs">${l.userEmail != null ? l.userEmail : '-'}</small>
+                                        <div class="d-lg-none text-muted text-xs font-monospace mt-1"><i class="bi bi-geo-alt"></i> ${l.ipAddress}</div>
                                     </td>
-                                    <td><span class="badge bg-light text-dark border font-monospace text-xs">${l.ipAddress}</span></td>
-                                    <td class="small text-dark" style="max-width: 320px;">
+                                    <td class="d-none d-lg-table-cell"><span class="badge bg-light text-dark border font-monospace text-xs">${l.ipAddress}</span></td>
+                                    <td class="small text-dark text-wrap-break" style="max-width: 300px;">
                                         ${l.description}
                                     </td>
                                 </tr>

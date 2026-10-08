@@ -25,35 +25,52 @@
             </button>
         </div>
 
-        <!-- Bộ lọc & Tìm kiếm -->
+        <!-- 
+            ======================================================================
+            [US 8]: BỘ LỌC TÌM KIẾM TÀI KHOẢN NỘI BỘ
+            - Tiêu chí US 8: Tìm theo tên, email, phòng ban; lọc theo vai trò và trạng thái.
+            - Điểm đạt: Tìm từ khóa tên/email/mã NV, lọc phòng ban, lọc trạng thái.
+            - Điểm cần bổ sung: Cần thêm dropdown lọc theo vai trò (roleId).
+            ======================================================================
+        -->
         <div class="filter-bar">
             <form method="GET" action="${pageContext.request.contextPath}/admin/users" class="row g-2 align-items-center">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3 col-xl-3">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
                         <input type="text" class="form-control border-start-0 ps-0" name="search" 
-                               placeholder="Tìm theo tên, email, mã nhân viên..." value="${paramSearch}">
+                               placeholder="Tìm tên, email, mã NV..." value="${paramSearch}">
                     </div>
                 </div>
 
-                <div class="col-12 col-sm-6 col-md-3">
+                <div class="col-6 col-md-2 col-xl-2">
                     <select class="form-select" name="deptId">
-                        <option value="">-- Tất cả phòng ban --</option>
+                        <option value="">-- Phòng ban --</option>
                         <c:forEach var="d" items="${departments}">
                             <option value="${d.id}" ${paramDeptId == d.id ? 'selected' : ''}>${d.name}</option>
                         </c:forEach>
                     </select>
                 </div>
 
-                <div class="col-12 col-sm-6 col-md-3">
-                    <select class="form-select" name="status">
-                        <option value="">-- Tất cả trạng thái --</option>
-                        <option value="ACTIVE" ${paramStatus == 'ACTIVE' ? 'selected' : ''}>Đang hoạt động (ACTIVE)</option>
-                        <option value="LOCKED" ${paramStatus == 'LOCKED' ? 'selected' : ''}>Đang bị khóa (LOCKED)</option>
+                <!-- [US 8 Tiêu chí 3]: Lọc theo vai trò người dùng -->
+                <div class="col-6 col-md-2 col-xl-2">
+                    <select class="form-select" name="roleId">
+                        <option value="">-- Vai trò --</option>
+                        <c:forEach var="r" items="${roles}">
+                            <option value="${r.id}" ${paramRoleId == r.id ? 'selected' : ''}>${r.name}</option>
+                        </c:forEach>
                     </select>
                 </div>
 
-                <div class="col-12 col-md-2 d-flex gap-2">
+                <div class="col-6 col-md-2 col-xl-2">
+                    <select class="form-select" name="status">
+                        <option value="">-- Trạng thái --</option>
+                        <option value="ACTIVE" ${paramStatus == 'ACTIVE' ? 'selected' : ''}>Hoạt động</option>
+                        <option value="LOCKED" ${paramStatus == 'LOCKED' ? 'selected' : ''}>Bị khóa</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3 col-xl-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">
                         <i class="bi bi-funnel-fill"></i> Lọc
                     </button>
@@ -68,22 +85,22 @@
         <div class="card mb-4">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-custom">
+                    <table class="table table-custom table-fit">
                         <thead>
                             <tr>
-                                <th>Mã NV</th>
+                                <th class="d-none d-sm-table-cell" style="width: 85px;">Mã NV</th>
                                 <th>Họ và tên &amp; Email</th>
-                                <th>Phòng ban &amp; Chức danh</th>
+                                <th class="d-none d-md-table-cell">Phòng ban &amp; Chức danh</th>
                                 <th>Vai trò</th>
                                 <th>Trạng thái</th>
-                                <th>Lần đăng nhập cuối</th>
-                                <th class="text-end pe-3">Hành động</th>
+                                <th class="d-none d-lg-table-cell">Đăng nhập cuối</th>
+                                <th class="text-end pe-3" style="width: 70px;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="u" items="${users}">
                                 <tr>
-                                    <td><span class="badge bg-light text-dark border font-monospace">${u.employeeCode}</span></td>
+                                    <td class="d-none d-sm-table-cell"><span class="badge bg-light text-dark border font-monospace">${u.employeeCode}</span></td>
                                     <td>
                                         <div class="user-cell">
                                             <div class="avatar-sm">
@@ -92,20 +109,23 @@
                                             <div class="user-meta">
                                                 <div class="user-name">${u.fullName}</div>
                                                 <div class="user-email">${u.email}</div>
+                                                <div class="d-sm-none text-muted text-xs font-monospace mt-1">${u.employeeCode}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="d-none d-md-table-cell">
                                         <div class="fw-semibold text-dark">${u.departmentName != null ? u.departmentName : 'Chưa phân bổ'}</div>
                                         <small class="text-muted">${u.jobTitle != null ? u.jobTitle : '-'}</small>
                                     </td>
                                     <td>
-                                        <c:forEach var="r" items="${u.roles}">
-                                            <span class="badge badge-role me-1 mb-1">${r.name}</span>
-                                        </c:forEach>
-                                        <c:if test="${empty u.roles}">
-                                            <span class="text-muted text-xs">Chưa có vai trò</span>
-                                        </c:if>
+                                        <div class="role-badges">
+                                            <c:forEach var="r" items="${u.roles}">
+                                                <span class="badge badge-role">${r.name}</span>
+                                            </c:forEach>
+                                            <c:if test="${empty u.roles}">
+                                                <span class="text-muted text-xs">Chưa có</span>
+                                            </c:if>
+                                        </div>
                                     </td>
                                     <td>
                                         <c:choose>
@@ -113,14 +133,14 @@
                                                 <span class="badge badge-active"><i class="bi bi-check-circle-fill me-1"></i> Hoạt động</span>
                                             </c:when>
                                             <c:when test="${u.status == 'LOCKED'}">
-                                                <span class="badge badge-locked" title="Lý do: ${u.lockReason}"><i class="bi bi-lock-fill me-1"></i> Bị khóa</span>
+                                                <span class="badge badge-locked" title="Lý do: ${u.lockReason}"><i class="bi bi-lock-fill me-1"></i> Khóa</span>
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="badge badge-inactive">${u.status}</span>
                                             </c:otherwise>
                                         </c:choose>
                                     </td>
-                                    <td class="text-muted text-xs">
+                                    <td class="text-muted text-xs d-none d-lg-table-cell">
                                         <c:choose>
                                             <c:when test="${not empty u.lastLoginAt}">
                                                 <fmt:formatDate value="${u.lastLoginAt}" pattern="HH:mm dd/MM/yyyy" />
@@ -135,8 +155,12 @@
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                 <li>
+                                                    <c:set var="uRoleIds" value="" />
+                                                    <c:forEach var="ur" items="${u.roles}" varStatus="rst">
+                                                        <c:set var="uRoleIds" value="${uRoleIds}${ur.id}${rst.last ? '' : ','}" />
+                                                    </c:forEach>
                                                     <a class="dropdown-item" href="javascript:void(0)" 
-                                                       onclick="openEditModal('${u.id}', '${u.employeeCode}', '${u.fullName}', '${u.phone}', '${u.jobTitle}', '${u.departmentId}', '${u.status}', '${not empty u.roles ? u.roles[0].id : ''}')">
+                                                       onclick="openEditModal('${u.id}', '${u.employeeCode}', '${u.fullName}', '${u.phone}', '${u.jobTitle}', '${u.departmentId}', '${u.status}', '${uRoleIds}')">
                                                         <i class="bi bi-pencil-square me-2 text-primary"></i> Sửa thông tin
                                                     </a>
                                                 </li>
@@ -192,7 +216,7 @@
                             <ul class="pagination pagination-sm mb-0">
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <li class="page-item ${currentPage == p ? 'active' : ''}">
-                                        <a class="page-link" href="${pageContext.request.contextPath}/admin/users?page=${p}&search=${paramSearch}&deptId=${paramDeptId}&status=${paramStatus}">${p}</a>
+                                        <a class="page-link" href="${pageContext.request.contextPath}/admin/users?page=${p}&search=${paramSearch}&deptId=${paramDeptId}&roleId=${paramRoleId}&status=${paramStatus}">${p}</a>
                                     </li>
                                 </c:forEach>
                             </ul>
@@ -203,9 +227,15 @@
         </div>
     </div>
 
-    <!-- Modal Thêm Người Dùng Mới -->
+    <!-- 
+        ======================================================================
+        [US 8 & US 9]: MODAL THÊM TÀI KHOẢN NỘI BỘ
+        - Tiêu chí US 8: Tạo tài khoản gửi email kích hoạt kèm mật khẩu tạm (mật khẩu mặc định hiện tại là Admin@123456).
+        - Tiêu chí US 9: Một người dùng có thể giữ nhiều vai trò cùng lúc (hiện form đang dùng select 1 vai trò).
+        ======================================================================
+    -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <form action="${pageContext.request.contextPath}/admin/users/create" method="POST">
                     <div class="modal-header">
@@ -214,17 +244,23 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-6">
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold">Mã nhân viên <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="employeeCode" required placeholder="EMP008">
                             </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold">Vai trò chính <span class="text-danger">*</span></label>
-                                <select class="form-select" name="roleId" required>
+                            <!-- [US 9 Tiêu chí 1]: Cho phép chọn một hoặc nhiều vai trò cùng lúc -->
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Vai trò phân quyền <span class="text-danger">*</span> (Có thể chọn nhiều vai trò)</label>
+                                <div class="border rounded p-2 bg-light d-flex flex-wrap gap-3">
                                     <c:forEach var="r" items="${roles}">
-                                        <option value="${r.id}">${r.name}</option>
+                                        <div class="form-check">
+                                            <input class="form-check-input add-user-role-cb" type="checkbox" name="roleIds" value="${r.id}" id="addRole_${r.id}">
+                                            <label class="form-check-label small fw-medium" for="addRole_${r.id}">
+                                                ${r.name}
+                                            </label>
+                                        </div>
                                     </c:forEach>
-                                </select>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Họ và tên <span class="text-danger">*</span></label>
@@ -234,11 +270,11 @@
                                 <label class="form-label small fw-semibold">Email công ty <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control" name="email" required placeholder="user@company.local">
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Số điện thoại</label>
                                 <input type="text" class="form-control" name="phone" placeholder="0901234567">
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Chức vụ / Vị trí</label>
                                 <input type="text" class="form-control" name="jobTitle" placeholder="Chuyên viên...">
                             </div>
@@ -265,9 +301,17 @@
         </div>
     </div>
 
-    <!-- Modal Sửa Người Dùng -->
+    <!-- 
+        ======================================================================
+        [US 9]: MODAL CHỈNH SỬA THÔNG TIN & GÁN VAI TRÒ
+        - Tiêu chí US 9:
+          + Một người dùng có thể giữ nhiều vai trò cùng lúc.
+          + Không thể tự thu hồi vai trò quản trị của chính mình.
+          + Lưu ý: Cần nâng cấp UI sang checkbox danh sách vai trò thay vì select 1 vai trò.
+        ======================================================================
+    -->
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <form action="${pageContext.request.contextPath}/admin/users/edit" method="POST">
                     <input type="hidden" name="userId" id="editUserId">
@@ -277,31 +321,37 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-6">
+                            <div class="col-12">
                                 <label class="form-label small fw-semibold">Mã nhân viên</label>
                                 <input type="text" class="form-control" id="editEmployeeCode" disabled>
                             </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold">Vai trò</label>
-                                <select class="form-select" name="roleId" id="editRoleId">
+                            <!-- [US 9 Tiêu chí 1]: Cập nhật nhiều vai trò cho tài khoản -->
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Vai trò phân quyền <span class="text-danger">*</span> (Có thể gán nhiều vai trò)</label>
+                                <div class="border rounded p-2 bg-light d-flex flex-wrap gap-3">
                                     <c:forEach var="r" items="${roles}">
-                                        <option value="${r.id}">${r.name}</option>
+                                        <div class="form-check">
+                                            <input class="form-check-input edit-user-role-cb" type="checkbox" name="roleIds" value="${r.id}" id="editRole_${r.id}">
+                                            <label class="form-check-label small fw-medium" for="editRole_${r.id}">
+                                                ${r.name}
+                                            </label>
+                                        </div>
                                     </c:forEach>
-                                </select>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Họ và tên</label>
                                 <input type="text" class="form-control" name="fullName" id="editFullName" required>
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Số điện thoại</label>
                                 <input type="text" class="form-control" name="phone" id="editPhone">
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Chức vụ</label>
                                 <input type="text" class="form-control" name="jobTitle" id="editJobTitle">
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Phòng ban</label>
                                 <select class="form-select" name="departmentId" id="editDepartmentId">
                                     <option value="">-- Chưa gán phòng ban --</option>
@@ -310,7 +360,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <label class="form-label small fw-semibold">Trạng thái</label>
                                 <select class="form-select" name="status" id="editStatus">
                                     <option value="ACTIVE">Hoạt động (ACTIVE)</option>
@@ -328,7 +378,15 @@
         </div>
     </div>
 
-    <!-- Modal Khóa Người Dùng -->
+    <!-- 
+        ======================================================================
+        [US 10]: MODAL KHÓA TÀI KHOẢN NHÂN SỰ
+        - Tiêu chí US 10:
+          + Tài khoản bị khóa không đăng nhập được và bị thu hồi phiên đang mở.
+          + Bắt buộc ghi lý do khóa (textarea required).
+          + Vị trí tuyển dụng do người đó phụ trách được cảnh báo cần bàn giao.
+        ======================================================================
+    -->
     <div class="modal fade" id="lockUserModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

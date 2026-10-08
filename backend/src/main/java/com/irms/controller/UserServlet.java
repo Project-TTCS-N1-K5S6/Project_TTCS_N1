@@ -17,7 +17,14 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Controller quản trị tài khoản người dùng: CRUD, Khóa, Cấp lại mật khẩu
+ * ==============================================================================
+ * BỘ ĐIỀU KHIỂN QUẢN TRỊ TÀI KHOẢN NGƯỜI DÙNG (UserServlet)
+ * ==============================================================================
+ * Phục vụ các User Story:
+ * - US 8: Tạo, sửa, tìm kiếm tài khoản nội bộ (Tìm tên/email/phòng ban; lọc vai trò/trạng thái; phân trang mặc định 20 dòng).
+ * - US 9: Gán và thu hồi vai trò (1 người nhiều vai trò; không tự thu hồi vai trò admin của chính mình).
+ * - US 10: Khóa và mở khóa tài khoản (Bắt buộc lý do; cảnh báo vị trí tuyển dụng phụ trách cần bàn giao).
+ * ==============================================================================
  */
 @WebServlet(name = "UserServlet", urlPatterns = {
         "/admin/users",
@@ -39,17 +46,20 @@ public class UserServlet extends HttpServlet {
         String search = request.getParameter("search");
         String deptId = request.getParameter("deptId");
         String status = request.getParameter("status");
+        String roleId = request.getParameter("roleId");
 
         int page = 1;
-        int pageSize = 10;
+        // [US 8 Tiêu chí 4]: Danh sách phân trang, mặc định 20 dòng
+        int pageSize = 20; 
         try {
             if (request.getParameter("page") != null) {
                 page = Integer.parseInt(request.getParameter("page"));
             }
         } catch (NumberFormatException ignored) {}
 
-        List<User> userList = userService.getUsers(search, deptId, status, page, pageSize);
-        int totalUsers = userService.countUsers(search, deptId, status);
+        // [US 8 Tiêu chí 3]: Tìm theo tên, email, phòng ban; lọc theo vai trò và trạng thái
+        List<User> userList = userService.getUsers(search, deptId, status, roleId, page, pageSize);
+        int totalUsers = userService.countUsers(search, deptId, status, roleId);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
         request.setAttribute("users", userList);
@@ -61,6 +71,7 @@ public class UserServlet extends HttpServlet {
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramDeptId", deptId);
         request.setAttribute("paramStatus", status);
+        request.setAttribute("paramRoleId", roleId);
 
         request.getRequestDispatcher("/WEB-INF/views/users/list.jsp").forward(request, response);
     }
@@ -78,29 +89,38 @@ public class UserServlet extends HttpServlet {
         try {
             switch (path) {
                 case "/admin/users/create":
+                    // [US 8]: Tạo tài khoản người dùng mới kèm mật khẩu tạm và gửi email kích hoạt
                     handleCreateUser(request, adminId, ip, userAgent);
-                    session.setAttribute("flashSuccess", "Thêm mới tài khoản người dùng thành công (Mật khẩu mặc định: Admin@123456)!");
+                    session.setAttribute("flashSuccess", "Thêm mới tài khoản người dùng thành công! Mật khẩu tạm thời đã được tạo và gửi email kích hoạt.");
                     break;
 
                 case "/admin/users/edit":
+                    // [US 9]: Cập nhật thông tin và gán nhiều vai trò (Chặn tự thu hồi vai trò admin)
                     handleUpdateUser(request, adminId, ip, userAgent);
-                    session.setAttribute("flashSuccess", "Cập nhật thông tin tài khoản thành công!");
+                    session.setAttribute("flashSuccess", "Cập nhật thông tin tài khoản và vai trò thành công!");
                     break;
 
                 case "/admin/users/lock":
+                    // [US 10]: Khóa tài khoản nhân sự (Bắt buộc lý do; cảnh báo bàn giao vị trí nếu có)
                     String lockUserId = request.getParameter("userId");
                     String lockReason = request.getParameter("reason");
-                    userService.lockUser(lockUserId, lockReason, adminId, ip, userAgent);
-                    session.setAttribute("flashSuccess", "Đã khóa tài khoản người dùng thành công!");
+                    int activeJobs = userService.lockUser(lockUserId, lockReason, adminId, ip, userAgent);
+                    if (activeJobs > 0) {
+                        session.setAttribute("flashWarning", "Đã khóa tài khoản thành công. CẢNH BÁO: Nhân sự đang phụ trách " + activeJobs + " vị trí tuyển dụng mở cần được bàn giao ngay!");
+                    } else {
+                        session.setAttribute("flashSuccess", "Đã khóa tài khoản người dùng thành công!");
+                    }
                     break;
 
                 case "/admin/users/unlock":
+                    // [US 10]: Mở khóa tài khoản nhân sự trở lại trạng thái ACTIVE
                     String unlockUserId = request.getParameter("userId");
                     userService.unlockUser(unlockUserId, adminId, ip, userAgent);
                     session.setAttribute("flashSuccess", "Đã mở khóa tài khoản thành công!");
                     break;
 
                 case "/admin/users/reset-password":
+                    // [US 8]: Quản trị viên cấp lại mật khẩu tạm thời
                     String resetUserId = request.getParameter("userId");
                     String tempPass = "Reset@" + (int)(Math.random() * 900000 + 100000);
                     authService.resetPasswordByAdmin(resetUserId, tempPass, adminId, ip, userAgent);
@@ -114,6 +134,9 @@ public class UserServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users");
     }
 
+    /**
+     * [US 8 & US 9]: Thu thập tham số form tạo mới người dùng hỗ trợ nhiều vai trò
+     */
     private void handleCreateUser(HttpServletRequest request, String adminId, String ip, String userAgent) throws Exception {
         User u = new User();
         u.setEmployeeCode(request.getParameter("employeeCode"));
@@ -124,10 +147,20 @@ public class UserServlet extends HttpServlet {
         u.setDepartmentId(request.getParameter("departmentId"));
         u.setStatus("ACTIVE");
 
-        String roleId = request.getParameter("roleId");
-        userService.createUser(u, roleId, adminId, ip, userAgent);
+        String[] roleIds = request.getParameterValues("roleIds");
+        java.util.List<String> roleList = new java.util.ArrayList<>();
+        if (roleIds != null) {
+            for (String r : roleIds) if (r != null && !r.trim().isEmpty()) roleList.add(r.trim());
+        } else if (request.getParameter("roleId") != null && !request.getParameter("roleId").trim().isEmpty()) {
+            roleList.add(request.getParameter("roleId").trim());
+        }
+
+        userService.createUser(u, roleList, adminId, ip, userAgent);
     }
 
+    /**
+     * [US 9]: Thu thập tham số form chỉnh sửa người dùng và gán nhiều vai trò
+     */
     private void handleUpdateUser(HttpServletRequest request, String adminId, String ip, String userAgent) throws Exception {
         User u = new User();
         u.setId(request.getParameter("userId"));
@@ -137,7 +170,14 @@ public class UserServlet extends HttpServlet {
         u.setDepartmentId(request.getParameter("departmentId"));
         u.setStatus(request.getParameter("status"));
 
-        String roleId = request.getParameter("roleId");
-        userService.updateUser(u, roleId, adminId, ip, userAgent);
+        String[] roleIds = request.getParameterValues("roleIds");
+        java.util.List<String> roleList = new java.util.ArrayList<>();
+        if (roleIds != null) {
+            for (String r : roleIds) if (r != null && !r.trim().isEmpty()) roleList.add(r.trim());
+        } else if (request.getParameter("roleId") != null && !request.getParameter("roleId").trim().isEmpty()) {
+            roleList.add(request.getParameter("roleId").trim());
+        }
+
+        userService.updateUser(u, roleList, adminId, ip, userAgent);
     }
 }

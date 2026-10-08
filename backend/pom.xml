@@ -91,6 +91,14 @@
             <version>${jbcrypt.version}</version>
         </dependency>
 
+        <!-- JUnit: Kiểm thử tự động phân quyền và dải lương -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- JavaMail API: Hỗ trợ gửi Email qua SMTP (MailHog & Gmail) -->
         <dependency>
             <groupId>com.sun.mail</groupId>

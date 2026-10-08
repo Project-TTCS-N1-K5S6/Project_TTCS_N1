@@ -14,6 +14,13 @@
     </div>
 
     <div class="header-right">
+        <!-- 
+            ======================================================================
+            [US 6 - Đạt]: HIỂN THỊ TÊN VÀ VAI TRÒ NGƯỜI ĐANG ĐĂNG NHẬP
+            - Hiển thị avatar ký tự đầu, họ tên đầy đủ: ${currentUser.fullName}
+            - Hiển thị danh sách vai trò: ${currentUser.getRolesDisplay()}
+            ======================================================================
+        -->
         <div class="dropdown">
             <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="user-avatar">

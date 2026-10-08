@@ -27,7 +27,14 @@
         <p>Hệ thống Quản lý Tuyển dụng Nội bộ</p>
     </div>
 
-    <!-- Thông báo lỗi hoặc thành công -->
+    <!-- 
+        ======================================================================
+        [US 1 & US 2]: KHU VỰC THÔNG BÁO HỆ THỐNG
+        - errorMessage: Thông báo lỗi xác thực, tài khoản bị khóa tạm 15 phút sau 5 lần sai (US 1).
+        - loggedOut: Thông báo đăng xuất làm mất hiệu lực phiên an toàn phía server (US 2).
+        - redirect (Phiên hết hạn): Tiêu chí US 2 yêu cầu thông báo rõ ràng khi phiên hết hạn.
+        ======================================================================
+    -->
     <c:if test="${not empty errorMessage}">
         <div class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
@@ -42,6 +49,36 @@
         </div>
     </c:if>
 
+    <c:if test="${param.resetSuccess == 'true'}">
+        <div class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div>Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới của bạn.</div>
+        </div>
+    </c:if>
+
+    <c:if test="${param.sessionRevoked == 'true'}">
+        <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+            <i class="bi bi-shield-exclamation me-2 fs-5"></i>
+            <div>Phiên đăng nhập đã bị thu hồi do tài khoản đã đổi mật khẩu hoặc được cập nhật vai trò. Vui lòng đăng nhập lại.</div>
+        </div>
+    </c:if>
+
+    <c:if test="${param.locked == 'true'}">
+        <div class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+            <i class="bi bi-lock-fill me-2 fs-5"></i>
+            <div>Tài khoản của bạn đã bị Quản trị viên khóa. Mọi phiên làm việc đã bị thu hồi.</div>
+        </div>
+    </c:if>
+
+    <!-- [US 2 Tiêu chí 3]: Phiên hết hạn đưa về trang đăng nhập kèm thông báo rõ ràng -->
+    <c:if test="${not empty param.redirect && param.loggedOut != 'true' && param.sessionRevoked != 'true' && param.locked != 'true'}">
+        <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+            <i class="bi bi-clock-history me-2 fs-5"></i>
+            <div>Phiên làm việc của bạn đã hết hạn do không hoạt động. Vui lòng đăng nhập lại để tiếp tục.</div>
+        </div>
+    </c:if>
+
+    <!-- [US 1]: Form đăng nhập email nội bộ và mật khẩu -->
     <form action="${pageContext.request.contextPath}/auth/login" method="POST">
         <input type="hidden" name="redirect" value="${param.redirect}">
 

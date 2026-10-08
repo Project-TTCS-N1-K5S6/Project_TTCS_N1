@@ -99,13 +99,13 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-custom">
+                            <table class="table table-custom table-fit">
                                 <thead>
                                     <tr>
                                         <th>Ứng viên</th>
                                         <th>Vị trí tuyển dụng</th>
                                         <th>Trạng thái</th>
-                                        <th>Ngày nộp</th>
+                                        <th class="d-none d-sm-table-cell">Ngày nộp</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -115,11 +115,11 @@
                                                 <div class="fw-semibold text-dark">${c.fullName}</div>
                                                 <div class="text-muted text-xs">${c.email}</div>
                                             </td>
-                                            <td>${c.requisitionTitle != null ? c.requisitionTitle : 'Kỹ sư Backend'}</td>
+                                            <td><div class="text-wrap-break">${c.requisitionTitle != null ? c.requisitionTitle : 'Kỹ sư Backend'}</div></td>
                                             <td>
                                                 <span class="badge ${c.getStatusBadgeClass()}">${c.getStatusLabel()}</span>
                                             </td>
-                                            <td class="text-muted text-xs">
+                                            <td class="text-muted text-xs d-none d-sm-table-cell">
                                                 <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy" />
                                             </td>
                                         </tr>

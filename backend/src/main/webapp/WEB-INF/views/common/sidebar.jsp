@@ -9,6 +9,14 @@
         </a>
     </div>
 
+    <!-- 
+        ======================================================================
+        [US 6]: MENU ĐIỀU HƯỚNG THEO QUYỀN
+        - Tiêu chí US 6: Mục menu không thuộc quyền thì không hiển thị.
+        - Tiêu chí US 5: Đảm bảo Người phỏng vấn (INTERVIEWER) KHÔNG xem được dải lương.
+        - Hỗ trợ màn hình 360px thông qua sidebar-toggle và co giãn CSS responsive.
+        ======================================================================
+    -->
     <div class="sidebar-menu">
         <div class="menu-header">TỔNG QUAN</div>
         <ul class="nav flex-column mb-3">
@@ -22,63 +30,72 @@
 
         <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
         <ul class="nav flex-column mb-3">
-            <li class="nav-item">
-                <a class="nav-link ${activeMenu == 'candidates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates">
-                    <i class="bi bi-people-fill"></i>
-                    <span>Hồ sơ & Pipeline</span>
-                </a>
-            </li>
-            <c:if test="${!currentUser.hasRole('INTERVIEWER') || currentUser.hasRole('ADMIN')}">
+            <!-- [US 6 Tiêu chí 1]: Menu Hồ sơ ứng viên hiển thị cho người có quyền candidates.view hoặc ADMIN -->
+            <c:if test="${currentUser.hasPermission('candidates.view') || currentUser.hasRole('ADMIN')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'candidates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Hồ sơ & Pipeline</span>
+                    </a>
+                </li>
+            </c:if>
+            <!-- [KN-103]: CHỈ Trưởng phòng Nhân sự (HR_MANAGER) và Quản trị hệ thống (ADMIN) mới thấy menu Khai báo dải lương -->
+            <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('salary.view')}">
                 <li class="nav-item">
                     <a class="nav-link ${activeMenu == 'salary' ? 'active' : ''}" href="${pageContext.request.contextPath}/salary-ranges">
                         <i class="bi bi-cash-stack"></i>
-                        <span>Dải lương ngân sách</span>
+                        <span>Khai báo dải lương</span>
                     </a>
                 </li>
             </c:if>
         </ul>
 
-        <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
-        <ul class="nav flex-column mb-3">
-            <c:if test="${currentUser.hasPermission('users.view') || currentUser.hasRole('ADMIN')}">
-                <li class="nav-item">
-                    <a class="nav-link ${activeMenu == 'users' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/users">
-                        <i class="bi bi-person-badge-fill"></i>
-                        <span>Tài khoản người dùng</span>
-                    </a>
-                </li>
-            </c:if>
-            <li class="nav-item">
-                <a class="nav-link ${activeMenu == 'departments' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/departments">
-                    <i class="bi bi-building-fill"></i>
-                    <span>Cơ cấu phòng ban</span>
-                </a>
-            </li>
-            <c:if test="${currentUser.hasPermission('roles.view') || currentUser.hasRole('ADMIN')}">
-                <li class="nav-item">
-                    <a class="nav-link ${activeMenu == 'roles' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/roles">
-                        <i class="bi bi-person-gear"></i>
-                        <span>Danh mục vai trò</span>
-                    </a>
-                </li>
-            </c:if>
-            <c:if test="${currentUser.hasPermission('permissions.view') || currentUser.hasRole('ADMIN')}">
-                <li class="nav-item">
-                    <a class="nav-link ${activeMenu == 'permissions' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/permissions">
-                        <i class="bi bi-diagram-3-fill"></i>
-                        <span>Ma trận phân quyền</span>
-                    </a>
-                </li>
-            </c:if>
-            <c:if test="${currentUser.hasPermission('audit.view') || currentUser.hasRole('ADMIN')}">
-                <li class="nav-item">
-                    <a class="nav-link ${activeMenu == 'audit' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">
-                        <i class="bi bi-clock-history"></i>
-                        <span>Nhật ký kiểm toán</span>
-                    </a>
-                </li>
-            </c:if>
-        </ul>
+        <!-- [US 6 Tiêu chí 1]: Menu Quản trị chỉ hiển thị khi tài khoản có ít nhất 1 quyền thuộc phân hệ Quản trị -->
+        <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasPermission('users.view') || currentUser.hasPermission('department.view') || currentUser.hasPermission('roles.view') || currentUser.hasPermission('permissions.view') || currentUser.hasPermission('audit.view')}">
+            <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
+            <ul class="nav flex-column mb-3">
+                <c:if test="${currentUser.hasPermission('users.view') || currentUser.hasRole('ADMIN')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'users' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/users">
+                            <i class="bi bi-person-badge-fill"></i>
+                            <span>Tài khoản người dùng</span>
+                        </a>
+                    </li>
+                </c:if>
+                <c:if test="${currentUser.hasPermission('department.view') || currentUser.hasRole('ADMIN')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'departments' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/departments">
+                            <i class="bi bi-building-fill"></i>
+                            <span>Cơ cấu phòng ban</span>
+                        </a>
+                    </li>
+                </c:if>
+                <c:if test="${currentUser.hasPermission('roles.view') || currentUser.hasRole('ADMIN')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'roles' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/roles">
+                            <i class="bi bi-person-gear"></i>
+                            <span>Danh mục vai trò</span>
+                        </a>
+                    </li>
+                </c:if>
+                <c:if test="${currentUser.hasPermission('permissions.view') || currentUser.hasRole('ADMIN')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'permissions' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/permissions">
+                            <i class="bi bi-diagram-3-fill"></i>
+                            <span>Ma trận phân quyền</span>
+                        </a>
+                    </li>
+                </c:if>
+                <c:if test="${currentUser.hasPermission('audit.view') || currentUser.hasRole('ADMIN')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'audit' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Nhật ký kiểm toán</span>
+                        </a>
+                    </li>
+                </c:if>
+            </ul>
+        </c:if>
 
         <div class="menu-header">MỞ RỘNG (PHASE 2)</div>
         <ul class="nav flex-column mb-3">

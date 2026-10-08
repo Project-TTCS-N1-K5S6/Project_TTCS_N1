@@ -29,6 +29,25 @@ public class AppConfig {
         if (sysVal != null && !sysVal.trim().isEmpty()) {
             return sysVal;
         }
+
+        // Hỗ trợ tra cứu các biến môi trường phổ biến từ .env
+        if ("mail.smtp.host".equals(key)) {
+            String alias = System.getenv("SMTP_HOST");
+            if (alias != null && !alias.trim().isEmpty()) return alias;
+        } else if ("mail.smtp.port".equals(key)) {
+            String alias = System.getenv("SMTP_PORT");
+            if (alias != null && !alias.trim().isEmpty()) return alias;
+        } else if ("mail.smtp.username".equals(key)) {
+            String alias = System.getenv("SMTP_USER");
+            if (alias != null && !alias.trim().isEmpty()) return alias;
+        } else if ("mail.smtp.password".equals(key)) {
+            String alias = System.getenv("SMTP_PASSWORD");
+            if (alias != null && !alias.trim().isEmpty()) return alias;
+        } else if ("mail.from".equals(key)) {
+            String alias = System.getenv("EMAIL_FROM");
+            if (alias != null && !alias.trim().isEmpty()) return alias;
+        }
+
         return properties.getProperty(key, defaultValue);
     }
 

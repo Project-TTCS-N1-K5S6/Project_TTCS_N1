@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * Controller hiển thị Bảng điều khiển Tổng quan (Dashboard)
  */
-@WebServlet(name = "DashboardServlet", urlPatterns = {"/dashboard", ""})
+@WebServlet(name = "DashboardServlet", urlPatterns = {"/dashboard"})
 public class DashboardServlet extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final CandidateDAO candidateDAO = new CandidateDAO();

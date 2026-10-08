@@ -17,9 +17,14 @@
         <p class="text-muted mb-4">
             Trang hoặc tài nguyên bạn đang cố truy cập không tồn tại hoặc đã được di chuyển trong hệ thống IRMS.
         </p>
-        <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-primary px-4 py-2">
-            <i class="bi bi-house-door me-1"></i> Quay về Bảng điều khiển
-        </a>
+        <div class="d-flex justify-content-center gap-2">
+            <button onclick="window.history.back()" class="btn btn-outline-secondary px-4 py-2">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại trang trước
+            </button>
+            <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-primary px-4 py-2">
+                <i class="bi bi-house-door me-1"></i> Về Bảng điều khiển
+            </a>
+        </div>
     </div>
 </body>
 </html>
