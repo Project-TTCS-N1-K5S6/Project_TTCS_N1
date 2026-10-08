@@ -186,7 +186,13 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 8. [US 5]: Cơ chế từ chối mặc định (Deny-by-default) cho toàn bộ các endpoint /admin/ nếu không có vai trò ADMIN
+        // 8. Phân hệ Ngân hàng câu hỏi theo năng lực (/admin/questions, /admin/criteria)
+        if (path.startsWith("/admin/questions") || path.startsWith("/admin/criteria")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 9. [US 5]: Cơ chế từ chối mặc định (Deny-by-default) cho toàn bộ các endpoint /admin/ nếu không có vai trò ADMIN
         if (path.startsWith("/admin/") && !currentUser.hasRole("ADMIN")) {
             request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
             return;
