@@ -27,7 +27,7 @@
                     <div class="user-avatar overflow-hidden" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; border-radius: 50% !important; overflow: hidden !important; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #2563eb, #8b5cf6); border: 1.5px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);">
                         <c:choose>
                             <c:when test="${not empty currentUser.avatarUrl}">
-                                <img src="${currentUser.avatarUrl}" alt="Avatar" class="user-avatar-img" id="navHeaderAvatarImg" style="width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; max-width: 32px !important; max-height: 32px !important; border-radius: 50% !important; object-fit: cover !important; display: block !important;" />
+                                <img src="${not empty currentUser.avatarThumbnailUrl ? currentUser.avatarThumbnailUrl : currentUser.avatarUrl}" alt="Avatar" class="user-avatar-img" id="navHeaderAvatarImg" style="width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; max-width: 32px !important; max-height: 32px !important; border-radius: 50% !important; object-fit: cover !important; display: block !important;" />
                             </c:when>
                             <c:when test="${not empty currentUser.fullName}">
                                 <span class="avatar-letter" style="color: #ffffff; font-weight: 700; font-size: 0.85rem; line-height: 1;">${currentUser.fullName.substring(0, 1)}</span>
@@ -50,7 +50,7 @@
                         <div class="user-avatar overflow-hidden style-sm" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; border-radius: 50% !important; overflow: hidden !important; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #2563eb, #8b5cf6);">
                             <c:choose>
                                 <c:when test="${not empty currentUser.avatarUrl}">
-                                    <img src="${currentUser.avatarUrl}" alt="Avatar" class="user-avatar-img" style="width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; max-width: 36px !important; max-height: 36px !important; border-radius: 50% !important; object-fit: cover !important; display: block !important;" />
+                                    <img src="${not empty currentUser.avatarThumbnailUrl ? currentUser.avatarThumbnailUrl : currentUser.avatarUrl}" alt="Avatar" class="user-avatar-img" style="width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; max-width: 36px !important; max-height: 36px !important; border-radius: 50% !important; object-fit: cover !important; display: block !important;" />
                                 </c:when>
                                 <c:when test="${not empty currentUser.fullName}">
                                     <span class="avatar-letter" style="color: #ffffff; font-weight: 700; font-size: 0.9rem;">${currentUser.fullName.substring(0, 1)}</span>
@@ -151,8 +151,8 @@
                         <div class="tab-pane fade show active" id="tab-file" role="tabpanel">
                             <div class="mb-3">
                                 <label for="avatarFileInput" class="form-label fw-semibold">Chọn tệp ảnh từ máy tính</label>
-                                <input class="form-control" type="file" id="avatarFileInput" name="avatarFile" accept="image/png, image/jpeg, image/webp, image/svg+xml" onchange="previewSelectedFile(this)" />
-                                <div class="form-text text-muted">Hỗ trợ các định dạng JPG, PNG, WEBP, SVG (tối đa 10MB).</div>
+                                <input class="form-control" type="file" id="avatarFileInput" name="avatarFile" accept=".jpg, .jpeg, .png, image/jpeg, image/png" onchange="previewSelectedFile(this)" />
+                                <div class="form-text text-muted">Chỉ chấp nhận ảnh định dạng <strong>JPG/PNG</strong>, dung lượng tối đa <strong>2MB</strong>. Ảnh sẽ được tự động <strong>cắt vuông và tạo bản thu nhỏ</strong>.</div>
                             </div>
                         </div>
 
@@ -203,11 +203,29 @@ function setAvatarType(type) {
 
 function previewSelectedFile(input) {
     if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var maxSizeBytes = 2 * 1024 * 1024; // 2MB
+        var allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+
+        // 1. Kiểm tra định dạng đuôi file
+        if (!allowedExtensions.exec(file.name)) {
+            alert('Định dạng tệp không hợp lệ! Hệ thống chỉ chấp nhận ảnh định dạng JPG hoặc PNG.');
+            input.value = '';
+            return;
+        }
+
+        // 2. Kiểm tra dung lượng tối đa 2MB
+        if (file.size > maxSizeBytes) {
+            alert('Dung lượng ảnh vượt quá giới hạn tối đa 2MB (' + (file.size / (1024 * 1024)).toFixed(2) + ' MB)! Vui lòng chọn ảnh nhỏ hơn.');
+            input.value = '';
+            return;
+        }
+
         var reader = new FileReader();
         reader.onload = function(e) {
             showPreviewImage(e.target.result);
         }
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
     }
 }
 
