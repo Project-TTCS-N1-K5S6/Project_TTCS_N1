@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 btnBackToSelect.disabled = false;
 
                 if (!data.success) {
-                    alert('Lỗi nhập dữ liệu: ' + (data.message || 'Không xác định'));
+                    window.showToast('Lỗi nhập dữ liệu: ' + (data.message || 'Không xác định'), 'error');
                     return;
                 }
 
@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 btnExecuteImport.innerHTML = originalText;
                 btnExecuteImport.disabled = false;
                 btnBackToSelect.disabled = false;
-                alert('Không thể hoàn tất nhập dữ liệu: ' + err.message);
+                window.showToast('Không thể hoàn tất nhập dữ liệu: ' + err.message, 'error');
             });
         });
     }

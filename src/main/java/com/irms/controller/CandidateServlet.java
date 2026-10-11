@@ -1,6 +1,8 @@
 package com.irms.controller;
 
+import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.model.Candidate;
+import com.irms.model.RecruitmentRequest;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
 import com.irms.service.CandidateService;
@@ -35,6 +37,7 @@ import java.util.List;
 public class CandidateServlet extends HttpServlet {
     private final CandidateService candidateService = new CandidateService();
     private final SharedCatalogService catalogService = new SharedCatalogService();
+    private final RecruitmentRequestDAO requisitionDAO = new RecruitmentRequestDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -63,6 +66,8 @@ public class CandidateServlet extends HttpServlet {
                 catalogService.getItems(SharedCatalogType.REJECTION_REASON);
         request.setAttribute("applicationSources", applicationSources);
         request.setAttribute("rejectionReasons", rejectionReasons);
+        List<RecruitmentRequest> requisitions = requisitionDAO.findAll(null, null, null);
+        request.setAttribute("requisitions", requisitions);
 
         request.getRequestDispatcher("/WEB-INF/views/candidates/list.jsp").forward(request, response);
     }
@@ -86,6 +91,10 @@ public class CandidateServlet extends HttpServlet {
                 c.setFullName(request.getParameter("fullName"));
                 c.setEmail(request.getParameter("email"));
                 c.setPhone(request.getParameter("phone"));
+                String reqId = request.getParameter("requisitionId");
+                if (reqId != null && !reqId.trim().isEmpty()) {
+                    c.setRequisitionId(reqId.trim());
+                }
                 c.setApplicationSourceId(request.getParameter("applicationSourceId"));
                 c.setStatus(request.getParameter("status"));
                 c.setCvUrl(request.getParameter("cvUrl"));

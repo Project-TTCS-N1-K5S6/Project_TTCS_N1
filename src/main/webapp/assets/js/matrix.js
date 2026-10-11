@@ -32,15 +32,15 @@ function saveRolePermissions(roleId, formElement) {
         saveBtn.disabled = false;
         saveBtn.innerHTML = originalText;
         if (data.success) {
-            alert(data.message || 'Cập nhật phân quyền thành công!');
+            window.showToast(data.message || 'Cập nhật phân quyền thành công!', 'success');
         } else {
-            alert('Lỗi: ' + (data.message || 'Không thể lưu phân quyền'));
+            window.showToast('Lỗi: ' + (data.message || 'Không thể lưu phân quyền'), 'error');
         }
     })
     .catch(err => {
         saveBtn.disabled = false;
         saveBtn.innerHTML = originalText;
-        alert('Lỗi kết nối máy chủ!');
+        window.showToast('Lỗi kết nối máy chủ!', 'error');
     });
 
     return false;
