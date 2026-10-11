@@ -180,7 +180,16 @@
                                 <label class="form-label small fw-semibold">Số điện thoại</label>
                                 <input type="text" class="form-control" name="phone" placeholder="0901234567">
                             </div>
-                            <div class="col-12">
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label small fw-semibold">Vị trí tuyển dụng</label>
+                                <select class="form-select" name="requisitionId">
+                                    <option value="">-- Chưa gán vị trí tuyển dụng --</option>
+                                    <c:forEach var="req" items="${requisitions}">
+                                        <option value="${req.id}"><c:out value="${req.title}" /> (<c:out value="${req.code}" />)</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-semibold">Nguồn ứng viên</label>
                                 <select class="form-select" name="applicationSourceId">
                                     <option value="">Chưa xác định</option>

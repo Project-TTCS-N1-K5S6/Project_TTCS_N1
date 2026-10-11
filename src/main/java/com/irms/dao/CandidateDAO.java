@@ -35,7 +35,7 @@ public class CandidateDAO extends BaseDAO {
 
         List<Object> params = new ArrayList<>();
         if (recruiterId != null && !recruiterId.trim().isEmpty()) {
-            sql.append("AND r.recruiter_id = ? ");
+            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IS NULL) ");
             params.add(recruiterId.trim());
         }
         if (search != null && !search.trim().isEmpty()) {
