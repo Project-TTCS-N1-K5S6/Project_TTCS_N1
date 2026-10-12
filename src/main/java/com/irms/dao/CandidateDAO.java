@@ -142,4 +142,92 @@ public class CandidateDAO extends BaseDAO {
         }
         return 0;
     }
+
+    /**
+     * Lấy danh sách các ứng viên còn đang trong pipeline (chưa kết thúc: APPLIED, SCREENING, INTERVIEWING, OFFER)
+     */
+    public List<Candidate> findActivePipelineCandidates(String requisitionId) {
+        List<Candidate> list = new ArrayList<>();
+        String sql = "SELECT * FROM candidates WHERE requisition_id = ? " +
+                     "AND status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER') " +
+                     "ORDER BY created_at ASC";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, requisitionId);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Candidate c = new Candidate();
+                c.setId(rs.getString("id"));
+                c.setRequisitionId(rs.getString("requisition_id"));
+                c.setFullName(rs.getString("full_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPhone(rs.getString("phone"));
+                c.setStatus(rs.getString("status"));
+                c.setCvUrl(rs.getString("cv_url"));
+                c.setNotes(rs.getString("notes"));
+                c.setCreatedAt(rs.getTimestamp("created_at"));
+                c.setUpdatedAt(rs.getTimestamp("updated_at"));
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy ứng viên trong pipeline theo requisition_id: " + requisitionId, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    /**
+     * Đếm số ứng viên còn đang trong pipeline của yêu cầu tuyển dụng
+     */
+    public int countActivePipelineCandidates(String requisitionId) {
+        String sql = "SELECT COUNT(*) FROM candidates WHERE requisition_id = ? " +
+                     "AND status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, requisitionId);
+            rs = ps.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số ứng viên trong pipeline của requisition_id: " + requisitionId, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
+    }
+
+    /**
+     * Cập nhật trạng thái hàng loạt cho các ứng viên còn đang trong pipeline khi đóng yêu cầu tuyển dụng
+     * Ví dụ: chuyển sang REJECTED (từ chối lịch sự) kèm ghi chú lý do
+     */
+    public int updatePipelineCandidates(String requisitionId, String newStatus, String noteAppend) {
+        String sql = "UPDATE candidates SET status = ?, " +
+                     "notes = CASE WHEN notes IS NULL OR notes = '' THEN ? ELSE CONCAT(notes, ' | ', ?) END, " +
+                     "updated_at = CURRENT_TIMESTAMP " +
+                     "WHERE requisition_id = ? AND status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, newStatus);
+            ps.setString(2, noteAppend != null ? noteAppend : "");
+            ps.setString(3, noteAppend != null ? noteAppend : "");
+            ps.setString(4, requisitionId);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật hàng loạt ứng viên trong pipeline: " + requisitionId, e);
+            return 0;
+        } finally {
+            close(conn, ps);
+        }
+    }
 }

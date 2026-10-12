@@ -165,6 +165,17 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create, requisitions.approve hoặc ADMIN
+        if (path.startsWith("/recruitment-requests")) {
+            if (!currentUser.hasPermission("requisitions.view") &&
+                !currentUser.hasPermission("requisitions.create") &&
+                !currentUser.hasPermission("requisitions.approve") &&
+                !currentUser.hasRole("ADMIN")) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // 5. Phân hệ Dải lương: Cấm tuyệt đối Người phỏng vấn (INTERVIEWER) & yêu cầu quyền salary.view hoặc ADMIN (US 5)
         if (path.startsWith("/salary-ranges")) {
             if (currentUser.hasRole("INTERVIEWER") && !currentUser.hasRole("ADMIN")) {

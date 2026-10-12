@@ -183,10 +183,20 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 
 -- 7. Khởi tạo một số yêu cầu tuyển dụng mẫu (Recruitment Requisitions)
 DELETE FROM recruitment_requisitions;
-INSERT INTO recruitment_requisitions (id, code, title, department_id, recruiter_id, hiring_manager_id, status) VALUES
-('req-001', 'REQ-2026-001', 'Tuyển dụng Kỹ sư Java Backend Senior', 'dept-003', 'usr-003', 'usr-004', 'OPEN'),
-('req-002', 'REQ-2026-002', 'Tuyển dụng Chuyên viên Tuyển dụng Nhân sự', 'dept-002', 'usr-003', 'usr-002', 'OPEN'),
-('req-003', 'REQ-2026-003', 'Tuyển dụng Trưởng nhóm Kinh doanh Doanh nghiệp', 'dept-004', 'usr-003', 'usr-006', 'CLOSED');
+INSERT INTO recruitment_requisitions (id, code, title, position_title, department_id, headcount, recruitment_reason, min_salary, max_salary, currency, deadline, job_description, job_requirements, status, close_status, close_reason, close_notes, closed_at, closed_by, recruiter_id, hiring_manager_id, created_by) VALUES
+('req-001', 'REQ-2026-001', 'Tuyển dụng Kỹ sư Java Backend Senior', 'Kỹ sư Java Backend (Senior)', 'dept-003', 2, 'NEW_HEADCOUNT', 25000000.00, 40000000.00, 'VND', '2026-11-30', 'Phát triển backend Java Servlet, Spring Boot, MySQL.', 'Tối thiểu 3 năm kinh nghiệm, thành thạo RESTful API.', 'OPEN', NULL, NULL, NULL, NULL, NULL, 'usr-003', 'usr-004', 'usr-004'),
+('req-002', 'REQ-2026-002', 'Tuyển dụng Chuyên viên Tuyển dụng Nhân sự', 'Chuyên viên Tuyển dụng (Recruiter)', 'dept-002', 1, 'NEW_HEADCOUNT', 12000000.00, 18000000.00, 'VND', '2026-11-15', 'Sàng lọc hồ sơ, liên hệ ứng viên, tổ chức phỏng vấn.', 'Tối thiểu 1 năm kinh nghiệm tuyển dụng IT/Headhunt.', 'OPEN', NULL, NULL, NULL, NULL, NULL, 'usr-003', 'usr-002', 'usr-002'),
+('req-003', 'REQ-2026-003', 'Tuyển dụng Trưởng nhóm Kinh doanh Doanh nghiệp', 'Trưởng nhóm Kinh doanh B2B', 'dept-004', 1, 'REPLACEMENT', 22000000.00, 35000000.00, 'VND', '2026-10-01', 'Quản lý đội ngũ kinh doanh phần mềm B2B.', 'Tối thiểu 3 năm kinh nghiệm bán hàng dự án.', 'FULFILLED', 'FULFILLED', 'Đã tuyển đủ số lượng chỉ tiêu (Headcount)', 'Ứng viên Hoàng Gia Long đã trúng tuyển và ký hợp đồng thử việc ngày 01/10/2026.', CURRENT_TIMESTAMP, 'usr-002', 'usr-003', 'usr-006', 'usr-006'),
+('req-004', 'REQ-2026-004', 'Tuyển dụng Kỹ sư Trí tuệ Nhân tạo AI/ML', 'Kỹ sư AI/ML', 'dept-003', 1, 'NEW_HEADCOUNT', 30000000.00, 50000000.00, 'VND', '2026-10-15', 'Nghiên cứu áp dụng LLM vào tự động hóa tuyển dụng.', 'Thành thạo Python, PyTorch, LangChain.', 'PAUSED', 'PAUSED', 'Tạm dừng kế hoạch tuyển dụng quý này', 'Tạm dừng do đóng băng ngân sách Q4 để tái cấu trúc phòng ban.', CURRENT_TIMESTAMP, 'usr-002', 'usr-003', 'usr-004', 'usr-004'),
+('req-005', 'REQ-2026-005', 'Tuyển dụng Chuyên viên Pháp chế Doanh nghiệp', 'Chuyên viên Pháp chế', 'dept-001', 1, 'NEW_HEADCOUNT', 15000000.00, 25000000.00, 'VND', '2026-10-10', 'Soạn thảo hợp đồng, tư vấn pháp lý lao động.', 'Cử nhân Luật, có chứng chỉ hành nghề.', 'CANCELLED', 'CANCELLED', 'Huỷ bỏ vị trí do thay đổi chiến lược kinh doanh', 'Công ty sử dụng đơn vị tư vấn luật thuê ngoài (Outsource), huỷ vị trí tuyển.', CURRENT_TIMESTAMP, 'usr-001', 'usr-003', 'usr-001', 'usr-001');
+
+-- Bảng Tin tuyển dụng mẫu (Job Postings)
+DELETE FROM job_postings;
+INSERT INTO job_postings (id, requisition_id, title, platform, status, posted_url, published_at, unpublished_at) VALUES
+('jp-001', 'req-001', 'Kỹ sư Java Backend Senior - Cổng tuyển dụng nội bộ', 'INTERNAL', 'PUBLISHED', 'https://careers.company.local/jobs/java-senior', CURRENT_TIMESTAMP, NULL),
+('jp-002', 'req-001', 'Senior Java Backend Engineer (TopCV)', 'TOPCV', 'PUBLISHED', 'https://topcv.vn/brand/company/java-senior', CURRENT_TIMESTAMP, NULL),
+('jp-003', 'req-002', 'Chuyên viên Tuyển dụng Nhân sự IT (Recruiter)', 'INTERNAL', 'PUBLISHED', 'https://careers.company.local/jobs/recruiter', CURRENT_TIMESTAMP, NULL),
+('jp-004', 'req-003', 'Trưởng nhóm Kinh doanh B2B - Đã hoàn thành', 'INTERNAL', 'UNPUBLISHED', 'https://careers.company.local/jobs/sales-lead', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 8. Khởi tạo danh sách ứng viên mẫu (Candidates)
 DELETE FROM candidates;
