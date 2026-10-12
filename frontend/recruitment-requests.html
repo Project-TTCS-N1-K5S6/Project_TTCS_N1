@@ -13,6 +13,34 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- SASS Compiled Stylesheet -->
     <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+    <style>
+        .bg-teal-custom { background-color: #0d9488 !important; color: #fff !important; }
+        .status-option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .status-option-card:hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+        .status-radio-fulfilled:checked + .status-option-card {
+            border-color: #0d9488;
+            background-color: #f0fdfa;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.15);
+        }
+        .status-radio-paused:checked + .status-option-card {
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.15);
+        }
+        .status-radio-cancelled:checked + .status-option-card {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
+        }
+    </style>
 </head>
 <body>
 <div id="app-wrapper">
@@ -134,7 +162,7 @@
                         <i class="bi bi-file-earmark-text text-primary me-2"></i>Yêu cầu tuyển dụng
                     </h4>
                     <p class="text-muted small mb-0">
-                        Khai báo chức danh, phòng ban, định biên, dải lương đề xuất và tiêu chuẩn tuyển dụng.
+                        Quản lý toàn diện yêu cầu tuyển dụng, đóng/kết thúc vị trí, tự động gỡ tin và kiểm soát ứng viên pipeline.
                     </p>
                 </div>
                 <a href="recruitment-request-create.html" class="btn btn-primary shadow-sm">
@@ -155,10 +183,13 @@
                         <div class="col-12 col-md-4">
                             <select id="statusFilter" class="form-select form-select-sm" onchange="renderTable()">
                                 <option value="">-- Tất cả trạng thái --</option>
-                                <option value="DRAFT">Lưu nháp (Draft)</option>
+                                <option value="OPEN">Đang tuyển dụng</option>
+                                <option value="FULFILLED">Đã tuyển đủ</option>
+                                <option value="PAUSED">Tạm dừng</option>
+                                <option value="CANCELLED">Đã huỷ</option>
+                                <option value="CLOSED_ALL">Tất cả đã đóng / kết thúc</option>
                                 <option value="PENDING_APPROVAL">Chờ phê duyệt</option>
-                                <option value="OPEN">Đang tuyển</option>
-                                <option value="CLOSED">Đã đóng</option>
+                                <option value="DRAFT">Lưu nháp (Draft)</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4 text-end">
@@ -178,12 +209,12 @@
                                     <th style="width: 130px;">Mã yêu cầu</th>
                                     <th>Chức danh &amp; Tiêu đề</th>
                                     <th>Phòng ban</th>
-                                    <th class="text-center" style="width: 100px;">SL tuyển</th>
+                                    <th class="text-center" style="width: 90px;">SL tuyển</th>
                                     <th>Lý do tuyển</th>
                                     <th>Dải lương đề xuất</th>
                                     <th>Ngày cần người</th>
-                                    <th class="text-center" style="width: 130px;">Trạng thái</th>
-                                    <th class="text-end pe-3" style="width: 100px;">Xem</th>
+                                    <th class="text-center" style="width: 140px;">Trạng thái</th>
+                                    <th class="text-end pe-3" style="width: 150px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="requisitionTableBody">
@@ -195,6 +226,192 @@
             </div>
         </div>
     </main>
+</div>
+
+<!-- Modal Đóng / Kết thúc Yêu cầu tuyển dụng -->
+<div class="modal fade" id="closeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark mb-0">
+                        <i class="bi bi-stop-circle-fill text-danger me-2"></i>Đóng Yêu cầu Tuyển dụng
+                    </h5>
+                    <small class="text-muted" id="closeModalSubtitle">Mã yêu cầu: REQ-XXXX</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="closeRequisitionForm" onsubmit="handleCloseSubmit(event)">
+                <input type="hidden" id="closeReqId" value="" />
+                
+                <div class="modal-body p-4">
+                    <!-- 1. BƯỚC 1: Chọn một trong 3 trạng thái kết thúc -->
+                    <label class="form-label fw-bold text-dark mb-2">
+                        1. Chọn trạng thái kết thúc <span class="text-danger">*</span>
+                    </label>
+                    <div class="row g-3 mb-4">
+                        <!-- Trạng thái 1: Đã tuyển đủ -->
+                        <div class="col-md-4">
+                            <label class="w-100 mb-0">
+                                <input type="radio" name="terminalStatus" value="FULFILLED" class="d-none status-radio status-radio-fulfilled" checked onchange="onStatusChanged()" />
+                                <div class="status-option-card p-3 h-100 text-center">
+                                    <div class="mb-2">
+                                        <span class="badge bg-teal-custom p-2 rounded-circle">
+                                            <i class="bi bi-check-lg fs-5"></i>
+                                        </span>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">Đã tuyển đủ</h6>
+                                    <small class="text-muted d-block">Đạt đủ chỉ tiêu tuyển dụng số lượng người.</small>
+                                </div>
+                            </label>
+                        </div>
+                        <!-- Trạng thái 2: Tạm dừng -->
+                        <div class="col-md-4">
+                            <label class="w-100 mb-0">
+                                <input type="radio" name="terminalStatus" value="PAUSED" class="d-none status-radio status-radio-paused" onchange="onStatusChanged()" />
+                                <div class="status-option-card p-3 h-100 text-center">
+                                    <div class="mb-2">
+                                        <span class="badge bg-warning p-2 rounded-circle text-dark">
+                                            <i class="bi bi-pause-fill fs-5"></i>
+                                        </span>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">Tạm dừng</h6>
+                                    <small class="text-muted d-block">Tạm dừng kế hoạch tuyển do ngân sách/quý.</small>
+                                </div>
+                            </label>
+                        </div>
+                        <!-- Trạng thái 3: Huỷ -->
+                        <div class="col-md-4">
+                            <label class="w-100 mb-0">
+                                <input type="radio" name="terminalStatus" value="CANCELLED" class="d-none status-radio status-radio-cancelled" onchange="onStatusChanged()" />
+                                <div class="status-option-card p-3 h-100 text-center">
+                                    <div class="mb-2">
+                                        <span class="badge bg-danger p-2 rounded-circle">
+                                            <i class="bi bi-x-lg fs-5"></i>
+                                        </span>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1">Huỷ yêu cầu</h6>
+                                    <small class="text-muted d-block">Huỷ bỏ vị trí do thay đổi chiến lược.</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2. BƯỚC 2: Lý do riêng tương ứng của từng trạng thái -->
+                    <div class="mb-4 p-3 bg-light rounded border">
+                        <label for="closeReasonSelect" class="form-label fw-bold text-dark mb-1">
+                            2. Lý do kết thúc cụ thể <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select mb-2" id="closeReasonSelect" onchange="onReasonSelectChanged()">
+                            <!-- Tự động cập nhật qua JS theo trạng thái -->
+                        </select>
+                        <input type="hidden" id="finalCloseReason" value="" />
+                        
+                        <div id="customReasonWrapper" style="display: none;">
+                            <input type="text" class="form-control mb-2" id="customReasonInput" 
+                                   placeholder="Nhập lý do kết thúc chi tiết của bạn..." />
+                        </div>
+
+                        <label for="closeNotes" class="form-label text-muted small mb-1">Ghi chú / Giải trình bổ sung (tùy chọn):</label>
+                        <textarea id="closeNotes" rows="2" class="form-control form-control-sm" 
+                                  placeholder="Nhập thêm chi tiết hoặc chỉ đạo bàn giao (nếu có)..."></textarea>
+                    </div>
+
+                    <!-- 3. BƯỚC 3: Cảnh báo tự động gỡ tin tuyển dụng đang đăng -->
+                    <div class="alert alert-info border-info d-flex align-items-start gap-3 mb-4" role="alert">
+                        <i class="bi bi-megaphone-fill fs-3 text-info"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1">Tự động gỡ tin tuyển dụng</h6>
+                            <p class="small mb-0 text-dark">
+                                Hệ thống sẽ <strong class="text-primary">tự động gỡ bỏ toàn bộ tin tuyển dụng đang đăng</strong> của vị trí này trên tất cả các cổng (Cổng nội bộ, Trang sự nghiệp công ty) để ngừng tiếp nhận hồ sơ mới.
+                            </p>
+                            <div class="mt-2 text-xs text-muted" id="postingsStatusText">
+                                <i class="bi bi-check-circle text-primary me-1"></i> Phát hiện <strong>1 tin tuyển dụng đang đăng</strong> sẽ được tự động gỡ khi xác nhận.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. BƯỚC 4: Cảnh báo và Xử lý Ứng viên còn trong Pipeline -->
+                    <div id="candidatePipelineSection">
+                        <!-- Cảnh báo NẾU CÓ ứng viên trong pipeline -->
+                        <div id="pipelineWarningBox" class="border rounded p-3 bg-warning-subtle border-warning" style="display: none;">
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <i class="bi bi-exclamation-triangle-fill fs-4 text-warning-emphasis"></i>
+                                <div>
+                                    <h6 class="fw-bold text-warning-emphasis mb-1">
+                                        CẢNH BÁO: Còn <span id="candidateCountNumber" class="badge bg-danger">0</span> ứng viên đang trong Pipeline!
+                                    </h6>
+                                    <small class="text-dark">
+                                        Các ứng viên dưới đây vẫn đang trong quy trình tuyển dụng (Sàng lọc, Phỏng vấn hoặc Đề nghị). Bạn bắt buộc phải chọn phương án xử lý trước khi đóng:
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Danh sách rút gọn ứng viên trong pipeline -->
+                            <div class="table-responsive bg-white rounded border my-2" style="max-height: 140px; overflow-y: auto;">
+                                <table class="table table-sm table-hover mb-0" style="font-size: 13px;">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>Họ và tên</th>
+                                            <th>Email</th>
+                                            <th>Vòng hiện tại</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pipelineCandidateListBody">
+                                        <!-- Render qua JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Lựa chọn phương án xử lý ứng viên -->
+                            <div class="mt-3">
+                                <label class="form-label fw-bold text-dark small mb-2">
+                                    Phương án xử lý các ứng viên này: <span class="text-danger">*</span>
+                                </label>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="candidateAction" id="actionReject" value="REJECT_ALL" checked />
+                                    <label class="form-check-label text-dark small" for="actionReject">
+                                        <strong>Tự động chuyển thành Từ chối (Rejected)</strong> - Hệ thống ghi nhận lý do vị trí đã đóng/huỷ và gửi thông báo cảm ơn phù hợp.
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="candidateAction" id="actionHold" value="HOLD_ALL" />
+                                    <label class="form-check-label text-dark small" for="actionHold">
+                                        <strong>Chuyển vào Kho dữ liệu tài năng (Talent Pool)</strong> - Giữ lại hồ sơ ứng viên để ưu tiên liên hệ khi mở lại vị trí.
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="candidateAction" id="actionManual" value="CONFIRM_MANUAL" />
+                                    <label class="form-check-label text-dark small" for="actionManual">
+                                        <strong>Tôi đã xử lý thủ công</strong> - Đã liên hệ và thông báo trực tiếp cho từng ứng viên, xác nhận đóng vị trí.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thông báo an toàn NẾU KHÔNG CÓ ứng viên nào -->
+                        <div id="pipelineSafeBox" class="border rounded p-3 bg-success-subtle border-success" style="display: none;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill fs-4 text-success"></i>
+                                <div>
+                                    <h6 class="fw-bold text-success-emphasis mb-0">Pipeline an toàn</h6>
+                                    <small class="text-dark">Không có ứng viên nào đang dở dang trong pipeline tuyển dụng.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" id="btnSubmitClose" class="btn btn-danger fw-semibold">
+                        <i class="bi bi-check-circle-fill me-1"></i> Xác nhận Đóng Yêu cầu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Modal xem chi tiết -->
@@ -232,6 +449,29 @@
                     </div>
                 </div>
 
+                <!-- Thông tin kết thúc nếu đã đóng -->
+                <div id="mClosureInfoBox" class="mb-4 p-3 rounded border" style="display:none;">
+                    <h6 class="fw-bold mb-2" id="mClosureTitle"><i class="bi bi-info-circle-fill me-1"></i> Thông tin kết thúc yêu cầu:</h6>
+                    <div class="row g-2 small">
+                        <div class="col-md-6">
+                            <span class="text-muted">Trạng thái kết thúc:</span>
+                            <span class="fw-bold ms-1" id="mClosureStatus"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted">Người đóng:</span>
+                            <span class="fw-semibold ms-1" id="mClosureActor">Hệ thống</span>
+                        </div>
+                        <div class="col-md-12">
+                            <span class="text-muted">Lý do:</span>
+                            <span class="fw-semibold ms-1" id="mClosureReason"></span>
+                        </div>
+                        <div class="col-md-12" id="mClosureNotesRow" style="display:none;">
+                            <span class="text-muted">Ghi chú giải trình:</span>
+                            <div class="p-2 bg-white rounded border mt-1" id="mClosureNotes" style="white-space: pre-line;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="mExplanationBox" class="mb-4 p-3 bg-warning-subtle border border-warning rounded" style="display:none;">
                     <h6 class="fw-bold text-warning-emphasis mb-2">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i> Giải trình dải lương ngoài chuẩn:
@@ -262,6 +502,44 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+const REASON_PRESETS = {
+    'FULFILLED': [
+        'Đã tuyển đủ số lượng chỉ tiêu (Headcount)',
+        'Đã ký hợp đồng thử việc và tiếp nhận đủ ứng viên',
+        'Tuyển vượt chỉ tiêu xuất sắc',
+        'Ứng viên nội bộ đã được điều chuyển đáp ứng đủ yêu cầu',
+        'Khác...'
+    ],
+    'PAUSED': [
+        'Tạm dừng kế hoạch tuyển dụng quý này',
+        'Đóng băng ngân sách tuyển dụng (Budget freeze)',
+        'Chờ tái cơ cấu tổ chức / phòng ban chuyên môn',
+        'Thay đổi yêu cầu năng lực vị trí cần chuẩn bị lại JD',
+        'Khác...'
+    ],
+    'CANCELLED': [
+        'Huỷ bỏ vị trí do thay đổi chiến lược kinh doanh',
+        'Dự án bị huỷ bỏ hoặc thu hẹp quy mô hoạt động',
+        'Chuyển giao vị trí sang đơn vị thành viên khác phụ trách',
+        'Không còn nhu cầu tuyển dụng vị trí này',
+        'Khác...'
+    ]
+};
+
+var sampleCandidates = {
+    'req-001': [
+        { fullName: 'Nguyễn Văn An', email: 'an.nguyen@email.test', status: 'INTERVIEWING' },
+        { fullName: 'Trần Bảo Bình', email: 'binh.tran@email.test', status: 'SCREENING' },
+        { fullName: 'Lê Hữu Cường', email: 'cuong.le@email.test', status: 'OFFER' }
+    ],
+    'req-002': [
+        { fullName: 'Phạm Minh Dung', email: 'dung.pham@email.test', status: 'APPLIED' }
+    ],
+    'req-003': [],
+    'req-004': [],
+    'req-005': []
+};
+
 var defaultRequisitions = [
     {
         id: "req-001",
@@ -276,6 +554,7 @@ var defaultRequisitions = [
         deadline: "2026-11-30",
         salaryExplanation: "",
         status: "OPEN",
+        activeCandidatesCount: 3,
         jobDescription: "- Thiết kế kiến trúc dịch vụ và RESTful APIs hiệu năng cao.\n- Quản trị CSDL MySQL, tối ưu truy vấn phân tán.\n- Hướng dẫn lập trình viên junior và review code chất lượng.",
         jobRequirements: "- Tối thiểu 4 năm kinh nghiệm với Java Core & Servlet/Spring Boot.\n- Hiểu sâu về MySQL, Transaction, HikariCP, Indexing.\n- Khả năng đọc hiểu tài liệu tiếng Anh tốt."
     },
@@ -292,6 +571,7 @@ var defaultRequisitions = [
         deadline: "2026-11-15",
         salaryExplanation: "",
         status: "OPEN",
+        activeCandidatesCount: 1,
         jobDescription: "- Tìm kiếm nguồn ứng viên tiềm năng cho các vị trí công nghệ.\n- Sàng lọc CV, điều phối lịch phỏng vấn và gửi Offer Letter.\n- Xây dựng thương hiệu tuyển dụng trên các kênh.",
         jobRequirements: "- Tối thiểu 1 năm kinh nghiệm tuyển dụng IT/Tech.\n- Kỹ năng giao tiếp xuất sắc, chủ động và khéo léo."
     },
@@ -305,27 +585,55 @@ var defaultRequisitions = [
         recruitmentReason: "REPLACEMENT",
         minSalary: 25000000,
         maxSalary: 42000000,
-        deadline: "2026-12-01",
-        salaryExplanation: "Đề xuất mức lương 25 - 42M vượt dải chuẩn (20 - 35M) do yêu cầu chuyên gia có sẵn mạng lưới khách hàng doanh nghiệp Enterprise cao cấp.",
-        status: "PENDING_APPROVAL",
+        deadline: "2026-10-01",
+        salaryExplanation: "",
+        status: "FULFILLED",
+        closeStatus: "FULFILLED",
+        closeReason: "Đã tuyển đủ số lượng chỉ tiêu (Headcount)",
+        closeNotes: "Ứng viên Hoàng Gia Long đã trúng tuyển và hoàn tất ký hợp đồng thử việc ngày 01/10/2026.",
+        activeCandidatesCount: 0,
         jobDescription: "- Quản lý đội ngũ kinh doanh 8 nhân sự, phụ trách KPI doanh số.\n- Tiếp cận khách hàng doanh nghiệp và đối tác chiến lược.\n- Đàm phán và ký kết hợp đồng dịch vụ lớn.",
         jobRequirements: "- Tối thiểu 3 năm kinh nghiệm Sales B2B phần mềm/SaaS.\n- Khả năng thương thuyết và dẫn dắt đội ngũ tốt."
     },
     {
         id: "req-004",
         code: "REQ-2026-004",
-        title: "Tuyển dụng Kỹ sư Java Backend Junior (Bản nháp)",
-        positionTitle: "Kỹ sư Java Backend (Junior)",
+        title: "Tuyển dụng Kỹ sư Trí tuệ Nhân tạo AI/ML",
+        positionTitle: "Kỹ sư AI/ML",
         departmentName: "Khối Công nghệ Thông tin",
-        headcount: 3,
+        headcount: 1,
         recruitmentReason: "NEW_HEADCOUNT",
-        minSalary: 12000000,
-        maxSalary: 18000000,
-        deadline: "2026-12-15",
+        minSalary: 30000000,
+        maxSalary: 50000000,
+        deadline: "2026-10-15",
         salaryExplanation: "",
-        status: "DRAFT",
-        jobDescription: "- Tham gia phát triển các tính năng phân hệ người dùng theo tài liệu thiết kế.\n- Viết unit test và sửa lỗi hệ thống.",
-        jobRequirements: "- Sinh viên mới tốt nghiệp hoặc có dưới 1 năm kinh nghiệm Java.\n- Nắm vững kiến thức OOP, cấu trúc dữ liệu và giải thuật."
+        status: "PAUSED",
+        closeStatus: "PAUSED",
+        closeReason: "Tạm dừng kế hoạch tuyển dụng quý này",
+        closeNotes: "Tạm dừng do đóng băng ngân sách Q4 để tái cơ cấu phòng ban.",
+        activeCandidatesCount: 0,
+        jobDescription: "- Nghiên cứu áp dụng LLM vào tự động hóa tuyển dụng.",
+        jobRequirements: "- Thành thạo Python, PyTorch, LangChain."
+    },
+    {
+        id: "req-005",
+        code: "REQ-2026-005",
+        title: "Tuyển dụng Chuyên viên Pháp chế Doanh nghiệp",
+        positionTitle: "Chuyên viên Pháp chế",
+        departmentName: "Ban Quản lý & Pháp chế",
+        headcount: 1,
+        recruitmentReason: "NEW_HEADCOUNT",
+        minSalary: 15000000,
+        maxSalary: 25000000,
+        deadline: "2026-10-10",
+        salaryExplanation: "",
+        status: "CANCELLED",
+        closeStatus: "CANCELLED",
+        closeReason: "Huỷ bỏ vị trí do thay đổi chiến lược kinh doanh",
+        closeNotes: "Công ty sử dụng tư vấn luật thuê ngoài (outsource), huỷ vị trí tuyển dụng.",
+        activeCandidatesCount: 0,
+        jobDescription: "- Soạn thảo hợp đồng, tư vấn pháp lý lao động.",
+        jobRequirements: "- Cử nhân Luật, có chứng chỉ hành nghề."
     }
 ];
 
@@ -338,15 +646,126 @@ function getStoredRequisitions() {
     return JSON.parse(stored);
 }
 
-function formatVND(val) {
-    if (!val) return "Thỏa thuận";
-    return new Intl.NumberFormat('vi-VN').format(val) + " VND";
+function saveRequisitions(list) {
+    localStorage.setItem('irms_requisitions', JSON.stringify(list));
 }
 
-function getStatusBadge(st) {
+function onStatusChanged() {
+    const selectedStatus = document.querySelector('input[name="terminalStatus"]:checked').value;
+    const reasonSelect = document.getElementById('closeReasonSelect');
+    reasonSelect.innerHTML = '';
+
+    const list = REASON_PRESETS[selectedStatus] || ['Lý do khác...'];
+    list.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r;
+        opt.textContent = r;
+        reasonSelect.appendChild(opt);
+    });
+
+    onReasonSelectChanged();
+}
+
+function onReasonSelectChanged() {
+    const select = document.getElementById('closeReasonSelect');
+    const customWrapper = document.getElementById('customReasonWrapper');
+    const customInput = document.getElementById('customReasonInput');
+    const finalReason = document.getElementById('finalCloseReason');
+
+    if (select.value === 'Khác...') {
+        customWrapper.style.display = 'block';
+        finalReason.value = customInput.value.trim() || 'Lý do khác';
+    } else {
+        customWrapper.style.display = 'none';
+        finalReason.value = select.value;
+    }
+}
+
+document.getElementById('customReasonInput').addEventListener('input', function() {
+    if (document.getElementById('closeReasonSelect').value === 'Khác...') {
+        document.getElementById('finalCloseReason').value = this.value.trim();
+    }
+});
+
+function openCloseModal(id, code, positionTitle) {
+    document.getElementById('closeReqId').value = id;
+    document.getElementById('closeModalSubtitle').textContent = code + ' - ' + positionTitle;
+    
+    document.querySelector('input[name="terminalStatus"][value="FULFILLED"]').checked = true;
+    onStatusChanged();
+    document.getElementById('closeNotes').value = '';
+
+    var candidates = sampleCandidates[id] || [];
+    var count = candidates.length;
+
+    if (count > 0) {
+        document.getElementById('pipelineWarningBox').style.display = 'block';
+        document.getElementById('pipelineSafeBox').style.display = 'none';
+        document.getElementById('candidateCountNumber').textContent = count;
+
+        var tbody = document.getElementById('pipelineCandidateListBody');
+        tbody.innerHTML = '';
+        candidates.forEach(function(c) {
+            var badgeClass = 'bg-secondary';
+            var badgeLabel = c.status;
+            if (c.status === 'APPLIED') { badgeClass = 'bg-primary'; badgeLabel = 'Mới ứng tuyển'; }
+            else if (c.status === 'SCREENING') { badgeClass = 'bg-info text-dark'; badgeLabel = 'Sàng lọc'; }
+            else if (c.status === 'INTERVIEWING') { badgeClass = 'bg-warning text-dark'; badgeLabel = 'Phỏng vấn'; }
+            else if (c.status === 'OFFER') { badgeClass = 'bg-purple text-white'; badgeLabel = 'Đã gửi Offer'; }
+
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td class="fw-semibold">' + c.fullName + '</td><td class="text-muted">' + c.email + '</td><td><span class="badge ' + badgeClass + '">' + badgeLabel + '</span></td>';
+            tbody.appendChild(tr);
+        });
+        document.getElementById('actionReject').checked = true;
+    } else {
+        document.getElementById('pipelineWarningBox').style.display = 'none';
+        document.getElementById('pipelineSafeBox').style.display = 'block';
+    }
+
+    var modal = new bootstrap.Modal(document.getElementById('closeModal'));
+    modal.show();
+}
+
+function handleCloseSubmit(e) {
+    e.preventDefault();
+    var id = document.getElementById('closeReqId').value;
+    var status = document.querySelector('input[name="terminalStatus"]:checked').value;
+    var reason = document.getElementById('finalCloseReason').value;
+    var notes = document.getElementById('closeNotes').value;
+
+    var list = getStoredRequisitions();
+    var item = list.find(function(x) { return x.id === id; });
+    if (item) {
+        item.status = status;
+        item.closeStatus = status;
+        item.closeReason = reason;
+        item.closeNotes = notes;
+        item.activeCandidatesCount = 0;
+        saveRequisitions(list);
+    }
+
+    sampleCandidates[id] = [];
+
+    bootstrap.Modal.getInstance(document.getElementById('closeModal')).hide();
+
+    var statusText = (status === 'FULFILLED') ? 'Đã tuyển đủ' : (status === 'PAUSED' ? 'Tạm dừng' : 'Đã huỷ');
+    showToast('Đã đóng yêu cầu thành công sang trạng thái "' + statusText + '". Đã tự động gỡ tin tuyển dụng đang đăng!');
+    renderTable();
+}
+
+function showToast(msg) {
+    document.getElementById('toastMessage').textContent = msg;
+    document.getElementById('toastNotification').style.display = 'block';
+}
+
+function getStatusBadge(st, closeReason) {
     if (st === 'DRAFT') return '<span class="badge bg-secondary text-white px-2 py-1">Bản nháp</span>';
     if (st === 'PENDING_APPROVAL') return '<span class="badge bg-warning text-dark px-2 py-1">Chờ phê duyệt</span>';
-    if (st === 'OPEN') return '<span class="badge bg-success text-white px-2 py-1">Đang tuyển</span>';
+    if (st === 'OPEN') return '<span class="badge bg-success text-white px-2 py-1"><i class="bi bi-broadcast me-1"></i>Đang tuyển</span>';
+    if (st === 'FULFILLED') return '<span class="badge bg-teal-custom px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Đã tuyển đủ</span>' + (closeReason ? '<div class="text-xs text-muted mt-1 text-truncate" style="max-width:130px;">' + closeReason + '</div>' : '');
+    if (st === 'PAUSED') return '<span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-pause-circle-fill me-1"></i>Tạm dừng</span>' + (closeReason ? '<div class="text-xs text-muted mt-1 text-truncate" style="max-width:130px;">' + closeReason + '</div>' : '');
+    if (st === 'CANCELLED') return '<span class="badge bg-danger text-white px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>Đã huỷ</span>' + (closeReason ? '<div class="text-xs text-muted mt-1 text-truncate" style="max-width:130px;">' + closeReason + '</div>' : '');
     if (st === 'CLOSED') return '<span class="badge bg-dark text-white px-2 py-1">Đã đóng</span>';
     return '<span class="badge bg-secondary">' + st + '</span>';
 }
@@ -358,7 +777,12 @@ function renderTable() {
 
     var filtered = list.filter(function(item) {
         var matchSearch = !search || item.code.toLowerCase().includes(search) || item.positionTitle.toLowerCase().includes(search) || (item.title && item.title.toLowerCase().includes(search));
-        var matchStatus = !status || item.status === status;
+        var matchStatus = true;
+        if (status === 'CLOSED_ALL') {
+            matchStatus = (item.status === 'CLOSED' || item.status === 'FULFILLED' || item.status === 'PAUSED' || item.status === 'CANCELLED');
+        } else if (status) {
+            matchStatus = (item.status === status || item.closeStatus === status);
+        }
         return matchSearch && matchStatus;
     });
 
@@ -372,27 +796,44 @@ function renderTable() {
     }
 
     filtered.forEach(function(r) {
+        var isTerminal = (r.status === 'FULFILLED' || r.status === 'PAUSED' || r.status === 'CANCELLED' || r.status === 'CLOSED');
         var reasonBadge = (r.recruitmentReason === 'REPLACEMENT') 
             ? '<span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-arrow-repeat me-1"></i>Thay thế</span>'
             : '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-person-plus me-1"></i>Tăng mới</span>';
 
         var hasExplanation = r.salaryExplanation && r.salaryExplanation.trim().length > 0;
-        var expBadge = hasExplanation ? '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-xs ms-1"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Có giải trình</span>' : '';
+        var expBadge = hasExplanation ? '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-xs ms-1" title="Đã có văn bản giải trình lương vượt khung chuẩn"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Có giải trình</span>' : '';
 
         var salText = (r.minSalary && r.maxSalary) ? (new Intl.NumberFormat('vi-VN').format(r.minSalary) + ' - ' + new Intl.NumberFormat('vi-VN').format(r.maxSalary) + ' VND') : 'Thỏa thuận';
+
+        var candidateBadge = (r.activeCandidatesCount > 0) 
+            ? '<span class="badge bg-info-subtle text-info border border-info-subtle ms-1" style="font-size:11px;" title="' + r.activeCandidatesCount + ' ứng viên trong pipeline"><i class="bi bi-people-fill me-1"></i>' + r.activeCandidatesCount + '</span>'
+            : '';
+
+        var closeButton = (!isTerminal && r.status !== 'DRAFT') 
+            ? '<button type="button" class="btn btn-outline-danger" onclick="openCloseModal(\'' + r.id + '\', \'' + r.code + '\', \'' + r.positionTitle + '\')" title="Đóng / Chuyển trạng thái kết thúc"><i class="bi bi-stop-circle-fill"></i> Đóng</button>'
+            : '';
+
+        var editButton = (!isTerminal) 
+            ? '<a href="recruitment-request-create.html?id=' + r.id + '" class="btn btn-outline-primary" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>'
+            : '';
 
         var tr = document.createElement('tr');
         tr.innerHTML = 
             '<td><span class="badge bg-light text-dark border font-monospace px-2 py-1">' + r.code + '</span></td>' +
-            '<td><div class="fw-bold text-dark">' + r.positionTitle + '</div><small class="text-muted">' + (r.title || '') + '</small></td>' +
+            '<td><div class="fw-bold text-dark d-flex align-items-center">' + r.positionTitle + candidateBadge + '</div><small class="text-muted">' + (r.title || '') + '</small></td>' +
             '<td><span class="fw-semibold text-secondary"><i class="bi bi-building me-1 small"></i>' + (r.departmentName || 'Chưa gán') + '</span></td>' +
             '<td class="text-center"><span class="badge bg-primary-subtle text-primary border">' + r.headcount + ' người</span></td>' +
             '<td>' + reasonBadge + '</td>' +
             '<td><div class="fw-semibold text-dark">' + salText + '</div>' + expBadge + '</td>' +
             '<td><span class="text-dark fw-semibold"><i class="bi bi-calendar-event me-1 text-muted"></i>' + (r.deadline || 'Chưa đặt') + '</span></td>' +
-            '<td class="text-center">' + getStatusBadge(r.status) + '</td>' +
+            '<td class="text-center">' + getStatusBadge(r.status, r.closeReason) + '</td>' +
             '<td class="text-end pe-3">' +
-                '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="showDetail(\'' + r.id + '\')"><i class="bi bi-eye"></i></button>' +
+                '<div class="btn-group btn-group-sm">' +
+                    '<button type="button" class="btn btn-outline-secondary" onclick="showDetail(\'' + r.id + '\')" title="Xem chi tiết"><i class="bi bi-eye"></i></button>' +
+                    editButton +
+                    closeButton +
+                '</div>' +
             '</td>';
         tbody.appendChild(tr);
     });
@@ -403,8 +844,10 @@ function showDetail(id) {
     var r = list.find(function(item) { return item.id === id; });
     if (!r) return;
 
+    var isTerminal = (r.status === 'FULFILLED' || r.status === 'PAUSED' || r.status === 'CANCELLED' || r.status === 'CLOSED');
+
     document.getElementById('mPosition').textContent = r.positionTitle;
-    document.getElementById('mCode').textContent = r.code + ' - ' + (r.status === 'DRAFT' ? 'Bản nháp' : (r.status === 'OPEN' ? 'Đang tuyển' : 'Chờ phê duyệt'));
+    document.getElementById('mCode').textContent = r.code;
     document.getElementById('mDept').textContent = r.departmentName || 'Chưa gán';
     document.getElementById('mHeadcount').textContent = r.headcount + ' nhân sự';
     document.getElementById('mReason').textContent = r.recruitmentReason === 'REPLACEMENT' ? 'Thay thế' : 'Tăng mới';
@@ -413,6 +856,32 @@ function showDetail(id) {
 
     document.getElementById('mJD').textContent = r.jobDescription || '(Chưa có mô tả công việc)';
     document.getElementById('mReq').textContent = r.jobRequirements || '(Chưa có yêu cầu ứng viên)';
+
+    var closureBox = document.getElementById('mClosureInfoBox');
+    if (isTerminal && (r.closeReason || r.status !== 'OPEN')) {
+        closureBox.style.display = 'block';
+        var statusLabel = (r.status === 'FULFILLED') ? 'Đã tuyển đủ' : (r.status === 'PAUSED' ? 'Tạm dừng' : (r.status === 'CANCELLED' ? 'Đã huỷ' : 'Đã đóng'));
+        document.getElementById('mClosureStatus').textContent = statusLabel;
+        document.getElementById('mClosureReason').textContent = r.closeReason || '(Không ghi)';
+        
+        var notesRow = document.getElementById('mClosureNotesRow');
+        if (r.closeNotes && r.closeNotes.trim().length > 0) {
+            document.getElementById('mClosureNotes').textContent = r.closeNotes;
+            notesRow.style.display = 'block';
+        } else {
+            notesRow.style.display = 'none';
+        }
+
+        if (r.status === 'FULFILLED') {
+            closureBox.className = 'mb-4 p-3 rounded border bg-teal-subtle border-teal text-teal-emphasis';
+        } else if (r.status === 'PAUSED') {
+            closureBox.className = 'mb-4 p-3 rounded border bg-warning-subtle border-warning text-warning-emphasis';
+        } else {
+            closureBox.className = 'mb-4 p-3 rounded border bg-danger-subtle border-danger text-danger-emphasis';
+        }
+    } else {
+        closureBox.style.display = 'none';
+    }
 
     var expBox = document.getElementById('mExplanationBox');
     if (r.salaryExplanation && r.salaryExplanation.trim().length > 0) {

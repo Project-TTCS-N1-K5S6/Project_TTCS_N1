@@ -52,11 +52,21 @@
 
         <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
         <ul class="nav flex-column mb-3">
-            <c:if test="${currentUser.hasPermission('requisitions.view') || currentUser.hasPermission('requisitions.create') || currentUser.hasRole('ADMIN')}">
+            <!-- Menu Yêu cầu tuyển dụng -->
+            <c:if test="${currentUser.hasPermission('requisitions.view') || currentUser.hasPermission('requisitions.create') || currentUser.hasPermission('requisitions.approve') || currentUser.hasRole('ADMIN')}">
                 <li class="nav-item">
                     <a class="nav-link ${activeMenu == 'requisitions' ? 'active' : ''}" href="${pageContext.request.contextPath}/recruitment-requests">
                         <i class="bi bi-file-earmark-text-fill"></i>
                         <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+            </c:if>
+            <!-- [US 6 Tiêu chí 1]: Menu Hồ sơ ứng viên hiển thị cho người có quyền candidates.view hoặc ADMIN -->
+            <c:if test="${currentUser.hasPermission('candidates.view') || currentUser.hasRole('ADMIN')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'candidates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Hồ sơ & Pipeline</span>
                     </a>
                 </li>
             </c:if>

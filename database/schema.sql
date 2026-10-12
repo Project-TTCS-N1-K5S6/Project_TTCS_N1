@@ -195,8 +195,14 @@ CREATE TABLE recruitment_requisitions (
     job_description LONGTEXT NULL, -- Soạn mô tả công việc
     job_requirements LONGTEXT NULL, -- Soạn yêu cầu ứng viên
     salary_explanation TEXT NULL, -- Bắt buộc nếu dải lương đề xuất nằm ngoài dải chuẩn của chức danh
-    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', -- 'DRAFT', 'PENDING_APPROVAL', 'OPEN', 'CLOSED', 'REJECTED'
+    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', -- 'DRAFT', 'PENDING_APPROVAL', 'OPEN', 'FULFILLED', 'PAUSED', 'CANCELLED', 'CLOSED', 'REJECTED'
+    close_status VARCHAR(50) NULL, -- 'FULFILLED', 'PAUSED', 'CANCELLED'
+    close_reason VARCHAR(255) NULL, -- Lý do riêng biệt tương ứng từng trạng thái
+    close_notes TEXT NULL, -- Ghi chú chi tiết lý do đóng
+    closed_at TIMESTAMP NULL, -- Thời điểm đóng
+    closed_by VARCHAR(36) NULL, -- Người thực hiện đóng
     recruiter_id VARCHAR(36) NULL,
+    hiring_manager_id VARCHAR(36) NULL,
     work_location_id VARCHAR(36) NULL,
     work_mode_id VARCHAR(36) NULL,
     created_by VARCHAR(36) NULL,
@@ -207,7 +213,24 @@ CREATE TABLE recruitment_requisitions (
     CONSTRAINT fk_req_manager FOREIGN KEY (hiring_manager_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_req_work_location FOREIGN KEY (work_location_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
     CONSTRAINT fk_req_work_mode FOREIGN KEY (work_mode_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
-    CONSTRAINT fk_req_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_req_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_req_closed_by FOREIGN KEY (closed_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Bảng Tin tuyển dụng (job_postings)
+DROP TABLE IF EXISTS job_postings;
+CREATE TABLE job_postings (
+    id VARCHAR(36) PRIMARY KEY,
+    requisition_id VARCHAR(36) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    platform VARCHAR(100) DEFAULT 'INTERNAL', -- 'INTERNAL', 'CAREER_SITE', 'LINKEDIN', 'TOPCV'
+    status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED', -- 'PUBLISHED', 'UNPUBLISHED', 'CLOSED', 'DRAFT'
+    posted_url VARCHAR(255) NULL,
+    published_at TIMESTAMP NULL,
+    unpublished_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_jp_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 13. Bảng Ứng viên (candidates)
@@ -353,6 +376,9 @@ CREATE TABLE position_competency_frameworks (
 
 CREATE INDEX idx_pcf_framework ON position_competency_frameworks(framework_id);
 CREATE INDEX idx_pcf_position ON position_competency_frameworks(position_id);
+
+CREATE INDEX idx_jp_req ON job_postings(requisition_id);
+CREATE INDEX idx_jp_status ON job_postings(status);
 
 SET FOREIGN_KEY_CHECKS = 1;
 

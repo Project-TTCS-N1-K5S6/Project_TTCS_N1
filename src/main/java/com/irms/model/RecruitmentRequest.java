@@ -28,7 +28,15 @@ public class RecruitmentRequest implements Serializable {
     private String jobDescription;
     private String jobRequirements;
     private String salaryExplanation; // Giải trình nếu dải lương đề xuất nằm ngoài dải chuẩn
-    private String status = "DRAFT"; // DRAFT, PENDING_APPROVAL, OPEN, CLOSED, REJECTED
+    private String status = "DRAFT"; // DRAFT, PENDING_APPROVAL, OPEN, FULFILLED, PAUSED, CANCELLED, CLOSED, REJECTED
+    private String closeStatus; // FULFILLED (Đã tuyển đủ), PAUSED (Tạm dừng), CANCELLED (Huỷ)
+    private String closeReason; // Lý do đóng/kết thúc
+    private String closeNotes; // Ghi chú chi tiết lý do đóng
+    private Timestamp closedAt; // Thời điểm đóng
+    private String closedBy; // Người thực hiện đóng
+    private String closedByName;
+    private int activeCandidatesCount = 0; // Số ứng viên còn trong pipeline
+    private int activeJobPostingsCount = 0; // Số tin tuyển dụng đang đăng
     private String recruiterId;
     private String recruiterName;
     private String hiringManagerId;
@@ -129,10 +137,44 @@ public class RecruitmentRequest implements Serializable {
         return min + " - " + max + " " + getCurrency();
     }
 
+    public String getCloseStatus() { return closeStatus; }
+    public void setCloseStatus(String closeStatus) { this.closeStatus = closeStatus; }
+
+    public String getCloseReason() { return closeReason; }
+    public void setCloseReason(String closeReason) { this.closeReason = closeReason; }
+
+    public String getCloseNotes() { return closeNotes; }
+    public void setCloseNotes(String closeNotes) { this.closeNotes = closeNotes; }
+
+    public Timestamp getClosedAt() { return closedAt; }
+    public void setClosedAt(Timestamp closedAt) { this.closedAt = closedAt; }
+
+    public String getClosedBy() { return closedBy; }
+    public void setClosedBy(String closedBy) { this.closedBy = closedBy; }
+
+    public String getClosedByName() { return closedByName; }
+    public void setClosedByName(String closedByName) { this.closedByName = closedByName; }
+
+    public int getActiveCandidatesCount() { return activeCandidatesCount; }
+    public void setActiveCandidatesCount(int activeCandidatesCount) { this.activeCandidatesCount = activeCandidatesCount; }
+
+    public int getActiveJobPostingsCount() { return activeJobPostingsCount; }
+    public void setActiveJobPostingsCount(int activeJobPostingsCount) { this.activeJobPostingsCount = activeJobPostingsCount; }
+
+    public boolean isTerminal() {
+        return "FULFILLED".equalsIgnoreCase(status) ||
+               "PAUSED".equalsIgnoreCase(status) ||
+               "CANCELLED".equalsIgnoreCase(status) ||
+               "CLOSED".equalsIgnoreCase(status);
+    }
+
     public String getStatusBadgeClass() {
         if ("DRAFT".equalsIgnoreCase(status)) return "bg-secondary text-white";
         if ("PENDING_APPROVAL".equalsIgnoreCase(status)) return "bg-warning text-dark";
         if ("OPEN".equalsIgnoreCase(status)) return "bg-success text-white";
+        if ("FULFILLED".equalsIgnoreCase(status) || "Đã tuyển đủ".equalsIgnoreCase(closeReason)) return "bg-teal-custom text-white";
+        if ("PAUSED".equalsIgnoreCase(status) || "Tạm dừng".equalsIgnoreCase(closeReason)) return "bg-warning-subtle text-warning-emphasis border border-warning";
+        if ("CANCELLED".equalsIgnoreCase(status) || "Huỷ".equalsIgnoreCase(closeReason)) return "bg-danger text-white";
         if ("CLOSED".equalsIgnoreCase(status)) return "bg-dark text-white";
         if ("REJECTED".equalsIgnoreCase(status)) return "bg-danger text-white";
         return "bg-secondary";
@@ -142,7 +184,15 @@ public class RecruitmentRequest implements Serializable {
         if ("DRAFT".equalsIgnoreCase(status)) return "Bản nháp";
         if ("PENDING_APPROVAL".equalsIgnoreCase(status)) return "Chờ phê duyệt";
         if ("OPEN".equalsIgnoreCase(status)) return "Đang tuyển";
-        if ("CLOSED".equalsIgnoreCase(status)) return "Đã đóng";
+        if ("FULFILLED".equalsIgnoreCase(status)) return "Đã tuyển đủ";
+        if ("PAUSED".equalsIgnoreCase(status)) return "Tạm dừng";
+        if ("CANCELLED".equalsIgnoreCase(status)) return "Đã huỷ";
+        if ("CLOSED".equalsIgnoreCase(status)) {
+            if ("FULFILLED".equalsIgnoreCase(closeStatus)) return "Đã tuyển đủ";
+            if ("PAUSED".equalsIgnoreCase(closeStatus)) return "Tạm dừng";
+            if ("CANCELLED".equalsIgnoreCase(closeStatus)) return "Đã huỷ";
+            return "Đã đóng";
+        }
         if ("REJECTED".equalsIgnoreCase(status)) return "Từ chối";
         return status != null ? status : "Không xác định";
     }

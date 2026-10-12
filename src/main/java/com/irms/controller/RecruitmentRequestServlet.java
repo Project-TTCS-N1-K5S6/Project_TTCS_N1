@@ -33,6 +33,8 @@ import java.util.Map;
         "/recruitment-requests/create",
         "/recruitment-requests/edit",
         "/recruitment-requests/save",
+        "/recruitment-requests/close",
+        "/recruitment-requests/check-pipeline",
         "/recruitment-requests/api/salary-benchmark"
 })
 public class RecruitmentRequestServlet extends HttpServlet {
@@ -46,25 +48,31 @@ public class RecruitmentRequestServlet extends HttpServlet {
             throws ServletException, IOException {
         String path = request.getServletPath();
 
-        // 1. AJAX API: Lấy dải chuẩn theo vị trí & phòng ban để phản hồi tức thời
+        // 1. AJAX API: Kiểm tra pipeline ứng viên và tin tuyển dụng trước khi đóng
+        if ("/recruitment-requests/check-pipeline".equals(path)) {
+            handleCheckPipeline(request, response);
+            return;
+        }
+
+        // 2. AJAX API: Lấy dải chuẩn theo vị trí & phòng ban để phản hồi tức thời
         if ("/recruitment-requests/api/salary-benchmark".equals(path)) {
             handleSalaryBenchmarkApi(request, response);
             return;
         }
 
-        // 2. Màn hình Tạo mới yêu cầu tuyển dụng
+        // 3. Màn hình Tạo mới yêu cầu tuyển dụng
         if ("/recruitment-requests/create".equals(path)) {
             showCreateForm(request, response);
             return;
         }
 
-        // 3. Màn hình Chỉnh sửa bản nháp / yêu cầu tuyển dụng
+        // 4. Màn hình Chỉnh sửa bản nháp / yêu cầu tuyển dụng
         if ("/recruitment-requests/edit".equals(path)) {
             showEditForm(request, response);
             return;
         }
 
-        // 4. Màn hình Danh sách yêu cầu tuyển dụng
+        // 5. Màn hình Danh sách yêu cầu tuyển dụng
         showList(request, response);
     }
 
@@ -75,6 +83,11 @@ public class RecruitmentRequestServlet extends HttpServlet {
 
         if ("/recruitment-requests/save".equals(path)) {
             handleSaveRequisition(request, response);
+            return;
+        }
+
+        if ("/recruitment-requests/close".equals(path)) {
+            handleCloseRequisition(request, response);
             return;
         }
 
@@ -110,6 +123,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
         request.setAttribute("paramDept", departmentId);
+        request.setAttribute("activeMenu", "requisitions");
 
         request.getRequestDispatcher("/WEB-INF/views/recruitment/list.jsp").forward(request, response);
     }
@@ -124,6 +138,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
         request.setAttribute("nextCode", requisitionService.getNextCode());
         request.setAttribute("todayDate", LocalDate.now().toString());
         request.setAttribute("isEdit", false);
+        request.setAttribute("activeMenu", "requisitions");
 
         request.getRequestDispatcher("/WEB-INF/views/recruitment/form.jsp").forward(request, response);
     }
@@ -156,6 +171,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
         request.setAttribute("salaryRanges", salaryRanges);
         request.setAttribute("todayDate", LocalDate.now().toString());
         request.setAttribute("isEdit", true);
+        request.setAttribute("activeMenu", "requisitions");
 
         request.getRequestDispatcher("/WEB-INF/views/recruitment/form.jsp").forward(request, response);
     }
@@ -299,5 +315,94 @@ public class RecruitmentRequestServlet extends HttpServlet {
         }
 
         JsonUtil.sendJsonResponse(response, 200, result);
+    }
+
+    private void handleCheckPipeline(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String id = request.getParameter("id");
+        if (id == null || id.trim().isEmpty()) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("error", "Thiếu mã ID yêu cầu tuyển dụng!");
+            JsonUtil.sendJsonResponse(response, 400, err);
+            return;
+        }
+
+        try {
+            Map<String, Object> data = requisitionService.checkPipelineAndPostings(id.trim());
+            data.put("success", true);
+            JsonUtil.sendJsonResponse(response, 200, data);
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("error", e.getMessage());
+            JsonUtil.sendJsonResponse(response, 404, err);
+        } catch (Exception e) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("error", "Lỗi kiểm tra pipeline: " + e.getMessage());
+            JsonUtil.sendJsonResponse(response, 500, err);
+        }
+    }
+
+    private void handleCloseRequisition(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        String actorId = (currentUser != null) ? currentUser.getId() : null;
+        String ip = SecurityUtil.getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        String id = request.getParameter("id");
+        String terminalStatus = request.getParameter("terminalStatus");
+        if (terminalStatus == null || terminalStatus.trim().isEmpty()) {
+            terminalStatus = request.getParameter("status");
+        }
+        String closeReason = request.getParameter("closeReason");
+        String closeNotes = request.getParameter("closeNotes");
+        String candidateAction = request.getParameter("candidateAction");
+
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"))
+                || "json".equalsIgnoreCase(request.getParameter("format"));
+
+        try {
+            Map<String, Object> result = requisitionService.closeRequest(
+                    id, terminalStatus, closeReason, closeNotes, candidateAction, actorId, ip, userAgent
+            );
+
+            if (isAjax) {
+                JsonUtil.sendJsonResponse(response, 200, result);
+            } else {
+                if (session != null) {
+                    session.setAttribute("flashSuccess", (String) result.get("message"));
+                }
+                response.sendRedirect(request.getContextPath() + "/recruitment-requests");
+            }
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            if (isAjax) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("success", false);
+                err.put("error", e.getMessage());
+                JsonUtil.sendJsonResponse(response, 400, err);
+            } else {
+                if (session != null) {
+                    session.setAttribute("flashError", e.getMessage());
+                }
+                response.sendRedirect(request.getContextPath() + "/recruitment-requests");
+            }
+        } catch (Exception e) {
+            if (isAjax) {
+                Map<String, Object> err = new HashMap<>();
+                err.put("success", false);
+                err.put("error", "Lỗi xử lý hệ thống: " + e.getMessage());
+                JsonUtil.sendJsonResponse(response, 500, err);
+            } else {
+                if (session != null) {
+                    session.setAttribute("flashError", "Lỗi xử lý hệ thống: " + e.getMessage());
+                }
+                response.sendRedirect(request.getContextPath() + "/recruitment-requests");
+            }
+        }
     }
 }

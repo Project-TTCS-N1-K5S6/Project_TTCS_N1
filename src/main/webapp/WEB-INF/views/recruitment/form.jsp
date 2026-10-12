@@ -60,26 +60,26 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <!-- Mã yêu cầu -->
-                                <div class="col-12">
+                                <div class="col-md-4">
                                     <label class="form-label text-muted small fw-semibold">Mã yêu cầu</label>
-                                    <input type="text" class="form-control bg-light font-monospace fw-bold" 
+                                    <input type="text" class="form-control form-control-sm bg-light font-monospace fw-bold" 
                                            value="${isEdit ? reqItem.code : nextCode}" readonly>
                                 </div>
 
                                 <!-- Tiêu đề yêu cầu -->
-                                <div class="col-12">
+                                <div class="col-md-8">
                                     <label class="form-label text-muted small fw-semibold">Tiêu đề phiếu yêu cầu</label>
-                                    <input type="text" name="title" id="titleInput" class="form-control" 
+                                    <input type="text" name="title" id="titleInput" class="form-control form-control-sm" 
                                            placeholder="VD: Tuyển dụng Kỹ sư Java Backend Senior"
                                            value="${reqItem.title}">
                                 </div>
 
                                 <!-- Chức danh cần tuyển -->
-                                <div class="col-12">
+                                <div class="col-md-7">
                                     <label class="form-label small fw-bold text-dark">
                                         Chức danh cần tuyển <span class="text-danger">*</span>
                                     </label>
-                                    <div class="input-group">
+                                    <div class="input-group input-group-sm">
                                         <input type="text" name="positionTitle" id="positionTitleInput" class="form-control" 
                                                list="standardPositionsList"
                                                placeholder="Chọn hoặc nhập chức danh..." 
@@ -108,11 +108,11 @@
                                 </div>
 
                                 <!-- Phòng ban -->
-                                <div class="col-12">
+                                <div class="col-md-5">
                                     <label class="form-label small fw-bold text-dark">
                                         Phòng ban phụ trách <span class="text-danger">*</span>
                                     </label>
-                                    <select name="departmentId" id="departmentSelect" class="form-select" required>
+                                    <select name="departmentId" id="departmentSelect" class="form-select form-select-sm" required>
                                         <option value="">-- Chọn phòng ban --</option>
                                         <c:forEach var="d" items="${departments}">
                                             <option value="${d.id}" ${(reqItem.departmentId == d.id) ? 'selected' : ''}>${d.name}</option>
@@ -121,11 +121,11 @@
                                 </div>
 
                                 <!-- Số lượng tuyển -->
-                                <div class="col-12">
+                                <div class="col-md-4">
                                     <label class="form-label small fw-bold text-dark">
                                         Số lượng tuyển <span class="text-danger">*</span>
                                     </label>
-                                    <div class="input-group">
+                                    <div class="input-group input-group-sm">
                                         <input type="number" name="headcount" id="headcountInput" class="form-control text-center fw-bold" 
                                                min="1" max="100" value="${reqItem.headcount > 0 ? reqItem.headcount : 1}" required>
                                         <span class="input-group-text">Nhân sự</span>
@@ -133,22 +133,22 @@
                                 </div>
 
                                 <!-- Lý do tuyển dụng -->
-                                <div class="col-12">
+                                <div class="col-md-4">
                                     <label class="form-label small fw-bold text-dark">
                                         Lý do tuyển <span class="text-danger">*</span>
                                     </label>
-                                    <select name="recruitmentReason" class="form-select" required>
+                                    <select name="recruitmentReason" class="form-select form-select-sm" required>
                                         <option value="NEW_HEADCOUNT" ${reqItem.recruitmentReason != 'REPLACEMENT' ? 'selected' : ''}>Tăng mới (Mở rộng quy mô)</option>
                                         <option value="REPLACEMENT" ${reqItem.recruitmentReason == 'REPLACEMENT' ? 'selected' : ''}>Thay thế (Nhân sự nghỉ việc)</option>
                                     </select>
                                 </div>
 
                                 <!-- Ngày cần người (Deadline) -->
-                                <div class="col-12">
+                                <div class="col-md-4">
                                     <label class="form-label small fw-bold text-dark">
                                         Ngày cần người <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" name="deadline" id="deadlineInput" class="form-control" 
+                                    <input type="date" name="deadline" id="deadlineInput" class="form-control form-control-sm" 
                                            min="${todayDate}" value="${reqItem.deadline}" required>
                                     <div class="form-text text-xs text-danger" id="deadlineHelp">
                                         <i class="bi bi-info-circle me-1"></i>Không được ở quá khứ
@@ -184,11 +184,11 @@
 
                             <div class="row g-3">
                                 <!-- Lương tối thiểu đề xuất -->
-                                <div class="col-12">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-dark">
                                         Lương tối thiểu đề xuất (VNĐ) <span class="text-danger">*</span>
                                     </label>
-                                    <div class="input-group">
+                                    <div class="input-group input-group-sm">
                                         <input type="number" name="minSalary" id="minSalaryInput" class="form-control fw-bold" 
                                                step="500000" placeholder="VD: 25000000" 
                                                value="${reqItem.minSalary != null ? reqItem.minSalary.toBigInteger() : ''}" required>
@@ -198,11 +198,11 @@
                                 </div>
 
                                 <!-- Lương tối đa đề xuất -->
-                                <div class="col-12">
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold text-dark">
                                         Lương tối đa đề xuất (VNĐ) <span class="text-danger">*</span>
                                     </label>
-                                    <div class="input-group">
+                                    <div class="input-group input-group-sm">
                                         <input type="number" name="maxSalary" id="maxSalaryInput" class="form-control fw-bold" 
                                                step="500000" placeholder="VD: 45000000" 
                                                value="${reqItem.maxSalary != null ? reqItem.maxSalary.toBigInteger() : ''}" required>
@@ -303,6 +303,7 @@
             </div>
         </form>
     </div>
+</main>
 
 <jsp:include page="../common/footer.jsp" />
 

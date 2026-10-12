@@ -166,6 +166,17 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create, requisitions.approve hoặc ADMIN
+        if (path.startsWith("/recruitment-requests")) {
+            if (!currentUser.hasPermission("requisitions.view") &&
+                !currentUser.hasPermission("requisitions.create") &&
+                !currentUser.hasPermission("requisitions.approve") &&
+                !currentUser.hasRole("ADMIN")) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // 5. Phân hệ Dải lương [KN-103]: CHỈ Trưởng phòng Nhân sự (HR_MANAGER) và Quản trị hệ thống (ADMIN) mới xem & quản lý được
         if (path.startsWith("/salary-ranges")) {
             boolean isAuthorizedSalary = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER");
