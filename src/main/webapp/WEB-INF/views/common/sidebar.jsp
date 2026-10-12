@@ -60,6 +60,14 @@
                     </a>
                 </li>
             </c:if>
+            <c:if test="${currentUser.hasPermission('job_postings.view') || currentUser.hasPermission('job_postings.manage') || currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('RECRUITER')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'post-publishing' ? 'active' : ''}" href="${pageContext.request.contextPath}/post-publishing">
+                        <i class="bi bi-broadcast-pin"></i>
+                        <span>Xuất bản bài đăng</span>
+                    </a>
+                </li>
+            </c:if>
             <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('salary.view')}">
                 <li class="nav-item">
                     <a class="nav-link ${activeMenu == 'salary' ? 'active' : ''}" href="${pageContext.request.contextPath}/salary-ranges">

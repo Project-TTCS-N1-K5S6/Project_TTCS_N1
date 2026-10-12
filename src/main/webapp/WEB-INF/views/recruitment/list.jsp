@@ -25,9 +25,14 @@
                     Khai báo chức danh, định biên, dải lương đề xuất, ngày cần người và soạn bản mô tả công việc (JD).
                 </p>
             </div>
-            <a href="${pageContext.request.contextPath}/recruitment-requests/create" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="${pageContext.request.contextPath}/post-publishing" class="btn btn-outline-success shadow-sm">
+                    <i class="bi bi-broadcast me-1"></i> Quản lý Xuất bản bài đăng
+                </a>
+                <a href="${pageContext.request.contextPath}/recruitment-requests/create" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
+                </a>
+            </div>
         </div>
 
         <!-- Bộ lọc trạng thái & tìm kiếm -->
@@ -185,6 +190,10 @@
                                                     <a href="${pageContext.request.contextPath}/recruitment-requests/edit?id=${r.id}" 
                                                        class="btn btn-outline-primary p-1 px-1.5" style="line-height: 1;" title="Chỉnh sửa">
                                                         <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="${pageContext.request.contextPath}/post-publishing?search=${r.code}" 
+                                                       class="btn btn-outline-success p-1 px-1.5" style="line-height: 1;" title="Quản lý xuất bản (KN-120)">
+                                                        <i class="bi bi-broadcast"></i>
                                                     </a>
                                                 </div>
                                                 <!-- Hidden data for modal view -->

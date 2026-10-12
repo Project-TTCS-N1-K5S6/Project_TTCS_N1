@@ -1,5 +1,6 @@
 com\irms\SharedCatalogTypeTest.class
 com\irms\CompetencyFrameworkTest.class
+com\irms\JobPostPublishingTest.class
 com\irms\CompanyProfileTest.class
 com\irms\DepartmentHierarchyTest.class
 com\irms\service\ProfileServiceTest.class
