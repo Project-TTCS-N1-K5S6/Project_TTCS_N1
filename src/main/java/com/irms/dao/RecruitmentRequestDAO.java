@@ -280,6 +280,24 @@ public class RecruitmentRequestDAO extends BaseDAO {
         }
     }
 
+    public boolean updateStatus(String id, String status) {
+        String sql = "UPDATE recruitment_requisitions SET status = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, status);
+            ps.setString(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật trạng thái yêu cầu tuyển dụng: " + id, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
     public boolean delete(String id) {
         String sql = "DELETE FROM recruitment_requisitions WHERE id = ?";
         Connection conn = null;

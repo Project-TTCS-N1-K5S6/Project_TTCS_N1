@@ -42,6 +42,7 @@ E:\ttcs_n1\src\main\java\com\irms\dao\AuditDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyCriterion.java
 E:\ttcs_n1\src\main\java\com\irms\service\UserService.java
 E:\ttcs_n1\src\main\java\com\irms\util\ImageUtil.java
+E:\ttcs_n1\src\main\java\com\irms\model\ApprovalMatrix.java
 E:\ttcs_n1\src\main\java\com\irms\dao\RoleDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\EmailTemplateUtil.java
 E:\ttcs_n1\src\main\java\com\irms\model\Department.java
@@ -49,13 +50,17 @@ E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyFrameworkDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PermissionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\JsonUtil.java
 E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
+E:\ttcs_n1\src\main\java\com\irms\service\ApprovalMatrixService.java
 E:\ttcs_n1\src\main\java\com\irms\dao\QuestionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyCriterionService.java
 E:\ttcs_n1\src\main\java\com\irms\service\QuestionService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\CompanyProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\service\RecruitmentRequestService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AuthServlet.java
+E:\ttcs_n1\src\main\java\com\irms\model\ApprovalMatrixStep.java
+E:\ttcs_n1\src\main\java\com\irms\model\RequisitionApprovalStep.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
+E:\ttcs_n1\src\main\java\com\irms\dao\ApprovalMatrixDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\DepartmentService.java
 E:\ttcs_n1\src\main\java\com\irms\service\RolePermissionService.java
 E:\ttcs_n1\src\main\java\com\irms\config\AppConfig.java
@@ -65,6 +70,7 @@ E:\ttcs_n1\src\main\java\com\irms\dao\BaseDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyCriterionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\ProfileService.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyFrameworkService.java
+E:\ttcs_n1\src\main\java\com\irms\controller\ApprovalMatrixServlet.java
 E:\ttcs_n1\src\main\java\com\irms\controller\ProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\RecruitmentRequestDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\Candidate.java

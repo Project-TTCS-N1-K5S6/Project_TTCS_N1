@@ -296,6 +296,18 @@
                     <div id="modalJobDescription" class="p-3 bg-white rounded border small" style="white-space: pre-line; min-height: 80px;"></div>
                 </div>
 
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary border-bottom pb-2 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-diagram-3-fill me-1"></i> Chuỗi cấp phê duyệt (Ma trận phê duyệt)</span>
+                        <span id="approvalChainBadge" class="badge bg-light text-secondary border text-xs"></span>
+                    </h6>
+                    <div id="modalApprovalSteps" class="p-3 bg-light rounded border">
+                        <div class="text-center py-2 text-muted small">
+                            <span class="spinner-border spinner-border-sm me-1"></span> Đang tải chuỗi phê duyệt...
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-2">
                     <h6 class="fw-bold text-primary border-bottom pb-2">
                         <i class="bi bi-person-check me-1"></i> Yêu cầu ứng viên (Candidate Requirements)
@@ -306,6 +318,33 @@
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Duyệt / Từ chối cấp -->
+<div class="modal fade" id="actionStepModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="actionStepForm" method="post" action="${pageContext.request.contextPath}/recruitment-requests/approve-step">
+                <input type="hidden" name="requisitionId" id="actionReqId" value="" />
+                <input type="hidden" name="stepId" id="actionStepId" value="" />
+                <div class="modal-header py-3" id="actionStepHeader">
+                    <h5 class="modal-title fw-bold" id="actionStepTitle">Phê duyệt cấp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p id="actionStepDesc" class="mb-3 text-secondary"></p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Ý kiến / Nhận xét / Lý do:</label>
+                        <textarea name="comment" id="actionStepComment" class="form-control" rows="3" placeholder="Nhập ý kiến phê duyệt hoặc lý do từ chối..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" id="actionStepSubmitBtn" class="btn btn-sm btn-primary">Xác nhận</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -338,7 +377,87 @@ function viewDetails(id, code, pos, dept, count, reason, sal, deadline, status) 
         expContainer.style.display = 'none';
     }
 
+    // Tải chuỗi phê duyệt theo Ma trận phê duyệt
+    var stepsDiv = document.getElementById('modalApprovalSteps');
+    stepsDiv.innerHTML = '<div class="text-center py-2 text-muted small"><span class="spinner-border spinner-border-sm me-1"></span> Đang tải chuỗi phê duyệt...</div>';
+    
+    fetch('${pageContext.request.contextPath}/recruitment-requests/api/approval-steps?id=' + id)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data && data.steps && data.steps.length > 0) {
+                var html = '<div class="d-flex flex-column gap-2">';
+                data.steps.forEach(function(s) {
+                    var statusBadge = '';
+                    if (s.status === 'APPROVED') {
+                        statusBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check-circle-fill me-1"></i>Đã phê duyệt</span>';
+                    } else if (s.status === 'REJECTED') {
+                        statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-x-circle-fill me-1"></i>Từ chối</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-hourglass-split me-1"></i>Chờ phê duyệt</span>';
+                    }
+
+                    html += '<div class="p-2.5 bg-white rounded border d-flex flex-wrap align-items-center justify-content-between gap-2">';
+                    html += '  <div>';
+                    html += '    <div class="fw-bold text-dark text-xs">Cấp ' + s.stepOrder + ': ' + s.stepName + '</div>';
+                    html += '    <small class="text-muted text-xs">Người phụ trách: <span class="fw-semibold text-secondary">' + s.assignedApproverName + '</span></small>';
+                    if (s.actedByName) {
+                        html += '    <div class="text-xs text-muted mt-0.5"><i class="bi bi-person-check me-1"></i>Người duyệt: ' + s.actedByName + '</div>';
+                    }
+                    if (s.comment) {
+                        html += '    <div class="text-xs text-secondary mt-0.5 fst-italic">" ' + s.comment + ' "</div>';
+                    }
+                    html += '  </div>';
+                    html += '  <div class="d-flex align-items-center gap-2">';
+                    html += statusBadge;
+                    if (s.status === 'PENDING') {
+                        html += '<button type="button" class="btn btn-sm btn-outline-success py-0.5 px-2 text-xs" onclick="openStepAction(\'' + id + '\', \'' + s.id + '\', \'' + s.stepName + '\', \'approve\')"><i class="bi bi-check-lg"></i> Duyệt</button>';
+                        html += '<button type="button" class="btn btn-sm btn-outline-danger py-0.5 px-2 text-xs" onclick="openStepAction(\'' + id + '\', \'' + s.id + '\', \'' + s.stepName + '\', \'reject\')"><i class="bi bi-x-lg"></i> Từ chối</button>';
+                    }
+                    html += '  </div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                stepsDiv.innerHTML = html;
+                document.getElementById('approvalChainBadge').textContent = data.steps.length + ' cấp phê duyệt';
+            } else {
+                stepsDiv.innerHTML = '<div class="text-muted small text-center py-1">Chưa có chuỗi phê duyệt được khởi tạo cho yêu cầu này.</div>';
+                document.getElementById('approvalChainBadge').textContent = 'Chưa thiết lập';
+            }
+        })
+        .catch(function(err) {
+            stepsDiv.innerHTML = '<div class="text-danger small">Không thể tải thông tin chuỗi phê duyệt.</div>';
+        });
+
     var modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    modal.show();
+}
+
+function openStepAction(reqId, stepId, stepName, action) {
+    document.getElementById('actionReqId').value = reqId;
+    document.getElementById('actionStepId').value = stepId;
+    var form = document.getElementById('actionStepForm');
+    var title = document.getElementById('actionStepTitle');
+    var desc = document.getElementById('actionStepDesc');
+    var header = document.getElementById('actionStepHeader');
+    var submitBtn = document.getElementById('actionStepSubmitBtn');
+
+    if (action === 'approve') {
+        form.action = '${pageContext.request.contextPath}/recruitment-requests/approve-step';
+        header.className = 'modal-header bg-success-subtle text-success py-3';
+        title.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Phê duyệt: ' + stepName;
+        desc.textContent = 'Bạn đang xác nhận PHÊ DUYỆT yêu cầu tuyển dụng này tại bước ' + stepName + '.';
+        submitBtn.className = 'btn btn-sm btn-success';
+        submitBtn.textContent = 'Xác nhận phê duyệt';
+    } else {
+        form.action = '${pageContext.request.contextPath}/recruitment-requests/reject-step';
+        header.className = 'modal-header bg-danger-subtle text-danger py-3';
+        title.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Từ chối: ' + stepName;
+        desc.textContent = 'Bạn đang xác nhận TỪ CHỐI yêu cầu tuyển dụng này tại bước ' + stepName + '.';
+        submitBtn.className = 'btn btn-sm btn-danger';
+        submitBtn.textContent = 'Xác nhận từ chối';
+    }
+
+    var modal = new bootstrap.Modal(document.getElementById('actionStepModal'));
     modal.show();
 }
 </script>

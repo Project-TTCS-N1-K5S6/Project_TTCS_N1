@@ -186,6 +186,17 @@ public class AuthFilter implements Filter {
             }
         }
 
+        // 5.2 Phân hệ Ma trận phê duyệt (/admin/approval-matrix): Kiểm tra quyền approval_matrix.view hoặc ADMIN hoặc HR_MANAGER
+        if (path.startsWith("/admin/approval-matrix")) {
+            boolean isAuthorizedApprovalMatrix = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("approval_matrix.view")
+                    || currentUser.hasPermission("approval_matrix.manage");
+            if (!isAuthorizedApprovalMatrix) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create hoặc ADMIN
         if (path.startsWith("/recruitment-requests")) {
             if (!currentUser.hasPermission("requisitions.view") && !currentUser.hasPermission("requisitions.create") && !currentUser.hasRole("ADMIN")) {

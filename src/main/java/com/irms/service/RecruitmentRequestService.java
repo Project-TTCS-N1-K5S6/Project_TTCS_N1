@@ -4,6 +4,8 @@ import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.dao.SalaryRangeDAO;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.SalaryRange;
+import com.irms.model.RequisitionApprovalStep;
+import com.irms.model.User;
 import com.irms.util.SecurityUtil;
 
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import java.util.List;
 public class RecruitmentRequestService {
     private final RecruitmentRequestDAO requestDAO = new RecruitmentRequestDAO();
     private final SalaryRangeDAO salaryRangeDAO = new SalaryRangeDAO();
+    private final ApprovalMatrixService approvalMatrixService = new ApprovalMatrixService();
     private final AuditService auditService = new AuditService();
 
     public List<RecruitmentRequest> getAllRequests(String search, String status, String departmentId) {
@@ -162,8 +165,16 @@ public class RecruitmentRequestService {
 
         validateRequest(req, isDraft);
 
+        // Xác thực ma trận phê duyệt trước khi lưu nếu gửi duyệt
+        if (!isDraft) {
+            approvalMatrixService.resolveApprovalSteps(req);
+        }
+
         boolean success = requestDAO.insert(req);
         if (success) {
+            if (!isDraft) {
+                approvalMatrixService.saveRequisitionApprovalChain(req);
+            }
             String action = isDraft ? "REQUISITION_DRAFT_CREATED" : "REQUISITION_SUBMITTED";
             String desc = (isDraft ? "Lưu nháp yêu cầu tuyển dụng: " : "Gửi phê duyệt yêu cầu tuyển dụng: ") 
                           + req.getCode() + " - " + req.getTitle();
@@ -181,11 +192,38 @@ public class RecruitmentRequestService {
         req.setStatus(isDraft ? "DRAFT" : "PENDING_APPROVAL");
         validateRequest(req, isDraft);
 
+        if (!isDraft) {
+            approvalMatrixService.resolveApprovalSteps(req);
+        }
+
         boolean success = requestDAO.update(req);
         if (success) {
+            if (!isDraft) {
+                approvalMatrixService.saveRequisitionApprovalChain(req);
+            }
             String action = isDraft ? "REQUISITION_DRAFT_UPDATED" : "REQUISITION_SUBMITTED";
             String desc = "Cập nhật yêu cầu tuyển dụng: " + req.getCode() + " - " + req.getTitle();
             auditService.log(actorId, action, "REQUISITION", req.getId(), desc, ip, userAgent);
+        }
+        return success;
+    }
+
+    public List<RequisitionApprovalStep> getApprovalSteps(String requisitionId) {
+        return approvalMatrixService.getRequisitionApprovalSteps(requisitionId);
+    }
+
+    public boolean approveStep(String requisitionId, String stepId, String comment, User actor, String ip, String userAgent) {
+        boolean allApproved = approvalMatrixService.approveRequisitionStep(requisitionId, stepId, comment, actor, ip, userAgent);
+        if (allApproved) {
+            requestDAO.updateStatus(requisitionId, "OPEN");
+        }
+        return true;
+    }
+
+    public boolean rejectStep(String requisitionId, String stepId, String reason, User actor, String ip, String userAgent) {
+        boolean success = approvalMatrixService.rejectRequisitionStep(requisitionId, stepId, reason, actor, ip, userAgent);
+        if (success) {
+            requestDAO.updateStatus(requisitionId, "REJECTED");
         }
         return success;
     }
