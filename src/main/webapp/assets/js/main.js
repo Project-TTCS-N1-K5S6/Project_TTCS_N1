@@ -45,6 +45,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Khởi tạo các thông báo nổi (Toast) từ server render sẵn
     initServerRenderedToasts();
+
+    // 5. Tự động hiển thị thông báo Đăng nhập thành công nếu được kích hoạt
+    if (sessionStorage.getItem('showLoginSuccessToast') === 'true') {
+        sessionStorage.removeItem('showLoginSuccessToast');
+        setTimeout(() => {
+            if (window.showToast) {
+                window.showToast('Đăng nhập thành công! Chào mừng bạn trở lại hệ thống.', 'success', 'Thành công', 5000);
+            }
+        }, 150);
+    }
 });
 
 // ==============================================================================

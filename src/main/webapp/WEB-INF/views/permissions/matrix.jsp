@@ -34,10 +34,9 @@
         <ul class="nav nav-pills gap-2 mb-4 p-2 bg-white rounded-3 border shadow-sm">
             <c:forEach var="r" items="${roles}">
                 <li class="nav-item">
-                    <a class="nav-link ${selectedRole.id == r.id ? 'active' : ''}" 
+                    <a class="nav-link ${selectedRole.id == r.id ? 'active' : ''} fw-semibold px-3 py-2" 
                        href="${pageContext.request.contextPath}/admin/permissions?roleId=${r.id}">
-                        <strong>${r.name}</strong> 
-                        <span class="badge ${selectedRole.id == r.id ? 'bg-white text-primary' : 'bg-light text-dark'} ms-1 font-monospace">${r.code}</span>
+                        ${r.name}
                     </a>
                 </li>
             </c:forEach>
@@ -66,7 +65,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 50px;">STT</th>
-                                    <th style="width: 35%;">Tên quyền hạn &amp; Mã nghiệp vụ</th>
+                                    <th style="width: 35%;">Tên quyền hạn nghiệp vụ</th>
                                     <th>Mô tả chi tiết</th>
                                     <th style="width: 100px;" class="text-center">Được phép</th>
                                 </tr>
@@ -76,14 +75,25 @@
                                 <c:set var="counter" value="1" />
 
                                 <c:forEach var="entry" items="${groupedPermissions}">
-                                    <!-- Tiêu đề Phân hệ nghiệp vụ -->
+                                    <c:set var="moduleTitle" value="${entry.key.toUpperCase()}" />
+                                    <c:if test="${entry.key == 'audit'}"><c:set var="moduleTitle" value="NHẬT KÝ KIỂM TOÁN" /></c:if>
+                                    <c:if test="${entry.key == 'users'}"><c:set var="moduleTitle" value="QUẢN TRỊ TÀI KHOẢN" /></c:if>
+                                    <c:if test="${entry.key == 'roles'}"><c:set var="moduleTitle" value="DANH MỤC VAI TRÒ" /></c:if>
+                                    <c:if test="${entry.key == 'permissions'}"><c:set var="moduleTitle" value="PHÂN QUYỀN HỆ THỐNG" /></c:if>
+                                    <c:if test="${entry.key == 'departments'}"><c:set var="moduleTitle" value="QUẢN LÝ PHÒNG BAN" /></c:if>
+                                    <c:if test="${entry.key == 'requisitions'}"><c:set var="moduleTitle" value="YÊU CẦU TUYỂN DỤNG" /></c:if>
+                                    <c:if test="${entry.key == 'salary'}"><c:set var="moduleTitle" value="KHAI BÁO DẢI LƯƠNG" /></c:if>
+                                    <c:if test="${entry.key == 'competencies'}"><c:set var="moduleTitle" value="KHUNG NĂNG LỰC" /></c:if>
+                                    <c:if test="${entry.key == 'candidates'}"><c:set var="moduleTitle" value="HỒ SƠ ỨNG VIÊN" /></c:if>
+                                    <c:if test="${entry.key == 'company'}"><c:set var="moduleTitle" value="GIỚI THIỆU CÔNG TY" /></c:if>
+                                    <!-- Tiêu đề Phân hệ nghiệp vụ thuần Tiếng Việt -->
                                     <tr class="module-header">
                                         <td colspan="3" class="py-2">
-                                            <i class="bi bi-folder2-open me-2"></i> Phân hệ: <strong>${entry.key.toUpperCase()}</strong>
+                                            <i class="bi bi-folder2-open me-2"></i> Phân hệ: <strong>${moduleTitle}</strong>
                                         </td>
                                         <td class="text-center py-2">
                                             <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input" type="checkbox" title="Chọn toàn bộ module này"
+                                                <input class="form-check-input" type="checkbox" title="Chọn toàn bộ phân hệ này"
                                                        onclick="toggleModuleCheckboxes('${entry.key}', this)">
                                             </div>
                                         </td>
@@ -95,8 +105,8 @@
                                         <tr>
                                             <td class="text-center text-muted small">${counter}</td>
                                             <td class="permission-label text-wrap-break">
-                                                <div class="perm-name">${p.name}</div>
-                                                <div class="perm-code">${p.code}</div>
+                                                <div class="perm-name fw-bold text-dark">${p.name}</div>
+                                                <div class="perm-code text-muted small d-none">${p.code}</div>
                                             </td>
                                             <td class="text-muted small text-wrap-break">${p.description}</td>
                                             <td class="text-center">

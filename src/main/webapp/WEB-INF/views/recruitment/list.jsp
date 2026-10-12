@@ -104,15 +104,15 @@
                     <table class="table table-custom table-hover table-req-custom align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 11%;">Mã yêu cầu</th>
-                                <th style="width: 21%;">Chức danh &amp; Tiêu đề</th>
+                                <th style="width: 10%;">Mã yêu cầu</th>
+                                <th style="width: 20%;">Chức danh &amp; Tiêu đề</th>
                                 <th style="width: 13%;">Phòng ban</th>
-                                <th class="text-center" style="width: 7%;">SL</th>
-                                <th style="width: 10%;">Lý do</th>
+                                <th class="text-center" style="width: 5%;">SL</th>
+                                <th style="width: 9%;">Lý do</th>
                                 <th style="width: 14%;">Dải lương</th>
-                                <th style="width: 10%;">Ngày cần</th>
-                                <th class="text-center" style="width: 8%;">Trạng thái</th>
-                                <th class="text-end pe-2" style="width: 6%;">Thao tác</th>
+                                <th style="width: 9%;">Ngày cần</th>
+                                <th class="text-center" style="width: 12%;">Trạng thái</th>
+                                <th class="text-end pe-3" style="width: 8%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -175,15 +175,15 @@
                                             <td class="text-center">
                                                 <span class="badge ${r.statusBadgeClass} text-nowrap" style="font-size: 0.72rem; padding: 0.35rem 0.45rem;">${r.statusLabel}</span>
                                             </td>
-                                            <td class="text-end pe-2">
+                                            <td class="text-end pe-3">
                                                 <div class="btn-group btn-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary p-1" style="line-height: 1;" 
+                                                    <button type="button" class="btn btn-outline-secondary p-1 px-1.5" style="line-height: 1;" 
                                                             onclick="viewDetails('${r.id}', '${r.code}', '${r.positionTitle}', '${r.departmentName}', '${r.headcount}', '${r.recruitmentReasonLabel}', '${r.formattedSalaryRange}', '${r.deadline}', '${r.statusLabel}')"
-                                                            title="Xem chi tiết JD & Yêu cầu">
+                                                            title="Xem chi tiết">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
                                                     <a href="${pageContext.request.contextPath}/recruitment-requests/edit?id=${r.id}" 
-                                                       class="btn btn-outline-primary p-1" style="line-height: 1;" title="Chỉnh sửa yêu cầu">
+                                                       class="btn btn-outline-primary p-1 px-1.5" style="line-height: 1;" title="Chỉnh sửa">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                 </div>
@@ -212,6 +212,32 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Phân trang phía Server (Backend Pagination) -->
+                <c:if test="${totalPages > 1}">
+                    <div class="p-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <small class="text-muted">Hiển thị trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong> (Tổng cộng <strong>${totalCount}</strong> yêu cầu tuyển dụng)</small>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${currentPage - 1}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}" aria-label="Trang trước">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                        <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${p}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}">${p}</a>
+                                    </li>
+                                </c:forEach>
+                                <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${currentPage + 1}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}" aria-label="Trang sau">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </c:if>
             </div>
         </div>
     </div>

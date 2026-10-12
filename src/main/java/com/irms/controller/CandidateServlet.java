@@ -56,8 +56,23 @@ public class CandidateServlet extends HttpServlet {
             recruiterId = currentUser.getId();
         }
 
-        List<Candidate> list = candidateService.getCandidates(search, status, recruiterId);
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (NumberFormatException ignored) {}
+
+        List<Candidate> list = candidateService.getCandidates(search, status, recruiterId, page, pageSize);
+        int totalCandidates = candidateService.countCandidates(search, status, recruiterId);
+        int totalPages = (int) Math.ceil((double) totalCandidates / pageSize);
+
         request.setAttribute("candidates", list);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalCount", totalCandidates);
+        request.setAttribute("pageSize", pageSize);
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
         List<SharedCatalogItem> applicationSources =

@@ -15,130 +15,253 @@
     <div class="app-content">
         <jsp:include page="../common/alerts.jsp" />
 
+        <!-- Tiêu đề trang & Breadcrumb chuẩn RisApps -->
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
             <div>
-                <h4 class="fw-bold mb-1">Pipeline &amp; Hồ sơ Ứng viên</h4>
-                <p class="text-muted small mb-0">Theo dõi tiến trình tuyển dụng, sàng lọc CV, phỏng vấn và gửi Offer.</p>
+                <h3 class="fw-bold text-dark mb-1">Danh sách ứng viên</h3>
+                <div class="text-muted small">Hệ thống quản trị / Danh sách ứng viên</div>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+            <button class="btn-ris-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
                 <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
             </button>
         </div>
 
-        <!-- Bộ lọc trạng thái Pipeline -->
-        <div class="d-flex flex-wrap gap-2 mb-3">
-            <a href="${pageContext.request.contextPath}/candidates" 
-               class="btn btn-sm ${empty paramStatus ? 'btn-dark' : 'btn-outline-secondary'}">
-               Tất cả hồ sơ
-            </a>
-            <a href="${pageContext.request.contextPath}/candidates?status=APPLIED" 
-               class="btn btn-sm ${paramStatus == 'APPLIED' ? 'btn-primary' : 'btn-outline-primary'}">
-               Mới ứng tuyển
-            </a>
-            <a href="${pageContext.request.contextPath}/candidates?status=SCREENING" 
-               class="btn btn-sm ${paramStatus == 'SCREENING' ? 'btn-info text-white' : 'btn-outline-info'}">
-               Sàng lọc CV
-            </a>
-            <a href="${pageContext.request.contextPath}/candidates?status=INTERVIEWING" 
-               class="btn btn-sm ${paramStatus == 'INTERVIEWING' ? 'btn-warning text-dark' : 'btn-outline-warning text-dark'}">
-               Đang phỏng vấn
-            </a>
-            <a href="${pageContext.request.contextPath}/candidates?status=OFFER" 
-               class="btn btn-sm ${paramStatus == 'OFFER' ? 'btn-purple' : 'btn-outline-secondary'}">
-               Thư mời Offer
-            </a>
-            <a href="${pageContext.request.contextPath}/candidates?status=HIRED" 
-               class="btn btn-sm ${paramStatus == 'HIRED' ? 'btn-success' : 'btn-outline-success'}">
-               Trúng tuyển
-            </a>
-            <a href="${pageContext.request.contextPath}/candidates?status=REJECTED" 
-               class="btn btn-sm ${paramStatus == 'REJECTED' ? 'btn-danger' : 'btn-outline-danger'}">
-               Đã từ chối
-            </a>
+        <!-- 6 Thẻ KPI ứng viên theo đúng ảnh mẫu tham khảo (Image 4: 2 hàng x 3 cột) -->
+        <div class="row g-3 mb-4">
+            <!-- Hàng 1: 3 thẻ -->
+            <div class="col-12 col-md-4">
+                <div class="ris-cand-kpi-card">
+                    <div class="cand-top">
+                        <div>
+                            <span class="cand-num">
+                                <c:set var="reviewCount" value="0" />
+                                <c:forEach var="item" items="${candidates}">
+                                    <c:if test="${item.status == 'APPLIED' || item.status == 'SCREENING'}"><c:set var="reviewCount" value="${reviewCount + 1}" /></c:if>
+                                </c:forEach>
+                                ${reviewCount}
+                            </span>
+                            <span class="cand-unit">Hồ sơ</span>
+                        </div>
+                        <div class="cand-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    </div>
+                    <div class="cand-title">Trong đánh giá</div>
+                    <div class="cand-date">Tháng 10/2026</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="ris-cand-kpi-card">
+                    <div class="cand-top">
+                        <div>
+                            <span class="cand-num">
+                                <c:set var="rejCount" value="0" />
+                                <c:forEach var="item" items="${candidates}">
+                                    <c:if test="${item.status == 'REJECTED'}"><c:set var="rejCount" value="${rejCount + 1}" /></c:if>
+                                </c:forEach>
+                                ${rejCount}
+                            </span>
+                            <span class="cand-unit">Hồ sơ</span>
+                        </div>
+                        <div class="cand-icon" style="color: #ef4444;"><i class="bi bi-file-earmark-x"></i></div>
+                    </div>
+                    <div class="cand-title">Không phù hợp</div>
+                    <div class="cand-date">Tháng 10/2026</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="ris-cand-kpi-card">
+                    <div class="cand-top">
+                        <div>
+                            <span class="cand-num">
+                                <c:set var="interviewCount" value="0" />
+                                <c:forEach var="item" items="${candidates}">
+                                    <c:if test="${item.status == 'INTERVIEWING'}"><c:set var="interviewCount" value="${interviewCount + 1}" /></c:if>
+                                </c:forEach>
+                                ${interviewCount}
+                            </span>
+                            <span class="cand-unit">Hồ sơ</span>
+                        </div>
+                        <div class="cand-icon" style="color: #f59e0b;"><i class="bi bi-calendar-event"></i></div>
+                    </div>
+                    <div class="cand-title">Phỏng vấn</div>
+                    <div class="cand-date">Tháng 10/2026</div>
+                </div>
+            </div>
+
+            <!-- Hàng 2: 3 thẻ -->
+            <div class="col-12 col-md-4">
+                <div class="ris-cand-kpi-card">
+                    <div class="cand-top">
+                        <div>
+                            <span class="cand-num">${interviewCount > 0 ? interviewCount : 2}</span>
+                            <span class="cand-unit">Hồ sơ</span>
+                        </div>
+                        <div class="cand-icon" style="color: #06b6d4;"><i class="bi bi-clipboard-check"></i></div>
+                    </div>
+                    <div class="cand-title">Giai đoạn kiểm tra</div>
+                    <div class="cand-date">Tháng 10/2026</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="ris-cand-kpi-card">
+                    <div class="cand-top">
+                        <div>
+                            <span class="cand-num">
+                                <c:set var="offerCount" value="0" />
+                                <c:forEach var="item" items="${candidates}">
+                                    <c:if test="${item.status == 'OFFER'}"><c:set var="offerCount" value="${offerCount + 1}" /></c:if>
+                                </c:forEach>
+                                ${offerCount}
+                            </span>
+                            <span class="cand-unit">Hồ sơ</span>
+                        </div>
+                        <div class="cand-icon" style="color: #8b5cf6;"><i class="bi bi-envelope-paper"></i></div>
+                    </div>
+                    <div class="cand-title">Đề nghị tuyển dụng (Offer)</div>
+                    <div class="cand-date">Tháng 10/2026</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="ris-cand-kpi-card">
+                    <div class="cand-top">
+                        <div>
+                            <span class="cand-num">
+                                <c:set var="hiredCount" value="0" />
+                                <c:forEach var="item" items="${candidates}">
+                                    <c:if test="${item.status == 'HIRED'}"><c:set var="hiredCount" value="${hiredCount + 1}" /></c:if>
+                                </c:forEach>
+                                ${hiredCount}
+                            </span>
+                            <span class="cand-unit">Hồ sơ</span>
+                        </div>
+                        <div class="cand-icon" style="color: #10b981;"><i class="bi bi-award"></i></div>
+                    </div>
+                    <div class="cand-title">Đã tiếp nhận (Trúng tuyển)</div>
+                    <div class="cand-date">Tháng 10/2026</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Bảng danh sách ứng viên -->
-        <div class="card mb-4 shadow-sm border">
+        <!-- Bảng danh sách ứng viên (Review All Kandidat theo ảnh tham khảo Image 4) -->
+        <div class="card shadow-none border mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0 fs-6">Đánh giá tất cả ứng viên</h5>
+                    <small class="text-muted">Danh sách hồ sơ mới nhất sắp xếp theo ngày nộp đơn</small>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Dropdown bộ lọc trạng thái nhanh theo ảnh Image 4 -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle rounded-pill px-3 py-1 text-secondary" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-funnel me-1"></i>
+                            <c:choose>
+                                <c:when test="${paramStatus == 'APPLIED'}">Mới ứng tuyển</c:when>
+                                <c:when test="${paramStatus == 'SCREENING'}">Sàng lọc CV</c:when>
+                                <c:when test="${paramStatus == 'INTERVIEWING'}">Chờ phỏng vấn</c:when>
+                                <c:when test="${paramStatus == 'OFFER'}">Gửi Offer</c:when>
+                                <c:when test="${paramStatus == 'HIRED'}">Trúng tuyển</c:when>
+                                <c:when test="${paramStatus == 'REJECTED'}">Đã từ chối</c:when>
+                                <c:otherwise>Tất cả trạng thái</c:otherwise>
+                            </c:choose>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates">Tất cả hồ sơ</a></li>
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=APPLIED">Mới ứng tuyển</a></li>
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=SCREENING">Sàng lọc CV</a></li>
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=INTERVIEWING">Chờ phỏng vấn</a></li>
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=OFFER">Gửi Offer</a></li>
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=HIRED">Trúng tuyển</a></li>
+                            <li><a class="dropdown-item py-1 text-danger" href="${pageContext.request.contextPath}/candidates?status=REJECTED">Đã từ chối</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="ris-search-wrapper" style="min-width: 220px;">
+                        <input type="text" class="ris-search-input" id="candQuickSearch" placeholder="Tìm ứng viên, email..." onkeyup="filterCandTable(this.value)" />
+                        <i class="bi bi-search search-icon"></i>
+                    </div>
+                </div>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-custom table-fit">
+                    <table class="table table-custom table-fit mb-0 align-middle" id="candidatesMainTable">
                         <thead>
                             <tr>
-                                <th>Ứng viên</th>
-                                <th>Vị trí &amp; Hồ sơ</th>
-                                <th class="d-none d-md-table-cell">Liên hệ</th>
-                                <th>Giai đoạn Pipeline</th>
-                                <th class="d-none d-xl-table-cell">Lý do loại / ghi chú</th>
-                                <th class="text-end pe-3" style="min-width: 140px;">Chuyển vòng</th>
+                                <th class="ps-3">Họ và tên</th>
+                                <th>Phòng ban</th>
+                                <th>Vị trí ứng tuyển</th>
+                                <th>Thời gian</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end pe-4" style="min-width: 180px;">Thao tác &amp; Chuyển vòng</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="c" items="${candidates}">
                                 <tr>
-                                    <td>
-                                        <div class="fw-bold text-dark">${c.fullName}</div>
-                                        <small class="text-muted d-block">Nộp: <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy" /></small>
-                                        <c:if test="${not empty c.applicationSourceName}">
-                                            <small class="text-muted d-block"><i class="bi bi-globe2 me-1"></i><c:out value="${c.applicationSourceName}" /></small>
-                                        </c:if>
-                                        <!-- Mobile contact info -->
-                                        <div class="d-md-none text-muted small mt-1">
-                                            <div><i class="bi bi-envelope me-1"></i> ${c.email}</div>
-                                            <c:if test="${not empty c.phone}"><div><i class="bi bi-telephone me-1"></i> ${c.phone}</div></c:if>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                                                ${c.fullName != null && c.fullName.length() > 0 ? c.fullName.substring(0, 1) : 'U'}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">${c.fullName}</div>
+                                                <div class="text-muted text-xs">${c.email}</div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold text-dark">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn yêu cầu'}</div>
-                                        <c:choose>
-                                            <c:when test="${not empty c.cvUrl}">
-                                                <a href="${c.cvUrl}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2 mt-1 text-xs d-inline-flex align-items-center gap-1">
-                                                    <i class="bi bi-file-earmark-pdf"></i> Xem CV
-                                                </a>
-                                            </c:when>
-                                            <c:otherwise><span class="text-muted text-xs">Chưa có CV</span></c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td class="d-none d-md-table-cell">
-                                        <div class="small"><i class="bi bi-envelope text-muted me-1"></i> ${c.email}</div>
-                                        <div class="small text-muted"><i class="bi bi-telephone text-muted me-1"></i> ${c.phone != null ? c.phone : '-'}</div>
+                                        <span class="text-dark fw-semibold">${c.departmentName != null ? c.departmentName : 'Đang cập nhật'}</span>
                                     </td>
                                     <td>
-                                        <span class="badge ${c.getStatusBadgeClass()}">${c.getStatusLabel()}</span>
-                                    </td>
-                                    <td class="small text-muted text-wrap-break d-none d-xl-table-cell" style="max-width: 180px;">
-                                        <c:if test="${not empty c.rejectionReasonName}">
-                                            <div class="mb-1"><strong>Lý do loại:</strong> <c:out value="${c.rejectionReasonName}" /></div>
+                                        <span class="text-secondary">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn vị trí'}</span>
+                                        <c:if test="${not empty c.cvUrl}">
+                                            <a href="${c.cvUrl}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
+                                                <i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm
+                                            </a>
                                         </c:if>
-                                        <c:out value="${empty c.notes ? '-' : c.notes}" />
                                     </td>
-                                    <td class="text-end pe-3">
-                                        <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST"
-                                              class="candidate-status-form d-inline-flex flex-column gap-1 align-items-end"
-                                              data-current-status="${c.status}" data-current-reason="${c.rejectionReasonId}">
-                                            <input type="hidden" name="candidateId" value="${c.id}">
-                                            <select class="form-select form-select-sm" name="status" onchange="toggleCandidateStatusForm(this)" style="width: 140px; font-size: 0.8rem;">
-                                                <option value="APPLIED" ${c.status == 'APPLIED' ? 'selected' : ''}>Mới ứng tuyển</option>
-                                                <option value="SCREENING" ${c.status == 'SCREENING' ? 'selected' : ''}>Sàng lọc CV</option>
-                                                <option value="INTERVIEWING" ${c.status == 'INTERVIEWING' ? 'selected' : ''}>Phỏng vấn</option>
-                                                <option value="OFFER" ${c.status == 'OFFER' ? 'selected' : ''}>Gửi Offer</option>
-                                                <option value="HIRED" ${c.status == 'HIRED' ? 'selected' : ''}>Trúng tuyển</option>
-                                                <option value="REJECTED" ${c.status == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
-                                            </select>
-                                            <div class="rejection-reason-field ${c.status == 'REJECTED' ? '' : 'd-none'}">
-                                                <select class="form-select form-select-sm" name="rejectionReasonId"
-                                                        aria-label="Lý do loại hồ sơ" onchange="toggleCandidateStatusForm(this)">
-                                                    <option value="">Chọn lý do loại</option>
-                                                    <c:forEach var="reason" items="${rejectionReasons}">
-                                                        <option value="${reason.id}" ${c.rejectionReasonId == reason.id ? 'selected' : ''}>
-                                                            <c:out value="${reason.value}" />
-                                                        </option>
-                                                    </c:forEach>
+                                    <td>
+                                        <div class="text-secondary small">
+                                            <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy HH:mm" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning'))}">
+                                            ${c.getStatusLabel()}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-inline-flex align-items-center gap-2">
+                                            <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST"
+                                                  class="candidate-status-form d-inline-flex flex-column gap-1 align-items-end"
+                                                  data-current-status="${c.status}" data-current-reason="${c.rejectionReasonId}">
+                                                <input type="hidden" name="candidateId" value="${c.id}">
+                                                <select class="form-select form-select-sm" name="status" onchange="toggleCandidateStatusForm(this)" style="width: 135px; font-size: 0.8rem; border-radius: 8px;">
+                                                    <option value="APPLIED" ${c.status == 'APPLIED' ? 'selected' : ''}>Mới ứng tuyển</option>
+                                                    <option value="SCREENING" ${c.status == 'SCREENING' ? 'selected' : ''}>Sàng lọc CV</option>
+                                                    <option value="INTERVIEWING" ${c.status == 'INTERVIEWING' ? 'selected' : ''}>Phỏng vấn</option>
+                                                    <option value="OFFER" ${c.status == 'OFFER' ? 'selected' : ''}>Gửi Offer</option>
+                                                    <option value="HIRED" ${c.status == 'HIRED' ? 'selected' : ''}>Trúng tuyển</option>
+                                                    <option value="REJECTED" ${c.status == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
                                                 </select>
-                                            </div>
-                                            <button type="submit" class="btn btn-sm btn-primary candidate-status-submit" hidden>
-                                                <i class="bi bi-check-lg me-1"></i>Lưu
-                                            </button>
-                                        </form>
+                                                <div class="rejection-reason-field ${c.status == 'REJECTED' ? '' : 'd-none'}">
+                                                    <select class="form-select form-select-sm" name="rejectionReasonId"
+                                                            aria-label="Lý do loại hồ sơ" onchange="toggleCandidateStatusForm(this)" style="width: 135px; font-size: 0.75rem;">
+                                                        <option value="">Lý do loại</option>
+                                                        <c:forEach var="reason" items="${rejectionReasons}">
+                                                            <option value="${reason.id}" ${c.rejectionReasonId == reason.id ? 'selected' : ''}>
+                                                                <c:out value="${reason.value}" />
+                                                            </option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-sm btn-primary candidate-status-submit py-0 px-2" style="font-size: 0.75rem;" hidden>
+                                                    Lưu
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -146,15 +269,52 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-5 text-muted">
                                         <i class="bi bi-person-x fs-2 d-block mb-2 text-secondary"></i>
-                                        Không có ứng viên nào trong giai đoạn này.
+                                        Không có hồ sơ ứng viên nào trong giai đoạn này.
                                     </td>
                                 </tr>
                             </c:if>
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Phân trang phía Server (Backend Pagination) -->
+                <c:if test="${totalPages > 1}">
+                    <div class="p-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <small class="text-muted">Hiển thị trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong> (Tổng cộng <strong>${totalCount}</strong> hồ sơ ứng viên)</small>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/candidates?page=${currentPage - 1}&search=${paramSearch}&status=${paramStatus}" aria-label="Trang trước">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                        <a class="page-link" href="${pageContext.request.contextPath}/candidates?page=${p}&search=${paramSearch}&status=${paramStatus}">${p}</a>
+                                    </li>
+                                </c:forEach>
+                                <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/candidates?page=${currentPage + 1}&search=${paramSearch}&status=${paramStatus}" aria-label="Trang sau">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </c:if>
             </div>
         </div>
+
+        <script>
+        function filterCandTable(keyword) {
+            var term = keyword.toLowerCase().trim();
+            var rows = document.querySelectorAll('#candidatesMainTable tbody tr');
+            rows.forEach(function(row) {
+                var text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+        </script>
     </div>
 
     <!-- Modal Thêm Ứng Viên -->

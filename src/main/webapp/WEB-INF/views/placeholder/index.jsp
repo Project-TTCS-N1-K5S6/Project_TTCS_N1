@@ -22,11 +22,11 @@
                 Phân hệ này đã được thiết kế sẵn sàng trong ma trận phân quyền (RBAC Matrix) và cơ sở dữ liệu MySQL. Giao diện chức năng chi tiết đang trong lộ trình tích hợp tiếp theo.
             </p>
             <div class="d-inline-flex gap-2 justify-content-center mt-3">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 font-monospace">
-                    Route: ${requestUri}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                    <i class="bi bi-shield-check me-1"></i> Đã kích hoạt phân quyền
                 </span>
                 <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
-                    <i class="bi bi-shield-check me-1"></i> RBAC Enforced
+                    <i class="bi bi-check-circle me-1"></i> Sẵn sàng kết nối
                 </span>
             </div>
             <div class="mt-4">

@@ -25,11 +25,16 @@ public class CandidateDAO extends BaseDAO {
      * - Nếu recruiterId == null (Admin / HR Manager): Xem toàn bộ ứng viên của hệ thống.
      */
     public List<Candidate> findAll(String search, String status, String recruiterId) {
+        return findAll(search, status, recruiterId, 0, Integer.MAX_VALUE);
+    }
+
+    public List<Candidate> findAll(String search, String status, String recruiterId, int offset, int limit) {
         List<Candidate> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT c.*, r.title AS requisition_title, source.value AS application_source_name, " +
-                "reason.value AS rejection_reason_name FROM candidates c " +
+                "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                "source.value AS application_source_name, reason.value AS rejection_reason_name FROM candidates c " +
                 "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                "LEFT JOIN departments d ON r.department_id = d.id " +
                 "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
                 "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id WHERE 1=1 ");
 
@@ -51,6 +56,11 @@ public class CandidateDAO extends BaseDAO {
         }
 
         sql.append("ORDER BY c.created_at DESC");
+        if (limit < Integer.MAX_VALUE) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+        }
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -67,6 +77,8 @@ public class CandidateDAO extends BaseDAO {
                 c.setId(rs.getString("id"));
                 c.setRequisitionId(rs.getString("requisition_id"));
                 c.setRequisitionTitle(rs.getString("requisition_title"));
+                c.setDepartmentId(rs.getString("department_id"));
+                c.setDepartmentName(rs.getString("department_name"));
                 c.setApplicationSourceId(rs.getString("application_source_id"));
                 c.setApplicationSourceName(rs.getString("application_source_name"));
                 c.setRejectionReasonId(rs.getString("rejection_reason_id"));
@@ -87,6 +99,49 @@ public class CandidateDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return list;
+    }
+
+    public int countAll(String search, String status, String recruiterId) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM candidates c " +
+                "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (recruiterId != null && !recruiterId.trim().isEmpty()) {
+            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IS NULL) ");
+            params.add(recruiterId.trim());
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (c.full_name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND c.status = ? ");
+            params.add(status.trim());
+        }
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số lượng ứng viên", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
     }
 
     public boolean insert(Candidate c) {

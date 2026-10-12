@@ -22,6 +22,17 @@ public class RecruitmentRequestService {
         return requestDAO.findAll(search, status, departmentId);
     }
 
+    public List<RecruitmentRequest> getRequests(String search, String status, String departmentId, int page, int pageSize) {
+        int p = Math.max(1, page);
+        int size = Math.max(1, pageSize);
+        int offset = (p - 1) * size;
+        return requestDAO.findAll(search, status, departmentId, offset, size);
+    }
+
+    public int countRequests(String search, String status, String departmentId) {
+        return requestDAO.countAll(search, status, departmentId);
+    }
+
     public RecruitmentRequest getRequestById(String id) {
         return requestDAO.findById(id);
     }

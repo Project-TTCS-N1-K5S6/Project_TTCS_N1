@@ -32,10 +32,14 @@ public class DashboardServlet extends HttpServlet {
         int totalDepts = departmentDAO.findAll().size();
         int totalAuditLogs = auditDAO.countAll(null);
 
+        com.irms.dao.RecruitmentRequestDAO recruitmentRequestDAO = new com.irms.dao.RecruitmentRequestDAO();
+        int totalRequisitions = recruitmentRequestDAO.findAll(null, null, null).size();
+
         request.setAttribute("totalUsers", totalUsers);
         request.setAttribute("totalCandidates", totalCandidates);
         request.setAttribute("totalDepts", totalDepts);
         request.setAttribute("totalAuditLogs", totalAuditLogs);
+        request.setAttribute("totalRequisitions", totalRequisitions);
 
         // Danh sách hoạt động gần đây
         request.setAttribute("recentCandidates", candidateDAO.findAll(null, null));

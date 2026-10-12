@@ -200,6 +200,15 @@
             eyeIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
         });
     }
+
+    // Đảm bảo xóa cờ nếu đang ở form đăng nhập
+    sessionStorage.removeItem('showLoginSuccessToast');
+    const loginForm = document.querySelector('form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function() {
+            sessionStorage.setItem('showLoginSuccessToast', 'true');
+        });
+    }
 </script>
 </body>
 </html>

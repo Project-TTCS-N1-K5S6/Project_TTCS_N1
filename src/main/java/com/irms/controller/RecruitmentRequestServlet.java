@@ -87,11 +87,26 @@ public class RecruitmentRequestServlet extends HttpServlet {
         String status = request.getParameter("status");
         String departmentId = request.getParameter("departmentId");
 
-        List<RecruitmentRequest> list = requisitionService.getAllRequests(search, status, departmentId);
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (NumberFormatException ignored) {}
+
+        List<RecruitmentRequest> list = requisitionService.getRequests(search, status, departmentId, page, pageSize);
+        int totalRequests = requisitionService.countRequests(search, status, departmentId);
+        int totalPages = (int) Math.ceil((double) totalRequests / pageSize);
+
         List<Department> departments = departmentService.getAllDepartments();
 
         request.setAttribute("requisitions", list);
         request.setAttribute("departments", departments);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalCount", totalRequests);
+        request.setAttribute("pageSize", pageSize);
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
         request.setAttribute("paramDept", departmentId);

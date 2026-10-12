@@ -123,10 +123,25 @@ public class SalaryRangeServlet extends HttpServlet {
         String deptId = request.getParameter("deptId");
         String level = request.getParameter("level");
 
-        List<SalaryRange> list = salaryRangeService.getAllSalaryRanges(search, deptId, level);
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (NumberFormatException ignored) {}
+
+        List<SalaryRange> list = salaryRangeService.getSalaryRanges(search, deptId, level, page, pageSize);
+        int totalRanges = salaryRangeService.countSalaryRanges(search, deptId, level);
+        int totalPages = (int) Math.ceil((double) totalRanges / pageSize);
+
         request.setAttribute("salaryRanges", list);
         request.setAttribute("departments", departmentDAO.findAll());
         request.setAttribute("levels", salaryRangeService.getDistinctLevels());
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalCount", totalRanges);
+        request.setAttribute("pageSize", pageSize);
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramDeptId", deptId);
         request.setAttribute("paramLevel", level);

@@ -22,6 +22,8 @@ public class Candidate implements Serializable {
     private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED
     private String cvUrl;
     private String notes;
+    private String departmentId;
+    private String departmentName;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -65,6 +67,12 @@ public class Candidate implements Serializable {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getDepartmentId() { return departmentId; }
+    public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
 
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }

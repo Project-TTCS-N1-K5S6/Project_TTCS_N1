@@ -29,6 +29,17 @@ public class CandidateService {
         return candidateDAO.findAll(search, status, recruiterId);
     }
 
+    public List<Candidate> getCandidates(String search, String status, String recruiterId, int page, int pageSize) {
+        int p = Math.max(1, page);
+        int size = Math.max(1, pageSize);
+        int offset = (p - 1) * size;
+        return candidateDAO.findAll(search, status, recruiterId, offset, size);
+    }
+
+    public int countCandidates(String search, String status, String recruiterId) {
+        return candidateDAO.countAll(search, status, recruiterId);
+    }
+
     public boolean createCandidate(Candidate c) {
         if (!catalogDAO.isValueInType(c.getApplicationSourceId(), SharedCatalogType.APPLICATION_SOURCE)) {
             throw new IllegalArgumentException("Nguồn ứng viên không hợp lệ.");

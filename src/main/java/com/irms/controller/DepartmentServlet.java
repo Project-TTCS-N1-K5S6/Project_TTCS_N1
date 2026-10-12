@@ -81,7 +81,8 @@ public class DepartmentServlet extends HttpServlet {
         request.setAttribute("inactiveCount", inactiveCount);
         request.setAttribute("maxLevel", maxLevel);
         request.setAttribute("paramSearch", search);
-        request.setAttribute("paramStatus", status);
+        com.irms.dao.RecruitmentRequestDAO reqDAO = new com.irms.dao.RecruitmentRequestDAO();
+        request.setAttribute("recentRequisitions", reqDAO.findAll(null, null, null));
 
         request.getRequestDispatcher("/WEB-INF/views/departments/list.jsp").forward(request, response);
     }

@@ -1,4 +1,5 @@
 E:\ttcs_n1\src\test\java\com\irms\SalaryRangeTest.java
+E:\ttcs_n1\src\test\java\com\irms\DatabaseIntegrityTest.java
 E:\ttcs_n1\src\test\java\com\irms\AvatarProcessingTest.java
 E:\ttcs_n1\src\test\java\com\irms\CleanTestUsers.java
 E:\ttcs_n1\src\test\java\com\irms\CompanyProfileTest.java
@@ -6,4 +7,5 @@ E:\ttcs_n1\src\test\java\com\irms\RBACPermissionTest.java
 E:\ttcs_n1\src\test\java\com\irms\DepartmentHierarchyTest.java
 E:\ttcs_n1\src\test\java\com\irms\SharedCatalogTypeTest.java
 E:\ttcs_n1\src\test\java\com\irms\service\ProfileServiceTest.java
+E:\ttcs_n1\src\test\java\com\irms\service\EmailServiceTest.java
 E:\ttcs_n1\src\test\java\com\irms\CompetencyFrameworkTest.java

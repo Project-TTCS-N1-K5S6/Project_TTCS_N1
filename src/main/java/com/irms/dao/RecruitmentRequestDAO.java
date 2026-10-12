@@ -65,6 +65,10 @@ public class RecruitmentRequestDAO extends BaseDAO {
     }
 
     public List<RecruitmentRequest> findAll(String search, String status, String departmentId) {
+        return findAll(search, status, departmentId, 0, Integer.MAX_VALUE);
+    }
+
+    public List<RecruitmentRequest> findAll(String search, String status, String departmentId, int offset, int limit) {
         List<RecruitmentRequest> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, d.name AS department_name, " +
@@ -100,6 +104,11 @@ public class RecruitmentRequestDAO extends BaseDAO {
         }
 
         sql.append("ORDER BY r.created_at DESC");
+        if (limit < Integer.MAX_VALUE) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+        }
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -120,6 +129,49 @@ public class RecruitmentRequestDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return list;
+    }
+
+    public int countAll(String search, String status, String departmentId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM recruitment_requisitions r WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(r.code) LIKE ? OR LOWER(r.title) LIKE ? OR LOWER(r.position_title) LIKE ?) ");
+            String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND r.status = ? ");
+            params.add(status.trim());
+        }
+
+        if (departmentId != null && !departmentId.trim().isEmpty()) {
+            sql.append("AND r.department_id = ? ");
+            params.add(departmentId.trim());
+        }
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số lượng yêu cầu tuyển dụng", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
     }
 
     public RecruitmentRequest findById(String id) {

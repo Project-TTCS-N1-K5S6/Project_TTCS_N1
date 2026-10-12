@@ -82,8 +82,9 @@
                                     <td class="text-muted small">${q.goodAnswerSuggestion}</td>
                                     <td class="text-end pe-3">
                                         <button class="btn btn-sm btn-outline-secondary me-1" 
-                                                onclick="openEditQuestionModal('${q.id}', '${q.content.replace("'", "\\'")}', '${q.difficultyLevel}', '${q.goodAnswerSuggestion.replace("'", "\\'")}', '${q.criterionId}', '${q.jobTitle.replace("'", "\\'")}')">
-                                            <i class="bi bi-pencil"></i> Sửa
+                                                onclick="openEditQuestionModal('${q.id}', '${q.content.replace("'", "\\'")}', '${q.difficultyLevel}', '${q.goodAnswerSuggestion.replace("'", "\\'")}', '${q.criterionId}', '${q.jobTitle.replace("'", "\\'")}')"
+                                                title="Chỉnh sửa">
+                                            <i class="bi bi-pencil"></i>
                                         </button>
                                         <form action="${pageContext.request.contextPath}/admin/questions/delete" method="POST" style="display:inline;"
                                               onsubmit="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')">

@@ -2,17 +2,33 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
 <div id="toastNotificationContainer" class="toast-notification-container" aria-live="polite" aria-atomic="true">
-    <c:if test="${not empty sessionScope.flashSuccess}">
+    <c:if test="${not empty sessionScope.flashSuccess || param.loginSuccess == 'true'}">
         <div class="toast-notification-item toast-item-success" data-auto-dismiss="5000">
             <div class="toast-icon-box"><i class="bi bi-check-circle-fill"></i></div>
             <div class="toast-body-content">
                 <div class="toast-header-title">Thành công</div>
-                <div class="toast-message-text"><c:out value="${sessionScope.flashSuccess}" /></div>
+                <div class="toast-message-text">
+                    <c:choose>
+                        <c:when test="${not empty sessionScope.flashSuccess}">
+                            <c:out value="${sessionScope.flashSuccess}" />
+                        </c:when>
+                        <c:otherwise>
+                            Đăng nhập thành công! Chào mừng <c:out value="${not empty currentUser.fullName ? currentUser.fullName : 'bạn'}" /> trở lại hệ thống.
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
             <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
             <div class="toast-progress-bar"></div>
         </div>
         <c:remove var="flashSuccess" scope="session" />
+        <script>
+            if (window.location.search.includes('loginSuccess=true')) {
+                const u = new URL(window.location);
+                u.searchParams.delete('loginSuccess');
+                window.history.replaceState({}, document.title, u.pathname + (u.search ? u.search : ''));
+            }
+        </script>
     </c:if>
 
     <c:if test="${not empty sessionScope.flashError}">

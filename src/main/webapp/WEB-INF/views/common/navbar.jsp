@@ -3,26 +3,32 @@
 
 <header class="app-header">
     <div class="header-left">
-        <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button" aria-label="Toggle Sidebar">
+        <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button" aria-label="Mở Menu">
             <i class="bi bi-list"></i>
         </button>
-        <div class="page-breadcrumb">
-            <span class="text-muted fs-6"><i class="bi bi-house-door me-1"></i> IRMS</span>
-            <span class="text-muted mx-2">/</span>
-            <span class="fw-semibold text-dark fs-6">${breadcrumb != null ? breadcrumb : 'Hệ Thống Tuyển Dụng'}</span>
+        <div class="header-welcome d-none d-sm-block">
+            <div class="welcome-title">Xin chào, ${not empty currentUser.fullName ? currentUser.fullName : 'Quản trị viên'}</div>
+            <div class="welcome-subtitle">Chúc bạn một ngày làm việc hiệu quả và tràn đầy năng lượng</div>
         </div>
     </div>
 
     <div class="header-right">
-        <!-- 
-            ======================================================================
-            [US 6 & AVATAR]: HIỂN THỊ LOGO / AVATAR VÀ TÊN NGƯỜI DÙNG PHÍA BÊN PHẢI
-            - Hiển thị logo/avatar người dùng (hình ảnh hoặc ký tự đầu)
-            - Cho phép tải lên hoặc thay đổi ảnh đại diện cá nhân tùy chọn
-            ======================================================================
-        -->
+        <!-- Nút tìm kiếm nhanh theo phong cách RisApps -->
+        <button type="button" class="header-action-btn" title="Tìm kiếm nhanh" onclick="var s = document.querySelector('.ris-search-input, [name=search]'); if(s) s.focus();">
+            <i class="bi bi-search"></i>
+        </button>
+
+        <!-- Nút thông báo hệ thống theo phong cách RisApps -->
+        <a href="#" class="header-action-btn" title="Thông báo" onclick="if(window.showToast) window.showToast('Không có thông báo mới nào chưa đọc.', 'info', 'Hộp thư thông báo'); return false;">
+            <i class="bi bi-bell"></i>
+            <c:if test="${not empty unreadNotificationsCount && unreadNotificationsCount > 0}">
+                <span class="btn-badge-dot"></span>
+            </c:if>
+        </a>
+
+        <!-- Nút thông tin người dùng dạng Viên thuốc (User Pill) theo ảnh tham khảo -->
         <div class="dropdown">
-            <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle user-nav-link" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="#" class="header-user-pill dropdown-toggle text-decoration-none" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="user-avatar-wrapper position-relative" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;">
                     <div class="user-avatar overflow-hidden" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; max-width: 32px; max-height: 32px; border-radius: 50% !important; overflow: hidden !important; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(135deg, #2563eb, #8b5cf6); border: 1.5px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.15);">
                         <c:choose>
@@ -35,14 +41,9 @@
                             <c:otherwise><span class="avatar-letter" style="color: #ffffff; font-weight: 700; font-size: 0.85rem; line-height: 1;">U</span></c:otherwise>
                         </c:choose>
                     </div>
-                    <span class="avatar-camera-btn" style="position: absolute; bottom: -2px; right: -2px; width: 13px; height: 13px; border-radius: 50%; background: #2563eb; color: #fff; font-size: 7px; display: flex; align-items: center; justify-content: center; border: 1px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); cursor: pointer; z-index: 2;" title="Thay đổi ảnh đại diện" data-bs-toggle="modal" data-bs-target="#changeAvatarModal" onclick="event.stopPropagation();">
-                        <i class="bi bi-camera-fill" style="font-size: 7px; line-height: 1;"></i>
-                    </span>
                 </div>
-                <div class="d-none d-md-block text-start lh-1 ms-1">
-                    <div class="fw-semibold text-dark fs-6" style="font-size: 0.95rem; line-height: 1.2;">${currentUser.fullName}</div>
-                    <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">${currentUser.getRolesDisplay()}</small>
-                </div>
+                <span class="pill-name d-none d-md-inline-block text-truncate" style="max-width: 140px;">${not empty currentUser.fullName ? currentUser.fullName : 'Tài khoản'}</span>
+                <i class="bi bi-chevron-right pill-arrow d-none d-md-inline-block"></i>
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 mt-2" aria-labelledby="userMenuDropdown">
                 <li class="px-3 py-2 border-bottom mb-1">

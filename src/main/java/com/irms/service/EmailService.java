@@ -130,77 +130,114 @@ public class EmailService {
         String smtpUser = AppConfig.get("mail.smtp.username", "").trim();
         String smtpPass = AppConfig.get("mail.smtp.password", "").trim();
 
-        // 1. Chế độ CONSOLE / MOCK: In trực tiếp ra màn hình Terminal (không cần cài Docker hay Mail server)
+        // 1. Chế độ CONSOLE / MOCK: In trực tiếp ra màn hình Terminal (không cần Mail server)
         if ("console".equals(provider) || "mock".equals(provider)) {
             printConsoleEmail(to, subject, htmlContent);
             return true;
         }
 
-        boolean useGmail = "gmail".equals(provider) || ("auto".equals(provider) && !smtpUser.isEmpty() && !smtpPass.isEmpty());
+        // 2. Chế độ MAILHOG / MAILPIT cục bộ
+        if ("mailhog".equals(provider) || "mailpit".equals(provider)) {
+            return sendViaLocalMailHog(to, subject, htmlContent);
+        }
+
+        // 3. Chế độ GMAIL hoặc AUTO
+        boolean hasGmailConfig = !smtpUser.isEmpty() && !smtpPass.isEmpty();
+        if ("gmail".equals(provider) || ("auto".equals(provider) && hasGmailConfig)) {
+            try {
+                boolean sent = sendViaGmail(to, subject, htmlContent, smtpUser, smtpPass);
+                if (sent) return true;
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "[EmailService] Gửi qua Gmail SMTP thất bại (" + e.getMessage() + ")");
+                // Nếu ở chế độ 'auto', thử fallback sang MailHog/Mailpit cục bộ (1025)
+                if ("auto".equals(provider)) {
+                    LOGGER.info("[EmailService] Đang kích hoạt chuyển tiếp dự phòng (Fallback) sang Mailpit/MailHog cục bộ (localhost:1025)...");
+                    boolean fallbackSent = sendViaLocalMailHog(to, subject, htmlContent);
+                    if (fallbackSent) {
+                        LOGGER.info("[EmailService] Gửi email thành công qua máy chủ Mailpit cục bộ.");
+                        return true;
+                    }
+                }
+                printConsoleEmail(to, subject, htmlContent);
+                return false;
+            }
+        }
+
+        // Mặc định cho auto khi không có tài khoản Gmail: Gửi qua MailHog/Mailpit
+        boolean sentLocal = sendViaLocalMailHog(to, subject, htmlContent);
+        if (!sentLocal) {
+            printConsoleEmail(to, subject, htmlContent);
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean sendViaGmail(String to, String subject, String htmlContent, String smtpUser, String smtpPass) throws Exception {
+        String host = AppConfig.get("mail.smtp.host", "smtp.gmail.com");
+        String port = AppConfig.get("mail.smtp.port", "587");
+        if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
+            host = "smtp.gmail.com";
+            port = "587";
+        }
         final String cleanPass = smtpPass.replace(" ", "");
+        String from = AppConfig.get("mail.from", "IRMS Recruitment Platform <" + smtpUser + ">");
+        if (from.contains("@company.local") && smtpUser.contains("@")) {
+            from = "IRMS Recruitment Platform <" + smtpUser + ">";
+        }
 
         Properties props = new Properties();
-        Session session;
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", port);
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.starttls.required", "true");
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
+        props.put("mail.smtp.connectiontimeout", "8000");
+        props.put("mail.smtp.timeout", "8000");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(smtpUser, cleanPass);
+            }
+        });
+
+        LOGGER.info("[EmailService] Đang gửi thư qua Gmail SMTP (" + host + ":" + port + ") đến: " + to);
+        return doSendMimeMessage(session, from, to, subject, htmlContent);
+    }
+
+    private static boolean sendViaLocalMailHog(String to, String subject, String htmlContent) {
+        String host = AppConfig.get("mail.mailhog.host", "127.0.0.1");
+        String port = AppConfig.get("mail.mailhog.port", "1025");
         String from = AppConfig.get("mail.from", "IRMS Recruitment Platform <noreply@company.local>");
 
-        if (useGmail) {
-            // Cấu hình gửi qua Gmail SMTP (TLS 587)
-            String host = AppConfig.get("mail.smtp.host", "smtp.gmail.com");
-            String port = AppConfig.get("mail.smtp.port", "587");
-            if ("localhost".equalsIgnoreCase(host) || "127.0.0.1".equals(host)) {
-                host = "smtp.gmail.com";
-                port = "587";
-            }
-            if (from.contains("@company.local") && smtpUser.contains("@")) {
-                from = "IRMS Recruitment Platform <" + smtpUser + ">";
-            }
+        Properties props = new Properties();
+        props.put("mail.smtp.host", host);
+        props.put("mail.smtp.port", port);
+        props.put("mail.smtp.auth", "false");
+        props.put("mail.smtp.starttls.enable", "false");
+        props.put("mail.smtp.connectiontimeout", "4000");
+        props.put("mail.smtp.timeout", "4000");
 
-            props.put("mail.smtp.host", host);
-            props.put("mail.smtp.port", port);
-            props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.starttls.enable", "true");
-            props.put("mail.smtp.starttls.required", "true");
-            props.put("mail.smtp.ssl.protocols", "TLSv1.2 TLSv1.3");
-            props.put("mail.smtp.connectiontimeout", "10000");
-            props.put("mail.smtp.timeout", "10000");
-
-            session = Session.getInstance(props, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(smtpUser, cleanPass);
-                }
-            });
-            LOGGER.info("[EmailService] Đang gửi thư qua Gmail SMTP (" + host + ":" + port + ") từ: " + from + " đến: " + to);
-        } else {
-            // Cấu hình gửi qua MailHog nội bộ (Port 1025)
-            String host = AppConfig.get("mail.mailhog.host", "localhost");
-            String port = AppConfig.get("mail.mailhog.port", "1025");
-
-            props.put("mail.smtp.host", host);
-            props.put("mail.smtp.port", port);
-            props.put("mail.smtp.auth", "false");
-            props.put("mail.smtp.starttls.enable", "false");
-            props.put("mail.smtp.connectiontimeout", "5000");
-            props.put("mail.smtp.timeout", "5000");
-
-            session = Session.getInstance(props);
-            LOGGER.info("[EmailService] Đang gửi thư qua MailHog (" + host + ":" + port + ") đến: " + to);
-        }
-
+        Session session = Session.getInstance(props);
+        LOGGER.info("[EmailService] Đang gửi thư qua MailHog/Mailpit (" + host + ":" + port + ") đến: " + to);
         try {
-            MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(from));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
-            message.setSubject(subject, "UTF-8");
-            message.setContent(htmlContent, "text/html; charset=UTF-8");
-
-            Transport.send(message);
-            return true;
+            return doSendMimeMessage(session, from, to, subject, htmlContent);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "[EmailService] Máy chủ SMTP chưa sẵn sàng (" + e.getMessage() + "). Tự động kích hoạt hiển thị nội dung trên Terminal Console dự phòng.");
-            printConsoleEmail(to, subject, htmlContent);
-            return true;
+            LOGGER.log(Level.WARNING, "[EmailService] Không thể kết nối tới Mailpit/MailHog cục bộ (" + host + ":" + port + "): " + e.getMessage());
+            return false;
         }
+    }
+
+    private static boolean doSendMimeMessage(Session session, String from, String to, String subject, String htmlContent) throws Exception {
+        MimeMessage message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(from));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+        message.setSubject(subject, "UTF-8");
+        message.setContent(htmlContent, "text/html; charset=UTF-8");
+
+        Transport.send(message);
+        return true;
     }
 
     /**
