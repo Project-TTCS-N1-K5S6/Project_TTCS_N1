@@ -126,7 +126,7 @@
                                 <th>Dải lương đề xuất</th>
                                 <th>Ngày cần người</th>
                                 <th class="text-center" style="width: 140px;">Trạng thái</th>
-                                <th class="text-end pe-3" style="width: 220px;">Thao tác</th>
+                                <th class="text-end pe-3" style="width: 160px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -259,12 +259,6 @@
                                                             title="Xem chi tiết JD & Yêu cầu">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
-                                                    <c:if test="${not empty r.jobDescription or not empty r.jobRequirements}">
-                                                        <a href="${pageContext.request.contextPath}/recruitment-requests/create?copyFrom=${r.id}"
-                                                           class="btn btn-outline-success" title="Sao chép mô tả và yêu cầu thành bản nháp">
-                                                            <i class="bi bi-copy"></i>
-                                                        </a>
-                                                    </c:if>
                                                     <!-- Chỉnh sửa khi chưa kết thúc -->
                                                     <c:if test="${!r.terminal}">
                                                         <a href="${pageContext.request.contextPath}/recruitment-requests/edit?id=${r.id}" 
