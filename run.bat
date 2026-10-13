@@ -18,6 +18,7 @@ if exist "target\tomcat" if not exist "target\tomcat\conf\tomcat-users.xml" (
     rd /s /q "target\tomcat" >nul 2>&1
 )
 
+
 if exist "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" (
     call "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" -o tomcat7:run
 ) else (

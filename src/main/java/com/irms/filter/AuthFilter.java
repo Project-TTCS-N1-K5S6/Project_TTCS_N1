@@ -62,7 +62,8 @@ public class AuthFilter implements Filter {
         // - /about-us, /company/about: Trang giới thiệu công ty công khai
         // ----------------------------------------------------------------------
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
-            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about")) {
+            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about") ||
+            path.startsWith("/careers")) {
             chain.doFilter(request, response);
             return;
         }
@@ -211,6 +212,19 @@ public class AuthFilter implements Filter {
         // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create hoặc ADMIN
         if (path.startsWith("/recruitment-requests")) {
             if (!currentUser.hasPermission("requisitions.view") && !currentUser.hasPermission("requisitions.create") && !currentUser.hasRole("ADMIN")) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
+        // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing) [KN-120]
+        if (path.startsWith("/post-publishing")) {
+            boolean isAuthorizedPublish = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasRole("RECRUITER")
+                    || currentUser.hasPermission("job_postings.view")
+                    || currentUser.hasPermission("job_postings.manage")
+                    || currentUser.hasPermission("requisitions.view");
+            if (!isAuthorizedPublish) {
                 request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                 return;
             }

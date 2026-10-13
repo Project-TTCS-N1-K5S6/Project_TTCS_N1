@@ -1,3 +1,4 @@
+E:\ttcs_n1\src\main\java\com\irms\controller\JobPublishingServlet.java
 E:\ttcs_n1\src\main\java\com\irms\controller\PlaceholderServlet.java
 E:\ttcs_n1\src\main\java\com\irms\controller\RecruitmentRequestServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\Question.java
@@ -20,6 +21,7 @@ E:\ttcs_n1\src\main\java\com\irms\model\SalaryRange.java
 E:\ttcs_n1\src\main\java\com\irms\dao\SharedCatalogDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\ExcelUserRow.java
 E:\ttcs_n1\src\main\java\com\irms\model\EmailOutboxItem.java
+E:\ttcs_n1\src\main\java\com\irms\service\JobPublishingService.java
 E:\ttcs_n1\src\main\java\com\irms\dao\DepartmentDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\SharedCatalogItem.java
 E:\ttcs_n1\src\main\java\com\irms\service\AuthService.java
@@ -37,6 +39,7 @@ E:\ttcs_n1\src\main\java\com\irms\dao\SalaryRangeDAO.java
 E:\ttcs_n1\src\main\java\com\irms\controller\QuestionBankServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\Role.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompanyProfile.java
+E:\ttcs_n1\src\main\java\com\irms\model\JobPostPublication.java
 E:\ttcs_n1\src\main\java\com\irms\controller\UserServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\AuditDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyCriterion.java
@@ -50,7 +53,10 @@ E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyFrameworkDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PermissionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\JsonUtil.java
 E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
+<<<<<<< HEAD
 E:\ttcs_n1\src\main\java\com\irms\service\ApprovalMatrixService.java
+=======
+>>>>>>> origin/feature/Manage-Post-Publishing
 E:\ttcs_n1\src\main\java\com\irms\dao\JobPostingDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\QuestionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyCriterionService.java

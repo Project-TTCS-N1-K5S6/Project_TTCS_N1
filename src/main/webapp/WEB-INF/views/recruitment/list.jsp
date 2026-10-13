@@ -59,9 +59,14 @@
                     Quản lý toàn diện yêu cầu tuyển dụng, đóng/kết thúc vị trí, tự động gỡ tin và kiểm soát ứng viên pipeline.
                 </p>
             </div>
-            <a href="${pageContext.request.contextPath}/recruitment-requests/create" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="${pageContext.request.contextPath}/post-publishing" class="btn btn-outline-success shadow-sm">
+                    <i class="bi bi-broadcast me-1"></i> Quản lý Xuất bản bài đăng
+                </a>
+                <a href="${pageContext.request.contextPath}/recruitment-requests/create" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
+                </a>
+            </div>
         </div>
 
         <!-- Bộ lọc trạng thái & tìm kiếm -->
@@ -247,6 +252,11 @@
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
                                                     </c:if>
+                                                    <!-- Quản lý xuất bản tin tuyển dụng -->
+                                                    <a href="${pageContext.request.contextPath}/post-publishing?search=${r.code}" 
+                                                       class="btn btn-outline-success" title="Quản lý xuất bản bài đăng (KN-120)">
+                                                        <i class="bi bi-broadcast"></i>
+                                                    </a>
                                                     <!-- Đóng / Kết thúc yêu cầu khi đang mở hoặc chờ duyệt -->
                                                     <c:if test="${!r.terminal && r.status != 'DRAFT'}">
                                                         <button type="button" class="btn btn-outline-danger" 
