@@ -146,7 +146,7 @@
                                 <th>Dải lương đề xuất</th>
                                 <th>Ngày cần người</th>
                                 <th class="text-center" style="width: 140px;">Trạng thái</th>
-                                <th class="text-end pe-3" style="width: 150px;">Thao tác</th>
+                                <th class="text-center text-nowrap" style="width: 110px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -253,11 +253,7 @@
                                                         </span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="badge ${r.statusBadgeClass} px-2 py-1">${r.statusLabel}</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td class="text-end pe-3">
+                                                                                               <td class="text-center text-nowrap">
                                                 <div class="btn-group btn-group-sm">
                                                     <!-- Xem chi tiết -->
                                                     <button type="button" class="btn btn-outline-secondary" 
@@ -277,6 +273,10 @@
                                                         <button type="button" class="btn btn-outline-danger" 
                                                                 onclick="openCloseModal('${r.id}', '${r.code}', '${r.positionTitle}')"
                                                                 title="Đóng / Kết thúc yêu cầu (Đã tuyển đủ, Tạm dừng, Huỷ)">
+                                                            <i class="bi bi-stop-circle-fill"></i>
+                                                        </button>
+                                                    </c:if>
+                                                </div>��n đủ, Tạm dừng, Huỷ)">
                                                             <i class="bi bi-stop-circle-fill"></i> Đóng
                                                         </button>
                                                     </c:if>

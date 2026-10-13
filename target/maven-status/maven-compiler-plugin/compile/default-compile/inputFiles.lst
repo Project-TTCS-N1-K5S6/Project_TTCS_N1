@@ -49,6 +49,7 @@ E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyFrameworkDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PermissionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\JsonUtil.java
 E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
+E:\ttcs_n1\src\main\java\com\irms\dao\JobPostingDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\QuestionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyCriterionService.java
 E:\ttcs_n1\src\main\java\com\irms\service\QuestionService.java
@@ -57,6 +58,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\RecruitmentRequestService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AuthServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\DepartmentService.java
+E:\ttcs_n1\src\main\java\com\irms\model\JobPosting.java
 E:\ttcs_n1\src\main\java\com\irms\service\RolePermissionService.java
 E:\ttcs_n1\src\main\java\com\irms\config\AppConfig.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFrameworkCriterion.java
