@@ -1,5 +1,7 @@
 package com.irms.service;
 
+import com.irms.dao.CandidateDAO;
+import com.irms.dao.JobPostingDAO;
 import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.dao.SalaryRangeDAO;
 import com.irms.model.RecruitmentRequest;
@@ -16,7 +18,12 @@ import java.util.List;
 public class RecruitmentRequestService {
     private final RecruitmentRequestDAO requestDAO = new RecruitmentRequestDAO();
     private final SalaryRangeDAO salaryRangeDAO = new SalaryRangeDAO();
+    private final CandidateDAO candidateDAO = new CandidateDAO();
+    private final JobPostingDAO jobPostingDAO = new JobPostingDAO();
     private final AuditService auditService = new AuditService();
+
+    public CandidateDAO getCandidateDAO() { return candidateDAO; }
+    public JobPostingDAO getJobPostingDAO() { return jobPostingDAO; }
 
     public List<RecruitmentRequest> getAllRequests(String search, String status, String departmentId) {
         return requestDAO.findAll(search, status, departmentId);
@@ -32,7 +39,6 @@ public class RecruitmentRequestService {
     public int countRequests(String search, String status, String departmentId) {
         return requestDAO.countAll(search, status, departmentId);
     }
-
     public RecruitmentRequest getRequestById(String id) {
         return requestDAO.findById(id);
     }
@@ -200,5 +206,121 @@ public class RecruitmentRequestService {
                     "Xóa yêu cầu tuyển dụng: " + current.getCode(), ip, userAgent);
         }
         return success;
+    }
+
+    /**
+     * Kiểm tra trạng thái ứng viên trong pipeline và tin tuyển dụng đang đăng trước khi đóng yêu cầu
+     */
+    public java.util.Map<String, Object> checkPipelineAndPostings(String id) {
+        RecruitmentRequest req = requestDAO.findById(id);
+        if (req == null) {
+            throw new IllegalArgumentException("Không tìm thấy yêu cầu tuyển dụng có ID: " + id);
+        }
+
+        List<com.irms.model.Candidate> activeCandidates = candidateDAO.findActivePipelineCandidates(id);
+        List<com.irms.model.JobPosting> publishedPostings = jobPostingDAO.findPublishedByRequisitionId(id);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("requisitionId", req.getId());
+        result.put("requisitionCode", req.getCode());
+        result.put("requisitionTitle", req.getTitle());
+        result.put("currentStatus", req.getStatus());
+        result.put("activeCandidatesCount", activeCandidates.size());
+        result.put("activeCandidates", activeCandidates);
+        result.put("activePostingsCount", publishedPostings.size());
+        result.put("activePostings", publishedPostings);
+        return result;
+    }
+
+    /**
+     * Đóng / Kết thúc yêu cầu tuyển dụng với một trong ba trạng thái:
+     * - FULFILLED (Đã tuyển đủ)
+     * - PAUSED (Tạm dừng)
+     * - CANCELLED (Huỷ)
+     *
+     * Đồng thời:
+     * 1. Tự động gỡ các tin tuyển dụng đang đăng (PUBLISHED -> UNPUBLISHED)
+     * 2. Xử lý các ứng viên còn đang trong pipeline theo phương án người dùng chọn
+     * 3. Ghi nhật ký kiểm toán hệ thống (Audit Log)
+     */
+    public java.util.Map<String, Object> closeRequest(String id, String terminalStatus, String closeReason, 
+                                                      String closeNotes, String candidateAction, 
+                                                      String actorId, String ip, String userAgent) {
+        RecruitmentRequest req = requestDAO.findById(id);
+        if (req == null) {
+            throw new IllegalArgumentException("Không tìm thấy yêu cầu tuyển dụng có ID: " + id);
+        }
+
+        // Kiểm tra xem yêu cầu đã ở trạng thái kết thúc chưa
+        if (req.isTerminal()) {
+            throw new IllegalStateException("Yêu cầu tuyển dụng này đã ở trạng thái kết thúc (" + req.getStatusLabel() + ")!");
+        }
+
+        // Xác thực trạng thái kết thúc hợp lệ
+        if (!"FULFILLED".equalsIgnoreCase(terminalStatus) &&
+            !"PAUSED".equalsIgnoreCase(terminalStatus) &&
+            !"CANCELLED".equalsIgnoreCase(terminalStatus) &&
+            !"CLOSED".equalsIgnoreCase(terminalStatus)) {
+            throw new IllegalArgumentException("Trạng thái kết thúc không hợp lệ! Chỉ chấp nhận: Đã tuyển đủ (FULFILLED), Tạm dừng (PAUSED), hoặc Huỷ (CANCELLED).");
+        }
+
+        // Chuẩn hóa tên trạng thái
+        String normalizedStatus = terminalStatus.toUpperCase();
+
+        // Kiểm tra lý do đóng
+        if (closeReason == null || closeReason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn hoặc nhập lý do kết thúc yêu cầu tuyển dụng!");
+        }
+
+        // Kiểm tra ứng viên trong pipeline
+        int activeCandidatesCount = candidateDAO.countActivePipelineCandidates(id);
+        int processedCandidates = 0;
+
+        if (activeCandidatesCount > 0) {
+            if (candidateAction == null || candidateAction.trim().isEmpty()) {
+                throw new IllegalStateException("Cảnh báo: Hiện còn " + activeCandidatesCount + " ứng viên đang trong pipeline tuyển dụng! Bạn cần chọn phương án xử lý ứng viên trước khi đóng.");
+            }
+
+            if ("REJECT_ALL".equalsIgnoreCase(candidateAction)) {
+                String statusLabel = "FULFILLED".equals(normalizedStatus) ? "Đã tuyển đủ" : 
+                                    ("PAUSED".equals(normalizedStatus) ? "Tạm dừng" : "Đã huỷ");
+                String noteMsg = "[Đóng yêu cầu - " + statusLabel + "]: " + closeReason.trim();
+                processedCandidates = candidateDAO.updatePipelineCandidates(id, "REJECTED", noteMsg);
+            } else if ("HOLD_ALL".equalsIgnoreCase(candidateAction)) {
+                String noteMsg = "[Lưu trữ Talent Pool - Đóng vị trí]: " + closeReason.trim();
+                processedCandidates = candidateDAO.updatePipelineCandidates(id, "APPLIED", noteMsg);
+            } else if ("CONFIRM_MANUAL".equalsIgnoreCase(candidateAction)) {
+                processedCandidates = activeCandidatesCount;
+            }
+        }
+
+        // Cập nhật trạng thái yêu cầu tuyển dụng
+        boolean updated = requestDAO.closeRequisition(id, normalizedStatus, closeReason.trim(), 
+                                                      closeNotes != null ? closeNotes.trim() : "", actorId);
+        if (!updated) {
+            throw new RuntimeException("Không thể cập nhật trạng thái đóng yêu cầu trong cơ sở dữ liệu!");
+        }
+
+        // Tự động gỡ các tin tuyển dụng đang đăng
+        int unpublishedPostingsCount = jobPostingDAO.unpublishByRequisitionId(id);
+
+        // Ghi Audit Log
+        String statusText = "FULFILLED".equals(normalizedStatus) ? "Đã tuyển đủ" : 
+                           ("PAUSED".equals(normalizedStatus) ? "Tạm dừng" : "Đã huỷ");
+        String auditDesc = String.format("Đóng yêu cầu tuyển dụng [%s - %s] sang trạng thái: %s. Lý do: %s. Tự động gỡ %d tin tuyển dụng đang đăng. Đã xử lý %d ứng viên pipeline.",
+                req.getCode(), req.getTitle(), statusText, closeReason.trim(), unpublishedPostingsCount, activeCandidatesCount);
+        auditService.log(actorId, "REQUISITION_CLOSED", "REQUISITION", id, auditDesc, ip, userAgent);
+
+        java.util.Map<String, Object> responseData = new java.util.HashMap<>();
+        responseData.put("success", true);
+        responseData.put("requisitionId", id);
+        responseData.put("newStatus", normalizedStatus);
+        responseData.put("statusLabel", statusText);
+        responseData.put("unpublishedPostingsCount", unpublishedPostingsCount);
+        responseData.put("activeCandidatesCount", activeCandidatesCount);
+        responseData.put("processedCandidates", processedCandidates);
+        responseData.put("message", "Đã đóng yêu cầu thành công sang trạng thái \"" + statusText + "\", tự động gỡ " + unpublishedPostingsCount + " tin tuyển dụng.");
+
+        return responseData;
     }
 }

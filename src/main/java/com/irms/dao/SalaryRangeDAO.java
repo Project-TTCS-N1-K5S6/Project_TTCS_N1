@@ -222,6 +222,7 @@ public class SalaryRangeDAO extends BaseDAO {
         return null;
     }
 
+
     /**
      * Tìm dải lương theo ID
      */

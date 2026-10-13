@@ -40,6 +40,13 @@ public class RecruitmentRequestDAO extends BaseDAO {
             addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "job_requirements", "LONGTEXT NULL");
             addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "salary_explanation", "TEXT NULL");
             addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "created_by", "VARCHAR(36) NULL");
+
+            // Các cột phục vụ chức năng đóng/kết thúc yêu cầu và quản lý trạng thái
+            addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "close_status", "VARCHAR(50) NULL");
+            addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "close_reason", "VARCHAR(255) NULL");
+            addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "close_notes", "TEXT NULL");
+            addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "closed_at", "TIMESTAMP NULL");
+            addColumnIfNotExists(meta, stmt, "recruitment_requisitions", "closed_by", "VARCHAR(36) NULL");
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Không thể kiểm tra/cập nhật schema recruitment_requisitions: " + e.getMessage());
         } finally {
@@ -60,7 +67,13 @@ public class RecruitmentRequestDAO extends BaseDAO {
                 logger.info("Đã bổ sung cột " + columnName + " vào bảng " + tableName);
             }
         } catch (SQLException e) {
-            logger.log(Level.FINE, "Cột " + columnName + " có thể đã tồn tại: " + e.getMessage());
+            // Thử kiểm tra tên bảng chữ thường/chữ hoa cho tương thích
+            try (ResultSet rs2 = meta.getColumns(null, null, tableName.toUpperCase(), columnName.toUpperCase())) {
+                if (!rs2.next()) {
+                    String sql = "ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef;
+                    stmt.executeUpdate(sql);
+                }
+            } catch (Exception ignored) {}
         }
     }
 
@@ -74,12 +87,16 @@ public class RecruitmentRequestDAO extends BaseDAO {
                 "SELECT r.*, d.name AS department_name, " +
                 "u_rec.full_name AS recruiter_name, " +
                 "u_mgr.full_name AS hiring_manager_name, " +
-                "u_cre.full_name AS created_by_name " +
+                "u_cre.full_name AS created_by_name, " +
+                "u_cls.full_name AS closed_by_name, " +
+                "(SELECT COUNT(*) FROM candidates c WHERE c.requisition_id = r.id AND c.status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')) AS active_candidates_count, " +
+                "(SELECT COUNT(*) FROM job_postings jp WHERE jp.requisition_id = r.id AND jp.status = 'PUBLISHED') AS active_postings_count " +
                 "FROM recruitment_requisitions r " +
                 "LEFT JOIN departments d ON r.department_id = d.id " +
                 "LEFT JOIN users u_rec ON r.recruiter_id = u_rec.id " +
                 "LEFT JOIN users u_mgr ON r.hiring_manager_id = u_mgr.id " +
                 "LEFT JOIN users u_cre ON r.created_by = u_cre.id " +
+                "LEFT JOIN users u_cls ON r.closed_by = u_cls.id " +
                 "WHERE 1=1 "
         );
 
@@ -93,12 +110,17 @@ public class RecruitmentRequestDAO extends BaseDAO {
             params.add(term);
         }
 
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND r.status = ? ");
-            params.add(status.trim());
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            if ("CLOSED_ALL".equalsIgnoreCase(status)) {
+                sql.append("AND (r.status IN ('CLOSED', 'FULFILLED', 'PAUSED', 'CANCELLED')) ");
+            } else {
+                sql.append("AND (r.status = ? OR r.close_status = ?) ");
+                params.add(status.trim());
+                params.add(status.trim());
+            }
         }
 
-        if (departmentId != null && !departmentId.trim().isEmpty()) {
+        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
             sql.append("AND r.department_id = ? ");
             params.add(departmentId.trim());
         }
@@ -143,12 +165,17 @@ public class RecruitmentRequestDAO extends BaseDAO {
             params.add(term);
         }
 
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND r.status = ? ");
-            params.add(status.trim());
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            if ("CLOSED_ALL".equalsIgnoreCase(status)) {
+                sql.append("AND (r.status IN ('CLOSED', 'FULFILLED', 'PAUSED', 'CANCELLED')) ");
+            } else {
+                sql.append("AND (r.status = ? OR r.close_status = ?) ");
+                params.add(status.trim());
+                params.add(status.trim());
+            }
         }
 
-        if (departmentId != null && !departmentId.trim().isEmpty()) {
+        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
             sql.append("AND r.department_id = ? ");
             params.add(departmentId.trim());
         }
@@ -173,17 +200,20 @@ public class RecruitmentRequestDAO extends BaseDAO {
         }
         return 0;
     }
-
     public RecruitmentRequest findById(String id) {
         String sql = "SELECT r.*, d.name AS department_name, " +
                      "u_rec.full_name AS recruiter_name, " +
                      "u_mgr.full_name AS hiring_manager_name, " +
-                     "u_cre.full_name AS created_by_name " +
+                     "u_cre.full_name AS created_by_name, " +
+                     "u_cls.full_name AS closed_by_name, " +
+                     "(SELECT COUNT(*) FROM candidates c WHERE c.requisition_id = r.id AND c.status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')) AS active_candidates_count, " +
+                     "(SELECT COUNT(*) FROM job_postings jp WHERE jp.requisition_id = r.id AND jp.status = 'PUBLISHED') AS active_postings_count " +
                      "FROM recruitment_requisitions r " +
                      "LEFT JOIN departments d ON r.department_id = d.id " +
                      "LEFT JOIN users u_rec ON r.recruiter_id = u_rec.id " +
                      "LEFT JOIN users u_mgr ON r.hiring_manager_id = u_mgr.id " +
                      "LEFT JOIN users u_cre ON r.created_by = u_cre.id " +
+                     "LEFT JOIN users u_cls ON r.closed_by = u_cls.id " +
                      "WHERE r.id = ?";
 
         Connection conn = null;
@@ -280,6 +310,43 @@ public class RecruitmentRequestDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Cập nhật trạng thái đóng/kết thúc cho yêu cầu tuyển dụng
+     * @param id Mã định danh yêu cầu
+     * @param terminalStatus Trạng thái kết thúc: FULFILLED (Đã tuyển đủ), PAUSED (Tạm dừng), CANCELLED (Huỷ)
+     * @param closeReason Lý do kết thúc (lý do riêng của từng trạng thái)
+     * @param closeNotes Ghi chú giải trình thêm
+     * @param closedBy Người thực hiện
+     */
+    public boolean closeRequisition(String id, String terminalStatus, String closeReason, String closeNotes, String closedBy) {
+        String sql = "UPDATE recruitment_requisitions SET " +
+                     "status = ?, " +
+                     "close_status = ?, " +
+                     "close_reason = ?, " +
+                     "close_notes = ?, " +
+                     "closed_at = CURRENT_TIMESTAMP, " +
+                     "closed_by = ? " +
+                     "WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, terminalStatus);
+            ps.setString(2, terminalStatus);
+            ps.setString(3, closeReason);
+            ps.setString(4, closeNotes);
+            ps.setString(5, closedBy);
+            ps.setString(6, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật trạng thái đóng yêu cầu: " + id, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
     public boolean delete(String id) {
         String sql = "DELETE FROM recruitment_requisitions WHERE id = ?";
         Connection conn = null;
@@ -360,6 +427,18 @@ public class RecruitmentRequestDAO extends BaseDAO {
 
         try { req.setCreatedBy(rs.getString("created_by")); } catch (SQLException ignored) {}
         try { req.setCreatedByName(rs.getString("created_by_name")); } catch (SQLException ignored) {}
+
+        // Thông tin đóng/kết thúc
+        try { req.setCloseStatus(rs.getString("close_status")); } catch (SQLException ignored) {}
+        try { req.setCloseReason(rs.getString("close_reason")); } catch (SQLException ignored) {}
+        try { req.setCloseNotes(rs.getString("close_notes")); } catch (SQLException ignored) {}
+        try { req.setClosedAt(rs.getTimestamp("closed_at")); } catch (SQLException ignored) {}
+        try { req.setClosedBy(rs.getString("closed_by")); } catch (SQLException ignored) {}
+        try { req.setClosedByName(rs.getString("closed_by_name")); } catch (SQLException ignored) {}
+
+        // Đếm số lượng liên quan
+        try { req.setActiveCandidatesCount(rs.getInt("active_candidates_count")); } catch (SQLException ignored) {}
+        try { req.setActiveJobPostingsCount(rs.getInt("active_postings_count")); } catch (SQLException ignored) {}
 
         req.setCreatedAt(rs.getTimestamp("created_at"));
         req.setUpdatedAt(rs.getTimestamp("updated_at"));
