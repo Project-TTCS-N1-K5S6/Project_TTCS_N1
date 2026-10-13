@@ -145,7 +145,7 @@
                 </div>
               </div>
 
-              <h1>Tài sứ dụng Mô tả &amp; Yêu cầu Tuyển dụng</h1>
+              <h1>Tái sử dụng Mô tả &amp; Yêu cầu Tuyển dụng</h1>
             </div>
 
             <div class="card section-box">
@@ -155,11 +155,22 @@
               </div>
               <div class="description-box">
                 <ul>
-                  <li>· Sao chép toàn bộ mô tả công việc và yêu cầu ứng viên</li>
-                  <li>· Bản sao luôn bắt đầu ở trạng thái Nháp, không kể thứ tự sử dụng</li>
+                  <li>Sao chép mô tả công việc và yêu cầu ứng viên từ một tin tuyển dụng có sẵn.</li>
+                  <li>Mọi bản sao mới luôn bắt đầu ở trạng thái Nháp, bất kể trạng thái tin tuyển dụng gốc.</li>
                 </ul>
               </div>
             </div>
+
+            <section class="section-block reuse-section" aria-labelledby="reuse-title">
+              <div class="reuse-heading">
+                <div>
+                  <h2 class="section-title" id="reuse-title">Bản sao tuyển dụng</h2>
+                  <p class="reuse-help">Tạo tin mới từ nội dung tuyển dụng đã có.</p>
+                </div>
+                <button class="primary-btn" id="open-copy-dialog" type="button">＋ Tạo bản sao</button>
+              </div>
+              <div class="copy-list" id="copy-list" aria-live="polite"></div>
+            </section>
 
             <div class="section-block">
               <div class="section-title">Subtasks</div>
@@ -276,5 +287,48 @@
         </div>
       </main>
     </div>
+
+    <dialog class="copy-dialog" id="copy-dialog" aria-labelledby="copy-dialog-title">
+      <form id="copy-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="dialog-eyebrow">KN-115 · Tái sử dụng nội dung</p>
+            <h2 id="copy-dialog-title">Tạo bản sao tuyển dụng</h2>
+            <p class="dialog-description">Chọn tin gốc. Mô tả và yêu cầu sẽ được sao chép; tin mới luôn ở trạng thái Nháp.</p>
+          </div>
+          <button class="dialog-close" id="close-copy-dialog" type="button" aria-label="Đóng">×</button>
+        </div>
+
+        <label class="form-field">
+          <span>Tin tuyển dụng gốc <span class="required-mark">*</span></span>
+          <select id="source-job" name="sourceJob" required>
+            <option value="">Chọn tin tuyển dụng</option>
+          </select>
+        </label>
+        <label class="form-field">
+          <span>Tên tin tuyển dụng mới <span class="required-mark">*</span></span>
+          <input id="copy-title" name="title" type="text" maxlength="160" required />
+        </label>
+        <label class="form-field">
+          <span>Mô tả công việc <span class="required-mark">*</span></span>
+          <textarea id="copy-description" name="description" rows="5" required></textarea>
+        </label>
+        <label class="form-field">
+          <span>Yêu cầu ứng viên <span class="required-mark">*</span></span>
+          <textarea id="copy-requirements" name="requirements" rows="5" required></textarea>
+        </label>
+
+        <p class="form-error" id="copy-error" role="alert" hidden></p>
+        <div class="dialog-footer">
+          <span class="draft-note">Trạng thái sau khi tạo: <strong>Nháp</strong></span>
+          <div class="dialog-actions">
+            <button class="secondary-btn" id="cancel-copy" type="button">Hủy</button>
+            <button class="primary-btn" type="submit">Tạo bản sao Nháp</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+    <div class="toast" id="copy-toast" role="status" aria-live="polite"></div>
+    <script src="script.js"></script>
   </body>
 </html>
