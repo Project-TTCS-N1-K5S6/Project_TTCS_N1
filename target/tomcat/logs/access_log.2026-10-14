@@ -624,3 +624,15 @@
 0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:29:46 +0700] "GET /candidates HTTP/1.1" 200 86176 http-bio-8088-exec-1 71
 0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:29:46 +0700] "GET /assets/css/main.css?v=2.1 HTTP/1.1" 304 - http-bio-8088-exec-1 1
 0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:29:51 +0700] "GET /candidates HTTP/1.1" 200 86176 http-bio-8088-exec-1 51
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:18 +0700] "GET /candidates HTTP/1.1" 200 85744 http-bio-8088-exec-3 140
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:18 +0700] "GET /assets/css/main.css?v=2.1 HTTP/1.1" 304 - http-bio-8088-exec-3 1
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:18 +0700] "GET /uploads/avatars/avatar_usr-001_1791508657914_thumb.jpg HTTP/1.1" 304 - http-bio-8088-exec-3 2
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:18 +0700] "GET /uploads/avatars/avatar_usr-001_1791508657914.jpg HTTP/1.1" 304 - http-bio-8088-exec-6 2
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:18 +0700] "GET /assets/js/main.js HTTP/1.1" 304 - http-bio-8088-exec-2 1
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:23 +0700] "GET /recruitment-requests HTTP/1.1" 200 135514 http-bio-8088-exec-2 50
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:24 +0700] "GET /post-publishing HTTP/1.1" 200 75438 http-bio-8088-exec-2 285
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:25 +0700] "GET /candidates HTTP/1.1" 200 85744 http-bio-8088-exec-2 51
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:26 +0700] "GET /salary-ranges HTTP/1.1" 200 95505 http-bio-8088-exec-2 53
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:27 +0700] "GET /competency-frameworks HTTP/1.1" 200 80226 http-bio-8088-exec-8 30
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:28 +0700] "GET /admin/questions HTTP/1.1" 200 63521 http-bio-8088-exec-5 32
+0:0:0:0:0:0:0:1 - - [14/Oct/2026:00:41:29 +0700] "GET /admin/shared-catalogs HTTP/1.1" 200 46543 http-bio-8088-exec-5 32
