@@ -2,7 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 
-<c:set var="pageTitle" value="${isEdit ? 'Chỉnh sửa Yêu cầu tuyển dụng' : 'Tạo mới Yêu cầu tuyển dụng'}" />
+<c:set var="pageTitle" value="${isEdit ? 'Chỉnh sửa Yêu cầu tuyển dụng' : (isCopy ? 'Sao chép nội dung tuyển dụng' : 'Tạo mới Yêu cầu tuyển dụng')}" />
 <c:set var="breadcrumb" value="Yêu cầu tuyển dụng" />
 <c:set var="activeMenu" value="requisitions" />
 
@@ -15,6 +15,13 @@
     <div class="app-content">
         <jsp:include page="../common/alerts.jsp" />
 
+        <c:if test="${isCopy}">
+            <div class="alert alert-info border shadow-sm">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Mô tả công việc và yêu cầu ứng viên đã được sao chép. Hãy điền thông tin còn lại; yêu cầu mới sẽ luôn được lưu ở trạng thái Nháp.
+            </div>
+        </c:if>
+
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
@@ -25,6 +32,9 @@
                         <c:choose>
                             <c:when test="${isEdit}">
                                 <i class="bi bi-pencil-square text-primary me-2"></i>Chỉnh sửa Yêu cầu tuyển dụng: <span class="text-primary font-monospace">${reqItem.code}</span>
+                            </c:when>
+                            <c:when test="${isCopy}">
+                                <i class="bi bi-copy text-success me-2"></i>Sao chép nội dung tuyển dụng
                             </c:when>
                             <c:otherwise>
                                 <i class="bi bi-file-earmark-plus-fill text-primary me-2"></i>Tạo mới Yêu cầu tuyển dụng
@@ -150,6 +160,9 @@
         <form id="requisitionForm" method="post" action="${pageContext.request.contextPath}/recruitment-requests/save" novalidate>
             <input type="hidden" name="id" value="${reqItem.id}">
             <input type="hidden" name="code" value="${isEdit ? reqItem.code : nextCode}">
+            <c:if test="${isCopy}">
+                <input type="hidden" name="copyMode" value="true">
+            </c:if>
 
             <div class="row g-4">
                 <!-- Cột trái: Thông tin vị trí & Ngân sách lương -->
@@ -175,7 +188,7 @@
                                     <label class="form-label text-muted small fw-semibold">Tiêu đề phiếu yêu cầu</label>
                                     <input type="text" name="title" id="titleInput" class="form-control form-control-sm" 
                                            placeholder="VD: Tuyển dụng Kỹ sư Java Backend Senior"
-                                           value="${reqItem.title}">
+                                           value="<c:out value='${reqItem.title}' />">
                                 </div>
 
                                 <!-- Chức danh cần tuyển -->
@@ -361,7 +374,7 @@
                         </div>
                         <div class="card-body">
                             <textarea name="jobDescription" id="jobDescriptionInput" class="form-control font-sans" rows="7" 
-                                      placeholder="- Tham gia thiết kế và phát triển các hệ thống Backend...&#10;- Tối ưu hóa hiệu năng cơ sở dữ liệu và API...&#10;- Phối hợp cùng đội ngũ QA và Product Manager...">${reqItem.jobDescription}</textarea>
+                                      placeholder="- Tham gia thiết kế và phát triển các hệ thống Backend...&#10;- Tối ưu hóa hiệu năng cơ sở dữ liệu và API...&#10;- Phối hợp cùng đội ngũ QA và Product Manager..."><c:out value="${reqItem.jobDescription}" /></textarea>
                             <div class="form-text text-xs">Mô tả rõ ràng trách nhiệm công việc, nhiệm vụ chính và mục tiêu cần đạt được.</div>
                         </div>
                     </div>
@@ -378,7 +391,7 @@
                         </div>
                         <div class="card-body">
                             <textarea name="jobRequirements" id="jobRequirementsInput" class="form-control font-sans" rows="7" 
-                                      placeholder="- Tối thiểu 3 năm kinh nghiệm lập trình Java Servlet/Spring...&#10;- Thành thạo MySQL, tối ưu câu lệnh truy vấn...&#10;- Kỹ năng làm việc nhóm, tư duy giải quyết vấn đề tốt...">${reqItem.jobRequirements}</textarea>
+                                      placeholder="- Tối thiểu 3 năm kinh nghiệm lập trình Java Servlet/Spring...&#10;- Thành thạo MySQL, tối ưu câu lệnh truy vấn...&#10;- Kỹ năng làm việc nhóm, tư duy giải quyết vấn đề tốt..."><c:out value="${reqItem.jobRequirements}" /></textarea>
                             <div class="form-text text-xs">Liệt kê kinh nghiệm, bằng cấp, kỹ năng chuyên môn và phẩm chất cần thiết.</div>
                         </div>
                     </div>
@@ -391,11 +404,13 @@
                                 Bạn có thể <b>Lưu nháp</b> để tiếp tục bổ sung thông tin sau mà không bị ràng buộc các trường chưa hoàn tất, hoặc <b>Gửi duyệt</b> để chuyển tiếp yêu cầu đến cấp quản lý.
                             </p>
                             <div class="d-grid gap-2">
-                                <button type="submit" name="action" value="submit" class="btn btn-primary shadow-sm fw-semibold py-2" id="submitBtn">
-                                    <i class="bi bi-send-check-fill me-1"></i> Gửi phê duyệt yêu cầu
-                                </button>
+                                <c:if test="${not isCopy}">
+                                    <button type="submit" name="action" value="submit" class="btn btn-primary shadow-sm fw-semibold py-2" id="submitBtn">
+                                        <i class="bi bi-send-check-fill me-1"></i> Gửi phê duyệt yêu cầu
+                                    </button>
+                                </c:if>
                                 <button type="submit" name="action" value="draft" class="btn btn-outline-secondary py-2" id="draftBtn">
-                                    <i class="bi bi-save me-1"></i> Lưu bản nháp (Draft)
+                                    <i class="bi bi-save me-1"></i> ${isCopy ? 'Tạo bản sao Nháp' : 'Lưu bản nháp (Draft)'}
                                 </button>
                                 <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn btn-link text-muted btn-sm text-decoration-none">
                                     Hủy bỏ và quay lại danh sách

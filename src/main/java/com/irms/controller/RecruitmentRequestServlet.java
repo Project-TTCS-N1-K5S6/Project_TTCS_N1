@@ -166,6 +166,20 @@ public class RecruitmentRequestServlet extends HttpServlet {
             throws ServletException, IOException {
         List<Department> departments = departmentService.getAllDepartments();
         List<SalaryRange> salaryRanges = salaryRangeService.getAllSalaryRanges();
+        String copyFrom = request.getParameter("copyFrom");
+
+        if (copyFrom != null && !copyFrom.trim().isEmpty()) {
+            RecruitmentRequest source = requisitionService.getRequestById(copyFrom.trim());
+            if (source == null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("flashError", "Không tìm thấy yêu cầu tuyển dụng cần sao chép!");
+                response.sendRedirect(request.getContextPath() + "/recruitment-requests");
+                return;
+            }
+
+            request.setAttribute("reqItem", createDraftCopy(source));
+            request.setAttribute("isCopy", true);
+        }
 
         request.setAttribute("departments", departments);
         request.setAttribute("salaryRanges", salaryRanges);
@@ -228,7 +242,8 @@ public class RecruitmentRequestServlet extends HttpServlet {
         String userAgent = request.getHeader("User-Agent");
 
         String action = request.getParameter("action");
-        boolean isDraft = "draft".equalsIgnoreCase(action);
+        boolean isCopy = "true".equalsIgnoreCase(request.getParameter("copyMode"));
+        boolean isDraft = isCopy || "draft".equalsIgnoreCase(action);
 
         String id = request.getParameter("id");
         boolean isEdit = (id != null && !id.trim().isEmpty());
@@ -281,12 +296,20 @@ public class RecruitmentRequestServlet extends HttpServlet {
             req.setSalaryExplanation(request.getParameter("salaryExplanation"));
 
             if (isEdit) {
-                requisitionService.updateRequest(req, isDraft, actorId, ip, userAgent);
+                if (!requisitionService.updateRequest(req, isDraft, actorId, ip, userAgent)) {
+                    throw new IllegalStateException("Không thể lưu yêu cầu tuyển dụng. Vui lòng thử lại.");
+                }
             } else {
-                requisitionService.createRequest(req, isDraft, actorId, ip, userAgent);
+                if (!requisitionService.createRequest(req, isDraft, actorId, ip, userAgent)) {
+                    throw new IllegalStateException("Không thể lưu yêu cầu tuyển dụng. Vui lòng thử lại.");
+                }
             }
 
-            String msg = isDraft ? "Đã lưu nháp yêu cầu tuyển dụng thành công!" : "Yêu cầu tuyển dụng đã được gửi duyệt thành công!";
+            String msg = isCopy
+                ? "Đã tạo bản sao tuyển dụng ở trạng thái Nháp!"
+                : isDraft
+                    ? "Đã lưu nháp yêu cầu tuyển dụng thành công!"
+                    : "Yêu cầu tuyển dụng đã được gửi duyệt thành công!";
             if (session != null) session.setAttribute("flashSuccess", msg);
             response.sendRedirect(request.getContextPath() + "/recruitment-requests");
 
@@ -300,12 +323,27 @@ public class RecruitmentRequestServlet extends HttpServlet {
             request.setAttribute("salaryRanges", salaryRangeService.getAllSalaryRanges());
             request.setAttribute("todayDate", LocalDate.now().toString());
             request.setAttribute("isEdit", isEdit);
+            request.setAttribute("isCopy", isCopy);
             request.getRequestDispatcher("/WEB-INF/views/recruitment/form.jsp").forward(request, response);
 
         } catch (Exception e) {
             if (session != null) session.setAttribute("flashError", "Lỗi xử lý hệ thống: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/recruitment-requests");
         }
+    }
+
+    static RecruitmentRequest createDraftCopy(RecruitmentRequest source) {
+        if (source == null) {
+            throw new IllegalArgumentException("Tin tuyển dụng gốc không hợp lệ.");
+        }
+
+        RecruitmentRequest copy = new RecruitmentRequest();
+        String title = "Bản sao - " + (source.getTitle() == null ? "" : source.getTitle());
+        copy.setTitle(title.length() <= 255 ? title : title.substring(0, 255));
+        copy.setPositionTitle(source.getPositionTitle());
+        copy.setJobDescription(source.getJobDescription());
+        copy.setJobRequirements(source.getJobRequirements());
+        return copy;
     }
 
     private void handleSalaryBenchmarkApi(HttpServletRequest request, HttpServletResponse response)
@@ -572,4 +610,3 @@ public class RecruitmentRequestServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/recruitment-requests");
     }
 }
-
