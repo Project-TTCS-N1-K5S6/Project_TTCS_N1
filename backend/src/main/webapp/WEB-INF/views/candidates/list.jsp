@@ -25,6 +25,29 @@
             </button>
         </div>
 
+        <%-- [KN-116]: Thông báo phạm vi hiển thị cho Recruiter được phân công --%>
+        <c:if test="${currentUser.hasRole('RECRUITER') && !currentUser.hasRole('ADMIN') && !currentUser.hasRole('HR_MANAGER')}">
+            <div class="alert alert-info d-flex align-items-start gap-3 border border-info-subtle shadow-sm mb-3" role="alert"
+                 style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 10px;">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="rounded-circle bg-info bg-opacity-15 d-flex align-items-center justify-content-center"
+                         style="width: 36px; height: 36px;">
+                        <i class="bi bi-shield-lock-fill text-info"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="fw-bold text-info-emphasis mb-1">
+                        <i class="bi bi-info-circle me-1"></i>Phạm vi hiển thị bị giới hạn (KN-116)
+                    </div>
+                    <div class="text-info-emphasis small">
+                        Bạn chỉ xem được hồ sơ ứng viên của các <strong>vị trí tuyển dụng được giao cho bạn</strong>
+                        (vai trò Recruiter Chính hoặc Recruiter Hỗ trợ).
+                        Liên hệ HR Manager nếu cần mở rộng quyền truy cập.
+                    </div>
+                </div>
+            </div>
+        </c:if>
+
         <!-- Bộ lọc trạng thái Pipeline -->
         <div class="d-flex flex-wrap gap-2 mb-3">
             <a href="${pageContext.request.contextPath}/candidates" 

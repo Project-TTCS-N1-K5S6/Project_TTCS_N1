@@ -186,6 +186,13 @@
                                                        class="btn btn-outline-primary p-1" style="line-height: 1;" title="Chỉnh sửa yêu cầu">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                    <%-- [KN-116]: Phân bổ recruiter --%>
+                                                    <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('requisitions.assign')}">
+                                                        <a href="${pageContext.request.contextPath}/recruitment-requests/assign?id=${r.id}"
+                                                           class="btn btn-outline-success p-1" style="line-height: 1;" title="Phân bổ Recruiter (KN-116)">
+                                                            <i class="bi bi-person-lines-fill"></i>
+                                                        </a>
+                                                    </c:if>
                                                 </div>
                                                 <!-- Hidden data for modal view -->
                                                 <div id="jd-${r.id}" style="display:none;"><c:out value="${r.jobDescription}" /></div>

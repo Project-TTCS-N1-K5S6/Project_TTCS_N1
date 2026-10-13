@@ -272,6 +272,13 @@
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
                                                     </c:if>
+                                                    <%-- [KN-116]: Phân bổ recruiter --%>
+                                                    <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('requisitions.assign')}">
+                                                        <a href="${pageContext.request.contextPath}/recruitment-requests/assign?id=${r.id}"
+                                                           class="btn btn-outline-success" title="Phân bổ Recruiter (KN-116)">
+                                                            <i class="bi bi-person-lines-fill"></i>
+                                                        </a>
+                                                    </c:if>
                                                     <!-- Quản lý xuất bản tin tuyển dụng -->
                                                     <a href="${pageContext.request.contextPath}/post-publishing?search=${r.code}" 
                                                        class="btn btn-outline-success" title="Quản lý xuất bản bài đăng (KN-120)">

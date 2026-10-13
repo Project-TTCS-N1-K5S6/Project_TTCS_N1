@@ -215,6 +215,16 @@ public class AuthFilter implements Filter {
                 request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                 return;
             }
+            // [KN-116]: Endpoint phân bổ recruiter – chỉ ADMIN / HR_MANAGER / người có quyền requisitions.assign
+            if (path.startsWith("/recruitment-requests/assign")) {
+                boolean canAssign = currentUser.hasRole("ADMIN")
+                        || currentUser.hasRole("HR_MANAGER")
+                        || currentUser.hasPermission("requisitions.assign");
+                if (!canAssign) {
+                    request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                    return;
+                }
+            }
         }
 
         // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing) [KN-120]
