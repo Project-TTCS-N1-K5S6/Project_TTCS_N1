@@ -15,6 +15,7 @@ const SessionModel = require('./models/sessionModel');
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
+const recruitmentApprovalRoutes = require('./routes/recruitmentApprovalRoutes');
 
 const app = express();
 
@@ -106,6 +107,7 @@ app.use(express.static(path.join(__dirname, '../FE')));
 // ============================================================
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/evaluations', evaluationRoutes);
+app.use('/api/v1/approvals', recruitmentApprovalRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {

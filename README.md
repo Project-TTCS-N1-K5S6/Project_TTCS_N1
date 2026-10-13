@@ -151,6 +151,7 @@ Lệnh `npm run migrate` sẽ tự động tạo cấu trúc các bảng:
 - `session`: Bảng lưu session store của `connect-pg-simple`.
 - `evaluation_forms`: Dữ liệu phiếu đánh giá sau khi hoàn tất nộp.
 - `evaluation_drafts`: Bản nháp tự động lưu dạng JSONB theo từng nhân viên.
+- `recruitment_approval_requests`, `recruitment_approval_steps`, `recruitment_approval_history`: Hồ sơ tuyển dụng, các cấp phê duyệt và lịch sử quyết định.
 - Seed sẵn 3 tài khoản mẫu với mật khẩu chuẩn bcrypt cost 12.
 
 ### 3. Khởi Động Server
@@ -176,6 +177,31 @@ Tất cả tài khoản mẫu có mật khẩu ban đầu là: `TempPassword123`
 | **Nguyễn Thị Mai** | `TP001` | `mai.nt@company.com` | `truong_phong` | Trưởng phòng đánh giá |
 
 *(Trên giao diện `login.html`, có sẵn các nút bấm 1-click điền thông tin nhanh cho các tài khoản trên)*.
+
+---
+
+## Trung tâm Phê duyệt Tuyển dụng
+
+Sau khi đăng nhập, mở `http://localhost:5000/approvals.html` hoặc chọn **Phê duyệt tuyển dụng** trên Dashboard. Người tạo lập hồ sơ, chọn từ 1 đến 5 người phê duyệt theo thứ tự cấp. Người được giao xử lý hồ sơ ở cấp hiện tại bằng một trong ba hành động:
+
+- **Duyệt**: chuyển tự động sang cấp kế tiếp; duyệt ở cấp cuối sẽ hoàn tất hồ sơ.
+- **Từ chối**: kết thúc hồ sơ; bắt buộc nhập ý kiến.
+- **Yêu cầu bổ sung**: chuyển hồ sơ về người tạo; bắt buộc nhập ý kiến. Người tạo gửi thông tin bổ sung để tiếp tục đúng cấp đang chờ. Các ý kiến và hành động trước đó vẫn được lưu trong lịch sử.
+
+Các bảng nghiệp vụ được tạo bởi `npm run migrate`. Có thể chạy lại migration an toàn trên database đã khởi tạo.
+
+### API phê duyệt (`/api/v1/approvals`)
+
+Tất cả endpoint yêu cầu đăng nhập và chỉ trả hồ sơ của người tạo hoặc người được giao phê duyệt.
+
+| Method | Endpoint | Mô tả |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/approvals/reviewers` | Danh sách người có thể được giao phê duyệt |
+| `GET` | `/api/v1/approvals` | Hồ sơ do người dùng tạo hoặc được giao |
+| `POST` | `/api/v1/approvals` | Tạo hồ sơ với `title`, `details`, `reviewerIds` theo thứ tự |
+| `GET` | `/api/v1/approvals/:id` | Chi tiết, các cấp và lịch sử hồ sơ |
+| `POST` | `/api/v1/approvals/:id/decisions` | Ghi quyết định `APPROVE`, `REJECT` hoặc `REQUEST_MORE_INFO` |
+| `POST` | `/api/v1/approvals/:id/resubmit` | Gửi thông tin bổ sung bằng trường `response` |
 
 ---
 

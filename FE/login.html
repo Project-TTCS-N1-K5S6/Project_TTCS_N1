@@ -411,15 +411,15 @@
       <!-- Quick-fill accounts for development -->
       <div class="quick-login" aria-label="Tài khoản thử nghiệm">
         <div class="quick-login-title">🔑 Tài khoản thử nghiệm</div>
-        <button class="quick-acc" onclick="fillAccount('hoang.ta@company.com', 'TempPassword123')" type="button">
+        <button class="quick-acc" data-email="hoang.ta@company.com" data-password="TempPassword123" type="button">
           <span><strong>Hoàng Tiến Anh</strong> · NS001</span>
           <span class="role-badge badge-nhan_su">Nhân sự</span>
         </button>
-        <button class="quick-acc" onclick="fillAccount('cuong.sv@company.com', 'TempPassword123')" type="button">
+        <button class="quick-acc" data-email="cuong.sv@company.com" data-password="TempPassword123" type="button">
           <span><strong>Sìn Văn Cương</strong> · QT001</span>
           <span class="role-badge badge-quan_tri">Quản trị</span>
         </button>
-        <button class="quick-acc" onclick="fillAccount('mai.nt@company.com', 'TempPassword123')" type="button">
+        <button class="quick-acc" data-email="mai.nt@company.com" data-password="TempPassword123" type="button">
           <span><strong>Nguyễn Thị Mai</strong> · TP001</span>
           <span class="role-badge badge-truong_phong">Trưởng phòng</span>
         </button>
@@ -483,6 +483,11 @@
 
       // ── Eye Toggle ──
       const passwordInput = document.getElementById('password');
+      document.querySelectorAll('.quick-acc').forEach((button) => {
+        button.addEventListener('click', () => {
+          fillAccount(button.dataset.email, button.dataset.password);
+        });
+      });
       document.getElementById('togglePassword').addEventListener('click', () => {
         const isPass = passwordInput.type === 'password';
         passwordInput.type = isPass ? 'text' : 'password';
