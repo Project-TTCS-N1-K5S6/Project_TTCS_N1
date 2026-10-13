@@ -172,17 +172,6 @@ public class AuthFilter implements Filter {
                 !currentUser.hasPermission("requisitions.create") &&
                 !currentUser.hasPermission("requisitions.approve") &&
                 !currentUser.hasRole("ADMIN")) {
-<<<<<<< HEAD
-=======
-                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
-                return;
-            }
-        }
-
-        // 5. Phân hệ Dải lương: Cấm tuyệt đối Người phỏng vấn (INTERVIEWER) & yêu cầu quyền salary.view hoặc ADMIN (US 5)
-        if (path.startsWith("/salary-ranges")) {
-            if (currentUser.hasRole("INTERVIEWER") && !currentUser.hasRole("ADMIN")) {
->>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                 request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                 return;
             }

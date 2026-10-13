@@ -135,7 +135,6 @@ public class SalaryRangeDAO extends BaseDAO {
         return list;
     }
 
-<<<<<<< HEAD
     public int countAll(String search, String departmentId, String level) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM salary_ranges s WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
@@ -181,8 +180,6 @@ public class SalaryRangeDAO extends BaseDAO {
     /**
      * Tìm dải lương theo phòng ban và chức danh (dùng để kiểm tra hợp lệ khi tạo yêu cầu tuyển dụng)
      */
-=======
->>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
     public SalaryRange findByDepartmentAndPosition(String departmentId, String positionTitle) {
         if (positionTitle == null || positionTitle.trim().isEmpty()) return null;
         String sql;
@@ -210,21 +207,7 @@ public class SalaryRangeDAO extends BaseDAO {
             }
             rs = ps.executeQuery();
             if (rs.next()) {
-<<<<<<< HEAD
                 return mapResultSetToSalaryRange(rs);
-=======
-                SalaryRange sr = new SalaryRange();
-                sr.setId(rs.getString("id"));
-                sr.setDepartmentId(rs.getString("department_id"));
-                sr.setDepartmentName(rs.getString("department_name"));
-                sr.setPositionTitle(rs.getString("position_title"));
-                sr.setMinSalary(rs.getBigDecimal("min_salary"));
-                sr.setMaxSalary(rs.getBigDecimal("max_salary"));
-                sr.setCurrency(rs.getString("currency"));
-                sr.setCreatedAt(rs.getTimestamp("created_at"));
-                sr.setUpdatedAt(rs.getTimestamp("updated_at"));
-                return sr;
->>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi tìm dải lương theo vị trí", e);
@@ -239,7 +222,7 @@ public class SalaryRangeDAO extends BaseDAO {
         return null;
     }
 
-<<<<<<< HEAD
+
     /**
      * Tìm dải lương theo ID
      */
@@ -377,8 +360,6 @@ public class SalaryRangeDAO extends BaseDAO {
     /**
      * Thêm mới một dải lương chức danh
      */
-=======
->>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
     public boolean insert(SalaryRange sr) {
         String sql = "INSERT INTO salary_ranges (id, position_code, position_title, level, department_id, min_salary, max_salary, currency, note) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
