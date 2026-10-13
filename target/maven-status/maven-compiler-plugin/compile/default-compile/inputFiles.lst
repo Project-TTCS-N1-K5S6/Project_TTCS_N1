@@ -50,11 +50,8 @@ E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyFrameworkDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PermissionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\JsonUtil.java
 E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
-<<<<<<< HEAD
-E:\ttcs_n1\src\main\java\com\irms\dao\JobPostingDAO.java
-=======
 E:\ttcs_n1\src\main\java\com\irms\service\ApprovalMatrixService.java
->>>>>>> origin/feature/approval-matrix
+E:\ttcs_n1\src\main\java\com\irms\dao\JobPostingDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\QuestionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyCriterionService.java
 E:\ttcs_n1\src\main\java\com\irms\service\QuestionService.java

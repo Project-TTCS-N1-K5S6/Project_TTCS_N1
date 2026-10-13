@@ -336,7 +336,6 @@ public class RecruitmentRequestServlet extends HttpServlet {
         JsonUtil.sendJsonResponse(response, 200, result);
     }
 
-<<<<<<< HEAD
     private void handleCheckPipeline(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String id = request.getParameter("id");
