@@ -1,4 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.CompanyProfileTest
 -------------------------------------------------------------------------------
+<<<<<<< HEAD
 Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.394 s -- in com.irms.CompanyProfileTest
+=======
+Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.066 s -- in com.irms.CompanyProfileTest
+>>>>>>> origin/feature/approval-matrix

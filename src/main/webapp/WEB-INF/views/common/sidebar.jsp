@@ -129,6 +129,14 @@
                         </a>
                     </li>
                 </c:if>
+                <c:if test="${currentUser.hasPermission('approval_matrix.view') || currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER')}">
+                    <li class="nav-item">
+                        <a class="nav-link ${activeMenu == 'approval-matrix' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/approval-matrix">
+                            <i class="bi bi-diagram-2-fill"></i>
+                            <span>Ma trận phê duyệt</span>
+                        </a>
+                    </li>
+                </c:if>
                 <c:if test="${currentUser.hasPermission('audit.view') || currentUser.hasRole('ADMIN')}">
                     <li class="nav-item">
                         <a class="nav-link ${activeMenu == 'audit' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/audit-logs">

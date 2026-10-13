@@ -1,4 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.service.ProfileServiceTest
 -------------------------------------------------------------------------------
+<<<<<<< HEAD
 Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.irms.service.ProfileServiceTest
+=======
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in com.irms.service.ProfileServiceTest
+>>>>>>> origin/feature/approval-matrix

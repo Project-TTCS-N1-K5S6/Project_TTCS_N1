@@ -13,5 +13,14 @@ if not exist "target\tomcat\conf\tomcat-users.xml" (
 echo ========================================================
 echo   DANG KHOI DONG HE THONG IRMS TAI HTTP://LOCALHOST:8088
 echo ========================================================
-call "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" -o tomcat7:run
+if exist "target\tomcat" if not exist "target\tomcat\conf\tomcat-users.xml" (
+    echo [INFO] Phat hien cau hinh Tomcat loi, dang don dep target\tomcat...
+    rd /s /q "target\tomcat" >nul 2>&1
+)
+
+if exist "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" (
+    call "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" -o tomcat7:run
+) else (
+    call mvn.cmd -o tomcat7:run
+)
 pause

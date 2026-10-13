@@ -23,7 +23,8 @@ public class DatabaseIntegrityTest {
                 "audit_logs", "email_outbox", "shared_catalogs",
                 "recruitment_requisitions", "candidates", "salary_ranges",
                 "competency_criteria", "questions", "competency_frameworks",
-                "competency_framework_criteria", "position_competency_frameworks"
+                "competency_framework_criteria", "position_competency_frameworks",
+                "approval_matrices", "approval_matrix_steps", "requisition_approval_steps"
             };
 
             for (String table : tables) {

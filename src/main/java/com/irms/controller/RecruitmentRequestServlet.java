@@ -2,6 +2,7 @@ package com.irms.controller;
 
 import com.irms.model.Department;
 import com.irms.model.RecruitmentRequest;
+import com.irms.model.RequisitionApprovalStep;
 import com.irms.model.SalaryRange;
 import com.irms.model.User;
 import com.irms.service.DepartmentService;
@@ -35,7 +36,10 @@ import java.util.Map;
         "/recruitment-requests/save",
         "/recruitment-requests/close",
         "/recruitment-requests/check-pipeline",
-        "/recruitment-requests/api/salary-benchmark"
+        "/recruitment-requests/api/salary-benchmark",
+        "/recruitment-requests/api/approval-steps",
+        "/recruitment-requests/approve-step",
+        "/recruitment-requests/reject-step"
 })
 public class RecruitmentRequestServlet extends HttpServlet {
 
@@ -60,7 +64,13 @@ public class RecruitmentRequestServlet extends HttpServlet {
             return;
         }
 
-        // 3. Màn hình Tạo mới yêu cầu tuyển dụng
+        // 3. AJAX API: Lấy danh sách các cấp phê duyệt đã đóng băng của yêu cầu
+        if ("/recruitment-requests/api/approval-steps".equals(path)) {
+            handleApprovalStepsApi(request, response);
+            return;
+        }
+
+        // 4. Màn hình Tạo mới yêu cầu tuyển dụng
         if ("/recruitment-requests/create".equals(path)) {
             showCreateForm(request, response);
             return;
@@ -88,6 +98,16 @@ public class RecruitmentRequestServlet extends HttpServlet {
 
         if ("/recruitment-requests/close".equals(path)) {
             handleCloseRequisition(request, response);
+            return;
+        }
+
+        if ("/recruitment-requests/approve-step".equals(path)) {
+            handleApproveStep(request, response);
+            return;
+        }
+
+        if ("/recruitment-requests/reject-step".equals(path)) {
+            handleRejectStep(request, response);
             return;
         }
 
@@ -316,6 +336,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
         JsonUtil.sendJsonResponse(response, 200, result);
     }
 
+<<<<<<< HEAD
     private void handleCheckPipeline(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String id = request.getParameter("id");
@@ -403,5 +424,53 @@ public class RecruitmentRequestServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/recruitment-requests");
             }
         }
+    }
+
+    private void handleApprovalStepsApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String id = request.getParameter("id");
+        List<RequisitionApprovalStep> steps = requisitionService.getApprovalSteps(id);
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("steps", steps);
+        JsonUtil.sendJsonResponse(response, 200, result);
+    }
+
+    private void handleApproveStep(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        String requisitionId = request.getParameter("requisitionId");
+        String stepId = request.getParameter("stepId");
+        String comment = request.getParameter("comment");
+        String ip = SecurityUtil.getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        try {
+            requisitionService.approveStep(requisitionId, stepId, comment, currentUser, ip, userAgent);
+            if (session != null) session.setAttribute("flashSuccess", "Đã phê duyệt cấp này thành công!");
+        } catch (Exception e) {
+            if (session != null) session.setAttribute("flashError", e.getMessage());
+        }
+        response.sendRedirect(request.getContextPath() + "/recruitment-requests");
+    }
+
+    private void handleRejectStep(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        String requisitionId = request.getParameter("requisitionId");
+        String stepId = request.getParameter("stepId");
+        String reason = request.getParameter("reason");
+        String ip = SecurityUtil.getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        try {
+            requisitionService.rejectStep(requisitionId, stepId, reason, currentUser, ip, userAgent);
+            if (session != null) session.setAttribute("flashSuccess", "Đã từ chối phê duyệt yêu cầu này!");
+        } catch (Exception e) {
+            if (session != null) session.setAttribute("flashError", e.getMessage());
+        }
+        response.sendRedirect(request.getContextPath() + "/recruitment-requests");
     }
 }

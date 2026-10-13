@@ -1,4 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.DatabaseIntegrityTest
 -------------------------------------------------------------------------------
+<<<<<<< HEAD
 Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.241 s -- in com.irms.DatabaseIntegrityTest
+=======
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.053 s -- in com.irms.DatabaseIntegrityTest
+>>>>>>> origin/feature/approval-matrix
