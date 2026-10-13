@@ -166,7 +166,7 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT 'role-004', id FROM permissions
 WHERE code IN (
     'department.view',
-    'requisitions.view', 'requisitions.create',
+    'requisitions.view', 'requisitions.create', 'requisitions.approve',
     'job_postings.view',
     'candidates.view',
     'interviews.view',
@@ -229,6 +229,24 @@ INSERT INTO recruitment_requisitions (id, code, title, position_title, departmen
 ('req-002', 'REQ-2026-002', 'Tuyển dụng Chuyên viên Tuyển dụng Nhân sự', 'Chuyên viên Tuyển dụng (Recruiter)', 'dept-002', 1, 'REPLACEMENT', 10000000.00, 18000000.00, 'VND', '2026-11-15', '- Tìm kiếm nguồn ứng viên tiềm năng cho các vị trí công nghệ.\n- Sàng lọc CV, điều phối lịch phỏng vấn và gửi Offer Letter.\n- Xây dựng thương hiệu tuyển dụng trên LinkedIn, TopCV.', '- Tối thiểu 1 năm kinh nghiệm tuyển dụng IT/Tech.\n- Kỹ năng giao tiếp xuất sắc, chủ động và khéo léo.', NULL, 'OPEN', 'usr-003', 'usr-002', 'cat-loc-hanoi', 'cat-mode-office', 'usr-002'),
 ('req-003', 'REQ-2026-003', 'Tuyển dụng Trưởng nhóm Kinh doanh B2B', 'Trưởng nhóm Kinh doanh B2B', 'dept-004', 1, 'REPLACEMENT', 25000000.00, 42000000.00, 'VND', '2026-12-01', '- Quản lý đội ngũ kinh doanh 8 nhân sự, phụ trách KPI doanh số.\n- Tiếp cận khách hàng doanh nghiệp và đối tác chiến lược.\n- Đàm phán và ký kết hợp đồng dịch vụ lớn.', '- Tối thiểu 3 năm kinh nghiệm Sales B2B phần mềm/SaaS.\n- Khả năng thương thuyết và dẫn dắt đội ngũ tốt.', 'Đề xuất mức lương 25 - 42M vượt dải chuẩn (20 - 35M) do yêu cầu chuyên gia có sẵn mạng lưới khách hàng doanh nghiệp Enterprise cao cấp.', 'PENDING_APPROVAL', 'usr-003', 'usr-006', 'cat-loc-hcm', 'cat-mode-office', 'usr-006'),
 ('req-004', 'REQ-2026-004', 'Tuyển dụng Kỹ sư Java Backend Junior (Bản nháp)', 'Kỹ sư Java Backend (Junior)', 'dept-003', 3, 'NEW_HEADCOUNT', 12000000.00, 18000000.00, 'VND', '2026-12-15', '- Tham gia phát triển các tính năng phân hệ người dùng theo tài liệu thiết kế.\n- Viết unit test và sửa lỗi hệ thống.', '- Sinh viên mới tốt nghiệp hoặc có dưới 1 năm kinh nghiệm Java.\n- Nắm vững kiến thức OOP, cấu trúc dữ liệu và giải thuật.', NULL, 'DRAFT', 'usr-003', 'usr-004', 'cat-loc-hanoi', 'cat-mode-office', 'usr-004');
+
+-- 7.1. Nhật ký & Chuỗi cấp duyệt Yêu cầu tuyển dụng (recruitment_approval_logs)
+DELETE FROM recruitment_approval_logs;
+INSERT INTO recruitment_approval_logs (id, requisition_id, step_order, step_name, required_role, assigned_user_id, approver_id, status, decision_date, comment) VALUES
+-- req-001 (OPEN - Cả 3 cấp đã duyệt)
+('appr-001-1', 'req-001', 1, 'Cấp 1: Trưởng bộ phận chuyên môn', 'HIRING_MANAGER', 'usr-004', 'usr-004', 'APPROVED', '2026-10-01 09:30:00', 'Đồng ý nhu cầu bổ sung 2 Senior Backend để đảm bảo tiến độ quý 4.'),
+('appr-001-2', 'req-001', 2, 'Cấp 2: Trưởng phòng Nhân sự', 'HR_MANAGER', 'usr-002', 'usr-002', 'APPROVED', '2026-10-01 14:15:00', 'Đã thẩm định dải lương 25 - 45M phù hợp khung chuẩn của công ty.'),
+('appr-001-3', 'req-001', 3, 'Cấp 3: Ban Giám đốc', 'APPROVER', 'usr-006', 'usr-006', 'APPROVED', '2026-10-02 10:00:00', 'Phê duyệt chủ trương mở đợt tuyển dụng. Chúc team tuyển thành công!'),
+
+-- req-002 (OPEN - Cả 3 cấp đã duyệt)
+('appr-002-1', 'req-002', 1, 'Cấp 1: Trưởng bộ phận chuyên môn', 'HIRING_MANAGER', 'usr-002', 'usr-002', 'APPROVED', '2026-10-03 08:45:00', 'Cần tuyển thay thế nhân sự xin nghỉ sinh, công việc cần bàn giao sớm.'),
+('appr-002-2', 'req-002', 2, 'Cấp 2: Trưởng phòng Nhân sự', 'HR_MANAGER', 'usr-002', 'usr-002', 'APPROVED', '2026-10-03 11:20:00', 'Hồ sơ tuyển dụng đầy đủ tiêu chuẩn và bản mô tả công việc (JD).'),
+('appr-002-3', 'req-002', 3, 'Cấp 3: Ban Giám đốc', 'APPROVER', 'usr-006', 'usr-006', 'APPROVED', '2026-10-03 16:30:00', 'Đồng ý duyệt tuyển dụng thay thế.'),
+
+-- req-003 (PENDING_APPROVAL - Cấp 1 đã duyệt, Cấp 2 đang chờ, Cấp 3 chờ)
+('appr-003-1', 'req-003', 1, 'Cấp 1: Trưởng bộ phận chuyên môn', 'HIRING_MANAGER', 'usr-006', 'usr-006', 'APPROVED', '2026-10-10 10:30:00', 'Xác nhận nhu cầu Trưởng nhóm Kinh doanh B2B kèm văn bản giải trình lương vượt khung chuẩn.'),
+('appr-003-2', 'req-003', 2, 'Cấp 2: Trưởng phòng Nhân sự', 'HR_MANAGER', 'usr-002', NULL, 'PENDING', NULL, NULL),
+('appr-003-3', 'req-003', 3, 'Cấp 3: Ban Giám đốc', 'APPROVER', 'usr-006', NULL, 'WAITING', NULL, NULL);
 
 -- 8. Khởi tạo danh sách ứng viên mẫu (Candidates)
 DELETE FROM candidates;

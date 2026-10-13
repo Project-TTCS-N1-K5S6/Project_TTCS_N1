@@ -1756,4 +1756,215 @@ html, body {
   text-decoration: line-through;
 }
 
+/* ==========================================================================
+   APPROVAL WORKFLOW & TIMELINE (NHẬT KÝ & CHUỖI CẤP DUYỆT)
+   Subtasks: KN-154, KN-155, KN-156, KN-157, KN-158, KN-159, KN-160, KN-161
+   ========================================================================== */
+
+/* Hộp thông báo Đang chờ ai */
+.approval-waiting-box {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.approval-waiting-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+/* Stepper ngang */
+.approval-stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  margin: 1.5rem 0 2rem 0;
+  padding: 0 1rem;
+}
+.approval-stepper-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  text-align: center;
+}
+.approval-stepper-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+.approval-stepper-item.completed:not(:last-child)::after {
+  background: #10b981;
+}
+.approval-stepper-item.rejected:not(:last-child)::after {
+  background: #ef4444;
+}
+
+.approval-stepper-node {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #64748b;
+  position: relative;
+  z-index: 2;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.approval-stepper-item.completed .approval-stepper-node {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.approval-stepper-item.active .approval-stepper-node {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.2);
+  animation: pulse-border 2s infinite;
+}
+
+.approval-stepper-item.rejected .approval-stepper-node {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.approval-stepper-item.waiting .approval-stepper-node {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+.approval-stepper-title {
+  margin-top: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  max-width: 140px;
+}
+.approval-stepper-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* Thẻ lịch sử từng bước phê duyệt (Read-only cards) */
+.approval-step-card {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 1.15rem;
+  margin-bottom: 1rem;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-left-width: 5px;
+}
+.approval-step-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+.approval-step-card.status-approved {
+  border-left-color: #10b981;
+}
+.approval-step-card.status-pending {
+  border-left-color: #f59e0b;
+  background: #fffdfa;
+}
+.approval-step-card.status-waiting {
+  border-left-color: #cbd5e1;
+  background: #fcfdfe;
+}
+.approval-step-card.status-rejected {
+  border-left-color: #ef4444;
+  background: #fef7f7;
+}
+.approval-step-card.status-skipped {
+  border-left-color: #94a3b8;
+  opacity: 0.8;
+}
+
+/* Khối trích dẫn ý kiến người duyệt */
+.approval-comment-box {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #3b82f6;
+  font-size: 0.85rem;
+  color: #334155;
+  margin-top: 0.65rem;
+  position: relative;
+}
+.approval-comment-box.comment-approved {
+  border-left-color: #10b981;
+  background: #f0fdf4;
+}
+.approval-comment-box.comment-rejected {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Huy hiệu khóa lịch sử bảo mật (Immutability Lock) */
+.approval-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 30px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.25rem 0.65rem;
+}
+
+/* Avatar biểu tượng người duyệt */
+.approver-avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #3730a3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
 

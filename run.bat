@@ -6,6 +6,10 @@ set "PATH=%JAVA_HOME%\bin;%PATH%"
 echo ========================================================
 echo   DANG KHOI DONG HE THONG IRMS TAI HTTP://LOCALHOST:8088
 echo ========================================================
-call "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" -o tomcat7:run
+if exist "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" (
+    call "E:\maven\apache-maven-3.10.0\bin\mvn.cmd" -o tomcat7:run
+) else (
+    call mvn.cmd -o tomcat7:run
+)
 pause
 
