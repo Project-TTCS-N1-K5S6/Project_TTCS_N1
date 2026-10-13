@@ -1,4 +1,5 @@
 com\irms\config\AppConfig.class
+com\irms\model\RecruiterAssignmentHistory.class
 com\irms\service\JobPublishingService.class
 com\irms\dao\BaseDAO.class
 com\irms\model\Role.class
@@ -45,7 +46,11 @@ com\irms\util\EmailTemplateUtil.class
 com\irms\model\EmailOutboxItem.class
 com\irms\model\CompanyProfile$3.class
 com\irms\model\Question.class
+com\irms\model\RecruiterAssignment.class
+com\irms\service\RecruiterAssignmentService.class
+com\irms\dao\RecruiterAssignmentDAO.class
 com\irms\dao\SalaryRangeDAO.class
 com\irms\service\RolePermissionService.class
 com\irms\dao\JobPostingDAO.class
+com\irms\controller\RecruiterAssignmentServlet.class
 com\irms\controller\RoleServlet.class
