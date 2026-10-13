@@ -324,7 +324,6 @@
             </div>
         </div>
     </div>
-</main>
 
 <style>
 .timeline-container { }

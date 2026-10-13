@@ -8,4 +8,5 @@ com\irms\service\EmailServiceTest.class
 com\irms\RBACPermissionTest.class
 com\irms\CompanyProfileTest.class
 com\irms\DepartmentHierarchyTest.class
+com\irms\controller\RecruitmentRequestCopyTest.class
 com\irms\SalaryRangeTest.class

@@ -72,10 +72,10 @@
                         </select>
                     </div>
                     <div class="col-12 col-lg-2 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-dark flex-grow-1" style="min-height: 38px;">
-                            <i class="bi bi-filter me-1"></i> Lọc
+                        <button type="submit" class="btn btn-dark flex-grow-1" style="min-height: 38px;" title="Lọc danh sách">
+                            <i class="bi bi-funnel-fill"></i>
                         </button>
-                        <a href="${pageContext.request.contextPath}/admin/approval-matrix" class="btn btn-outline-secondary" style="min-height: 38px;" title="Đặt lại bộ lọc">
+                        <a href="${pageContext.request.contextPath}/admin/approval-matrix" class="btn btn-outline-secondary" style="min-height: 38px; width: 44px; display: inline-flex; align-items: center; justify-content: center;" title="Đặt lại bộ lọc">
                             <i class="bi bi-arrow-clockwise"></i>
                         </a>
                     </div>
@@ -87,17 +87,15 @@
         <div class="card mb-4 shadow-sm border">
             <div class="card-body p-0">
                 <div class="table-responsive w-100">
-                    <table class="table table-hover align-middle mb-0" style="font-size: 0.875rem;">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.8125rem;">
                         <thead class="table-light">
                             <tr>
-                                <th class="ps-3" style="min-width: 180px;">Tên và mã cấu hình</th>
-                                <th style="min-width: 140px;">Phòng ban</th>
-                                <th style="min-width: 170px;">Khoảng lương và hạn mức</th>
-                                <th style="min-width: 220px;">Chuỗi cấp phê duyệt</th>
-                                <th class="text-center" style="min-width: 80px;">Số cấp</th>
-                                <th class="text-center" style="min-width: 100px;">Trạng thái</th>
-                                <th style="min-width: 110px;">Cập nhật</th>
-                                <th class="text-end pe-3" style="min-width: 110px;">Thao tác</th>
+                                <th class="ps-3" style="width: 22%;">Tên và mã cấu hình</th>
+                                <th style="width: 15%;">Phòng ban</th>
+                                <th style="width: 18%;">Khoảng lương &amp; hạn mức</th>
+                                <th style="width: 29%;">Chuỗi cấp phê duyệt</th>
+                                <th class="text-center" style="width: 8%;">Trạng thái</th>
+                                <th class="text-end pe-3" style="width: 8%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -106,88 +104,86 @@
                                     <c:forEach var="m" items="${matrices}">
                                         <tr>
                                             <td class="ps-3">
-                                                <div class="fw-bold text-dark">${m.name}</div>
-                                                <span class="badge bg-light text-secondary border font-monospace mt-1 px-2 py-0.5" style="font-size: 0.75rem;">
-                                                    ${m.code}
-                                                </span>
+                                                <div class="fw-bold text-dark text-break" style="font-size: 0.825rem;">${m.name}</div>
+                                                <div class="d-flex align-items-center gap-1 flex-wrap mt-0.5">
+                                                    <span class="badge bg-light text-secondary border font-monospace px-1.5 py-0.5" style="font-size: 0.7rem;">
+                                                        ${m.code}
+                                                    </span>
+                                                    <span class="text-muted" style="font-size: 0.7rem;" title="Thời điểm cập nhật gần nhất">
+                                                        <i class="bi bi-clock me-0.5"></i><fmt:formatDate value="${m.updatedAt}" pattern="dd/MM/yyyy HH:mm" />
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${not empty m.departmentName}">
-                                                        <span class="fw-semibold text-secondary">
+                                                        <span class="fw-semibold text-secondary small">
                                                             <i class="bi bi-building me-1 text-primary"></i>${m.departmentName}
                                                         </span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
-                                                            <i class="bi bi-globe me-1"></i>Toàn công ty
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-globe me-0.5"></i>Toàn công ty
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td>
-                                                <div class="fw-semibold text-dark">${m.formattedSalaryRange}</div>
-                                                <div class="text-secondary small mt-0.5" style="font-size: 0.75rem;">
-                                                    <span class="badge bg-light text-muted border">${m.formattedCondition}</span>
+                                                <div class="fw-semibold text-dark small">${m.formattedSalaryRange}</div>
+                                                <div class="text-secondary mt-0.5" style="font-size: 0.72rem;">
+                                                    <span class="badge bg-light text-muted border px-1.5 py-0.5">${m.formattedCondition}</span>
                                                 </div>
                                                 <c:if test="${not empty m.thresholdAmount}">
-                                                    <div class="text-danger small mt-0.5" style="font-size: 0.75rem;">
-                                                        <i class="bi bi-arrow-up-circle-fill me-1"></i>Vượt hạn mức: <fmt:formatNumber value="${m.thresholdAmount}" pattern="#,###" /> đ
+                                                    <div class="text-danger mt-0.5 fw-medium" style="font-size: 0.72rem;">
+                                                        <i class="bi bi-arrow-up-circle-fill me-0.5"></i>Vượt hạn: <fmt:formatNumber value="${m.thresholdAmount}" pattern="#,###" /> đ
                                                     </div>
                                                 </c:if>
                                             </td>
                                             <td>
-                                                <div class="d-flex flex-wrap align-items-center gap-1.5 py-1">
+                                                <div class="d-flex flex-wrap align-items-center gap-1 py-1">
+                                                    <span class="badge bg-secondary-subtle text-secondary border px-1.5 py-0.5" style="font-size: 0.68rem;" title="Tổng số cấp trong chuỗi">
+                                                        ${m.stepCount} cấp
+                                                    </span>
                                                     <c:forEach var="s" items="${m.steps}" varStatus="status">
-                                                        <span class="badge ${s.escalationStep ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-light text-dark border'} px-2 py-1" style="font-size: 0.75rem;" title="${s.escalationStep ? s.escalationCondition : s.approverDisplayName}">
+                                                        <span class="badge ${s.escalationStep ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-light text-dark border'} px-1.5 py-0.5" style="font-size: 0.72rem;" title="${s.escalationStep ? s.escalationCondition : s.approverDisplayName}">
                                                             ${s.stepOrder}. ${s.stepName}
                                                             <c:if test="${s.escalationStep}">
                                                                 <i class="bi bi-arrow-up-circle-fill text-danger ms-0.5" title="Cấp tự động bổ sung khi vượt hạn mức"></i>
                                                             </c:if>
                                                         </span>
                                                         <c:if test="${!status.last}">
-                                                            <i class="bi bi-chevron-right text-muted" style="font-size: 0.65rem;"></i>
+                                                            <i class="bi bi-chevron-right text-muted" style="font-size: 0.6rem;"></i>
                                                         </c:if>
                                                     </c:forEach>
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 font-monospace">
-                                                    ${m.stepCount} cấp
-                                                </span>
-                                            </td>
-                                            <td class="text-center">
                                                 <c:choose>
                                                     <c:when test="${m.status == 'ACTIVE'}">
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                                            <i class="bi bi-check-circle-fill me-1"></i>Đang áp dụng
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-1.5 py-1" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-check-circle-fill me-0.5"></i>Áp dụng
                                                         </span>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
-                                                            <i class="bi bi-pause-circle me-1"></i>Tạm dừng
+                                                        <span class="badge bg-secondary-subtle text-secondary border px-1.5 py-1" style="font-size: 0.72rem;">
+                                                            <i class="bi bi-pause-circle me-0.5"></i>Tạm dừng
                                                         </span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td>
-                                                <small class="text-muted d-block font-monospace" style="font-size: 0.75rem;">
-                                                    <fmt:formatDate value="${m.updatedAt}" pattern="dd/MM/yyyy HH:mm" />
-                                                </small>
-                                            </td>
-                                            <td class="text-end pe-3">
+                                            <td class="text-end pe-3 text-nowrap">
                                                 <div class="btn-group btn-group-sm">
-                                                    <button type="button" class="btn btn-outline-info" title="Xem chi tiết cấu hình" onclick="viewMatrixDetail('${m.id}')">
+                                                    <button type="button" class="btn btn-outline-info px-1.5 py-0.5" title="Xem chi tiết" onclick="viewMatrixDetail('${m.id}')">
                                                         <i class="bi bi-eye"></i>
                                                     </button>
-                                                    <a href="${pageContext.request.contextPath}/admin/approval-matrix/edit?id=${m.id}" class="btn btn-outline-primary" title="Chỉnh sửa cấu hình">
+                                                    <a href="${pageContext.request.contextPath}/admin/approval-matrix/edit?id=${m.id}" class="btn btn-outline-primary px-1.5 py-0.5" title="Chỉnh sửa">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
-                                                    <button type="button" class="btn btn-outline-warning" title="${m.status == 'ACTIVE' ? 'Tạm dừng áp dụng' : 'Kích hoạt áp dụng'}" 
+                                                    <button type="button" class="btn btn-outline-warning px-1.5 py-0.5" title="${m.status == 'ACTIVE' ? 'Tạm dừng áp dụng' : 'Kích hoạt áp dụng'}" 
                                                             onclick="confirmToggleStatus('${m.id}', '${m.code}', '${m.status}')">
                                                         <i class="bi ${m.status == 'ACTIVE' ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
                                                     </button>
-                                                    <button type="button" class="btn btn-outline-danger" title="Xóa cấu hình" 
+                                                    <button type="button" class="btn btn-outline-danger px-1.5 py-0.5" title="Xóa cấu hình" 
                                                             onclick="confirmDeleteMatrix('${m.id}', '${m.code}', '${m.name}')">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
@@ -198,7 +194,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <tr>
-                                        <td colspan="8" class="text-center py-5 text-muted">
+                                        <td colspan="6" class="text-center py-5 text-muted">
                                             <div class="mb-3">
                                                 <i class="bi bi-diagram-2 text-secondary" style="font-size: 3rem; opacity: 0.4;"></i>
                                             </div>

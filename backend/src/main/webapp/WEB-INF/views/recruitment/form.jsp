@@ -48,8 +48,7 @@
             <input type="hidden" name="code" value="${isEdit ? reqItem.code : nextCode}">
 
             <div class="row g-4">
-                <!-- Cột trái: Thông tin vị trí & Ngân sách lương -->
-                <div class="col-12 col-lg-7">
+                <div class="col-12">
                     <!-- Khối 1: Khai báo Chức danh, Phòng ban, Định biên -->
                     <div class="card shadow-sm border mb-4">
                         <div class="card-header bg-white py-3 border-bottom">
@@ -57,17 +56,17 @@
                                 <i class="bi bi-card-checklist text-primary me-2"></i>1. Thông tin Vị trí &amp; Định biên
                             </h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="row g-3">
                                 <!-- Mã yêu cầu -->
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-3">
                                     <label class="form-label text-muted small fw-semibold">Mã yêu cầu</label>
                                     <input type="text" class="form-control form-control-sm bg-light font-monospace fw-bold" 
                                            value="${isEdit ? reqItem.code : nextCode}" readonly>
                                 </div>
 
                                 <!-- Tiêu đề yêu cầu -->
-                                <div class="col-md-8">
+                                <div class="col-12 col-md-9">
                                     <label class="form-label text-muted small fw-semibold">Tiêu đề phiếu yêu cầu</label>
                                     <input type="text" name="title" id="titleInput" class="form-control form-control-sm" 
                                            placeholder="VD: Tuyển dụng Kỹ sư Java Backend Senior"
@@ -75,7 +74,7 @@
                                 </div>
 
                                 <!-- Chức danh cần tuyển -->
-                                <div class="col-md-7">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold text-dark">
                                         Chức danh cần tuyển <span class="text-danger">*</span>
                                     </label>
@@ -108,7 +107,7 @@
                                 </div>
 
                                 <!-- Phòng ban -->
-                                <div class="col-md-5">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold text-dark">
                                         Phòng ban phụ trách <span class="text-danger">*</span>
                                     </label>
@@ -121,7 +120,7 @@
                                 </div>
 
                                 <!-- Số lượng tuyển -->
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label small fw-bold text-dark">
                                         Số lượng tuyển <span class="text-danger">*</span>
                                     </label>
@@ -133,7 +132,7 @@
                                 </div>
 
                                 <!-- Lý do tuyển dụng -->
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label small fw-bold text-dark">
                                         Lý do tuyển <span class="text-danger">*</span>
                                     </label>
@@ -144,7 +143,7 @@
                                 </div>
 
                                 <!-- Ngày cần người (Deadline) -->
-                                <div class="col-md-4">
+                                <div class="col-12 col-md-4">
                                     <label class="form-label small fw-bold text-dark">
                                         Ngày cần người <span class="text-danger">*</span>
                                     </label>
@@ -168,7 +167,7 @@
                                 Chưa xác định dải chuẩn
                             </span>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <!-- Hộp thông tin dải chuẩn của chức danh -->
                             <div class="p-3 mb-3 rounded border bg-light" id="standardRangeBox">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -184,7 +183,7 @@
 
                             <div class="row g-3">
                                 <!-- Lương tối thiểu đề xuất -->
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold text-dark">
                                         Lương tối thiểu đề xuất (VNĐ) <span class="text-danger">*</span>
                                     </label>
@@ -198,7 +197,7 @@
                                 </div>
 
                                 <!-- Lương tối đa đề xuất -->
-                                <div class="col-md-6">
+                                <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold text-dark">
                                         Lương tối đa đề xuất (VNĐ) <span class="text-danger">*</span>
                                     </label>
@@ -241,22 +240,19 @@
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Cột phải: Soạn JD & Tiêu chuẩn ứng viên -->
-                <div class="col-12 col-lg-5">
                     <!-- Khối 3: Soạn mô tả công việc (JD) -->
                     <div class="card shadow-sm border mb-4">
                         <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                             <h6 class="fw-bold mb-0 text-dark">
                                 <i class="bi bi-file-text text-primary me-2"></i>3. Bản mô tả công việc (JD) <span class="text-danger">*</span>
                             </h6>
-                            <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 text-xs" onclick="insertJdTemplate()">
+                            <button type="button" class="btn btn-sm btn-outline-primary py-1 px-3" onclick="insertJdTemplate()">
                                 <i class="bi bi-magic me-1"></i>Mẫu gợi ý
                             </button>
                         </div>
-                        <div class="card-body">
-                            <textarea name="jobDescription" id="jobDescriptionInput" class="form-control font-sans" rows="7" 
+                        <div class="card-body p-4">
+                            <textarea name="jobDescription" id="jobDescriptionInput" class="form-control font-sans" rows="5" 
                                       placeholder="- Tham gia thiết kế và phát triển các hệ thống Backend...&#10;- Tối ưu hóa hiệu năng cơ sở dữ liệu và API...&#10;- Phối hợp cùng đội ngũ QA và Product Manager...">${reqItem.jobDescription}</textarea>
                             <div class="form-text text-xs">Mô tả rõ ràng trách nhiệm công việc, nhiệm vụ chính và mục tiêu cần đạt được.</div>
                         </div>
@@ -268,34 +264,34 @@
                             <h6 class="fw-bold mb-0 text-dark">
                                 <i class="bi bi-person-check text-success me-2"></i>4. Yêu cầu ứng viên <span class="text-danger">*</span>
                             </h6>
-                            <button type="button" class="btn btn-xs btn-outline-success py-0 px-2 text-xs" onclick="insertReqTemplate()">
+                            <button type="button" class="btn btn-sm btn-outline-success py-1 px-3" onclick="insertReqTemplate()">
                                 <i class="bi bi-magic me-1"></i>Mẫu gợi ý
                             </button>
                         </div>
-                        <div class="card-body">
-                            <textarea name="jobRequirements" id="jobRequirementsInput" class="form-control font-sans" rows="7" 
+                        <div class="card-body p-4">
+                            <textarea name="jobRequirements" id="jobRequirementsInput" class="form-control font-sans" rows="5" 
                                       placeholder="- Tối thiểu 3 năm kinh nghiệm lập trình Java Servlet/Spring...&#10;- Thành thạo MySQL, tối ưu câu lệnh truy vấn...&#10;- Kỹ năng làm việc nhóm, tư duy giải quyết vấn đề tốt...">${reqItem.jobRequirements}</textarea>
                             <div class="form-text text-xs">Liệt kê kinh nghiệm, bằng cấp, kỹ năng chuyên môn và phẩm chất cần thiết.</div>
                         </div>
                     </div>
 
                     <!-- Khối 5: Thao tác nộp / Lưu nháp -->
-                    <div class="card shadow-sm border bg-light">
-                        <div class="card-body p-3">
-                            <h6 class="fw-bold text-dark mb-2">Thao tác xử lý yêu cầu</h6>
-                            <p class="text-muted small mb-3">
-                                Bạn có thể <b>Lưu nháp</b> để tiếp tục bổ sung thông tin sau mà không bị ràng buộc các trường chưa hoàn tất, hoặc <b>Gửi duyệt</b> để chuyển tiếp yêu cầu đến cấp quản lý.
-                            </p>
-                            <div class="d-grid gap-2">
-                                <button type="submit" name="action" value="submit" class="btn btn-primary shadow-sm fw-semibold py-2" id="submitBtn">
-                                    <i class="bi bi-send-check-fill me-1"></i> Gửi phê duyệt yêu cầu
-                                </button>
-                                <button type="submit" name="action" value="draft" class="btn btn-outline-secondary py-2" id="draftBtn">
+                    <div class="card shadow-sm border bg-light mb-4">
+                        <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Thao tác xử lý yêu cầu</h6>
+                                <small class="text-muted">Bạn có thể lưu nháp để tiếp tục hoàn thiện sau, hoặc gửi duyệt để chuyển tiếp đến cấp quản lý.</small>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn btn-outline-secondary btn-sm px-3">
+                                    <i class="bi bi-x-circle me-1"></i> Hủy bỏ
+                                </a>
+                                <button type="submit" name="action" value="draft" class="btn btn-outline-primary btn-sm px-3" id="draftBtn">
                                     <i class="bi bi-save me-1"></i> Lưu bản nháp (Draft)
                                 </button>
-                                <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn btn-link text-muted btn-sm text-decoration-none">
-                                    Hủy bỏ và quay lại danh sách
-                                </a>
+                                <button type="submit" name="action" value="submit" class="btn btn-primary btn-sm px-3 shadow-sm" id="submitBtn">
+                                    <i class="bi bi-send-check-fill me-1"></i> Gửi phê duyệt yêu cầu
+                                </button>
                             </div>
                         </div>
                     </div>

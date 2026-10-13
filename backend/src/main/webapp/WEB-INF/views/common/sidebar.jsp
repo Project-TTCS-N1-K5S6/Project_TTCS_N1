@@ -26,6 +26,14 @@
                     <span>Bảng điều khiển</span>
                 </a>
             </li>
+            <c:if test="${currentUser.hasPermission('candidates.view') || currentUser.hasRole('ADMIN')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'candidates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Danh sách ứng viên</span>
+                    </a>
+                </li>
+            </c:if>
         </ul>
 
         <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
@@ -36,15 +44,6 @@
                     <a class="nav-link ${activeMenu == 'requisitions' ? 'active' : ''}" href="${pageContext.request.contextPath}/recruitment-requests">
                         <i class="bi bi-file-earmark-text-fill"></i>
                         <span>Yêu cầu tuyển dụng</span>
-                    </a>
-                </li>
-            </c:if>
-            <!-- [US 6 Tiêu chí 1]: Menu Hồ sơ ứng viên hiển thị cho người có quyền candidates.view hoặc ADMIN -->
-            <c:if test="${currentUser.hasPermission('candidates.view') || currentUser.hasRole('ADMIN')}">
-                <li class="nav-item">
-                    <a class="nav-link ${activeMenu == 'candidates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates">
-                        <i class="bi bi-people-fill"></i>
-                        <span>Hồ sơ & Pipeline</span>
                     </a>
                 </li>
             </c:if>
@@ -138,37 +137,7 @@
             </ul>
         </c:if>
 
-        <div class="menu-header">MỞ RỘNG (PHASE 2)</div>
-        <ul class="nav flex-column mb-3">
-            <li class="nav-item">
-                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/interviews">
-                    <i class="bi bi-calendar-check"></i>
-                    <span>Lịch phỏng vấn</span>
-                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/offers">
-                    <i class="bi bi-envelope-paper"></i>
-                    <span>Thư mời nhận việc</span>
-                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/onboarding">
-                    <i class="bi bi-person-check"></i>
-                    <span>Tiếp nhận Onboarding</span>
-                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/reports">
-                    <i class="bi bi-bar-chart"></i>
-                    <span>Báo cáo hiệu quả</span>
-                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
-                </a>
-            </li>
-        </ul>
+
     </div>
 
     <div class="sidebar-footer">

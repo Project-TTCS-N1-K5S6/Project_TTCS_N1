@@ -192,6 +192,7 @@
                                                             <i class="bi bi-calendar-event me-1 text-muted"></i>
                                                             <fmt:formatDate value="${r.deadline}" pattern="dd/MM/yyyy" />
                                                         </span>
+                                                    </c:when>
                                                     <c:otherwise><span class="text-muted">Chưa đặt</span></c:otherwise>
                                                 </c:choose>
                                             </td>
@@ -289,7 +290,7 @@
                                                         <button type="button" class="btn btn-outline-danger" 
                                                                 onclick="openCloseModal('${r.id}', '${r.code}', '${r.positionTitle}', ${r.activeCandidatesCount}, ${r.activeJobPostingsCount})"
                                                                 title="Đóng / Kết thúc yêu cầu (Đã tuyển đủ, Tạm dừng, Huỷ)">
-                                                            <i class="bi bi-stop-circle-fill"></i> Đóng
+                                                            <i class="bi bi-stop-circle-fill"></i>
                                                         </button>
                                                     </c:if>
                                                 </div>
@@ -346,7 +347,6 @@
             </div>
         </div>
     </div>
-</main>
 
 <!-- Modal Đóng / Kết thúc Yêu cầu tuyển dụng -->
 <div class="modal fade" id="closeModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
