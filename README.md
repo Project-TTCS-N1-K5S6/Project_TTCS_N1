@@ -1,244 +1,166 @@
-# HỆ THỐNG QUẢN LÝ ĐĂNG NHẬP, PHIÊN LÀM VIỆC & CHẤM PHIẾU ĐÁNH GIÁ NHÂN SỰ (TTCS HR)
-
-> **Kiến trúc:** Session-based Authentication (HttpOnly Cookie + PostgreSQL Store) + RESTful API + Vanilla JS/Bootstrap 5 SPA + Auto-Save Drafts (JSONB).
-
----
-
-## 🎯 Mục Tiêu & Tính Năng Đạt Được
-
-1. **Đăng nhập an toàn:**
-   - Hỗ trợ đăng nhập linh hoạt bằng **Email** hoặc **Mã nhân sự** kết hợp mật khẩu.
-   - Băm mật khẩu với **bcrypt salt rounds = 12**, chống tấn công từ điển và rainbow table.
-   - Phòng chống brute-force bằng **express-rate-limit** (tối đa 10 lần thử/15 phút).
-   - Chống Session Fixation bằng **session.regenerate()** ngay sau khi xác thực thành công.
-
-2. **Quản lý Phiên làm việc (Session Management) cấp Enterprise:**
-   - **PostgreSQL Session Store (`connect-pg-simple`):** Lưu trữ tập trung, không dùng MemoryStore trong production.
-   - **Cookie HttpOnly, SameSite, Secure (Production):** Tuyệt đối không lưu token hay mật khẩu trong `localStorage`.
-   - **Idle Timeout (30 phút):** Tự động gia hạn (rolling renewal) khi người dùng còn hoạt động. Không gia hạn vô hạn nếu người dùng vắng mặt.
-   - **Absolute Timeout (8 giờ):** Giới hạn phiên tối đa, bắt buộc đăng nhập lại sau 8 tiếng dù có hoạt động liên tục.
-   - **Cảnh báo trước khi hết hạn:** Modal đếm ngược (60s) với nút *"Tiếp tục phiên"* để gia hạn chủ động.
-   - **Đăng xuất an toàn:** Vô hiệu hóa session ngay lập tức ở server (`is_active = FALSE` & xóa session record).
-   - **Đăng xuất tất cả thiết bị (`/api/v1/auth/logout-all`):** Thu hồi toàn bộ session đang mở của tài khoản trên mọi máy tính và thiết bị di động.
-
-3. **Chấm phiếu đánh giá & Tự động lưu bản nháp (Draft Manager):**
-   - 6 tiêu chí đánh giá nhân sự: Kỷ luật & Tác phong, Chất lượng công việc, Tiến độ & Hiệu quả, Kỹ năng làm việc nhóm, Tinh thần chủ động, Giao tiếp.
-   - Tự động tính tổng điểm (thang 60) và xếp hạng thời gian thực (🏆 Xuất sắc, ⭐ Tốt, ✅ Đạt yêu cầu, ⚠️ Cần cải thiện).
-   - **Auto-save định kỳ (30s):** Tự động lưu bản nháp vào PostgreSQL dưới định dạng `JSONB` (`evaluation_drafts`).
-   - **Chống mất dữ liệu:** Lưu trữ fallback tại `sessionStorage` khi mạng gián đoạn, tự động khôi phục toàn bộ form khi đăng nhập lại hoặc tải lại trang.
-
-4. **Đổi mật khẩu & Thu hồi phiên (`change-password.html`):**
-   - Thanh đo độ mạnh mật khẩu (Password Strength Meter) theo thời gian thực.
-   - Kiểm tra 4 điều kiện nghiệp vụ: Tối thiểu 8 ký tự, có chữ cái, có chữ số, khác mật khẩu hiện tại.
-   - Tùy chọn thu hồi phiên trên toàn bộ thiết bị khác sau khi đổi mật khẩu thành công.
-   - Cập nhật cờ `must_change_pw = FALSE`.
-
-5. **Quản lý phiên đăng nhập trực quan (`sessions.html`):**
-   - Danh sách thiết bị, địa chỉ IP, thời gian đăng nhập và hoạt động gần nhất.
-   - Phân biệt rõ ràng phiên hiện tại (Current Session) và phiên trên các thiết bị khác.
-   - Nút thu hồi phiên từ xa cho từng thiết bị cụ thể.
+# HỆ THỐNG QUẢN TRỊ TUYỂN DỤNG NỘI BỘ (IRMS)
+### Dự án Thực tập Cơ sở (TTCS) & Tuyển dụng Doanh nghiệp
+**Công nghệ:** Backend Java Servlet &amp; JSP &bull; Cơ sở dữ liệu MySQL 8.0 &bull; Frontend Bootstrap 5, HTML5, CSS3, JS &amp; SASS
 
 ---
 
-## 🏗️ Kiến Trúc Công Nghệ
-
-### Backend (`/BE`)
-- **Runtime:** Node.js (Express.js 5.x)
-- **Cơ sở dữ liệu:** PostgreSQL (Driver `pg` + Pool connection)
-- **Session Engine:** `express-session` + `connect-pg-simple`
-- **Bảo mật:** `helmet`, `cors`, `express-rate-limit`, `bcryptjs`, `uuid`
-- **Validation:** `express-validator`
-
-### Frontend (`/FE`)
-- **Ngôn ngữ:** HTML5, CSS3, JavaScript ES Modules / Vanilla JS
-- **UI Framework:** Bootstrap 5.3 + Custom Luxury Dark Glassmorphism CSS
-- **Typography & Icons:** Font Inter (Google Fonts), SVG Icons tối ưu hóa
-- **Giao tiếp:** Fetch API (`credentials: 'include'` cho cookie session)
-- **Tuân thủ:** Không React/Vue/Angular, không `localStorage` cho token hay mật khẩu.
+## 📌 1. Giới thiệu Dự án
+**IRMS (Internal Recruitment Management System)** là giải pháp phần mềm quản trị quy trình tuyển dụng nội bộ toàn diện cho doanh nghiệp:
+- **Kiến trúc:** Mô hình MVC (Model - View - Controller) kinh điển trong Java Enterprise Web.
+- **Bảo mật:** Phân quyền theo vai trò (RBAC) trên 10 phân hệ nghiệp vụ, mã hóa mật khẩu một chiều bằng thuật toán BCrypt, tự động khóa tài khoản sau 5 lần đăng nhập thất bại trong 15 phút, chống lộ diện người dùng (User Enumeration Protection), và kiểm toán toàn diện (Audit Logging).
+- **Giao diện:** Thiết kế hiện đại, chuyên nghiệp với **Bootstrap 5.3**, phối hợp hệ thống biến **SASS (SCSS)**, hỗ trợ linh hoạt từ màn hình máy tính tới thiết bị di động (Responsive Layout & Mobile Drawer).
 
 ---
 
-## 📁 Cấu Trúc Thư Mục
+## 🛠️ 2. Công nghệ sử dụng trong dự án
 
-```text
-Project_TTCS_N1/
-├── BE/                               # Backend Node.js Express
-│   ├── config/
-│   │   └── config.js                 # Cấu hình biến môi trường và timeout
-│   ├── controllers/
-│   │   ├── authController.js         # Xử lý login, logout, refresh, đổi MK, quản lý session
-│   │   └── evaluationController.js   # Xử lý chấm điểm, nộp phiếu, lưu draft JSONB
-│   ├── database/
-│   │   ├── db.js                     # PostgreSQL connection pool & transaction helper
-│   │   ├── migrate.js                # Script chạy migration tự động
-│   │   └── migrations/
-│   │       └── 001_init.sql          # DDL tạo bảng users, sessions, drafts, forms + Seed data
-│   ├── middleware/
-│   │   └── authMiddleware.js         # Kiểm tra phiên hợp lệ, idle & absolute timeout
-│   ├── models/
-│   │   ├── userModel.js              # Truy vấn dữ liệu người dùng
-│   │   ├── sessionModel.js           # Truy vấn và quản lý bảng user_sessions
-│   │   └── evaluationDraftModel.js   # Quản lý JSONB draft trong evaluation_drafts
-│   ├── routes/
-│   │   ├── authRoutes.js             # Endpoints /api/v1/auth/*
-│   │   └── evaluationRoutes.js       # Endpoints /api/v1/evaluations/*
-│   ├── utils/
-│   │   ├── generateHash.js           # Tiện ích sinh hash mật khẩu bcrypt cost 12
-│   │   └── passwordValidator.js      # Kiểm tra quy tắc độ phức tạp mật khẩu
-│   ├── .env.example                  # Mẫu cấu hình môi trường
-│   ├── package.json
-│   └── server.js                     # Điểm khởi động Express server
-│
-├── FE/                               # Frontend Single Page / Multi-Page App
-│   ├── css/
-│   │   ├── style.css                 # Hệ thống design tokens, layout và dark glassmorphism
-│   │   └── toast.css                 # Hiệu ứng thông báo Toast
-│   ├── js/
-│   │   ├── auth.js                   # Module xác thực phiên, guard, fetchWithAuth
-│   │   ├── sessionManager.js         # Quản lý idle timeout, cảnh báo countdown, auto-renew
-│   │   ├── draftManager.js           # Auto-save draft định kỳ (JSONB) & khôi phục dữ liệu
-│   │   └── changePassword.js         # Realtime password validation & strength meter
-│   ├── login.html                    # Trang đăng nhập với danh sách tài khoản demo
-│   ├── index.html                    # Dashboard tổng quan, thống kê phiên & hành động nhanh
-│   ├── evaluation.html               # Trang chấm phiếu đánh giá nhân sự 6 tiêu chí
-│   ├── change-password.html          # Trang đổi mật khẩu bảo mật
-│   └── sessions.html                 # Trang quản lý các phiên & thiết bị đăng nhập
-└── README.md
-```
-
----
-
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
-
-### 1. Chuẩn bị Cơ sở dữ liệu PostgreSQL
-
-Tạo database trong PostgreSQL:
-```sql
-CREATE DATABASE ttcs_hr_db;
-```
-
-Cấu hình file `BE/.env` (tham khảo `BE/.env.example`):
-```env
-PORT=5000
-NODE_ENV=development
-
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=ttcs_hr_db
-DB_USER=postgres
-DB_PASSWORD=your_postgres_password
-DB_SSL=false
-
-SESSION_SECRET=ttcs_session_super_secret_key_2026_change_in_production_min_32_chars
-SESSION_IDLE_TIMEOUT_SECONDS=1800
-SESSION_ABSOLUTE_TIMEOUT_SECONDS=28800
-SESSION_RENEW_THRESHOLD_SECONDS=600
-
-CORS_ORIGIN=http://localhost:5000
-```
-
-### 2. Cài đặt Dependencies & Chạy Migration
-
-```bash
-cd BE
-npm install
-npm run migrate
-```
-
-Lệnh `npm run migrate` sẽ tự động tạo cấu trúc các bảng:
-- `users`: Thông tin nhân viên, vai trò, hash mật khẩu bcrypt.
-- `user_sessions`: Theo dõi phiên đăng nhập chi tiết, thiết bị, IP, thời gian hết hạn.
-- `session`: Bảng lưu session store của `connect-pg-simple`.
-- `evaluation_forms`: Dữ liệu phiếu đánh giá sau khi hoàn tất nộp.
-- `evaluation_drafts`: Bản nháp tự động lưu dạng JSONB theo từng nhân viên.
-- `recruitment_approval_requests`, `recruitment_approval_steps`, `recruitment_approval_history`: Hồ sơ tuyển dụng, các cấp phê duyệt và lịch sử quyết định.
-- Seed sẵn 3 tài khoản mẫu với mật khẩu chuẩn bcrypt cost 12.
-
-### 3. Khởi Động Server
-
-```bash
-npm run dev
-# hoặc: npm start
-```
-
-Server sẽ phục vụ cả API và static frontend tại:
-👉 **`http://localhost:5000/login.html`**
-
----
-
-## 🔑 Tài Khoản Thử Nghiệm Mặc Định
-
-Tất cả tài khoản mẫu có mật khẩu ban đầu là: `TempPassword123`
-
-| Họ và tên | Mã nhân sự | Email | Vai trò | Chức năng kiểm thử |
-| :--- | :--- | :--- | :--- | :--- |
-| **Hoàng Tiến Anh** | `NS001` | `hoang.ta@company.com` | `nhan_su` | Chấm phiếu, lưu draft, đổi mật khẩu |
-| **Sìn Văn Cương** | `QT001` | `cuong.sv@company.com` | `quan_tri` | Quản trị viên, quản lý nhiều phiên |
-| **Nguyễn Thị Mai** | `TP001` | `mai.nt@company.com` | `truong_phong` | Trưởng phòng đánh giá |
-
-*(Trên giao diện `login.html`, có sẵn các nút bấm 1-click điền thông tin nhanh cho các tài khoản trên)*.
-
----
-
-## Trung tâm Phê duyệt Tuyển dụng
-
-Sau khi đăng nhập, mở `http://localhost:5000/approvals.html` hoặc chọn **Phê duyệt tuyển dụng** trên Dashboard. Người tạo lập hồ sơ, chọn từ 1 đến 5 người phê duyệt theo thứ tự cấp. Người được giao xử lý hồ sơ ở cấp hiện tại bằng một trong ba hành động:
-
-- **Duyệt**: chuyển tự động sang cấp kế tiếp; duyệt ở cấp cuối sẽ hoàn tất hồ sơ.
-- **Từ chối**: kết thúc hồ sơ; bắt buộc nhập ý kiến.
-- **Yêu cầu bổ sung**: chuyển hồ sơ về người tạo; bắt buộc nhập ý kiến. Người tạo gửi thông tin bổ sung để tiếp tục đúng cấp đang chờ. Các ý kiến và hành động trước đó vẫn được lưu trong lịch sử.
-
-Các bảng nghiệp vụ được tạo bởi `npm run migrate`. Có thể chạy lại migration an toàn trên database đã khởi tạo.
-
-### API phê duyệt (`/api/v1/approvals`)
-
-Tất cả endpoint yêu cầu đăng nhập và chỉ trả hồ sơ của người tạo hoặc người được giao phê duyệt.
-
-| Method | Endpoint | Mô tả |
+| Thành phần | Công nghệ / Thư viện | Vai trò |
 | :--- | :--- | :--- |
-| `GET` | `/api/v1/approvals/reviewers` | Danh sách người có thể được giao phê duyệt |
-| `GET` | `/api/v1/approvals` | Hồ sơ do người dùng tạo hoặc được giao |
-| `POST` | `/api/v1/approvals` | Tạo hồ sơ với `title`, `details`, `reviewerIds` theo thứ tự |
-| `GET` | `/api/v1/approvals/:id` | Chi tiết, các cấp và lịch sử hồ sơ |
-| `POST` | `/api/v1/approvals/:id/decisions` | Ghi quyết định `APPROVE`, `REJECT` hoặc `REQUEST_MORE_INFO` |
-| `POST` | `/api/v1/approvals/:id/resubmit` | Gửi thông tin bổ sung bằng trường `response` |
+| **Backend** | **Java 8+ / Java Servlet 4.0 (hoặc 3.1)** | Tầng xử lý logic Controller điều phối HTTP Request/Response |
+| **View Engine** | **JSP (Java Server Pages) &amp; JSTL 1.2** | Render giao diện web động từ phía máy chủ (Server-Side Rendering) |
+| **Database** | **MySQL 8.0+** | Hệ quản trị cơ sở dữ liệu quan hệ lưu trữ dữ liệu ACID an toàn |
+| **Connection Pool** | **HikariCP 3.4.5** | Quản lý và tái sử dụng kết nối JDBC với hiệu năng tối ưu |
+| **Bảo mật mật khẩu** | **jBCrypt 0.4** | Băm và đối chiếu mật khẩu an toàn theo tiêu chuẩn BCrypt |
+| **Xử lý JSON / AJAX**| **Google Gson 2.10.1** | Chuyển đổi dữ liệu đối tượng Java sang JSON cho các API/AJAX |
+| **Frontend Styling** | **Bootstrap 5.3.3 &amp; SASS (SCSS)** | Khung giao diện UI hiện đại, phối màu doanh nghiệp |
+| **Frontend Logic** | **Vanilla JavaScript (ES6+)** | Điều khiển tương tác modal, lọc tìm kiếm, validation và gọi AJAX |
+| **Build &amp; Dependency**| **Apache Maven** | Quản lý thư viện và đóng gói thành file `war` triển khai lên Tomcat |
 
 ---
 
-## 📡 Danh Sách RESTful API Endpoints
+## 📁 3. Cấu trúc thư mục Dự án
 
-### Xác thực & Phiên (`/api/v1/auth`)
-
-| Method | Endpoint | Xác thực | Mô tả |
-| :--- | :--- | :---: | :--- |
-| `POST` | `/api/v1/auth/login` | ❌ | Đăng nhập (Email/Mã NV + Mật khẩu), tạo session cookie |
-| `POST` | `/api/v1/auth/logout` | ❌ | Đăng xuất thiết bị hiện tại, revoke session |
-| `POST` | `/api/v1/auth/logout-all` | ✅ | Đăng xuất toàn bộ các thiết bị đang đăng nhập |
-| `POST` | `/api/v1/auth/refresh` | ✅ | Gia hạn phiên (Keep-alive) nếu đạt ngưỡng quy định |
-| `GET` | `/api/v1/auth/me` | ✅ | Lấy thông tin tài khoản người dùng hiện tại |
-| `GET` | `/api/v1/auth/sessions` | ✅ | Lấy danh sách toàn bộ phiên đang hoạt động |
-| `DELETE`| `/api/v1/auth/sessions/:id` | ✅ | Thu hồi một phiên cụ thể từ xa |
-| `POST` | `/api/v1/auth/change-password` | ✅ | Đổi mật khẩu, tùy chọn thu hồi phiên thiết bị khác |
-
-### Đánh giá & Bản nháp (`/api/v1/evaluations`)
-
-| Method | Endpoint | Xác thực | Mô tả |
-| :--- | :--- | :---: | :--- |
-| `POST` | `/api/v1/evaluations/drafts/:draftKey` | ✅ | Tự động lưu bản nháp dạng JSONB |
-| `GET` | `/api/v1/evaluations/drafts/:draftKey` | ✅ | Lấy dữ liệu bản nháp để khôi phục vào form |
-| `GET` | `/api/v1/evaluations/drafts` | ✅ | Lấy danh sách tất cả bản nháp của user |
-| `DELETE`| `/api/v1/evaluations/drafts/:draftKey` | ✅ | Xóa bản nháp sau khi đã nộp phiếu |
-| `POST` | `/api/v1/evaluations/submit` | ✅ | Nộp phiếu đánh giá hoàn chỉnh vào database |
-| `GET` | `/api/v1/evaluations/history` | ✅ | Xem lịch sử các phiếu đã đánh giá |
+```
+ttcs_n1/
+├── pom.xml                                   <- File cấu hình Maven (Dependencies & Plugins)
+├── package.json                              <- Quản lý script biên dịch SASS & Docker MySQL
+├── docker-compose.yml                        <- Khởi chạy MySQL 8.0 & MailHog bằng Docker
+├── .env / .env.example                       <- Biến môi trường hệ thống
+│
+├── database/                                 <- Kịch bản Cơ sở dữ liệu MySQL
+│   ├── schema.sql                            <- DDL tạo bảng, chỉ mục và khóa ngoại MySQL
+│   └── seed.sql                              <- DML nạp dữ liệu mẫu ban đầu (Users, Roles, Perms)
+│
+├── src/main/
+│   ├── java/com/irms/                        <- Mã nguồn Java Backend
+│   │   ├── config/                           <- Cấu hình hệ thống & kết nối DB
+│   │   │   ├── AppConfig.java                <- Đọc cấu hình từ application.properties
+│   │   │   └── DBConnection.java             <- HikariCP Connection Pool kết nối MySQL
+│   │   ├── model/                            <- JavaBeans / Thực thể dữ liệu (Models)
+│   │   │   ├── User.java, Role.java, Permission.java, Department.java
+│   │   │   ├── Candidate.java, SalaryRange.java, AuditLog.java
+│   │   ├── dao/                              <- Tầng truy vấn CSDL JDBC (Data Access Objects)
+│   │   │   ├── BaseDAO.java, UserDAO.java, RoleDAO.java, PermissionDAO.java
+│   │   │   ├── DepartmentDAO.java, CandidateDAO.java, SalaryRangeDAO.java, AuditDAO.java
+│   │   ├── service/                          <- Tầng nghiệp vụ (Business Logic Layer)
+│   │   │   ├── AuthService.java, UserService.java, RolePermissionService.java
+│   │   │   ├── DepartmentService.java, CandidateService.java, SalaryRangeService.java, AuditService.java
+│   │   ├── filter/                           <- Bộ lọc kiểm soát bảo mật (Filters)
+│   │   │   ├── EncodingFilter.java           <- Ép buộc UTF-8 cho toàn hệ thống
+│   │   │   └── AuthFilter.java               <- Kiểm tra đăng nhập, đổi mật khẩu và phân quyền RBAC
+│   │   ├── controller/                       <- Tầng điều khiển Servlet (HTTP Handlers)
+│   │   │   ├── DashboardServlet.java         <- Bảng điều khiển tổng quan (/dashboard)
+│   │   │   ├── AuthServlet.java              <- Đăng nhập, đăng xuất, đổi mật khẩu (/auth/*)
+│   │   │   ├── UserServlet.java              <- Quản trị người dùng (/admin/users)
+│   │   │   ├── RoleServlet.java              <- Danh mục vai trò (/admin/roles)
+│   │   │   ├── PermissionMatrixServlet.java  <- Ma trận phân quyền 10 phân hệ (/admin/permissions)
+│   │   │   ├── DepartmentServlet.java        <- Quản lý phòng ban (/admin/departments)
+│   │   │   ├── CandidateServlet.java         <- Hồ sơ & pipeline ứng viên (/candidates)
+│   │   │   ├── SalaryRangeServlet.java       <- Dải lương vị trí (/salary-ranges)
+│   │   │   └── AuditLogServlet.java          <- Tra cứu nhật ký kiểm toán (/admin/audit-logs)
+│   │   └── util/                             <- Tiện ích bảo mật và xử lý dữ liệu
+│   │       ├── PasswordUtil.java             <- Mã hóa BCrypt
+│   │       ├── JsonUtil.java                 <- Google Gson cho AJAX
+│   │       └── SecurityUtil.java             <- Lấy IP Client, chống XSS, sinh UUID
+│   │
+│   ├── resources/
+│   │   └── application.properties            <- Cấu hình tham số MySQL, Pool & Security
+│   │
+│   └── webapp/                               <- Tầng giao diện người dùng (Web Application)
+│       ├── WEB-INF/
+│       │   ├── web.xml                       <- Bộ định tuyến và mô tả triển khai Web
+│       │   └── views/                        <- Giao diện JSP (Server-Side Rendering)
+│       │       ├── common/                   <- Layout dùng chung: header, footer, sidebar, navbar, alerts
+│       │       ├── auth/                     <- Đăng nhập, quên mật khẩu, đổi mật khẩu
+│       │       ├── dashboard/                <- Giao diện thống kê tổng quan
+│       │       ├── users/                    <- Quản lý người dùng, modal thêm/sửa/khóa
+│       │       ├── roles/                    <- Danh mục vai trò hệ thống
+│       │       ├── permissions/              <- Giao diện Ma trận phân quyền 10 phân hệ
+│       │       ├── departments/              <- Quản lý cơ cấu phòng ban
+│       │       ├── candidates/               <- Quản lý hồ sơ & pipeline ứng viên
+│       │       ├── salary/                   <- Quản lý dải lương ngân sách
+│       │       ├── audit/                    <- Tra cứu nhật ký kiểm toán
+│       │       └── errors/                   <- Trang thông báo lỗi 403, 404, 500
+│       └── assets/                           <- Tài nguyên tĩnh (Static Assets)
+│           ├── scss/                         <- Các tệp nguồn SASS (_variables, _layout, _components, _tables, _auth, main.scss)
+│           ├── css/                          <- Tệp CSS biên dịch hoàn chỉnh (main.css)
+│           └── js/                           <- Mã JavaScript giao diện (main.js, users.js, matrix.js)
+│
+├── frontend/                                 <- Bản xem trước giao diện HTML + Bootstrap + SASS độc lập
+│   ├── index.html, dashboard.html, users.html, candidates.html, permissions.html
+│
+└── docs/                                     <- Tài liệu kiến trúc và cơ sở dữ liệu
+    ├── architecture.md                       <- Tài liệu kiến trúc MVC & Bảo mật
+    └── database.md                           <- Lược đồ CSDL MySQL chi tiết
+```
 
 ---
 
-## 🛡️ Cam Kết Bảo Mật (Security Checklist)
+## 🚀 4. Hướng dẫn Cài đặt & Vận hành
 
-- [x] **No localStorage Secrets:** Không lưu password, access token hay session ID trong `localStorage`.
-- [x] **HttpOnly Cookie:** Cookie phiên `ttcs.sid` được đặt cờ `HttpOnly` ngăn chặn triệt để tấn công XSS trộm phiên.
-- [x] **SameSite Protection:** Giảm thiểu nguy cơ CSRF.
-- [x] **Session Fixation Prevention:** Tái tạo lại Session ID (`session.regenerate`) ngay sau khi đăng nhập.
-- [x] **Immediate Revocation:** Đăng xuất hoặc đổi mật khẩu sẽ đánh dấu session mất hiệu lực ngay trong DB, chặn đứng các request giả mạo tiếp theo.
-- [x] **Bcrypt Salt 12:** Thuật toán băm mật khẩu bảo mật cao.
-- [x] **Draft Resilience:** Tự động bảo vệ dữ liệu nhập dở, ngăn chặn mất dữ liệu do rớt mạng hoặc hết hạn phiên đột ngột.
+### Bước 1: Khởi động Cơ sở dữ liệu MySQL
+Có thể sử dụng Docker Compose hoặc cài đặt MySQL Server trực tiếp trên máy:
+
+**Cách 1: Khởi chạy bằng Docker Compose (Khuyến nghị, nhanh nhất):**
+```bash
+# Khởi chạy MySQL 8.0 (Tự động nạp schema.sql và seed.sql)
+docker compose up -d mysql
+```
+
+**Cách 2: Sử dụng MySQL Server cài sẵn trên máy:**
+1. Mở MySQL Workbench hoặc dòng lệnh `mysql -u root -p`.
+2. Chạy lần lượt các tập lệnh:
+   ```sql
+   source database/schema.sql;
+   source database/seed.sql;
+   ```
+3. Mở file `src/main/resources/application.properties`, kiểm tra thông số kết nối:
+   ```properties
+   db.url=jdbc:mysql://localhost:3306/ttcs_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
+   db.user=root
+   db.password=root
+   ```
+
+### Bước 2: Chạy ứng dụng Java Servlet
+
+**Cách 1: Chạy trong IntelliJ IDEA / Eclipse:**
+1. Mở thư mục dự án `ttcs_n1` trong IntelliJ IDEA hoặc Eclipse.
+2. Chọn **Import as Maven Project**.
+3. Cấu hình máy chủ **Apache Tomcat 8.5 hoặc 9.0**:
+   - Application context: `/` (hoặc `/irms`).
+   - Chọn Deployment: `irms:war exploded`.
+4. Nhấn **Run** hoặc **Debug**.
+
+**Cách 2: Chạy trực tiếp bằng Maven Tomcat Plugin (Dòng lệnh):**
+```bash
+mvn tomcat7:run
+```
+Ứng dụng sẽ khởi chạy tại: **http://localhost:8080**
+
+### Bước 3: Xem giao diện Frontend độc lập (Tùy chọn)
+Nếu muốn xem trước các màn hình HTML/CSS/JS/Bootstrap tĩnh mà không cần bật máy chủ Java:
+- Mở thư mục `frontend/` và nhấp đúp vào `index.html` hoặc chạy với Visual Studio Code **Live Server**.
+
+---
+
+## 🔑 5. Danh sách Tài khoản Kiểm thử Mặc định
+Mật khẩu chung cho tất cả tài khoản mẫu: **`Admin@123456`**
+
+| Vai trò | Email đăng nhập | Quyền hạn nổi bật |
+| :--- | :--- | :--- |
+| **Quản trị hệ thống (Admin)** | `admin@company.local` | Toàn quyền quản trị tài khoản, vai trò, ma trận phân quyền và kiểm toán |
+| **Trưởng phòng Nhân sự (HR Manager)** | `hr.manager@company.local` | Quản lý danh mục phòng ban, ứng viên, xem người dùng và dải lương |
+| **Chuyên viên Tuyển dụng (Recruiter)** | `recruiter@company.local` | Tiếp nhận ứng viên, điều phối pipeline (Bị giới hạn không xem dải lương) |
+| **Trưởng bộ phận (Hiring Manager)** | `hiring.mgr@company.local` | Theo dõi ứng viên phỏng vấn chuyên môn |
+| **Người phỏng vấn (Interviewer)** | `interviewer@company.local` | Chấm điểm phỏng vấn (Cấm tuyệt đối truy cập dải lương) |
+| **Tài khoản bị khóa (Locked)** | `locked.user@company.local` | Mô phỏng trường hợp tài khoản bị khóa do vi phạm |
