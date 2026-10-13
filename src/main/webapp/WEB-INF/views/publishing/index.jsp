@@ -2,18 +2,17 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 
-<jsp:include page="../common/header.jsp">
-    <jsp:param name="title" value="Quản lý Xuất bản bài đăng - KN-120" />
-</jsp:include>
+<c:set var="pageTitle" value="Quản lý Xuất bản bài đăng" />
+<c:set var="breadcrumb" value="Xuất bản bài đăng" />
+<c:set var="activeMenu" value="post-publishing" />
 
-<div class="app-wrapper">
-    <jsp:include page="../common/sidebar.jsp">
-        <jsp:param name="activeMenu" value="post-publishing" />
-    </jsp:include>
+<jsp:include page="../common/header.jsp" />
+<jsp:include page="../common/sidebar.jsp" />
 
-    <main class="app-main">
-        <jsp:include page="../common/navbar.jsp" />
+<main class="app-main">
+    <jsp:include page="../common/navbar.jsp" />
 
+    <div class="app-content">
         <div class="container-fluid py-4 px-lg-4">
             <!-- Breadcrumbs chuẩn theo vé KN-120 -->
             <nav aria-label="breadcrumb" class="mb-3">
@@ -380,8 +379,7 @@
                 </div>
             </div>
         </div>
-    </main>
-</div>
+    </div>
 
 <!-- ============================================================== -->
 <!-- MODAL 1: XEM TRƯỚC ĐÚNG NHƯ KHAI BÁO TRƯỚC KHI XUẤT BẢN [KN-120] -->
@@ -722,8 +720,6 @@
     </div>
 </div>
 
-<jsp:include page="../common/footer.jsp" />
-
 <!-- JavaScript điều khiển logic vé KN-120 -->
 <script>
 const ctx = '${pageContext.request.contextPath}';
@@ -924,3 +920,5 @@ function quickApprove(id, code, pos) {
     new bootstrap.Modal(document.getElementById('approveModal')).show();
 }
 </script>
+
+<jsp:include page="../common/footer.jsp" />
