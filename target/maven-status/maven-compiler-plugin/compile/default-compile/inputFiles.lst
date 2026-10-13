@@ -13,6 +13,7 @@ E:\ttcs_n1\src\main\java\com\irms\dao\PasswordResetDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\UserExcelService.java
 E:\ttcs_n1\src\main\java\com\irms\model\User.java
 E:\ttcs_n1\src\main\java\com\irms\config\DBConnection.java
+E:\ttcs_n1\src\main\java\com\irms\service\RecruitmentApprovalService.java
 E:\ttcs_n1\src\main\java\com\irms\filter\EncodingFilter.java
 E:\ttcs_n1\src\main\java\com\irms\controller\RoleServlet.java
 E:\ttcs_n1\src\main\java\com\irms\service\CandidateService.java
@@ -53,10 +54,7 @@ E:\ttcs_n1\src\main\java\com\irms\dao\CompetencyFrameworkDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\PermissionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\util\JsonUtil.java
 E:\ttcs_n1\src\main\java\com\irms\filter\AuthFilter.java
-<<<<<<< HEAD
 E:\ttcs_n1\src\main\java\com\irms\service\ApprovalMatrixService.java
-=======
->>>>>>> origin/feature/Manage-Post-Publishing
 E:\ttcs_n1\src\main\java\com\irms\dao\JobPostingDAO.java
 E:\ttcs_n1\src\main\java\com\irms\dao\QuestionDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyCriterionService.java
@@ -64,6 +62,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\QuestionService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\CompanyProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\service\RecruitmentRequestService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\AuthServlet.java
+E:\ttcs_n1\src\main\java\com\irms\dao\RecruitmentApprovalDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\ApprovalMatrixStep.java
 E:\ttcs_n1\src\main\java\com\irms\model\RequisitionApprovalStep.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
@@ -81,6 +80,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\CompetencyFrameworkService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\ApprovalMatrixServlet.java
 E:\ttcs_n1\src\main\java\com\irms\controller\ProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\RecruitmentRequestDAO.java
+E:\ttcs_n1\src\main\java\com\irms\model\RecruitmentApprovalLog.java
 E:\ttcs_n1\src\main\java\com\irms\model\Candidate.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFramework.java
 E:\ttcs_n1\src\main\java\com\irms\listener\AppContextListener.java

@@ -39,13 +39,16 @@ import java.util.Map;
         "/recruitment-requests/api/salary-benchmark",
         "/recruitment-requests/api/approval-steps",
         "/recruitment-requests/approve-step",
-        "/recruitment-requests/reject-step"
+        "/recruitment-requests/reject-step",
+        "/recruitment-requests/api/approval-chain",
+        "/recruitment-requests/api/approve"
 })
 public class RecruitmentRequestServlet extends HttpServlet {
 
     private final RecruitmentRequestService requisitionService = new RecruitmentRequestService();
     private final DepartmentService departmentService = new DepartmentService();
     private final SalaryRangeService salaryRangeService = new SalaryRangeService();
+    private final com.irms.service.RecruitmentApprovalService approvalService = new com.irms.service.RecruitmentApprovalService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -55,6 +58,12 @@ public class RecruitmentRequestServlet extends HttpServlet {
         // 1. AJAX API: Kiểm tra pipeline ứng viên và tin tuyển dụng trước khi đóng
         if ("/recruitment-requests/check-pipeline".equals(path)) {
             handleCheckPipeline(request, response);
+            return;
+        }
+
+        // AJAX API: Lấy chuỗi cấp duyệt và trạng thái hồ sơ (KN-158)
+        if ("/recruitment-requests/api/approval-chain".equals(path)) {
+            handleApprovalChainApi(request, response);
             return;
         }
 
@@ -90,6 +99,12 @@ public class RecruitmentRequestServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
+
+        // AJAX API: Ghi nhận kết quả phê duyệt theo từng cấp (KN-154)
+        if ("/recruitment-requests/api/approve".equals(path)) {
+            handleApprovalDecisionApi(request, response);
+            return;
+        }
 
         if ("/recruitment-requests/save".equals(path)) {
             handleSaveRequisition(request, response);
@@ -191,6 +206,15 @@ public class RecruitmentRequestServlet extends HttpServlet {
         request.setAttribute("todayDate", LocalDate.now().toString());
         request.setAttribute("isEdit", true);
         request.setAttribute("activeMenu", "requisitions");
+
+        // Chuỗi cấp duyệt và phân cấp phê duyệt (KN-158, KN-159)
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        if (!"DRAFT".equalsIgnoreCase(reqItem.getStatus())) {
+            request.setAttribute("approvalSteps", approvalService.getApprovalChain(id));
+            request.setAttribute("nextApproverInfo", approvalService.getNextApproverInfo(id));
+            request.setAttribute("canCurrentUserApprove", approvalService.canCurrentUserApprove(currentUser, id));
+        }
 
         request.getRequestDispatcher("/WEB-INF/views/recruitment/form.jsp").forward(request, response);
     }
@@ -336,6 +360,81 @@ public class RecruitmentRequestServlet extends HttpServlet {
         JsonUtil.sendJsonResponse(response, 200, result);
     }
 
+    /**
+     * KN-158: API lấy chuỗi cấp duyệt và trạng thái hiện tại của hồ sơ
+     */
+    private void handleApprovalChainApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String id = request.getParameter("id");
+        if (id == null || id.trim().isEmpty()) {
+            id = request.getParameter("requisitionId");
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Thiếu mã ID yêu cầu tuyển dụng cần tra cứu chuỗi cấp duyệt!");
+            JsonUtil.sendJsonResponse(response, 400, err);
+            return;
+        }
+
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+
+        Map<String, Object> state = approvalService.getApprovalWorkflowState(id.trim(), currentUser);
+        JsonUtil.sendJsonResponse(response, 200, state);
+    }
+
+    /**
+     * KN-154 & KN-155: API ghi nhận kết quả phê duyệt theo từng cấp
+     */
+    private void handleApprovalDecisionApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+
+        if (currentUser == null) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
+            JsonUtil.sendJsonResponse(response, 401, err);
+            return;
+        }
+
+        String requisitionId = request.getParameter("requisitionId");
+        String action = request.getParameter("action"); // APPROVE / REJECT
+        String comment = request.getParameter("comment");
+        String ip = SecurityUtil.getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        if (requisitionId == null || requisitionId.trim().isEmpty()) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Thiếu mã ID yêu cầu tuyển dụng!");
+            JsonUtil.sendJsonResponse(response, 400, err);
+            return;
+        }
+
+        try {
+            boolean success = approvalService.processApprovalDecision(requisitionId.trim(), currentUser, action, comment, ip, userAgent);
+            Map<String, Object> respData = new HashMap<>();
+            respData.put("success", success);
+            respData.put("message", "APPROVE".equalsIgnoreCase(action) ? "Đã ghi nhận phê duyệt thành công!" : "Đã ghi nhận từ chối yêu cầu tuyển dụng!");
+            respData.put("state", approvalService.getApprovalWorkflowState(requisitionId.trim(), currentUser));
+            JsonUtil.sendJsonResponse(response, 200, respData);
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {
+            Map<String, Object> errData = new HashMap<>();
+            errData.put("success", false);
+            errData.put("message", e.getMessage());
+            JsonUtil.sendJsonResponse(response, 400, errData);
+        } catch (Exception e) {
+            Map<String, Object> errData = new HashMap<>();
+            errData.put("success", false);
+            errData.put("message", "Lỗi xử lý hệ thống: " + e.getMessage());
+            JsonUtil.sendJsonResponse(response, 500, errData);
+        }
+    }
+
     private void handleCheckPipeline(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String id = request.getParameter("id");
@@ -473,3 +572,4 @@ public class RecruitmentRequestServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/recruitment-requests");
     }
 }
+

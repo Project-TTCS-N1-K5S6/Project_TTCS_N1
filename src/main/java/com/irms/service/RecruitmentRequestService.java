@@ -2,8 +2,10 @@ package com.irms.service;
 
 import com.irms.dao.CandidateDAO;
 import com.irms.dao.JobPostingDAO;
+import com.irms.dao.RecruitmentApprovalDAO;
 import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.dao.SalaryRangeDAO;
+import com.irms.model.RecruitmentApprovalLog;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.SalaryRange;
 import com.irms.model.RequisitionApprovalStep;
@@ -23,10 +25,12 @@ public class RecruitmentRequestService {
     private final CandidateDAO candidateDAO = new CandidateDAO();
     private final JobPostingDAO jobPostingDAO = new JobPostingDAO();
     private final ApprovalMatrixService approvalMatrixService = new ApprovalMatrixService();
+    private final RecruitmentApprovalDAO approvalDAO = new RecruitmentApprovalDAO();
     private final AuditService auditService = new AuditService();
 
     public CandidateDAO getCandidateDAO() { return candidateDAO; }
     public JobPostingDAO getJobPostingDAO() { return jobPostingDAO; }
+    public RecruitmentApprovalDAO getApprovalDAO() { return approvalDAO; }
 
     public List<RecruitmentRequest> getAllRequests(String search, String status, String departmentId) {
         return requestDAO.findAll(search, status, departmentId);
@@ -180,6 +184,8 @@ public class RecruitmentRequestService {
         if (success) {
             if (!isDraft) {
                 approvalMatrixService.saveRequisitionApprovalChain(req);
+                // Tự động khởi tạo chuỗi phê duyệt 3 cấp / nhật ký
+                approvalDAO.initApprovalChain(req.getId(), req.getHiringManagerId());
             }
             String action = isDraft ? "REQUISITION_DRAFT_CREATED" : "REQUISITION_SUBMITTED";
             String desc = (isDraft ? "Lưu nháp yêu cầu tuyển dụng: " : "Gửi phê duyệt yêu cầu tuyển dụng: ") 
@@ -206,6 +212,10 @@ public class RecruitmentRequestService {
         if (success) {
             if (!isDraft) {
                 approvalMatrixService.saveRequisitionApprovalChain(req);
+                // Tự động khởi tạo chuỗi phê duyệt nếu chưa có
+                if (approvalDAO.countSteps(req.getId()) == 0) {
+                    approvalDAO.initApprovalChain(req.getId(), req.getHiringManagerId());
+                }
             }
             String action = isDraft ? "REQUISITION_DRAFT_UPDATED" : "REQUISITION_SUBMITTED";
             String desc = "Cập nhật yêu cầu tuyển dụng: " + req.getCode() + " - " + req.getTitle();
@@ -237,6 +247,17 @@ public class RecruitmentRequestService {
     public boolean deleteRequest(String id, String actorId, String ip, String userAgent) {
         RecruitmentRequest current = requestDAO.findById(id);
         if (current == null) return false;
+
+        // KN-155: Khóa lịch sử phê duyệt không cho sửa hoặc xóa
+        if (approvalDAO.countSteps(id) > 0) {
+            List<RecruitmentApprovalLog> steps = approvalDAO.findByRequisitionId(id);
+            for (RecruitmentApprovalLog s : steps) {
+                if (s.isApproved() || s.isRejected()) {
+                    throw new IllegalStateException("LỊCH SỬ PHÊ DUYỆT ĐÃ KHÓA: Yêu cầu này đã phát sinh nhật ký phê duyệt thực tế, không thể xóa!");
+                }
+            }
+            approvalDAO.deleteApprovalChain(id);
+        }
 
         boolean success = requestDAO.delete(id);
         if (success) {

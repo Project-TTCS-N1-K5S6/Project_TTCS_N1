@@ -1,8 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.DepartmentHierarchyTest
 -------------------------------------------------------------------------------
-<<<<<<< HEAD
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s -- in com.irms.DepartmentHierarchyTest
-=======
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.018 s -- in com.irms.DepartmentHierarchyTest
->>>>>>> origin/feature/approval-matrix
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.026 s -- in com.irms.DepartmentHierarchyTest

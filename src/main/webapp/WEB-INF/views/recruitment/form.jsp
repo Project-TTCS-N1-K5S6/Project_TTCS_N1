@@ -43,6 +43,110 @@
             </div>
         </div>
 
+        <c:if test="${isEdit && not empty approvalSteps}">
+            <!-- Khối Tiến trình & Chuỗi cấp duyệt (KN-154 -> KN-161) -->
+            <div class="card shadow-sm border mb-4 bg-white">
+                <div class="card-header bg-light py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="logo-icon bg-primary text-white rounded p-1 px-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="bi bi-diagram-3-fill"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0">Tiến trình &amp; Chuỗi cấp duyệt Hồ sơ</h6>
+                            <small class="text-muted">Theo dõi chuỗi 3 cấp phê duyệt &bull; Lịch sử chỉ đọc (Không thể sửa hoặc xóa)</small>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="approval-lock-badge">
+                            <i class="bi bi-shield-lock-fill text-warning"></i>
+                            Bản ghi lịch sử đã khóa (Chỉ đọc)
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Box Đang chờ ai (KN-157) -->
+                    <div class="approval-waiting-box mb-4">
+                        <div class="approval-waiting-icon">
+                            <i class="bi bi-person-fill-exclamation"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <small class="text-muted d-block fw-semibold" style="font-size: 0.72rem;">TRẠNG THÁI HIỆN TẠI</small>
+                            <div class="fw-bold text-dark fs-6">${nextApproverInfo.waitingForText}</div>
+                        </div>
+                    </div>
+
+                    <!-- Stepper Timeline (KN-159) -->
+                    <div class="approval-stepper px-2 py-3 bg-light rounded border mb-4">
+                        <c:forEach var="s" items="${approvalSteps}">
+                            <div class="approval-stepper-item ${s.status == 'APPROVED' ? 'completed' : (s.status == 'PENDING' ? 'active' : (s.status == 'REJECTED' ? 'rejected' : 'waiting'))}">
+                                <div class="approval-stepper-node">
+                                    <c:choose>
+                                        <c:when test="${s.status == 'APPROVED'}"><i class="bi bi-check-lg"></i></c:when>
+                                        <c:when test="${s.status == 'PENDING'}"><i class="bi bi-hourglass-split"></i></c:when>
+                                        <c:when test="${s.status == 'REJECTED'}"><i class="bi bi-x-lg"></i></c:when>
+                                        <c:otherwise><i class="bi bi-clock"></i></c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="approval-stepper-title">${s.stepName}</div>
+                                <div class="approval-stepper-desc">${s.statusLabel}</div>
+                            </div>
+                        </c:forEach>
+                    </div>
+
+                    <!-- Chi tiết từng cấp duyệt & Ý kiến (KN-160, KN-161) -->
+                    <div class="row g-3">
+                        <c:forEach var="s" items="${approvalSteps}">
+                            <div class="col-12 col-md-4">
+                                <div class="approval-step-card h-100 ${s.status == 'APPROVED' ? 'status-approved' : (s.status == 'PENDING' ? 'status-pending' : (s.status == 'REJECTED' ? 'status-rejected' : 'status-waiting'))}">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="fw-bold text-dark small">${s.stepName}</span>
+                                        <span class="badge ${s.statusBadgeClass}" style="font-size: 0.68rem;">${s.statusLabel}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">Người duyệt:</small>
+                                        <c:choose>
+                                            <c:when test="${not empty s.approverName}">
+                                                <div class="fw-semibold text-dark small">${s.approverName}</div>
+                                                <small class="text-muted text-xs">${s.approverJobTitle}</small>
+                                            </c:when>
+                                            <c:when test="${s.status == 'PENDING'}">
+                                                <div class="text-warning-emphasis small fw-semibold"><i class="bi bi-hourglass-split me-1"></i>Đang chờ cấp này duyệt</div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="text-muted small">Chờ cấp trước</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">Thời điểm:</small>
+                                        <div class="small fw-semibold text-secondary">
+                                            <c:choose>
+                                                <c:when test="${not empty s.decisionDate}"><i class="bi bi-calendar3 me-1 text-primary"></i>${s.formattedDecisionDate}</c:when>
+                                                <c:otherwise>--</c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">Ý kiến người duyệt:</small>
+                                        <c:choose>
+                                            <c:when test="${not empty s.comment}">
+                                                <div class="approval-comment-box ${s.status == 'APPROVED' ? 'comment-approved' : (s.status == 'REJECTED' ? 'comment-rejected' : '')} py-1 px-2 mt-1" style="font-size: 0.78rem;">
+                                                    "${s.comment}"
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="text-muted fst-italic small" style="font-size: 0.75rem;">Chưa có ý kiến</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </div>
+            </div>
+        </c:if>
+
         <form id="requisitionForm" method="post" action="${pageContext.request.contextPath}/recruitment-requests/save" novalidate>
             <input type="hidden" name="id" value="${reqItem.id}">
             <input type="hidden" name="code" value="${isEdit ? reqItem.code : nextCode}">

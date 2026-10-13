@@ -166,7 +166,7 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT 'role-004', id FROM permissions
 WHERE code IN (
     'department.view',
-    'requisitions.view', 'requisitions.create',
+    'requisitions.view', 'requisitions.create', 'requisitions.approve',
     'job_postings.view',
     'candidates.view',
     'interviews.view',
@@ -238,6 +238,24 @@ INSERT INTO job_postings (id, requisition_id, title, platform, status, posted_ur
 ('jp-002', 'req-001', 'Senior Java Backend Engineer (TopCV)', 'TOPCV', 'PUBLISHED', 'https://topcv.vn/brand/company/java-senior', CURRENT_TIMESTAMP, NULL),
 ('jp-003', 'req-002', 'Chuyên viên Tuyển dụng Nhân sự IT (Recruiter)', 'INTERNAL', 'PUBLISHED', 'https://careers.company.local/jobs/recruiter', CURRENT_TIMESTAMP, NULL),
 ('jp-004', 'req-003', 'Trưởng nhóm Kinh doanh B2B - Đã hoàn thành', 'INTERNAL', 'UNPUBLISHED', 'https://careers.company.local/jobs/sales-lead', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- 7.1. Nhật ký & Chuỗi cấp duyệt Yêu cầu tuyển dụng (recruitment_approval_logs)
+DELETE FROM recruitment_approval_logs;
+INSERT INTO recruitment_approval_logs (id, requisition_id, step_order, step_name, required_role, assigned_user_id, approver_id, status, decision_date, comment) VALUES
+-- req-001 (OPEN - Cả 3 cấp đã duyệt)
+('appr-001-1', 'req-001', 1, 'Cấp 1: Trưởng bộ phận chuyên môn', 'HIRING_MANAGER', 'usr-004', 'usr-004', 'APPROVED', '2026-10-01 09:30:00', 'Đồng ý nhu cầu bổ sung 2 Senior Backend để đảm bảo tiến độ quý 4.'),
+('appr-001-2', 'req-001', 2, 'Cấp 2: Trưởng phòng Nhân sự', 'HR_MANAGER', 'usr-002', 'usr-002', 'APPROVED', '2026-10-01 14:15:00', 'Đã thẩm định dải lương 25 - 45M phù hợp khung chuẩn của công ty.'),
+('appr-001-3', 'req-001', 3, 'Cấp 3: Ban Giám đốc', 'APPROVER', 'usr-006', 'usr-006', 'APPROVED', '2026-10-02 10:00:00', 'Phê duyệt chủ trương mở đợt tuyển dụng. Chúc team tuyển thành công!'),
+
+-- req-002 (OPEN - Cả 3 cấp đã duyệt)
+('appr-002-1', 'req-002', 1, 'Cấp 1: Trưởng bộ phận chuyên môn', 'HIRING_MANAGER', 'usr-002', 'usr-002', 'APPROVED', '2026-10-03 08:45:00', 'Cần tuyển thay thế nhân sự xin nghỉ sinh, công việc cần bàn giao sớm.'),
+('appr-002-2', 'req-002', 2, 'Cấp 2: Trưởng phòng Nhân sự', 'HR_MANAGER', 'usr-002', 'usr-002', 'APPROVED', '2026-10-03 11:20:00', 'Hồ sơ tuyển dụng đầy đủ tiêu chuẩn và bản mô tả công việc (JD).'),
+('appr-002-3', 'req-002', 3, 'Cấp 3: Ban Giám đốc', 'APPROVER', 'usr-006', 'usr-006', 'APPROVED', '2026-10-03 16:30:00', 'Đồng ý duyệt tuyển dụng thay thế.'),
+
+-- req-003 (PENDING_APPROVAL - Cấp 1 đã duyệt, Cấp 2 đang chờ, Cấp 3 chờ)
+('appr-003-1', 'req-003', 1, 'Cấp 1: Trưởng bộ phận chuyên môn', 'HIRING_MANAGER', 'usr-006', 'usr-006', 'APPROVED', '2026-10-10 10:30:00', 'Xác nhận nhu cầu Trưởng nhóm Kinh doanh B2B kèm văn bản giải trình lương vượt khung chuẩn.'),
+('appr-003-2', 'req-003', 2, 'Cấp 2: Trưởng phòng Nhân sự', 'HR_MANAGER', 'usr-002', NULL, 'PENDING', NULL, NULL),
+('appr-003-3', 'req-003', 3, 'Cấp 3: Ban Giám đốc', 'APPROVER', 'usr-006', NULL, 'WAITING', NULL, NULL);
 
 -- 8. Khởi tạo danh sách ứng viên mẫu (Candidates)
 DELETE FROM candidates;
