@@ -15,10 +15,12 @@ E:\ttcs_n1\src\main\java\com\irms\config\DBConnection.java
 E:\ttcs_n1\src\main\java\com\irms\filter\EncodingFilter.java
 E:\ttcs_n1\src\main\java\com\irms\controller\RoleServlet.java
 E:\ttcs_n1\src\main\java\com\irms\service\CandidateService.java
+E:\ttcs_n1\src\main\java\com\irms\model\RecruiterAssignment.java
 E:\ttcs_n1\src\main\java\com\irms\util\PasswordUtil.java
 E:\ttcs_n1\src\main\java\com\irms\model\SalaryRange.java
 E:\ttcs_n1\src\main\java\com\irms\dao\SharedCatalogDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\ExcelUserRow.java
+E:\ttcs_n1\src\main\java\com\irms\dao\RecruiterAssignmentDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\EmailOutboxItem.java
 E:\ttcs_n1\src\main\java\com\irms\dao\DepartmentDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\SharedCatalogItem.java
@@ -58,6 +60,8 @@ E:\ttcs_n1\src\main\java\com\irms\controller\AuthServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\CandidateDAO.java
 E:\ttcs_n1\src\main\java\com\irms\service\DepartmentService.java
 E:\ttcs_n1\src\main\java\com\irms\service\RolePermissionService.java
+E:\ttcs_n1\src\main\java\com\irms\model\RecruiterAssignmentHistory.java
+E:\ttcs_n1\src\main\java\com\irms\controller\RecruiterAssignmentServlet.java
 E:\ttcs_n1\src\main\java\com\irms\config\AppConfig.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFrameworkCriterion.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompanyProfileService.java
@@ -67,6 +71,7 @@ E:\ttcs_n1\src\main\java\com\irms\service\ProfileService.java
 E:\ttcs_n1\src\main\java\com\irms\service\CompetencyFrameworkService.java
 E:\ttcs_n1\src\main\java\com\irms\controller\ProfileServlet.java
 E:\ttcs_n1\src\main\java\com\irms\dao\RecruitmentRequestDAO.java
+E:\ttcs_n1\src\main\java\com\irms\service\RecruiterAssignmentService.java
 E:\ttcs_n1\src\main\java\com\irms\model\Candidate.java
 E:\ttcs_n1\src\main\java\com\irms\model\CompetencyFramework.java
 E:\ttcs_n1\src\main\java\com\irms\listener\AppContextListener.java

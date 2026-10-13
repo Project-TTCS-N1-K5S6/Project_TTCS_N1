@@ -6,6 +6,7 @@ com\irms\config\AppConfig.class
 com\irms\dao\CompetencyCriterionDAO.class
 com\irms\controller\RecruitmentRequestServlet.class
 com\irms\config\DBConnection.class
+com\irms\model\RecruiterAssignmentHistory.class
 com\irms\dao\BaseDAO.class
 com\irms\service\AuditService.class
 com\irms\model\Role.class
@@ -48,7 +49,10 @@ com\irms\controller\PermissionMatrixServlet.class
 com\irms\model\Question.class
 com\irms\dao\UserDAO.class
 com\irms\service\DepartmentService.class
+com\irms\model\RecruiterAssignment.class
 com\irms\dao\PasswordResetDAO.class
+com\irms\service\RecruiterAssignmentService.class
+com\irms\dao\RecruiterAssignmentDAO.class
 com\irms\model\Permission.class
 com\irms\service\DepartmentService$DeleteCheckResult.class
 com\irms\dao\SalaryRangeDAO.class
@@ -59,6 +63,7 @@ com\irms\filter\AuthFilter.class
 com\irms\model\Candidate.class
 com\irms\model\SharedCatalogType.class
 com\irms\controller\PlaceholderServlet.class
+com\irms\controller\RecruiterAssignmentServlet.class
 com\irms\filter\EncodingFilter.class
 com\irms\controller\CandidateServlet.class
 com\irms\dao\PermissionDAO.class

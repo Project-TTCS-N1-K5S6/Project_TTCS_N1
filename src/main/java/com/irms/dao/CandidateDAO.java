@@ -40,7 +40,10 @@ public class CandidateDAO extends BaseDAO {
 
         List<Object> params = new ArrayList<>();
         if (recruiterId != null && !recruiterId.trim().isEmpty()) {
-            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IS NULL) ");
+            // [KN-116]: Recruiter thấy ứng viên của vị trí mình là recruiter CHÍNH hoặc recruiter HỖ TRỢ
+            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IN ("
+                + "SELECT requisition_id FROM requisition_recruiters WHERE recruiter_id = ?)) ");
+            params.add(recruiterId.trim());
             params.add(recruiterId.trim());
         }
         if (search != null && !search.trim().isEmpty()) {
@@ -108,7 +111,10 @@ public class CandidateDAO extends BaseDAO {
 
         List<Object> params = new ArrayList<>();
         if (recruiterId != null && !recruiterId.trim().isEmpty()) {
-            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IS NULL) ");
+            // [KN-116]: Recruiter thấy ứng viên của vị trí mình là recruiter CHÍNH hoặc recruiter HỖ TRỢ
+            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IN ("
+                + "SELECT requisition_id FROM requisition_recruiters WHERE recruiter_id = ?)) ");
+            params.add(recruiterId.trim());
             params.add(recruiterId.trim());
         }
         if (search != null && !search.trim().isEmpty()) {
