@@ -58,7 +58,9 @@ class RecruitmentApprovalModel {
               current_step.approver_user_id AS current_approver_id,
               approver.full_name AS current_approver_name,
               (r.created_by = $1) AS is_creator,
-              (current_step.approver_user_id = $1) AS can_review,
+              (current_step.approver_user_id = $1
+                AND current_step.status = 'PENDING'
+                AND r.status = 'PENDING_APPROVAL') AS can_review,
               (SELECT COUNT(*) FROM recruitment_approval_steps all_steps
                WHERE all_steps.request_id = r.id) AS total_steps,
               (SELECT COUNT(*) FROM recruitment_approval_steps approved_steps
