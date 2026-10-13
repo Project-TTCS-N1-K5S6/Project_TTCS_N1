@@ -29,6 +29,7 @@ public class RecruitmentRequestService {
         return requestDAO.findAll(search, status, departmentId);
     }
 
+<<<<<<< HEAD
     public List<RecruitmentRequest> getRequests(String search, String status, String departmentId, int page, int pageSize) {
         int p = Math.max(1, page);
         int size = Math.max(1, pageSize);
@@ -40,6 +41,8 @@ public class RecruitmentRequestService {
         return requestDAO.countAll(search, status, departmentId);
     }
 
+=======
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
     public RecruitmentRequest getRequestById(String id) {
         return requestDAO.findById(id);
     }

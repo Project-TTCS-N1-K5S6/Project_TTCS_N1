@@ -161,9 +161,37 @@
         <!-- Nút Đăng xuất đồng bộ ở cuối thanh điều hướng -->
         <ul class="nav flex-column mt-2 pt-2 border-top">
             <li class="nav-item">
+<<<<<<< HEAD
                 <a class="nav-link text-danger" href="${pageContext.request.contextPath}/auth/logout">
                     <i class="bi bi-box-arrow-right text-danger"></i>
                     <span>Đăng xuất</span>
+=======
+                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/interviews">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Lịch phỏng vấn</span>
+                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/offers">
+                    <i class="bi bi-envelope-paper"></i>
+                    <span>Thư mời nhận việc</span>
+                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/onboarding">
+                    <i class="bi bi-person-check"></i>
+                    <span>Tiếp nhận Onboarding</span>
+                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-muted" href="${pageContext.request.contextPath}/reports">
+                    <i class="bi bi-bar-chart"></i>
+                    <span>Báo cáo hiệu quả</span>
+                    <span class="badge bg-secondary-subtle text-secondary ms-auto" style="font-size: 10px;">Soon</span>
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                 </a>
             </li>
         </ul>

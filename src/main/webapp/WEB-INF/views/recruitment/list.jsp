@@ -41,6 +41,7 @@
     background-color: #fef2f2;
     box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
 }
+<<<<<<< HEAD
 .table-req-custom {
     table-layout: fixed;
     width: 100%;
@@ -66,6 +67,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+=======
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
 </style>
 
 <main class="app-main">
@@ -138,7 +141,11 @@
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
+<<<<<<< HEAD
                                 <th style="width: 120px;">Mã yêu cầu</th>
+=======
+                                <th style="width: 130px;">Mã yêu cầu</th>
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                                 <th>Chức danh &amp; Tiêu đề</th>
                                 <th>Phòng ban</th>
                                 <th class="text-center" style="width: 90px;">SL tuyển</th>
@@ -146,7 +153,11 @@
                                 <th>Dải lương đề xuất</th>
                                 <th>Ngày cần người</th>
                                 <th class="text-center" style="width: 140px;">Trạng thái</th>
+<<<<<<< HEAD
                                 <th class="text-center text-nowrap" style="width: 110px;">Thao tác</th>
+=======
+                                <th class="text-end pe-3" style="width: 160px;">Thao tác</th>
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                             </tr>
                         </thead>
                         <tbody>
@@ -253,7 +264,15 @@
                                                         </span>
                                                     </c:when>
                                                     <c:otherwise>
+<<<<<<< HEAD
                                                                                                <td class="text-center text-nowrap">
+=======
+                                                        <span class="badge ${r.statusBadgeClass} px-2 py-1">${r.statusLabel}</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td class="text-end pe-3">
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                                                 <div class="btn-group btn-group-sm">
                                                     <!-- Xem chi tiết -->
                                                     <button type="button" class="btn btn-outline-secondary" 
@@ -271,12 +290,17 @@
                                                     <!-- Đóng / Kết thúc yêu cầu khi đang mở hoặc chờ duyệt -->
                                                     <c:if test="${!r.terminal && r.status != 'DRAFT'}">
                                                         <button type="button" class="btn btn-outline-danger" 
+<<<<<<< HEAD
                                                                 onclick="openCloseModal('${r.id}', '${r.code}', '${r.positionTitle}')"
                                                                 title="Đóng / Kết thúc yêu cầu (Đã tuyển đủ, Tạm dừng, Huỷ)">
                                                             <i class="bi bi-stop-circle-fill"></i>
                                                         </button>
                                                     </c:if>
                                                 </div>��n đủ, Tạm dừng, Huỷ)">
+=======
+                                                                onclick="openCloseModal('${r.id}', '${r.code}', '${r.positionTitle}', ${r.activeCandidatesCount}, ${r.activeJobPostingsCount})"
+                                                                title="Đóng / Kết thúc yêu cầu (Đã tuyển đủ, Tạm dừng, Huỷ)">
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                                                             <i class="bi bi-stop-circle-fill"></i> Đóng
                                                         </button>
                                                     </c:if>
@@ -306,6 +330,7 @@
                         </tbody>
                     </table>
                 </div>
+<<<<<<< HEAD
 
                 <!-- Phân trang phía Server (Backend Pagination) -->
                 <c:if test="${totalPages > 1}">
@@ -332,6 +357,8 @@
                         </nav>
                     </div>
                 </c:if>
+=======
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
             </div>
         </div>
     </div>

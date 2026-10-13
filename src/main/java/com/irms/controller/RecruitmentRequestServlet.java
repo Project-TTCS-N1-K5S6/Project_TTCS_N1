@@ -100,6 +100,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
         String status = request.getParameter("status");
         String departmentId = request.getParameter("departmentId");
 
+<<<<<<< HEAD
         int page = 1;
         int pageSize = 10;
         try {
@@ -112,14 +113,20 @@ public class RecruitmentRequestServlet extends HttpServlet {
         int totalRequests = requisitionService.countRequests(search, status, departmentId);
         int totalPages = (int) Math.ceil((double) totalRequests / pageSize);
 
+=======
+        List<RecruitmentRequest> list = requisitionService.getAllRequests(search, status, departmentId);
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
         List<Department> departments = departmentService.getAllDepartments();
 
         request.setAttribute("requisitions", list);
         request.setAttribute("departments", departments);
+<<<<<<< HEAD
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalCount", totalRequests);
         request.setAttribute("pageSize", pageSize);
+=======
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
         request.setAttribute("paramDept", departmentId);

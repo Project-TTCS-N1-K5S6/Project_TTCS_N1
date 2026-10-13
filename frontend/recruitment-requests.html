@@ -126,6 +126,7 @@
                 <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button"><i class="bi bi-list"></i></button>
                 <div class="page-breadcrumb">
                     <span class="text-muted fs-6"><i class="bi bi-house-door me-1"></i> IRMS</span>
+<<<<<<< HEAD
                     <span class="text-muted mx-2">/</span>
                     <span class="fw-semibold text-dark fs-6">Yêu cầu tuyển dụng</span>
                 </div>
@@ -143,6 +144,16 @@
                         <li><a class="dropdown-item py-2 text-danger" href="index.html"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
                     </ul>
                 </div>
+=======
+                    <span class="mx-2 text-muted">/</span>
+                    <span class="fw-semibold text-dark">Yêu cầu tuyển dụng</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                    <i class="bi bi-person-circle me-1"></i> Quản trị viên
+                </span>
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
             </div>
         </header>
 
@@ -536,8 +547,12 @@ var sampleCandidates = {
         { fullName: 'Phạm Minh Dung', email: 'dung.pham@email.test', status: 'APPLIED' }
     ],
     'req-003': [],
+<<<<<<< HEAD
     'req-004': [],
     'req-005': []
+=======
+    'req-004': []
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
 };
 
 var defaultRequisitions = [
@@ -801,9 +816,12 @@ function renderTable() {
             ? '<span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-arrow-repeat me-1"></i>Thay thế</span>'
             : '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-person-plus me-1"></i>Tăng mới</span>';
 
+<<<<<<< HEAD
         var hasExplanation = r.salaryExplanation && r.salaryExplanation.trim().length > 0;
         var expBadge = hasExplanation ? '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-xs ms-1" title="Đã có văn bản giải trình lương vượt khung chuẩn"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Có giải trình</span>' : '';
 
+=======
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
         var salText = (r.minSalary && r.maxSalary) ? (new Intl.NumberFormat('vi-VN').format(r.minSalary) + ' - ' + new Intl.NumberFormat('vi-VN').format(r.maxSalary) + ' VND') : 'Thỏa thuận';
 
         var candidateBadge = (r.activeCandidatesCount > 0) 
@@ -825,12 +843,20 @@ function renderTable() {
             '<td><span class="fw-semibold text-secondary"><i class="bi bi-building me-1 small"></i>' + (r.departmentName || 'Chưa gán') + '</span></td>' +
             '<td class="text-center"><span class="badge bg-primary-subtle text-primary border">' + r.headcount + ' người</span></td>' +
             '<td>' + reasonBadge + '</td>' +
+<<<<<<< HEAD
             '<td><div class="fw-semibold text-dark">' + salText + '</div>' + expBadge + '</td>' +
+=======
+            '<td><div class="fw-semibold text-dark">' + salText + '</div></td>' +
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
             '<td><span class="text-dark fw-semibold"><i class="bi bi-calendar-event me-1 text-muted"></i>' + (r.deadline || 'Chưa đặt') + '</span></td>' +
             '<td class="text-center">' + getStatusBadge(r.status, r.closeReason) + '</td>' +
             '<td class="text-end pe-3">' +
                 '<div class="btn-group btn-group-sm">' +
+<<<<<<< HEAD
                     '<button type="button" class="btn btn-outline-secondary" onclick="showDetail(\'' + r.id + '\')" title="Xem chi tiết"><i class="bi bi-eye"></i></button>' +
+=======
+                    '<button type="button" class="btn btn-outline-secondary" onclick="showDetail(\'' + r.id + '\')"><i class="bi bi-eye"></i></button>' +
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
                     editButton +
                     closeButton +
                 '</div>' +
@@ -896,12 +922,15 @@ function showDetail(id) {
 }
 
 window.addEventListener('DOMContentLoaded', function() {
+<<<<<<< HEAD
     var toastMsg = sessionStorage.getItem('irms_toast');
     if (toastMsg) {
         document.getElementById('toastMessage').textContent = toastMsg;
         document.getElementById('toastNotification').style.display = 'block';
         sessionStorage.removeItem('irms_toast');
     }
+=======
+>>>>>>> c2fb6f39c3d38e3e1d9fe8dbe3851776d1754a3f
     renderTable();
 });
 </script>
