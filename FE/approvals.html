@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trung tâm Phê duyệt Tuyển dụng - TTCS HR</title>
+  <meta name="description" content="Tạo, theo dõi và xử lý hồ sơ phê duyệt tuyển dụng theo nhiều cấp">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/approvals.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">HR</div>
+        <div>
+          <div class="brand-title">TTCS HR</div>
+          <div class="brand-subtitle">Nhân Sự Nội Bộ K5S6</div>
+        </div>
+      </div>
+      <nav class="nav-menu" aria-label="Điều hướng chính">
+        <a href="index.html" class="nav-item">Dashboard</a>
+        <a href="evaluation.html" class="nav-item">Chấm phiếu đánh giá</a>
+        <a href="approvals.html" class="nav-item active" aria-current="page">Phê duyệt tuyển dụng</a>
+        <a href="sessions.html" class="nav-item">Phiên đăng nhập</a>
+      </nav>
+      <div class="approval-sidebar-footer">
+        <span id="current-user">Đang tải tài khoản...</span>
+        <button type="button" id="logout-button" class="button button-muted">Đăng xuất</button>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="top-bar">
+        <div class="page-breadcrumb">
+          <a href="index.html">Hệ thống</a>
+          <span aria-hidden="true">/</span>
+          <span class="active">Phê duyệt tuyển dụng</span>
+        </div>
+      </header>
+
+      <div class="content-area approval-page">
+        <div class="approval-heading">
+          <div>
+            <h1>Trung tâm Phê duyệt Tuyển dụng</h1>
+            <p>Quản lý hồ sơ, các cấp duyệt và toàn bộ ý kiến trong quy trình.</p>
+          </div>
+          <button type="button" id="show-create" class="button button-primary">Tạo hồ sơ</button>
+        </div>
+
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+        <section id="create-panel" class="approval-panel" hidden>
+          <div class="panel-heading">
+            <div>
+              <h2>Tạo hồ sơ phê duyệt</h2>
+              <p>Chọn người phê duyệt theo đúng thứ tự các cấp.</p>
+            </div>
+            <button type="button" id="cancel-create" class="button button-muted">Đóng</button>
+          </div>
+          <form id="create-form">
+            <label class="field-label" for="request-title">Tiêu đề hồ sơ</label>
+            <input id="request-title" name="title" maxlength="200" required
+              placeholder="Ví dụ: Đề xuất tuyển dụng chuyên viên tuyển dụng">
+
+            <label class="field-label" for="request-details">Thông tin hồ sơ</label>
+            <textarea id="request-details" name="details" rows="4" maxlength="10000" required
+              placeholder="Mô tả vị trí, số lượng, lý do tuyển dụng..."></textarea>
+
+            <div class="step-heading">
+              <label class="field-label">Các cấp phê duyệt</label>
+              <button type="button" id="add-step" class="button button-muted">+ Thêm cấp</button>
+            </div>
+            <div id="reviewer-steps" class="reviewer-steps"></div>
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Gửi phê duyệt</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="approval-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Hồ sơ của tôi và được giao</h2>
+              <p>Hồ sơ yêu cầu bổ sung sẽ quay lại người tạo; lịch sử quyết định luôn được lưu.</p>
+            </div>
+            <button type="button" id="refresh-list" class="button button-muted">Làm mới</button>
+          </div>
+          <div id="request-list" class="request-list" aria-live="polite">
+            <p class="empty-state">Đang tải hồ sơ...</p>
+          </div>
+        </section>
+
+        <section id="detail-panel" class="approval-panel detail-panel" hidden>
+          <div id="request-detail"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="js/sessionManager.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/approvals.js"></script>
+</body>
+
+</html>
