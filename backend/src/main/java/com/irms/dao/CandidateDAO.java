@@ -20,8 +20,9 @@ public class CandidateDAO extends BaseDAO {
     }
 
     /**
-     * [US 5]: Tra cứu danh sách ứng viên, hỗ trợ ràng buộc quyền sở hữu vị trí tuyển dụng của Recruiter.
-     * - Nếu recruiterId != null: Chỉ trả về ứng viên nộp vào các vị trí do recruiter này phụ trách (r.recruiter_id = ?).
+     * [US 5 / KN-116]: Tra cứu danh sách ứng viên, hỗ trợ ràng buộc quyền sở hữu vị trí tuyển dụng của Recruiter.
+     * - Nếu recruiterId != null: Chỉ trả về ứng viên nộp vào các vị trí mà recruiter được giao
+     *   (là recruiter chính HOẶC recruiter hỗ trợ trong bảng requisition_recruiters).
      * - Nếu recruiterId == null (Admin / HR Manager): Xem toàn bộ ứng viên của hệ thống.
      */
     public List<Candidate> findAll(String search, String status, String recruiterId) {
@@ -32,7 +33,10 @@ public class CandidateDAO extends BaseDAO {
 
         List<Object> params = new ArrayList<>();
         if (recruiterId != null && !recruiterId.trim().isEmpty()) {
-            sql.append("AND r.recruiter_id = ? ");
+            // [KN-116]: Recruiter thấy ứng viên của vị trí mình là recruiter CHÍNH hoặc recruiter HỖ TRỢ
+            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IN ("
+                + "SELECT requisition_id FROM requisition_recruiters WHERE recruiter_id = ?)) ");
+            params.add(recruiterId.trim());
             params.add(recruiterId.trim());
         }
         if (search != null && !search.trim().isEmpty()) {

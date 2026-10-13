@@ -338,7 +338,42 @@ CREATE TABLE competency_framework_criteria (
 CREATE INDEX idx_cfc_framework ON competency_framework_criteria(framework_id);
 CREATE INDEX idx_cfc_criterion ON competency_framework_criteria(criterion_id);
 
--- 18. Bảng liên kết Chức danh - Khung năng lực (position_competency_frameworks)
+-- 18. Bảng Phân công Recruiter hỗ trợ cho Vị trí tuyển dụng (KN-116)
+DROP TABLE IF EXISTS requisition_recruiters;
+CREATE TABLE requisition_recruiters (
+    id VARCHAR(36) PRIMARY KEY,
+    requisition_id VARCHAR(36) NOT NULL,
+    recruiter_id VARCHAR(36) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'SUPPORT', -- 'PRIMARY', 'SUPPORT'
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by VARCHAR(36) NULL,
+    CONSTRAINT fk_rr_req FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_rr_rec FOREIGN KEY (recruiter_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_rr_req_rec UNIQUE (requisition_id, recruiter_id),
+    INDEX idx_rr_requisition (requisition_id),
+    INDEX idx_rr_recruiter (recruiter_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 19. Bảng Lịch sử chuyển giao Recruiter chính (KN-116)
+DROP TABLE IF EXISTS recruiter_assignment_history;
+CREATE TABLE recruiter_assignment_history (
+    id VARCHAR(36) PRIMARY KEY,
+    requisition_id VARCHAR(36) NOT NULL,
+    requisition_code VARCHAR(50) NULL,
+    old_recruiter_id VARCHAR(36) NULL,
+    old_recruiter_name VARCHAR(255) NULL,
+    new_recruiter_id VARCHAR(36) NULL,
+    new_recruiter_name VARCHAR(255) NULL,
+    change_reason TEXT NULL,
+    changed_by VARCHAR(36) NULL,
+    changed_by_name VARCHAR(255) NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_rah_req FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE,
+    INDEX idx_rah_requisition (requisition_id),
+    INDEX idx_rah_changed_at (changed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. Bảng liên kết Chức danh - Khung năng lực (position_competency_frameworks)
 DROP TABLE IF EXISTS position_competency_frameworks;
 CREATE TABLE position_competency_frameworks (
     id VARCHAR(36) PRIMARY KEY,

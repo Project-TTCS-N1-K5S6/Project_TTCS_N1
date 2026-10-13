@@ -39,6 +39,16 @@
                     </a>
                 </li>
             </c:if>
+            <!-- [KN-116]: Menu Phân bổ hồ sơ – chỉ ADMIN / HR_MANAGER / người có quyền requisitions.assign -->
+            <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('requisitions.assign')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'assign' ? 'active' : ''}" href="${pageContext.request.contextPath}/recruitment-requests">
+                        <i class="bi bi-person-lines-fill"></i>
+                        <span>Phân bổ hồ sơ</span>
+                        <span class="badge bg-primary-subtle text-primary ms-auto" style="font-size: 10px;">KN-116</span>
+                    </a>
+                </li>
+            </c:if>
             <!-- [US 6 Tiêu chí 1]: Menu Hồ sơ ứng viên hiển thị cho người có quyền candidates.view hoặc ADMIN -->
             <c:if test="${currentUser.hasPermission('candidates.view') || currentUser.hasRole('ADMIN')}">
                 <li class="nav-item">

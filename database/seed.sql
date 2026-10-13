@@ -119,7 +119,9 @@ INSERT INTO permissions (id, code, name, module, action, description) VALUES
 ('p-032', 'competencies.create', 'Tạo khung năng lực', 'competencies', 'create', 'Tạo mới bộ khung năng lực đánh giá nhân sự'),
 ('p-033', 'competencies.update', 'Chỉnh sửa khung năng lực', 'competencies', 'update', 'Cập nhật nội dung tiêu chí và cơ cấu trọng số khung năng lực'),
 ('p-034', 'competencies.status', 'Kích hoạt / Ngừng áp dụng', 'competencies', 'status', 'Kích hoạt hoặc ngừng áp dụng khung năng lực'),
-('p-035', 'competencies.assign', 'Gán khung cho chức danh', 'competencies', 'assign', 'Thiết lập khung năng lực áp dụng cho từng chức danh vị trí');
+('p-035', 'competencies.assign', 'Gán khung cho chức danh', 'competencies', 'assign', 'Thiết lập khung năng lực áp dụng cho từng chức danh vị trí'),
+-- 12. Phân bổ hồ sơ tuyển dụng (KN-116)
+('p-036', 'requisitions.assign', 'Phân bổ Recruiter cho vị trí', 'requisitions', 'assign', 'Gán recruiter chính và recruiter hỗ trợ cho từng vị trí tuyển dụng, ghi lịch sử chuyển giao');
 
 -- 4. Gán quyền hạn cho từng vai trò (Role Permissions)
 DELETE FROM role_permissions;
@@ -143,7 +145,8 @@ WHERE code IN (
     'reports.view', 'reports.export',
     'users.view', 'roles.view', 'permissions.view', 'audit.view', 'salary.view',
     'competencies.view', 'competencies.create', 'competencies.update', 'competencies.status', 'competencies.assign',
-    'departments.view', 'departments.create', 'departments.update', 'departments.delete', 'departments.status'
+    'departments.view', 'departments.create', 'departments.update', 'departments.delete', 'departments.status',
+    'requisitions.assign'
 );
 
 -- RECRUITER: Chuyên sâu pipeline tuyển dụng, KHÔNG có salary.view và quản trị người dùng

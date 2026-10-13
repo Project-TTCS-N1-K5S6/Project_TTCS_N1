@@ -20,7 +20,8 @@ import java.util.List;
  * ==============================================================================
  * Phục vụ User Story:
  * - US 5: Đảm bảo Recruiter không xem được ứng viên của vị trí không thuộc mình.
- *   + Chỉ trả về ứng viên của các vị trí do chính Recruiter đó phụ trách nếu user không phải ADMIN hoặc HR_MANAGER.
+ * - KN-116: Recruiter chỉ nhìn thấy ứng viên của vị trí được giao
+ *   (bao gồm cả recruiter chính lẫn recruiter hỗ trợ - bảng requisition_recruiters).
  *   + Kiểm tra thẩm quyền thao tác sửa đổi ứng viên (candidates.manage) ở tầng Server.
  * ==============================================================================
  */
@@ -41,9 +42,10 @@ public class CandidateServlet extends HttpServlet {
         String search = request.getParameter("search");
         String status = request.getParameter("status");
 
-        // [US 5]: Phân tách dữ liệu ứng viên theo vai trò:
+        // [US 5 / KN-116]: Phân tách dữ liệu ứng viên theo vai trò:
         // Nếu là Chuyên viên tuyển dụng (RECRUITER) và không phải Quản trị viên/Trưởng phòng HR,
-        // hệ thống chỉ tải các ứng viên nộp vào vị trí mà nhân sự này phụ trách.
+        // hệ thống chỉ tải các ứng viên nộp vào vị trí mà nhân sự này phụ trách
+        // (recruiter chính HOẶC recruiter hỗ trợ - KN-116, dùng bảng requisition_recruiters).
         String recruiterId = null;
         if (currentUser != null && currentUser.hasRole("RECRUITER") && !currentUser.hasRole("ADMIN") && !currentUser.hasRole("HR_MANAGER")) {
             recruiterId = currentUser.getId();
@@ -56,6 +58,7 @@ public class CandidateServlet extends HttpServlet {
 
         request.getRequestDispatcher("/WEB-INF/views/candidates/list.jsp").forward(request, response);
     }
+
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

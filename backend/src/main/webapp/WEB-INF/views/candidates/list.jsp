@@ -20,10 +20,35 @@
                 <h4 class="fw-bold mb-1">Pipeline &amp; Hồ sơ Ứng viên</h4>
                 <p class="text-muted small mb-0">Theo dõi tiến trình tuyển dụng, sàng lọc CV, phỏng vấn và gửi Offer.</p>
             </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
-                <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
-            </button>
+            <c:if test="${currentUser.hasPermission('candidates.manage') || currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER')}">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
+                </button>
+            </c:if>
         </div>
+
+        <%-- [KN-116]: Thông báo phạm vi hiển thị cho Recruiter được phân công --%>
+        <c:if test="${currentUser.hasRole('RECRUITER') && !currentUser.hasRole('ADMIN') && !currentUser.hasRole('HR_MANAGER')}">
+            <div class="alert alert-info d-flex align-items-start gap-3 border border-info-subtle shadow-sm mb-3" role="alert"
+                 style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 10px;">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="rounded-circle bg-info bg-opacity-15 d-flex align-items-center justify-content-center"
+                         style="width: 36px; height: 36px;">
+                        <i class="bi bi-shield-lock-fill text-info"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="fw-bold text-info-emphasis mb-1">
+                        <i class="bi bi-info-circle me-1"></i>Phạm vi hiển thị bị giới hạn (KN-116)
+                    </div>
+                    <div class="text-info-emphasis small">
+                        Bạn chỉ xem được hồ sơ ứng viên của các <strong>vị trí tuyển dụng được giao cho bạn</strong>
+                        (vai trò Recruiter Chính hoặc Recruiter Hỗ trợ).
+                        Liên hệ HR Manager nếu cần mở rộng quyền truy cập.
+                    </div>
+                </div>
+            </div>
+        </c:if>
 
         <!-- Bộ lọc trạng thái Pipeline -->
         <div class="d-flex flex-wrap gap-2 mb-3">
@@ -84,7 +109,7 @@
                                             <c:if test="${not empty c.phone}"><div><i class="bi bi-telephone me-1"></i> ${c.phone}</div></c:if>
                                         </div>
                                     </td>
-                                    <td>
+                                     <td>
                                         <div class="fw-semibold text-dark">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn yêu cầu'}</div>
                                         <c:choose>
                                             <c:when test="${not empty c.cvUrl}">
