@@ -1,34 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const sourceJobs = [
-    {
-      id: 'job-sales',
-      title: 'Chuyên viên Kinh doanh',
-      status: 'Đang tuyển',
-      description:
-        'Tìm kiếm và phát triển khách hàng mới. Tư vấn giải pháp phù hợp, duy trì quan hệ với khách hàng hiện tại và phối hợp với các phòng ban để đạt mục tiêu kinh doanh.',
-      requirements:
-        '- Tốt nghiệp Cao đẳng trở lên.\n- Có kỹ năng giao tiếp, đàm phán và chăm sóc khách hàng.\n- Ưu tiên ứng viên có ít nhất 1 năm kinh nghiệm kinh doanh.'
-    },
-    {
-      id: 'job-java',
-      title: 'Lập trình viên Java',
-      status: 'Đã đóng',
-      description:
-        'Phát triển, kiểm thử và bảo trì các dịch vụ backend bằng Java. Phối hợp cùng nhóm sản phẩm để phân tích yêu cầu và cải thiện hiệu năng hệ thống.',
-      requirements:
-        '- Có kiến thức Java, OOP và SQL.\n- Biết sử dụng Git và làm việc theo quy trình nhóm.\n- Có kinh nghiệm với Spring Boot là một lợi thế.'
-    },
-    {
-      id: 'job-hr-intern',
-      title: 'Thực tập sinh Nhân sự',
-      status: 'Bản nháp',
-      description:
-        'Hỗ trợ đăng tin tuyển dụng, sàng lọc hồ sơ, sắp xếp lịch phỏng vấn và cập nhật dữ liệu ứng viên.',
-      requirements:
-        '- Là sinh viên năm cuối hoặc mới tốt nghiệp ngành Quản trị nhân lực.\n- Cẩn thận, chủ động và giao tiếp tốt.\n- Có thể thực tập tối thiểu 3 ngày mỗi tuần.'
-    }
-  ];
-
   const navButtons = document.querySelectorAll('.nav-item');
   const dialog = document.querySelector('#copy-dialog');
   const form = document.querySelector('#copy-form');
@@ -39,9 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const copyList = document.querySelector('#copy-list');
   const errorMessage = document.querySelector('#copy-error');
   const toast = document.querySelector('#copy-toast');
-  const copiesStorageKey = 'kn115-recruitment-copies';
+  const openDialogButton = document.querySelector('#open-copy-dialog');
+  const submitButton = form.querySelector('[type="submit"]');
+  let sourceJobs = [];
   let copies = [];
-  let storageReady = false;
   let toastTimeout;
 
   navButtons.forEach((button) => {
@@ -63,28 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
     toastTimeout = window.setTimeout(() => toast.classList.remove('visible'), 3500);
   }
 
-  function readCopies() {
-    const storedCopies = window.localStorage.getItem(copiesStorageKey);
-    if (!storedCopies) return [];
-
-    const parsedCopies = JSON.parse(storedCopies);
-    if (!Array.isArray(parsedCopies)) {
-      throw new Error('Dữ liệu bản sao tuyển dụng trong trình duyệt không hợp lệ.');
+  async function requestJson(url, options) {
+    const response = await fetch(url, options);
+    let payload;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      throw new Error('Máy chủ trả về dữ liệu không hợp lệ.');
     }
 
-    const validCopies = parsedCopies.every((copy) =>
-      copy &&
-      typeof copy.id === 'string' &&
-      typeof copy.title === 'string' &&
-      typeof copy.description === 'string' &&
-      typeof copy.requirements === 'string' &&
-      typeof copy.sourceTitle === 'string'
-    );
-    if (!validCopies) {
-      throw new Error('Dữ liệu bản sao tuyển dụng trong trình duyệt không đầy đủ.');
+    if (!response.ok) {
+      throw new Error(payload.error || `Yêu cầu thất bại (${response.status}).`);
     }
-
-    return parsedCopies;
+    return payload;
   }
 
   function appendText(parent, tagName, className, text) {
@@ -110,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const summary = document.createElement('summary');
       summary.className = 'copy-summary';
       appendText(summary, 'span', 'copy-name', copy.title);
-      appendText(summary, 'span', 'draft-badge', 'Nháp');
+      appendText(summary, 'span', 'draft-badge', copy.status);
       row.append(summary);
 
       const content = document.createElement('div');
@@ -126,15 +88,38 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function populateSources() {
+    sourceSelect.replaceChildren(new Option('Chọn tin tuyển dụng', ''));
     sourceJobs.forEach((job) => {
-      const option = document.createElement('option');
-      option.value = job.id;
-      option.textContent = `${job.title} — ${job.status}`;
-      sourceSelect.append(option);
+      sourceSelect.add(new Option(`${job.title} — ${job.status}`, job.id));
     });
   }
 
-  document.querySelector('#open-copy-dialog').addEventListener('click', () => {
+  async function loadData() {
+    openDialogButton.disabled = true;
+    copyList.replaceChildren();
+    appendText(copyList, 'p', 'empty-text', 'Đang tải dữ liệu tuyển dụng...');
+
+    try {
+      const [jobs, savedCopies] = await Promise.all([
+        requestJson('/api/jobs'),
+        requestJson('/api/job-copies')
+      ]);
+      if (!Array.isArray(jobs) || !Array.isArray(savedCopies)) {
+        throw new Error('Máy chủ trả về danh sách tuyển dụng không hợp lệ.');
+      }
+
+      sourceJobs = jobs;
+      copies = savedCopies;
+      populateSources();
+      renderCopies();
+      openDialogButton.disabled = sourceJobs.length === 0;
+    } catch (error) {
+      copyList.replaceChildren();
+      appendText(copyList, 'p', 'storage-error', `Không thể tải dữ liệu từ backend. ${error.message}`);
+    }
+  }
+
+  openDialogButton.addEventListener('click', () => {
     form.reset();
     setError('');
     dialog.showModal();
@@ -159,57 +144,45 @@ document.addEventListener('DOMContentLoaded', () => {
     setError('');
   });
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     setError('');
 
-    const source = sourceJobs.find((job) => job.id === sourceSelect.value);
-    if (!source) {
+    if (!sourceJobs.some((job) => job.id === sourceSelect.value)) {
       setError('Vui lòng chọn tin tuyển dụng gốc.');
       sourceSelect.focus();
       return;
     }
 
-    if (!storageReady) {
-      setError('Không thể đọc dữ liệu đã lưu. Hãy tải lại trang trước khi tạo bản sao để tránh ghi đè dữ liệu.');
-      return;
-    }
-
     const newCopy = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      sourceTitle: source.title,
+      sourceJobId: sourceSelect.value,
       title: titleInput.value.trim(),
-      description: descriptionInput.value,
-      requirements: requirementsInput.value,
-      status: 'Nháp',
-      createdAt: new Date().toISOString()
+      description: descriptionInput.value.trim(),
+      requirements: requirementsInput.value.trim()
     };
 
-    if (!newCopy.title || !newCopy.description.trim() || !newCopy.requirements.trim()) {
+    if (!newCopy.title || !newCopy.description || !newCopy.requirements) {
       setError('Vui lòng nhập đầy đủ tên tin, mô tả công việc và yêu cầu ứng viên.');
       return;
     }
 
+    submitButton.disabled = true;
     try {
-      const updatedCopies = [newCopy, ...copies];
-      window.localStorage.setItem(copiesStorageKey, JSON.stringify(updatedCopies));
-      copies = updatedCopies;
+      const createdCopy = await requestJson('/api/job-copies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCopy)
+      });
+      copies = [createdCopy, ...copies];
+      renderCopies();
+      dialog.close();
+      showToast('Đã tạo bản sao tuyển dụng ở trạng thái Nháp.');
     } catch (error) {
-      setError(`Không thể lưu bản sao vào trình duyệt. ${error.message}`);
-      return;
+      setError(`Không thể tạo bản sao tuyển dụng. ${error.message}`);
+    } finally {
+      submitButton.disabled = false;
     }
-
-    renderCopies();
-    dialog.close();
-    showToast('Đã tạo bản sao tuyển dụng ở trạng thái Nháp.');
   });
 
-  try {
-    populateSources();
-    copies = readCopies();
-    storageReady = true;
-    renderCopies();
-  } catch (error) {
-    appendText(copyList, 'p', 'storage-error', `Không thể tải bản sao đã lưu. ${error.message}`);
-  }
+  loadData();
 });
