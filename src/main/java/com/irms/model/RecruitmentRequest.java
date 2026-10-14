@@ -46,6 +46,13 @@ public class RecruitmentRequest implements Serializable {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // Phân hệ Định biên & Ngân sách (KN-199 & KN-201): Xác nhận ghi đè khi vượt chỉ tiêu
+    private boolean isBudgetOverridden = false;
+    private String budgetOverrideReason;
+    private String budgetOverriddenBy;
+    private String budgetOverriddenByName;
+    private Timestamp budgetOverriddenAt;
+
     public RecruitmentRequest() {}
 
     public String getId() { return id; }
@@ -196,4 +203,19 @@ public class RecruitmentRequest implements Serializable {
         if ("REJECTED".equalsIgnoreCase(status)) return "Từ chối";
         return status != null ? status : "Không xác định";
     }
+
+    public boolean isBudgetOverridden() { return isBudgetOverridden; }
+    public void setBudgetOverridden(boolean budgetOverridden) { isBudgetOverridden = budgetOverridden; }
+
+    public String getBudgetOverrideReason() { return budgetOverrideReason; }
+    public void setBudgetOverrideReason(String budgetOverrideReason) { this.budgetOverrideReason = budgetOverrideReason; }
+
+    public String getBudgetOverriddenBy() { return budgetOverriddenBy; }
+    public void setBudgetOverriddenBy(String budgetOverriddenBy) { this.budgetOverriddenBy = budgetOverriddenBy; }
+
+    public String getBudgetOverriddenByName() { return budgetOverriddenByName; }
+    public void setBudgetOverriddenByName(String budgetOverriddenByName) { this.budgetOverriddenByName = budgetOverriddenByName; }
+
+    public Timestamp getBudgetOverriddenAt() { return budgetOverriddenAt; }
+    public void setBudgetOverriddenAt(Timestamp budgetOverriddenAt) { this.budgetOverriddenAt = budgetOverriddenAt; }
 }

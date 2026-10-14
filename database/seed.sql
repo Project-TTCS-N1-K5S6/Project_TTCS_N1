@@ -121,7 +121,11 @@ INSERT INTO permissions (id, code, name, module, action, description) VALUES
 ('p-034', 'competencies.status', 'Kích hoạt / Ngừng áp dụng', 'competencies', 'status', 'Kích hoạt hoặc ngừng áp dụng khung năng lực'),
 ('p-035', 'competencies.assign', 'Gán khung cho chức danh', 'competencies', 'assign', 'Thiết lập khung năng lực áp dụng cho từng chức danh vị trí'),
 -- 12. Phân bổ hồ sơ tuyển dụng (KN-116)
-('p-036', 'requisitions.assign', 'Phân bổ Recruiter cho vị trí', 'requisitions', 'assign', 'Gán recruiter chính và recruiter hỗ trợ cho từng vị trí tuyển dụng, ghi lịch sử chuyển giao');
+('p-036', 'requisitions.assign', 'Phân bổ Recruiter cho vị trí', 'requisitions', 'assign', 'Gán recruiter chính và recruiter hỗ trợ cho từng vị trí tuyển dụng, ghi lịch sử chuyển giao'),
+-- 13. Định biên & Ngân sách nhân sự (KN-195 -> KN-201)
+('p-037', 'budget.view', 'Xem định biên & ngân sách', 'budget', 'view', 'Xem danh sách và báo cáo định biên headcount và ngân sách nhân sự theo phòng ban'),
+('p-038', 'budget.manage', 'Khai báo định biên & ngân sách', 'budget', 'manage', 'Khai báo và cập nhật chỉ tiêu định biên và ngân sách lương theo phòng ban'),
+('p-039', 'budget.override', 'Xác nhận ghi đè vượt chỉ tiêu', 'budget', 'override', 'Xác nhận ghi đè khi tạo yêu cầu tuyển dụng vượt chỉ tiêu định biên hoặc ngân sách (Dành cho Trưởng phòng Nhân sự)');
 
 -- 4. Gán quyền hạn cho từng vai trò (Role Permissions)
 DELETE FROM role_permissions;
@@ -146,7 +150,8 @@ WHERE code IN (
     'users.view', 'roles.view', 'permissions.view', 'audit.view', 'salary.view',
     'competencies.view', 'competencies.create', 'competencies.update', 'competencies.status', 'competencies.assign',
     'departments.view', 'departments.create', 'departments.update', 'departments.delete', 'departments.status',
-    'requisitions.assign'
+    'requisitions.assign',
+    'budget.view', 'budget.manage', 'budget.override'
 );
 
 -- RECRUITER: Chuyên sâu pipeline tuyển dụng, KHÔNG có salary.view và quản trị người dùng
@@ -340,6 +345,26 @@ INSERT INTO competency_framework_criteria (id, framework_id, criterion_id, weigh
 INSERT INTO position_competency_frameworks (id, position_id, framework_id, assigned_by) VALUES
 ('pcf-001', 'sal-002', 'cf-001', 'usr-001'), -- DEV-BE-SR (Kỹ sư Java Backend Senior) dùng KNL-DEV-SR
 ('pcf-002', 'sal-005', 'cf-002', 'usr-001'); -- SALES-LEAD-01 (Trưởng nhóm Kinh doanh B2B) dùng KNL-SALES-B2B
+
+-- 12. Khởi tạo Subtasks công việc Định biên & Ngân sách (KN-195 -> KN-201)
+DELETE FROM budget_subtasks;
+INSERT INTO budget_subtasks (id, code, title, priority, assignee_id, assignee_name, status, module_type) VALUES
+('st-195', 'KN-195', '[BE] Tính toán headcount còn lại và kiểm tra vượt chỉ tiêu khi tạo yêu cầu tuyển dụng.', 'HIGH', 'usr-004', 'Phạm Trưởng Bộ Phận Kỹ Thuật', 'DONE', 'BE'),
+('st-196', 'KN-196', '[BE] API tra cứu ngân sách còn lại theo phòng ban để phục vụ màn hình requisition.', 'MEDIUM', 'usr-004', 'Phạm Trưởng Bộ Phận Kỹ Thuật', 'DONE', 'BE'),
+('st-197', 'KN-197', '[BE] Khai báo/cập nhật định biên và ngân sách nhân sự theo phòng ban.', 'HIGH', 'usr-002', 'Trần Thị Trưởng Phòng Nhân Sự', 'DONE', 'BE'),
+('st-198', 'KN-198', '[BE] Thiết kế mô hình lưu chỉ tiêu headcount và ngân sách lương theo phòng ban/năm.', 'CRITICAL', 'usr-004', 'Phạm Trưởng Bộ Phận Kỹ Thuật', 'DONE', 'BE'),
+('st-199', 'KN-199', '[BE] Cơ chế xác nhận ghi đè khi vượt chỉ tiêu bởi Trưởng phòng Nhân sự.', 'HIGH', 'usr-002', 'Trần Thị Trưởng Phòng Nhân Sự', 'DONE', 'BE'),
+('st-200', 'KN-200', '[FE] Màn hình khai báo định biên và ngân sách nhân sự theo phòng ban.', 'HIGH', 'usr-003', 'Lê Chuyên Viên Tuyển Dụng', 'DONE', 'FE'),
+('st-201', 'KN-201', '[FE] Hiển thị cảnh báo vượt chỉ tiêu và luồng xác nhận ghi đè trên form yêu cầu tuyển dụng.', 'CRITICAL', 'usr-003', 'Lê Chuyên Viên Tuyển Dụng', 'DONE', 'FE');
+
+-- 13. Khởi tạo Định biên & Ngân sách Nhân sự theo phòng ban (2026)
+DELETE FROM department_headcount_budgets;
+INSERT INTO department_headcount_budgets (id, department_id, fiscal_year, target_headcount, total_salary_budget, currency, description, status, created_by) VALUES
+('dhb-tech-2026', 'dept-003', 2026, 15, 650000000.00, 'VND', 'Định biên Khối Công nghệ Thông tin năm tài chính 2026', 'ACTIVE', 'usr-001'),
+('dhb-hr-2026', 'dept-002', 2026, 8, 250000000.00, 'VND', 'Định biên Ban Nhân sự & Tuyển dụng năm 2026', 'ACTIVE', 'usr-001'),
+('dhb-sales-2026', 'dept-004', 2026, 20, 500000000.00, 'VND', 'Định biên Khối Kinh doanh & Thị trường năm 2026', 'ACTIVE', 'usr-001'),
+('dhb-mkt-2026', 'dept-005', 2026, 6, 180000000.00, 'VND', 'Định biên Phòng Truyền thông & Marketing năm 2026', 'ACTIVE', 'usr-001'),
+('dhb-bgd-2026', 'dept-001', 2026, 5, 300000000.00, 'VND', 'Định biên Ban Giám đốc năm 2026', 'ACTIVE', 'usr-001');
 
 SET FOREIGN_KEY_CHECKS = 1;
 

@@ -21,7 +21,6 @@ com\irms\service\DepartmentService$DeleteCheckResult.class
 com\irms\controller\SharedCatalogServlet.class
 com\irms\dao\AuditDAO.class
 com\irms\dao\SharedCatalogDAO.class
-com\irms\filter\AuthFilter.class
 com\irms\model\Candidate.class
 com\irms\model\SharedCatalogType.class
 com\irms\controller\PlaceholderServlet.class

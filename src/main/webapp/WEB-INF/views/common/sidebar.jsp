@@ -72,6 +72,14 @@
                     </a>
                 </li>
             </c:if>
+            <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('budget.view') || currentUser.hasPermission('budget.manage')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'budget' ? 'active' : ''}" href="${pageContext.request.contextPath}/headcount-budgets">
+                        <i class="bi bi-wallet2"></i>
+                        <span>Định biên &amp; Ngân sách</span>
+                    </a>
+                </li>
+            </c:if>
             <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('competencies.view') || currentUser.hasPermission('evaluations.manage')}">
                 <li class="nav-item">
                     <a class="nav-link ${activeMenu == 'competencies' ? 'active' : ''}" href="${pageContext.request.contextPath}/competency-frameworks">

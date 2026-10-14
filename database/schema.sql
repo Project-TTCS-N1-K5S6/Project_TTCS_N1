@@ -206,6 +206,10 @@ CREATE TABLE recruitment_requisitions (
     work_location_id VARCHAR(36) NULL,
     work_mode_id VARCHAR(36) NULL,
     created_by VARCHAR(36) NULL,
+    is_budget_overridden BOOLEAN NOT NULL DEFAULT FALSE,
+    budget_override_reason TEXT NULL,
+    budget_overridden_by VARCHAR(36) NULL,
+    budget_overridden_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_req_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
@@ -214,7 +218,8 @@ CREATE TABLE recruitment_requisitions (
     CONSTRAINT fk_req_work_location FOREIGN KEY (work_location_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
     CONSTRAINT fk_req_work_mode FOREIGN KEY (work_mode_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
     CONSTRAINT fk_req_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_req_closed_by FOREIGN KEY (closed_by) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_req_closed_by FOREIGN KEY (closed_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_req_overridden_by FOREIGN KEY (budget_overridden_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 12. Bảng Tin tuyển dụng (job_postings)
@@ -434,6 +439,46 @@ CREATE TABLE recruiter_assignment_history (
     CONSTRAINT fk_rah_req FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE,
     INDEX idx_rah_requisition (requisition_id),
     INDEX idx_rah_changed_at (changed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 22. Bảng Khai báo Định biên & Ngân sách Nhân sự theo phòng ban/năm (KN-197, KN-198)
+DROP TABLE IF EXISTS department_headcount_budgets;
+CREATE TABLE department_headcount_budgets (
+    id VARCHAR(36) PRIMARY KEY,
+    department_id VARCHAR(36) NOT NULL,
+    fiscal_year INT NOT NULL,
+    target_headcount INT NOT NULL DEFAULT 0,
+    total_salary_budget DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    currency VARCHAR(10) NOT NULL DEFAULT 'VND',
+    description TEXT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- 'ACTIVE', 'INACTIVE', 'LOCKED'
+    created_by VARCHAR(36) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(36) NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dhb_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE,
+    CONSTRAINT fk_dhb_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_dhb_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE KEY uk_dept_fiscal_year (department_id, fiscal_year),
+    INDEX idx_dhb_year (fiscal_year),
+    INDEX idx_dhb_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 23. Bảng Danh mục Subtasks công việc (budget_subtasks: KN-195 -> KN-201)
+DROP TABLE IF EXISTS budget_subtasks;
+CREATE TABLE budget_subtasks (
+    id VARCHAR(36) PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM', -- 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'
+    assignee_id VARCHAR(36) NULL,
+    assignee_name VARCHAR(100) NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'TODO', -- 'TODO', 'IN_PROGRESS', 'DONE'
+    module_type VARCHAR(10) NOT NULL DEFAULT 'BE', -- 'BE', 'FE'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_bs_assignee FOREIGN KEY (assignee_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_bs_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
