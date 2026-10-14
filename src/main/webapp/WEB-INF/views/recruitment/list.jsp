@@ -643,7 +643,12 @@
                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="openApprovalModalFromDetail()">
                     <i class="bi bi-diagram-3-fill me-1"></i>Xem Nhật ký & Chuỗi cấp duyệt
                 </button>
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                <div class="d-flex align-items-center gap-2">
+                    <a id="modalCopyBtn" href="#" class="btn btn-outline-success btn-sm" title="KN-115: Sao chép JD và yêu cầu thành bản nháp mới">
+                        <i class="bi bi-copy me-1"></i>Sao chép JD &amp; Yêu cầu
+                    </a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                </div>
             </div>
         </div>
     </div>
@@ -987,6 +992,11 @@ function viewDetails(id, code, pos, dept, count, reason, sal, deadline, statusLa
     document.getElementById('modalReason').textContent = reason;
     document.getElementById('modalSalary').textContent = sal;
     document.getElementById('modalDeadline').textContent = deadline || 'Chưa đặt';
+
+    var copyBtn = document.getElementById('modalCopyBtn');
+    if (copyBtn) {
+        copyBtn.href = '${pageContext.request.contextPath}/recruitment-requests/create?copyFrom=' + encodeURIComponent(id);
+    }
 
     var jd = document.getElementById('jd-' + id) ? document.getElementById('jd-' + id).textContent.trim() : '';
     var req = document.getElementById('req-' + id) ? document.getElementById('req-' + id).textContent.trim() : '';
