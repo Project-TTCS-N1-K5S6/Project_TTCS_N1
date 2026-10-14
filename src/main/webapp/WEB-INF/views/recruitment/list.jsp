@@ -251,7 +251,10 @@
                             <option value="OVERDUE" class="text-danger fw-bold" ${paramStatus == 'OVERDUE' ? 'selected' : ''}>⚠️ Quá hạn cần người</option>
                             <option value="DUE_SOON" class="text-warning-emphasis fw-bold" ${paramStatus == 'DUE_SOON' ? 'selected' : ''}>⏳ Sắp đến hạn (&le; 7 ngày)</option>
                             <option value="OPEN" ${paramStatus == 'OPEN' ? 'selected' : ''}>Đang tuyển dụng</option>
+                            <option value="APPROVED" ${paramStatus == 'APPROVED' ? 'selected' : ''}>Đã duyệt</option>
                             <option value="PENDING_APPROVAL" ${paramStatus == 'PENDING_APPROVAL' ? 'selected' : ''}>Chờ phê duyệt</option>
+                            <option value="CHANGES_REQUESTED" ${paramStatus == 'CHANGES_REQUESTED' ? 'selected' : ''}>Yêu cầu bổ sung</option>
+                            <option value="REJECTED" ${paramStatus == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
                             <option value="FULFILLED" ${paramStatus == 'FULFILLED' ? 'selected' : ''}>Đã tuyển đủ</option>
                             <option value="PAUSED" ${paramStatus == 'PAUSED' ? 'selected' : ''}>Tạm dừng</option>
                             <option value="CANCELLED" ${paramStatus == 'CANCELLED' ? 'selected' : ''}>Đã huỷ</option>
@@ -1133,11 +1136,25 @@
                         </div>
                     </div>
 
-                    <!-- Khung thao tác phê duyệt (Hiển thị nếu người dùng hiện tại có quyền tại cấp đang chờ) (KN-154) -->
+                    <!-- Lịch sử ý kiến & vết phê duyệt qua các vòng (KN-183, KN-188) -->
+                    <div id="apprHistoriesSection" class="mb-4" style="display: none;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-clock-history text-primary"></i>
+                                Lịch sử phê duyệt &amp; Ý kiến phản hồi qua các vòng
+                            </h6>
+                            <span class="badge bg-light text-secondary border">Bảo mật bất biến</span>
+                        </div>
+                        <div id="apprHistoriesList" class="p-3 bg-light rounded border">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+
+                    <!-- Khung thao tác phê duyệt (Hiển thị nếu người dùng hiện tại có quyền tại cấp đang chờ) (KN-154, KN-186) -->
                     <div id="apprActionFormCard" class="card border-primary border-2 shadow-sm mb-2" style="display: none;">
                         <div class="card-header bg-primary-subtle border-primary py-2.5 d-flex align-items-center justify-content-between">
                             <span class="fw-bold text-primary small">
-                                <i class="bi bi-pencil-square me-1"></i> Thao tác Phê duyệt / Từ chối (Dành cho bạn)
+                                <i class="bi bi-pencil-square me-1"></i> Thao tác Phê duyệt / Đánh giá hồ sơ (Dành cho bạn)
                             </span>
                             <span class="badge bg-primary text-white" id="actionCurrentStepName"></span>
                         </div>
@@ -1145,18 +1162,24 @@
                             <form id="actionApprovalForm" onsubmit="return false;">
                                 <input type="hidden" id="actionRequisitionId" value="">
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-dark">
-                                        Ý kiến người duyệt / Góp ý <span class="text-danger">* (Bắt buộc nếu từ chối)</span>
+                                    <label class="form-label small fw-bold text-dark" for="actionComment">
+                                        Ý kiến người duyệt / Lý do <span class="text-danger" id="commentRequiredHint">* (Bắt buộc khi Từ chối hoặc Yêu cầu bổ sung)</span>
                                     </label>
                                     <textarea id="actionComment" class="form-control form-control-sm" rows="3" 
-                                              placeholder="Nhập nhận xét, hướng dẫn hoặc lý do từ chối..."></textarea>
+                                              placeholder="Nhập nhận xét phê duyệt, lý do từ chối hoặc hướng dẫn bổ sung thông tin..."></textarea>
+                                    <div id="actionCommentValidation" class="invalid-feedback">
+                                        Vui lòng nhập lý do/ý kiến khi thực hiện Từ chối hoặc Yêu cầu bổ sung!
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                <div class="d-flex align-items-center justify-content-end gap-2 flex-wrap">
                                     <button type="button" class="btn btn-sm btn-outline-danger px-3" onclick="submitApprovalDecision('REJECT')">
-                                        <i class="bi bi-x-circle me-1"></i> Từ chối yêu cầu
+                                        <i class="bi bi-x-circle me-1"></i> Từ chối
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-warning text-dark px-3 shadow-sm" onclick="submitApprovalDecision('REQUEST_CHANGES')">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Yêu cầu bổ sung
                                     </button>
                                     <button type="button" class="btn btn-sm btn-success px-3 shadow-sm" onclick="submitApprovalDecision('APPROVE')">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Đồng ý phê duyệt
+                                        <i class="bi bi-check-circle-fill me-1"></i> Duyệt
                                     </button>
                                 </div>
                             </form>
@@ -1594,6 +1617,9 @@ function renderApprovalModalData(data) {
         } else if (s.status === 'REJECTED') {
             itemClass += ' rejected';
             nodeContent = '<i class="bi bi-x-lg"></i>';
+        } else if (s.status === 'CHANGES_REQUESTED') {
+            itemClass += ' changes-requested';
+            nodeContent = '<i class="bi bi-arrow-counterclockwise"></i>';
         } else {
             itemClass += ' waiting';
             nodeContent = '<i class="bi bi-clock"></i>';
@@ -1608,7 +1634,7 @@ function renderApprovalModalData(data) {
         stepperEl.appendChild(stepItem);
     });
 
-    // 3. Render danh sách thẻ chi tiết từng bước & Ý kiến (KN-160, KN-161)
+    // 3. Render danh sách thẻ chi tiết từng bước & Ý kiến (KN-160, KN-161, KN-188)
     var stepsListEl = document.getElementById('apprStepsList');
     stepsListEl.innerHTML = '';
 
@@ -1642,7 +1668,9 @@ function renderApprovalModalData(data) {
         // Ý kiến người duyệt
         var commentHtml = '';
         if (s.comment && s.comment.trim().length > 0) {
-            var commentTypeClass = s.status === 'APPROVED' ? 'comment-approved' : (s.status === 'REJECTED' ? 'comment-rejected' : '');
+            var commentTypeClass = s.status === 'APPROVED' ? 'comment-approved' : 
+                (s.status === 'REJECTED' ? 'comment-rejected' : 
+                (s.status === 'CHANGES_REQUESTED' ? 'comment-warning' : ''));
             commentHtml = 
                 '<div class="approval-comment-box ' + commentTypeClass + '">' +
                     '<i class="bi bi-chat-quote-fill me-1 opacity-75"></i>' +
@@ -1678,12 +1706,46 @@ function renderApprovalModalData(data) {
         stepsListEl.appendChild(card);
     });
 
-    // 4. Form thao tác duyệt (KN-154)
+    // 3b. Render Lịch sử ý kiến & Vết phê duyệt qua các vòng (KN-183, KN-188)
+    var historiesSection = document.getElementById('apprHistoriesSection');
+    var historiesList = document.getElementById('apprHistoriesList');
+    var histories = data.histories || [];
+    if (histories && histories.length > 0) {
+        historiesSection.style.display = 'block';
+        historiesList.innerHTML = '';
+        histories.forEach(function(h) {
+            var item = document.createElement('div');
+            item.className = 'border-bottom pb-2 mb-2';
+            var actionBadge = '<span class="badge ' + (h.action_badge_class || 'bg-secondary') + '">' + escapeHtml(h.action_label || h.action) + '</span>';
+            var actorInfo = escapeHtml(h.actor_name || 'Người dùng') + (h.actor_job_title ? ' (' + escapeHtml(h.actor_job_title) + ')' : '');
+            var commentText = h.comment && h.comment.trim().length > 0 ? 
+                '<div class="mt-1 text-dark small fst-italic"><i class="bi bi-chat-left-quote me-1 text-muted"></i>"' + escapeHtml(h.comment) + '"</div>' : 
+                '<div class="mt-1 text-muted small fst-italic">Không có ghi chú</div>';
+            
+            item.innerHTML = 
+                '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        actionBadge +
+                        '<strong class="small text-dark">' + escapeHtml(h.step_name) + '</strong>' +
+                        '<span class="text-muted small">&bull; ' + actorInfo + '</span>' +
+                    '</div>' +
+                    '<small class="text-muted"><i class="bi bi-calendar3 me-1"></i>' + escapeHtml(h.created_at || '') + '</small>' +
+                '</div>' +
+                commentText;
+            historiesList.appendChild(item);
+        });
+    } else {
+        historiesSection.style.display = 'none';
+    }
+
+    // 4. Form thao tác duyệt (KN-154, KN-186)
     var actionCard = document.getElementById('apprActionFormCard');
     if (data.canCurrentUserApprove && data.isPendingApproval) {
         actionCard.style.display = 'block';
         document.getElementById('actionCurrentStepName').textContent = data.currentStepName || 'Cấp hiện tại';
-        document.getElementById('actionComment').value = '';
+        var commentEl = document.getElementById('actionComment');
+        commentEl.value = '';
+        commentEl.classList.remove('is-invalid');
     } else {
         actionCard.style.display = 'none';
     }
@@ -1695,16 +1757,31 @@ function renderApprovalModalData(data) {
 function submitApprovalDecision(action) {
     if (!currentApprovalReqId) return;
 
-    var comment = document.getElementById('actionComment').value.trim();
-    if (action === 'REJECT' && !comment) {
-        alert('Vui lòng nhập lý do từ chối phê duyệt để gửi phản hồi cho người lập phiếu!');
-        document.getElementById('actionComment').focus();
+    var commentEl = document.getElementById('actionComment');
+    var comment = commentEl.value.trim();
+    commentEl.classList.remove('is-invalid');
+
+    // KN-187: Ràng buộc Validation - Bắt buộc phải nhập ý kiến/lý do khi Từ chối hoặc Yêu cầu bổ sung
+    if ((action === 'REJECT' || action === 'REQUEST_CHANGES') && !comment) {
+        commentEl.classList.add('is-invalid');
+        var hintMsg = (action === 'REJECT') ? 
+            'Bắt buộc nhập lý do từ chối phê duyệt để gửi phản hồi cho người lập phiếu!' : 
+            'Bắt buộc nhập ý kiến hướng dẫn khi yêu cầu bổ sung thông tin cho hồ sơ!';
+        var feedbackEl = document.getElementById('actionCommentValidation');
+        if (feedbackEl) feedbackEl.textContent = hintMsg;
+        commentEl.focus();
+        alert(hintMsg);
         return;
     }
 
-    var confirmMsg = action === 'APPROVE' ? 
-        'Bạn có chắc chắn muốn ĐỒNG Ý PHÊ DUYỆT hồ sơ tuyển dụng này ở cấp hiện tại?' :
-        'Bạn có chắc chắn muốn TỪ CHỐI hồ sơ tuyển dụng này?';
+    var confirmMsg = '';
+    if (action === 'APPROVE') {
+        confirmMsg = 'Bạn có chắc chắn muốn ĐỒNG Ý PHÊ DUYỆT hồ sơ tuyển dụng này ở cấp hiện tại?';
+    } else if (action === 'REQUEST_CHANGES') {
+        confirmMsg = 'Bạn có chắc chắn muốn YÊU CẦU BỔ SUNG thông tin cho hồ sơ tuyển dụng này? (Hồ sơ sẽ được trả về cho Người tạo hoàn thiện)';
+    } else {
+        confirmMsg = 'Bạn có chắc chắn muốn TỪ CHỐI hồ sơ tuyển dụng này?';
+    }
 
     if (!confirm(confirmMsg)) return;
 
@@ -1736,7 +1813,7 @@ function submitApprovalDecision(action) {
         } else {
             openApprovalModal(currentApprovalReqId);
         }
-        // Tải lại trang sau 1.5 giây để cập nhật bảng danh sách
+        // Tải lại trang sau 1.2 giây để cập nhật bảng danh sách
         setTimeout(function() {
             window.location.reload();
         }, 1200);

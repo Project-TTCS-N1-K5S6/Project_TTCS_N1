@@ -325,6 +325,9 @@ public class RecruitmentRequestService {
                 // Tự động khởi tạo chuỗi phê duyệt nếu chưa có
                 if (approvalDAO.countSteps(req.getId()) == 0) {
                     approvalDAO.initApprovalChain(req.getId(), req.getHiringManagerId());
+                } else if ("CHANGES_REQUESTED".equalsIgnoreCase(current.getStatus())) {
+                    // Khi người tạo cập nhật và gửi lại sau khi bị yêu cầu bổ sung thông tin
+                    approvalDAO.reactivateChangesRequestedStep(req.getId());
                 }
             }
             String action = isDraft ? "REQUISITION_DRAFT_UPDATED" : "REQUISITION_SUBMITTED";

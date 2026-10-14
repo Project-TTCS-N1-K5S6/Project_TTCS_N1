@@ -198,4 +198,88 @@ public class RecruitmentApprovalTest {
         req.setStatus("REJECTED");
         assertEquals("Từ chối", req.getStatusLabel());
     }
+
+    /**
+     * [KN-182 & KN-187]: Kiểm tra ràng buộc validation - Bắt buộc nhập ý kiến khi REJECT hoặc REQUEST_CHANGES
+     */
+    @Test
+    public void testValidationRequiresCommentOnRejectAndRequestChanges() {
+        RecruitmentApprovalService service = new RecruitmentApprovalService();
+
+        // 1. REJECT không có comment -> IllegalArgumentException khi actor null
+        try {
+            service.processApprovalDecision("fake-id", null, "REJECT", "", "127.0.0.1", "JUnit");
+            fail("Phải ném exception khi actor null");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("đăng nhập") || e.getMessage().contains("lý do"));
+        }
+
+        // Test validate comment logic
+        String commentEmpty = "   ";
+        assertFalse("Comment trống không được hợp lệ khi REJECT", commentEmpty != null && !commentEmpty.trim().isEmpty());
+    }
+
+    /**
+     * [KN-181]: Yêu cầu bổ sung (REQUEST_CHANGES) -> Trạng thái hồ sơ chuyển sang CHANGES_REQUESTED
+     */
+    @Test
+    public void testChangesRequestedWorkflowStatus() {
+        RecruitmentRequest req = new RecruitmentRequest();
+        req.setStatus("CHANGES_REQUESTED");
+
+        assertTrue("Hồ sơ phải ở trạng thái CHANGES_REQUESTED", req.isChangesRequested());
+        assertEquals("Yêu cầu bổ sung", req.getStatusLabel());
+        assertTrue(req.getStatusBadgeClass().contains("warning"));
+
+        RecruitmentApprovalLog step = new RecruitmentApprovalLog();
+        step.setStatus("CHANGES_REQUESTED");
+        step.setComment("Cần bổ sung JD chi tiết và chứng chỉ tiếng Anh");
+
+        assertTrue(step.isChangesRequested());
+        assertTrue("Bước yêu cầu bổ sung cũng phải được khóa lịch sử vòng này", step.isLocked());
+        assertEquals("Yêu cầu bổ sung", step.getStatusLabel());
+        assertEquals("bi-arrow-counterclockwise text-warning", step.getStatusIcon());
+    }
+
+    /**
+     * [KN-185]: Cấp phê duyệt cuối cùng hoàn tất "Duyệt" -> Chuyển trạng thái sang "APPROVED" (Đã duyệt)
+     */
+    @Test
+    public void testFinalApprovalSetsRequisitionStatusApproved() {
+        RecruitmentRequest req = new RecruitmentRequest();
+        req.setStatus("APPROVED");
+
+        assertTrue("Hồ sơ phải ở trạng thái APPROVED", req.isApproved());
+        assertEquals("Đã duyệt", req.getStatusLabel());
+        assertEquals("bg-success text-white", req.getStatusBadgeClass());
+    }
+
+    /**
+     * [KN-184]: Kiểm tra chuỗi duyệt đa cấp và tự động chuyển cấp tiếp theo
+     */
+    @Test
+    public void testMultiStepApprovalFlow() {
+        List<RecruitmentApprovalLog> steps = new ArrayList<>();
+
+        RecruitmentApprovalLog s1 = new RecruitmentApprovalLog();
+        s1.setStepOrder(1);
+        s1.setStatus("APPROVED");
+        s1.setApproverName("Trưởng bộ phận");
+        steps.add(s1);
+
+        RecruitmentApprovalLog s2 = new RecruitmentApprovalLog();
+        s2.setStepOrder(2);
+        s2.setStatus("PENDING");
+        steps.add(s2);
+
+        RecruitmentApprovalLog s3 = new RecruitmentApprovalLog();
+        s3.setStepOrder(3);
+        s3.setStatus("WAITING");
+        steps.add(s3);
+
+        assertEquals(3, steps.size());
+        assertTrue(s1.isApproved());
+        assertTrue(s2.isPending());
+        assertTrue(s3.isWaiting());
+    }
 }

@@ -498,7 +498,15 @@ public class RecruitmentRequestServlet extends HttpServlet {
             boolean success = approvalService.processApprovalDecision(requisitionId.trim(), currentUser, action, comment, ip, userAgent);
             Map<String, Object> respData = new HashMap<>();
             respData.put("success", success);
-            respData.put("message", "APPROVE".equalsIgnoreCase(action) ? "Đã ghi nhận phê duyệt thành công!" : "Đã ghi nhận từ chối yêu cầu tuyển dụng!");
+            String successMsg;
+            if ("APPROVE".equalsIgnoreCase(action)) {
+                successMsg = "Đã ghi nhận phê duyệt thành công!";
+            } else if ("REQUEST_CHANGES".equalsIgnoreCase(action) || "CHANGES_REQUESTED".equalsIgnoreCase(action) || "REQUIRE_SUPPLEMENT".equalsIgnoreCase(action)) {
+                successMsg = "Đã yêu cầu bổ sung thông tin và trả hồ sơ về cho người tạo!";
+            } else {
+                successMsg = "Đã ghi nhận từ chối yêu cầu tuyển dụng!";
+            }
+            respData.put("message", successMsg);
             respData.put("state", approvalService.getApprovalWorkflowState(requisitionId.trim(), currentUser));
             JsonUtil.sendJsonResponse(response, 200, respData);
         } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {

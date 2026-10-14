@@ -96,6 +96,10 @@ public class RecruitmentApprovalLog implements Serializable {
         return "REJECTED".equalsIgnoreCase(status);
     }
 
+    public boolean isChangesRequested() {
+        return "CHANGES_REQUESTED".equalsIgnoreCase(status);
+    }
+
     public boolean isPending() {
         return "PENDING".equalsIgnoreCase(status);
     }
@@ -109,15 +113,16 @@ public class RecruitmentApprovalLog implements Serializable {
     }
 
     /**
-     * Bất biến: Khi đã có quyết định (APPROVED / REJECTED), bản ghi sẽ bị khóa, không được sửa/xóa
+     * Bất biến: Khi đã có quyết định (APPROVED / REJECTED / CHANGES_REQUESTED), bản ghi sẽ bị khóa, không được sửa/xóa
      */
     public boolean isLocked() {
-        return isApproved() || isRejected();
+        return isApproved() || isRejected() || isChangesRequested();
     }
 
     public String getStatusLabel() {
         if ("APPROVED".equalsIgnoreCase(status)) return "Đã phê duyệt";
         if ("PENDING".equalsIgnoreCase(status)) return "Đang chờ duyệt";
+        if ("CHANGES_REQUESTED".equalsIgnoreCase(status)) return "Yêu cầu bổ sung";
         if ("WAITING".equalsIgnoreCase(status)) return "Chờ cấp trước";
         if ("REJECTED".equalsIgnoreCase(status)) return "Từ chối";
         if ("SKIPPED".equalsIgnoreCase(status)) return "Bỏ qua";
@@ -127,6 +132,7 @@ public class RecruitmentApprovalLog implements Serializable {
     public String getStatusBadgeClass() {
         if ("APPROVED".equalsIgnoreCase(status)) return "bg-success text-white";
         if ("PENDING".equalsIgnoreCase(status)) return "bg-warning text-dark";
+        if ("CHANGES_REQUESTED".equalsIgnoreCase(status)) return "bg-warning-subtle text-warning-emphasis border border-warning";
         if ("WAITING".equalsIgnoreCase(status)) return "bg-light text-secondary border";
         if ("REJECTED".equalsIgnoreCase(status)) return "bg-danger text-white";
         if ("SKIPPED".equalsIgnoreCase(status)) return "bg-secondary text-white";
@@ -136,6 +142,7 @@ public class RecruitmentApprovalLog implements Serializable {
     public String getStatusIcon() {
         if ("APPROVED".equalsIgnoreCase(status)) return "bi-check-circle-fill text-success";
         if ("PENDING".equalsIgnoreCase(status)) return "bi-hourglass-split text-warning";
+        if ("CHANGES_REQUESTED".equalsIgnoreCase(status)) return "bi-arrow-counterclockwise text-warning";
         if ("WAITING".equalsIgnoreCase(status)) return "bi-clock text-muted";
         if ("REJECTED".equalsIgnoreCase(status)) return "bi-x-circle-fill text-danger";
         if ("SKIPPED".equalsIgnoreCase(status)) return "bi-dash-circle text-muted";
