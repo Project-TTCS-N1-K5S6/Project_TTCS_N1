@@ -166,4 +166,4 @@ Mật khẩu chung cho tất cả tài khoản mẫu: **`Admin@123456`**
 | **Chuyên viên Tuyển dụng (Recruiter)** | `recruiter@company.local` | Tiếp nhận ứng viên, điều phối pipeline (Bị giới hạn không xem dải lương) |
 | **Trưởng bộ phận (Hiring Manager)** | `hiring.mgr@company.local` | Theo dõi ứng viên phỏng vấn chuyên môn |
 | **Người phỏng vấn (Interviewer)** | `interviewer@company.local` | Chấm điểm phỏng vấn (Cấm tuyệt đối truy cập dải lương) |
-| **Tài khoản bị khóa (Locked)** | `locked.user@company.local` | Mô phỏng trường hợp tài khoản bị khóa do vi phạm |
+| **Tài khoản bị khóa (Locked)** | `locked.user@company.local` | Mô phỏng trường hợp tài khoản bị khóa do vi phạm 
