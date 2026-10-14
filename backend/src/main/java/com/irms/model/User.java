@@ -66,6 +66,20 @@ public class User implements Serializable {
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
+    /**
+     * Lấy đường dẫn bản thu nhỏ (thumbnail) của ảnh đại diện nếu có
+     */
+    public String getAvatarThumbnailUrl() {
+        if (avatarUrl == null || avatarUrl.isEmpty()) {
+            return null;
+        }
+        int dot = avatarUrl.lastIndexOf('.');
+        if (dot > 0 && avatarUrl.contains("/uploads/avatars/")) {
+            return avatarUrl.substring(0, dot) + "_thumb" + avatarUrl.substring(dot);
+        }
+        return avatarUrl;
+    }
+
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 

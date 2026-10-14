@@ -2,10 +2,10 @@
 
         <footer class="app-footer">
             <div>
-                &copy; 2026 <strong>IRMS (Internal Recruitment Management System)</strong>. All rights reserved.
+                &copy; 2026 <strong>IRMS Platform</strong> - Hệ thống quản lý tuyển dụng nội bộ. Bảo lưu mọi quyền.
             </div>
             <div class="d-none d-sm-block text-muted">
-                Công nghệ: <strong>Java Servlet</strong> &bull; <strong>MySQL</strong> &bull; <strong>Bootstrap 5 &amp; SASS</strong>
+                Nền tảng: <strong>Java Servlet</strong> &bull; <strong>MySQL</strong> &bull; <strong>RisApps Theme</strong>
             </div>
         </footer>
     </main>

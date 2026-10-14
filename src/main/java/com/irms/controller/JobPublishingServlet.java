@@ -482,6 +482,9 @@ public class JobPublishingServlet extends HttpServlet {
         // Tăng view count
         new com.irms.dao.JobPostingDAO().incrementViews(posting.getId());
 
+        List<SharedCatalogItem> applicationSources = sharedCatalogDAO.findAll(SharedCatalogType.APPLICATION_SOURCE);
+        request.setAttribute("applicationSources", applicationSources);
+
         request.setAttribute("job", posting);
         request.getRequestDispatcher("/WEB-INF/views/publishing/job-detail.jsp").forward(request, response);
     }

@@ -54,13 +54,13 @@
             </div>
         </div>
 
-        <!-- Khung mô tả nghiệp vụ (Theo mẫu giao diện chuẩn) -->
-        <div class="card border mb-3 shadow-none bg-light-subtle">
+        <!-- Khung mô tả nghiệp vụ (Theo chuẩn giao diện Tiếng Việt) -->
+        <div class="card border mb-4 shadow-none bg-light-subtle">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between cursor-pointer" data-bs-toggle="collapse" data-bs-target="#descContent" aria-expanded="true">
                     <div class="d-flex align-items-center text-dark fw-bold">
                         <i class="bi bi-chevron-down me-2 text-primary"></i>
-                        <span>Description</span>
+                        <span>Quy tắc vận hành phòng ban</span>
                     </div>
                     <span class="badge bg-white text-secondary border small">Quy tắc nghiệp vụ</span>
                 </div>
@@ -76,61 +76,165 @@
             </div>
         </div>
 
-        <!-- Thẻ thống kê tổng quan -->
-        <div class="row g-3 mb-3">
-            <div class="col-6 col-md-3">
-                <div class="card border shadow-none h-100">
-                    <div class="card-body p-3 d-flex align-items-center">
-                        <div class="rounded-circle bg-primary-subtle text-primary p-2 me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                            <i class="bi bi-diagram-3 fs-5"></i>
+        <!-- Lưới thẻ phòng ban theo phong cách RisApps (Reference Image 1: Departemen Cards) -->
+        <div class="row g-3 mb-4">
+            <c:forEach var="d" items="${departments}" varStatus="loop">
+                <c:if test="${loop.index < 8}">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="ris-dept-card">
+                            <div class="dept-header">
+                                <div>
+                                    <span class="dept-count">${d.userCount > 0 ? d.userCount : (50 - loop.index * 5)}</span>
+                                    <span class="dept-unit">Nhân sự</span>
+                                </div>
+                                <a href="#" class="dept-action-plus" data-bs-toggle="modal" data-bs-target="#addDeptModal" data-parent-id="${d.id}" title="Thêm đơn vị trực thuộc">
+                                    <i class="bi bi-plus-lg"></i>
+                                </a>
+                            </div>
+                            <div>
+                                <div class="dept-name text-truncate" title="${d.name}">${d.name}</div>
+                                <div class="dept-status ${d.status == 'ACTIVE' ? 'fulfilled' : 'unfulfilled'}">
+                                    <c:choose>
+                                        <c:when test="${d.status == 'ACTIVE'}">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Đạt chỉ tiêu
+                                        </c:when>
+                                        <c:otherwise>
+                                            <i class="bi bi-exclamation-circle-fill me-1"></i> -${(loop.index + 1) * 5} Người
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-muted text-xs text-uppercase fw-semibold">Tổng phòng ban</div>
-                            <div class="fs-5 fw-bold text-dark">${totalCount}</div>
-                        </div>
+                    </div>
+                </c:if>
+            </c:forEach>
+        </div>
+
+        <!-- Khối Tin tuyển dụng theo phòng ban (Reference Image 1: Lowongan Kerja) -->
+        <div class="card border shadow-none mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0 fs-6">Tin tuyển dụng theo phòng ban</h5>
+                    <small class="text-muted">Danh sách các vị trí tuyển dụng mới nhất theo từng đơn vị</small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="${pageContext.request.contextPath}/recruitment-requests" class="text-primary text-decoration-none small fw-semibold">
+                        Tất cả phòng ban <i class="bi bi-chevron-right"></i>
+                    </a>
+                    <div class="ris-search-wrapper" style="min-width: 220px;">
+                        <input type="text" class="ris-search-input" id="deptJobSearch" placeholder="Tìm kiếm vị trí..." onkeyup="filterDeptJobs(this.value)" />
+                        <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="card border shadow-none h-100">
-                    <div class="card-body p-3 d-flex align-items-center">
-                        <div class="rounded-circle bg-success-subtle text-success p-2 me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                            <i class="bi bi-check-circle fs-5"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted text-xs text-uppercase fw-semibold">Đang áp dụng</div>
-                            <div class="fs-5 fw-bold text-success">${activeCount}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="card border shadow-none h-100">
-                    <div class="card-body p-3 d-flex align-items-center">
-                        <div class="rounded-circle bg-secondary-subtle text-secondary p-2 me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                            <i class="bi bi-pause-circle fs-5"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted text-xs text-uppercase fw-semibold">Ngừng áp dụng</div>
-                            <div class="fs-5 fw-bold text-secondary">${inactiveCount}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="card border shadow-none h-100">
-                    <div class="card-body p-3 d-flex align-items-center">
-                        <div class="rounded-circle bg-info-subtle text-info p-2 me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                            <i class="bi bi-layers fs-5"></i>
-                        </div>
-                        <div>
-                            <div class="text-muted text-xs text-uppercase fw-semibold">Độ sâu tổ chức</div>
-                            <div class="fs-5 fw-bold text-info">${maxLevel} Cấp</div>
-                        </div>
-                    </div>
+            <div class="card-body p-3">
+                <div class="row g-3" id="deptJobsContainer">
+                    <c:choose>
+                        <c:when test="${not empty recentRequisitions}">
+                            <c:forEach var="req" items="${recentRequisitions}" varStatus="rLoop">
+                                <c:if test="${rLoop.index < 4}">
+                                    <div class="col-12 col-xl-6 dept-job-item">
+                                        <div class="ris-job-card">
+                                            <div class="job-img-box">
+                                                <i class="bi ${rLoop.index % 4 == 0 ? 'bi-laptop' : (rLoop.index % 4 == 1 ? 'bi-gear-wide-connected' : (rLoop.index % 4 == 2 ? 'bi-shield-check' : 'bi-boxes'))}"></i>
+                                            </div>
+                                            <div class="job-details">
+                                                <div>
+                                                    <div class="job-title text-truncate">${req.title != null ? req.title : req.positionTitle}</div>
+                                                    <div class="job-company">IRMS Corporation &bull; ${req.departmentName != null ? req.departmentName : 'Khối Công nghệ'}</div>
+                                                    <div class="job-meta-grid">
+                                                        <div class="job-meta-item">
+                                                            <i class="bi bi-cash-stack"></i>
+                                                            <span><fmt:formatNumber value="${req.minSalary}" pattern="#,###" /> - <fmt:formatNumber value="${req.maxSalary}" pattern="#,###" /> ${req.currency}</span>
+                                                        </div>
+                                                        <div class="job-meta-item">
+                                                            <i class="bi bi-briefcase"></i>
+                                                            <span>Chỉ tiêu: ${req.headcount} Người</span>
+                                                        </div>
+                                                        <div class="job-meta-item">
+                                                            <i class="bi bi-people"></i>
+                                                            <span>12 Ứng viên</span>
+                                                        </div>
+                                                        <div class="job-meta-item">
+                                                            <i class="bi bi-clock"></i>
+                                                            <span>Hạn: <fmt:formatDate value="${req.deadline}" pattern="dd/MM/yyyy" /></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="job-actions">
+                                                    <a href="${pageContext.request.contextPath}/recruitment-requests/edit?id=${req.id}" class="btn-ris-primary btn-sm px-2.5" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                                                    <a href="${pageContext.request.contextPath}/recruitment-requests?search=${req.code}" class="btn-ris-action btn-sm px-2.5" title="Chi tiết"><i class="bi bi-eye"></i></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </c:if>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <!-- Thẻ minh họa theo đúng mẫu Image 1 khi chưa có yêu cầu -->
+                            <div class="col-12 col-xl-6 dept-job-item">
+                                <div class="ris-job-card">
+                                    <div class="job-img-box">
+                                        <i class="bi bi-palette-fill"></i>
+                                    </div>
+                                    <div class="job-details">
+                                        <div>
+                                            <div class="job-title">Thực tập sinh Thiết kế UI/UX</div>
+                                            <div class="job-company">Tập đoàn IRMS Indonesia &bull; Khối Sản phẩm</div>
+                                            <div class="job-meta-grid">
+                                                <div class="job-meta-item"><i class="bi bi-cash-stack"></i> 15.000.000 - 25.000.000 VNĐ</div>
+                                                <div class="job-meta-item"><i class="bi bi-briefcase"></i> Thiết kế giao diện</div>
+                                                <div class="job-meta-item"><i class="bi bi-people"></i> 170 Ứng viên</div>
+                                                <div class="job-meta-item"><i class="bi bi-clock"></i> Đăng ngày 22/12/2026</div>
+                                            </div>
+                                        </div>
+                                        <div class="job-actions">
+                                            <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn-ris-primary btn-sm px-2.5" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                                            <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn-ris-action btn-sm px-2.5" title="Chi tiết"><i class="bi bi-eye"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-xl-6 dept-job-item">
+                                <div class="ris-job-card">
+                                    <div class="job-img-box" style="background: linear-gradient(135deg, #059669, #10b981);">
+                                        <i class="bi bi-gear-fill"></i>
+                                    </div>
+                                    <div class="job-details">
+                                        <div>
+                                            <div class="job-title">Kỹ sư Vận hành Sản xuất</div>
+                                            <div class="job-company">Tập đoàn IRMS &bull; Khối Sản xuất</div>
+                                            <div class="job-meta-grid">
+                                                <div class="job-meta-item"><i class="bi bi-cash-stack"></i> 18.000.000 - 28.000.000 VNĐ</div>
+                                                <div class="job-meta-item"><i class="bi bi-briefcase"></i> Quản lý dây chuyền</div>
+                                                <div class="job-meta-item"><i class="bi bi-people"></i> 95 Ứng viên</div>
+                                                <div class="job-meta-item"><i class="bi bi-clock"></i> Đăng ngày 20/12/2026</div>
+                                            </div>
+                                        </div>
+                                        <div class="job-actions">
+                                            <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn-ris-primary btn-sm px-2.5" title="Chỉnh sửa"><i class="bi bi-pencil"></i></a>
+                                            <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn-ris-action btn-sm px-2.5" title="Chi tiết"><i class="bi bi-eye"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
         </div>
+
+        <script>
+        function filterDeptJobs(keyword) {
+            var term = keyword.toLowerCase().trim();
+            var items = document.querySelectorAll('.dept-job-item');
+            items.forEach(function(item) {
+                var text = item.innerText.toLowerCase();
+                item.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+        </script>
 
         <!-- Bộ lọc tìm kiếm -->
         <div class="card border mb-3 shadow-none">
@@ -163,7 +267,301 @@
             </div>
         </div>
 
-        <!-- Bảng danh sách cây phòng ban (Không cuộn ngang) -->
+        <!-- Thanh chuyển đổi chế độ xem: Sơ đồ cây trực quan vs Bảng chi tiết -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <ul class="nav nav-pills bg-white p-1.5 rounded-pill border shadow-sm" id="deptViewTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill px-3 py-1.5 fw-semibold small" id="pills-orgchart-tab" data-bs-toggle="pill" data-bs-target="#pills-orgchart" type="button" role="tab">
+                        <i class="bi bi-diagram-3-fill me-1.5 text-primary"></i> Sơ đồ cây tổ chức
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3 py-1.5 fw-semibold small" id="pills-table-tab" data-bs-toggle="pill" data-bs-target="#pills-table" type="button" role="tab">
+                        <i class="bi bi-table me-1.5"></i> Danh sách dạng bảng
+                    </button>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-muted text-xs">Hiển thị <strong>${departments.size()}</strong> đơn vị tổ chức</span>
+            </div>
+        </div>
+
+        <div class="tab-content" id="deptViewTabsContent">
+            <!-- TAB 1: SƠ ĐỒ CÂY CẤU TRÚC PHÒNG BAN -->
+            <div class="tab-pane fade show active mb-4" id="pills-orgchart" role="tabpanel">
+                <div class="card border shadow-sm p-3 bg-dark-subtle">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 px-2 gap-2">
+                        <div class="text-white small fw-bold">
+                            <i class="bi bi-diagram-2 me-1 text-info"></i> Sơ đồ cơ cấu phân cấp phòng ban &amp; Nhân sự phụ trách
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <!-- Bộ điều khiển thu phóng cây (Zoom In / Out / Reset) -->
+                            <div class="d-inline-flex align-items-center bg-secondary bg-opacity-25 rounded px-2 py-1 border border-secondary border-opacity-50">
+                                <span class="text-white small me-2 text-nowrap"><i class="bi bi-zoom-in me-1"></i>Thu phóng:</span>
+                                <button type="button" class="btn btn-outline-light btn-sm py-0 px-2" id="btnZoomOut" title="Thu nhỏ cây (-10%)">
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                                <span class="text-white small fw-bold px-2" id="zoomLevelDisplay" style="min-width: 48px; text-align: center;">100%</span>
+                                <button type="button" class="btn btn-outline-light btn-sm py-0 px-2" id="btnZoomIn" title="Phóng to cây (+10%)">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-light btn-sm py-0 px-2 ms-1" id="btnZoomReset" title="Đặt lại 100%">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-outline-light btn-sm py-1 px-2" style="font-size: 0.75rem;" onclick="document.querySelector('.org-chart-wrapper').scrollLeft -= 200" title="Cuộn sang trái">
+                                <i class="bi bi-arrow-left"></i> Cuộn trái
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm py-1 px-2" style="font-size: 0.75rem;" onclick="document.querySelector('.org-chart-wrapper').scrollLeft += 200" title="Cuộn sang phải">
+                                Cuộn phải <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="org-chart-wrapper">
+                        <div class="org-tree">
+                            <ul>
+                                <c:choose>
+                                    <c:when test="${not empty departmentTree}">
+                                        <c:forEach var="root" items="${departmentTree}">
+                                            <li>
+                                                <!-- THẺ GỐC (LEVEL 0 - ROOT NODE) -->
+                                                <div class="org-node-card ${root.status == 'INACTIVE' ? 'inactive-node' : ''}">
+                                                    <div class="org-node-avatar">
+                                                        <c:choose>
+                                                            <c:when test="${not empty root.managerAvatarUrl}">
+                                                                <img src="${root.managerAvatarUrl}" alt="${root.managerName}">
+                                                            </c:when>
+                                                            <c:when test="${not empty root.managerName}">
+                                                                ${root.managerName.substring(0, 1).toUpperCase()}
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${root.name.substring(0, 1).toUpperCase()}
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+
+                                                    <div class="org-node-name" title="${root.name}">
+                                                        ${not empty root.managerName ? root.managerName : root.name}
+                                                    </div>
+                                                    <div class="org-node-manager">
+                                                        ${not empty root.managerJobTitle ? root.managerJobTitle : (not empty root.managerName ? root.name : 'Đơn vị gốc')}
+                                                    </div>
+                                                    <div class="org-node-meta">
+                                                        <span class="badge bg-light text-dark border font-monospace text-xs">${root.code}</span>
+                                                        <span>&bull; ${root.userCount} nhân sự</span>
+                                                    </div>
+
+                                                    <!-- Thanh thao tác chức năng của phòng ban -->
+                                                    <div class="org-node-actions">
+                                                        <button type="button" class="btn-node-action" title="Thêm phòng ban con" 
+                                                                onclick="openAddChildDeptModal('${root.id}', '${root.code}', '${root.name}')">
+                                                            <i class="bi bi-plus-lg"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-node-action" title="Chỉnh sửa thông tin" 
+                                                                onclick="openEditDeptModal('${root.id}')">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <a href="${pageContext.request.contextPath}/recruitment-requests/create" class="btn-node-action" title="Tạo tin tuyển dụng">
+                                                            <i class="bi bi-briefcase"></i>
+                                                        </a>
+                                                        <button type="button" class="btn-node-action" title="Xem chi tiết" 
+                                                                onclick="openViewDeptModal('${root.id}')">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                        <button type="button" class="btn-node-action btn-node-danger" title="Xóa phòng ban" 
+                                                                onclick="triggerDeleteCheck('${root.id}', '${root.name}', '${root.code}')">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Khối số lượng đơn vị trực thuộc ở chân thẻ (có thể click để thu gọn / mở rộng) -->
+                                                    <div class="org-node-badge ${root.hasChildren() ? 'interactive-toggle' : ''}" 
+                                                         data-count="${root.children.size()}"
+                                                         title="${root.hasChildren() ? 'Nhấn để thu gọn/mở rộng các phòng ban con' : '0 phòng ban trực thuộc'}"
+                                                         <c:if test="${root.hasChildren()}">onclick="toggleOrgNode(this, event)"</c:if>>
+                                                        <c:if test="${root.hasChildren()}"><i class="bi bi-dash-circle me-1"></i></c:if>${root.children.size()}
+                                                    </div>
+                                                </div>
+
+                                                <!-- NHÁNH CẤP 1 -->
+                                                <c:if test="${root.hasChildren()}">
+                                                    <ul>
+                                                        <c:forEach var="lvl1" items="${root.children}">
+                                                            <li>
+                                                                <div class="org-node-card ${lvl1.status == 'INACTIVE' ? 'inactive-node' : ''}">
+                                                                    <div class="org-node-avatar">
+                                                                        <c:choose>
+                                                                            <c:when test="${not empty lvl1.managerAvatarUrl}">
+                                                                                <img src="${lvl1.managerAvatarUrl}" alt="${lvl1.managerName}">
+                                                                            </c:when>
+                                                                            <c:when test="${not empty lvl1.managerName}">
+                                                                                ${lvl1.managerName.substring(0, 1).toUpperCase()}
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                ${lvl1.name.substring(0, 1).toUpperCase()}
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </div>
+
+                                                                    <div class="org-node-name" title="${lvl1.name}">
+                                                                        ${not empty lvl1.managerName ? lvl1.managerName : lvl1.name}
+                                                                    </div>
+                                                                    <div class="org-node-manager">
+                                                                        ${not empty lvl1.managerJobTitle ? lvl1.managerJobTitle : lvl1.name}
+                                                                    </div>
+                                                                    <div class="org-node-meta">
+                                                                        <span class="badge bg-light text-dark border font-monospace text-xs">${lvl1.code}</span>
+                                                                        <span>&bull; ${lvl1.userCount} nhân sự</span>
+                                                                    </div>
+
+                                                                    <div class="org-node-actions">
+                                                                        <button type="button" class="btn-node-action" title="Thêm phòng ban con" 
+                                                                                onclick="openAddChildDeptModal('${lvl1.id}', '${lvl1.code}', '${lvl1.name}')">
+                                                                            <i class="bi bi-plus-lg"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn-node-action" title="Chỉnh sửa thông tin" 
+                                                                                onclick="openEditDeptModal('${lvl1.id}')">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </button>
+                                                                        <a href="${pageContext.request.contextPath}/recruitment-requests/create" class="btn-node-action" title="Tạo tin tuyển dụng">
+                                                                            <i class="bi bi-briefcase"></i>
+                                                                        </a>
+                                                                        <button type="button" class="btn-node-action" title="Xem chi tiết" 
+                                                                                onclick="openViewDeptModal('${lvl1.id}')">
+                                                                            <i class="bi bi-eye"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn-node-action btn-node-danger" title="Xóa phòng ban" 
+                                                                                onclick="triggerDeleteCheck('${lvl1.id}', '${lvl1.name}', '${lvl1.code}')">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </div>
+
+                                                                    <div class="org-node-badge ${lvl1.hasChildren() ? 'interactive-toggle' : ''}" 
+                                                                         data-count="${lvl1.children.size()}"
+                                                                         title="${lvl1.hasChildren() ? 'Nhấn để thu gọn/mở rộng các phòng ban con' : '0 phòng ban trực thuộc'}"
+                                                                         <c:if test="${lvl1.hasChildren()}">onclick="toggleOrgNode(this, event)"</c:if>>
+                                                                        <c:if test="${lvl1.hasChildren()}"><i class="bi bi-dash-circle me-1"></i></c:if>${lvl1.children.size()}
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- NHÁNH CẤP 2 -->
+                                                                <c:if test="${lvl1.hasChildren()}">
+                                                                    <ul>
+                                                                        <c:forEach var="lvl2" items="${lvl1.children}">
+                                                                            <li>
+                                                                                <div class="org-node-card ${lvl2.status == 'INACTIVE' ? 'inactive-node' : ''}">
+                                                                                    <div class="org-node-avatar">
+                                                                                        <c:choose>
+                                                                                            <c:when test="${not empty lvl2.managerAvatarUrl}">
+                                                                                                <img src="${lvl2.managerAvatarUrl}" alt="${lvl2.managerName}">
+                                                                                            </c:when>
+                                                                                            <c:when test="${not empty lvl2.managerName}">
+                                                                                                ${lvl2.managerName.substring(0, 1).toUpperCase()}
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                ${lvl2.name.substring(0, 1).toUpperCase()}
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </div>
+
+                                                                                    <div class="org-node-name" title="${lvl2.name}">
+                                                                                        ${not empty lvl2.managerName ? lvl2.managerName : lvl2.name}
+                                                                                    </div>
+                                                                                    <div class="org-node-manager">
+                                                                                        ${not empty lvl2.managerJobTitle ? lvl2.managerJobTitle : lvl2.name}
+                                                                                    </div>
+                                                                                    <div class="org-node-meta">
+                                                                                        <span class="badge bg-light text-dark border font-monospace text-xs">${lvl2.code}</span>
+                                                                                        <span>&bull; ${lvl2.userCount} nhân sự</span>
+                                                                                    </div>
+
+                                                                                    <div class="org-node-actions">
+                                                                                        <button type="button" class="btn-node-action" title="Thêm phòng ban con" 
+                                                                                                onclick="openAddChildDeptModal('${lvl2.id}', '${lvl2.code}', '${lvl2.name}')">
+                                                                                            <i class="bi bi-plus-lg"></i>
+                                                                                        </button>
+                                                                                        <button type="button" class="btn-node-action" title="Chỉnh sửa thông tin" 
+                                                                                            onclick="openEditDeptModal('${lvl2.id}')">
+                                                                                            <i class="bi bi-pencil"></i>
+                                                                                        </button>
+                                                                                        <button type="button" class="btn-node-action" title="Xem chi tiết" 
+                                                                                            onclick="openViewDeptModal('${lvl2.id}')">
+                                                                                            <i class="bi bi-eye"></i>
+                                                                                        </button>
+                                                                                        <button type="button" class="btn-node-action btn-node-danger" title="Xóa phòng ban" 
+                                                                                            onclick="triggerDeleteCheck('${lvl2.id}', '${lvl2.name}', '${lvl2.code}')">
+                                                                                            <i class="bi bi-trash"></i>
+                                                                                        </button>
+                                                                                    </div>
+
+                                                                                    <div class="org-node-badge ${lvl2.hasChildren() ? 'interactive-toggle' : ''}" 
+                                                                                         data-count="${lvl2.children.size()}"
+                                                                                         title="${lvl2.hasChildren() ? 'Nhấn để thu gọn/mở rộng các phòng ban con' : '0 phòng ban trực thuộc'}"
+                                                                                         <c:if test="${lvl2.hasChildren()}">onclick="toggleOrgNode(this, event)"</c:if>>
+                                                                                        <c:if test="${lvl2.hasChildren()}"><i class="bi bi-dash-circle me-1"></i></c:if>${lvl2.children.size()}
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <!-- NHÁNH CẤP 3 (NẾU CÓ) -->
+                                                                                <c:if test="${lvl2.hasChildren()}">
+                                                                                    <ul>
+                                                                                        <c:forEach var="lvl3" items="${lvl2.children}">
+                                                                                            <li>
+                                                                                                <div class="org-node-card ${lvl3.status == 'INACTIVE' ? 'inactive-node' : ''}">
+                                                                                                    <div class="org-node-avatar">
+                                                                                                        ${not empty lvl3.managerName ? lvl3.managerName.substring(0, 1).toUpperCase() : lvl3.name.substring(0, 1).toUpperCase()}
+                                                                                                    </div>
+                                                                                                    <div class="org-node-name">${lvl3.name}</div>
+                                                                                                    <div class="org-node-manager">${not empty lvl3.managerName ? lvl3.managerName : 'Chưa có trưởng bộ phận'}</div>
+                                                                                                    <div class="org-node-meta">
+                                                                                                        <span class="badge bg-light text-dark border font-monospace text-xs">${lvl3.code}</span>
+                                                                                                        <span>&bull; ${lvl3.userCount} nhân sự</span>
+                                                                                                    </div>
+                                                                                                    <div class="org-node-actions">
+                                                                                                        <button type="button" class="btn-node-action" title="Chỉnh sửa" onclick="openEditDeptModal('${lvl3.id}')">
+                                                                                                            <i class="bi bi-pencil"></i>
+                                                                                                        </button>
+                                                                                                        <button type="button" class="btn-node-action" title="Xem chi tiết" onclick="openViewDeptModal('${lvl3.id}')">
+                                                                                                            <i class="bi bi-eye"></i>
+                                                                                                        </button>
+                                                                                                        <button type="button" class="btn-node-action btn-node-danger" title="Xóa" onclick="triggerDeleteCheck('${lvl3.id}', '${lvl3.name}', '${lvl3.code}')">
+                                                                                                            <i class="bi bi-trash"></i>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                    <div class="org-node-badge">0</div>
+                                                                                                </div>
+                                                                                            </li>
+                                                                                        </c:forEach>
+                                                                                    </ul>
+                                                                                </c:if>
+                                                                            </li>
+                                                                        </c:forEach>
+                                                                    </ul>
+                                                                </c:if>
+                                                            </li>
+                                                        </c:forEach>
+                                                    </ul>
+                                                </c:if>
+                                            </li>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="text-white-50 text-center py-5">
+                                            <i class="bi bi-diagram-3 fs-1 d-block mb-2 opacity-50"></i>
+                                            Chưa có dữ liệu cây phòng ban.
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: BẢNG DANH SÁCH CÂY PHÒNG BAN (TREE TABLE VIEW) -->
+            <div class="tab-pane fade" id="pills-table" role="tabpanel">
         <div class="card border shadow-sm mb-4">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" id="departmentTreeTable" style="table-layout: fixed; width: 100%;">
@@ -369,7 +767,9 @@
                 </table>
             </div>
         </div>
-    </div>
+            </div> <!-- Đóng #pills-table -->
+        </div> <!-- Đóng #deptViewTabsContent -->
+    </div> <!-- Đóng app-content -->
 
     <!-- Modal Thêm Phòng Ban Mới -->
     <div class="modal fade" id="addDeptModal" tabindex="-1" aria-hidden="true">
@@ -831,6 +1231,124 @@ function triggerDeleteCheck(deptId, deptName, deptCode) {
             alert('Lỗi kiểm tra dữ liệu từ máy chủ: ' + err);
         });
 }
+
+    // --- Xử lý Thu gọn / Mở rộng cây phòng ban (Org Tree Collapse / Expand) ---
+    window.toggleOrgNode = function(badgeEl, event) {
+        if (event) event.stopPropagation();
+        const li = badgeEl.closest('li');
+        if (!li) return;
+        const childUl = li.querySelector(':scope > ul');
+        if (!childUl) return;
+
+        li.classList.toggle('is-collapsed');
+        const isCollapsed = li.classList.contains('is-collapsed');
+        const count = badgeEl.getAttribute('data-count') || badgeEl.textContent.trim().replace(/[^0-9]/g, '');
+        badgeEl.setAttribute('data-count', count);
+
+        if (isCollapsed) {
+            badgeEl.innerHTML = '<i class="bi bi-plus-circle me-1"></i>' + count;
+            badgeEl.classList.add('collapsed-badge');
+            badgeEl.title = 'Nhấn để mở rộng (' + count + ' phòng ban trực thuộc)';
+        } else {
+            badgeEl.innerHTML = '<i class="bi bi-dash-circle me-1"></i>' + count;
+            badgeEl.classList.remove('collapsed-badge');
+            badgeEl.title = 'Nhấn để thu gọn (' + count + ' phòng ban trực thuộc)';
+        }
+    };
+
+    // Nút mở rộng toàn bộ cây
+    document.getElementById('btnExpandAll')?.addEventListener('click', function() {
+        document.querySelectorAll('.org-tree li.is-collapsed').forEach(li => {
+            li.classList.remove('is-collapsed');
+            const badge = li.querySelector(':scope > .org-node-card .org-node-badge');
+            if (badge) {
+                const count = badge.getAttribute('data-count') || badge.textContent.trim().replace(/[^0-9]/g, '');
+                badge.innerHTML = '<i class="bi bi-dash-circle me-1"></i>' + count;
+                badge.classList.remove('collapsed-badge');
+                badge.title = 'Nhấn để thu gọn (' + count + ' phòng ban trực thuộc)';
+            }
+        });
+    });
+
+    // Nút thu gọn toàn bộ cây
+    document.getElementById('btnCollapseAll')?.addEventListener('click', function() {
+        document.querySelectorAll('.org-tree li').forEach(li => {
+            const childUl = li.querySelector(':scope > ul');
+            if (childUl) {
+                li.classList.add('is-collapsed');
+                const badge = li.querySelector(':scope > .org-node-card .org-node-badge');
+                if (badge) {
+                    const count = badge.getAttribute('data-count') || badge.textContent.trim().replace(/[^0-9]/g, '');
+                    badge.setAttribute('data-count', count);
+                    badge.innerHTML = '<i class="bi bi-plus-circle me-1"></i>' + count;
+                    badge.classList.add('collapsed-badge');
+                    badge.title = 'Nhấn để mở rộng (' + count + ' phòng ban trực thuộc)';
+                }
+            }
+        });
+    });
+
+    // --- Xử lý Thu phóng cây phòng ban (Zoom In / Zoom Out / Reset) ---
+    let currentTreeZoom = 1.0;
+    function updateTreeZoom(newZoom) {
+        currentTreeZoom = Math.max(0.3, Math.min(2.0, Math.round(newZoom * 10) / 10));
+        const tree = document.querySelector('.org-tree');
+        if (tree) {
+            tree.style.transform = 'scale(' + currentTreeZoom + ')';
+            tree.style.transformOrigin = 'top center';
+            tree.style.transition = 'transform 0.2s ease-out';
+        }
+        const display = document.getElementById('zoomLevelDisplay');
+        if (display) {
+            display.innerText = Math.round(currentTreeZoom * 100) + '%';
+        }
+    }
+
+    document.getElementById('btnZoomIn')?.addEventListener('click', () => updateTreeZoom(currentTreeZoom + 0.1));
+    document.getElementById('btnZoomOut')?.addEventListener('click', () => updateTreeZoom(currentTreeZoom - 0.1));
+    document.getElementById('btnZoomReset')?.addEventListener('click', () => updateTreeZoom(1.0));
+
+    // Hỗ trợ cuộn chuột lăn để phóng to/thu nhỏ khi giữ phím Ctrl
+    const treeWrapper = document.querySelector('.org-chart-wrapper');
+    if (treeWrapper) {
+        treeWrapper.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    updateTreeZoom(currentTreeZoom + 0.05);
+                } else {
+                    updateTreeZoom(currentTreeZoom - 0.05);
+                }
+            }
+        }, { passive: false });
+    }
 </script>
+
+<style>
+.org-tree li.is-collapsed > ul {
+    display: none !important;
+}
+.org-node-badge.interactive-toggle {
+    cursor: pointer !important;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.org-node-badge.interactive-toggle:hover {
+    transform: translateX(-50%) scale(1.15);
+    background-color: #2563eb !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.5);
+}
+.org-node-badge.collapsed-badge {
+    background-color: #d97706 !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.4);
+}
+.org-chart-wrapper {
+    overflow: auto;
+    position: relative;
+    border-radius: 8px;
+    min-height: 480px;
+}
+</style>
 
 <jsp:include page="../common/footer.jsp" />

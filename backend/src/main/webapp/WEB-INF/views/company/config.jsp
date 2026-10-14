@@ -71,7 +71,7 @@
                 <div class="d-flex align-items-center justify-content-between cursor-pointer" data-bs-toggle="collapse" data-bs-target="#descContent" aria-expanded="true">
                     <div class="d-flex align-items-center text-dark fw-bold">
                         <i class="bi bi-chevron-down me-2 text-primary"></i>
-                        <span>Description</span>
+                        <span>Hướng dẫn nghiệp vụ</span>
                     </div>
                     <span class="badge bg-white text-secondary border small">Tiêu chí hoàn thành</span>
                 </div>
@@ -162,8 +162,9 @@
                                                         <img src="${profile.logoUrl}" id="previewLogoImg" class="img-fluid" style="max-height: 64px; object-fit: contain;" alt="Logo Preview" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
                                                     </div>
                                                     <div class="flex-fill">
-                                                        <input type="file" class="form-control form-control-sm mb-2" name="logoFile" id="uploadLogoFile" accept="image/*" onchange="handleLocalImagePreview(this, 'previewLogoImg', 'editLogoUrl')">
-                                                        <input type="text" class="form-control form-control-sm text-xs font-monospace" name="logoUrl" id="editLogoUrl" value="${profile.logoUrl}" placeholder="Hoặc dán URL logo trực tiếp...">
+                                                        <input type="file" class="form-control form-control-sm mb-1" name="logoFile" id="uploadLogoFile" accept="image/*" onchange="handleLocalImagePreview(this, 'previewLogoImg', 'editLogoUrl')">
+                                                        <input type="hidden" name="logoUrl" id="editLogoUrl" value="${profile.logoUrl}">
+                                                        <div class="text-xs text-muted mt-1"><i class="bi bi-check-circle text-success me-1"></i> Đã chọn ảnh biểu trưng hiện tại</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -181,8 +182,9 @@
                                                         <img src="${profile.bannerUrl}" id="previewBannerImg" class="img-fluid rounded" style="width: 100%; height: 100%; object-fit: cover;" alt="Banner Preview" onerror="this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
                                                     </div>
                                                     <div class="flex-fill">
-                                                        <input type="file" class="form-control form-control-sm mb-2" name="bannerFile" id="uploadBannerFile" accept="image/*" onchange="handleLocalImagePreview(this, 'previewBannerImg', 'editBannerUrl')">
-                                                        <input type="text" class="form-control form-control-sm text-xs font-monospace" name="bannerUrl" id="editBannerUrl" value="${profile.bannerUrl}" placeholder="Hoặc dán URL banner trực tiếp...">
+                                                        <input type="file" class="form-control form-control-sm mb-1" name="bannerFile" id="uploadBannerFile" accept="image/*" onchange="handleLocalImagePreview(this, 'previewBannerImg', 'editBannerUrl')">
+                                                        <input type="hidden" name="bannerUrl" id="editBannerUrl" value="${profile.bannerUrl}">
+                                                        <div class="text-xs text-muted mt-1"><i class="bi bi-check-circle text-success me-1"></i> Đã chọn ảnh bìa hiển thị</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -357,7 +359,7 @@
                                     <i class="bi bi-eye me-1"></i> Xem trước đúng giao diện công khai
                                 </button>
                                 <a href="${pageContext.request.contextPath}/about-us" target="_blank" class="btn btn-light border btn-sm text-secondary">
-                                    <i class="bi bi-box-arrow-up-right me-1"></i> Truy cập trang công khai (/about-us)
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Truy cập trang công khai
                                 </a>
                                 <button type="button" class="btn btn-primary btn-sm" onclick="submitProfileForm()">
                                     <i class="bi bi-check-lg me-1"></i> Lưu toàn bộ cấu hình
@@ -370,7 +372,7 @@
                     <div class="card border shadow-none">
                         <div class="card-header bg-white py-2 border-bottom d-flex align-items-center justify-content-between">
                             <span class="small fw-bold text-dark"><i class="bi bi-phone me-1"></i> Khung xem nhanh</span>
-                            <span class="badge bg-light text-muted border text-xs">Real-time</span>
+                            <span class="badge bg-light text-muted border text-xs">Thời gian thực</span>
                         </div>
                         <div class="card-body p-2 bg-light rounded-bottom">
                             <div class="border rounded bg-white shadow-sm overflow-hidden" style="font-size: 11px;">

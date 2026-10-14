@@ -266,8 +266,11 @@ CREATE TABLE candidates (
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     status VARCHAR(50) NOT NULL DEFAULT 'APPLIED', -- 'APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'HIRED', 'REJECTED'
+    tracking_code VARCHAR(50) NULL UNIQUE,
     cv_url TEXT,
     notes TEXT,
+    cover_letter MEDIUMTEXT NULL,
+    ip_address VARCHAR(45) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL,
@@ -314,6 +317,8 @@ CREATE INDEX idx_audit_created ON audit_logs(created_at);
 CREATE INDEX idx_cand_req ON candidates(requisition_id);
 CREATE INDEX idx_cand_email ON candidates(email);
 CREATE INDEX idx_cand_status ON candidates(status);
+CREATE INDEX idx_cand_email_req ON candidates(email, requisition_id);
+CREATE INDEX idx_cand_tracking ON candidates(tracking_code);
 
 CREATE INDEX idx_sr_dept ON salary_ranges(department_id);
 

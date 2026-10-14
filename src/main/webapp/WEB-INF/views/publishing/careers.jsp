@@ -889,7 +889,7 @@
                                             <i class="bi bi-calendar3 me-1 text-secondary"></i> \${deadline}
                                         </span>
                                     </div>
-                                    <a href="\${detailUrl}" class="btn btn-outline-primary btn-sm px-3 rounded-pill fw-semibold">
+                                    <a href="\${detailUrl}#applyCardContainer" class="btn btn-outline-primary btn-sm px-3 rounded-pill fw-semibold">
                                         Ứng tuyển <i class="bi bi-arrow-right ms-1"></i>
                                     </a>
                                 </div>

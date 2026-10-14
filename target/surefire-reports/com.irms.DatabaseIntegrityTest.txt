@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.DatabaseIntegrityTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.007 s <<< FAILURE! -- in com.irms.DatabaseIntegrityTest
-com.irms.DatabaseIntegrityTest.testDatabaseConnectionAndTables -- Time elapsed: 0.004 s <<< ERROR!
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.013 s <<< FAILURE! -- in com.irms.DatabaseIntegrityTest
+com.irms.DatabaseIntegrityTest.testDatabaseConnectionAndTables -- Time elapsed: 0.012 s <<< ERROR!
 com.mysql.cj.jdbc.exceptions.CommunicationsException: 
 Communications link failure
 

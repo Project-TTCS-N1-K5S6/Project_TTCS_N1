@@ -1,7 +1,12 @@
 package com.irms.controller;
 
+import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.model.Candidate;
+import com.irms.model.RecruitmentRequest;
+import com.irms.model.SharedCatalogItem;
+import com.irms.model.SharedCatalogType;
 import com.irms.service.CandidateService;
+import com.irms.service.SharedCatalogService;
 
 import com.irms.model.User;
 
@@ -31,6 +36,8 @@ import java.util.List;
 })
 public class CandidateServlet extends HttpServlet {
     private final CandidateService candidateService = new CandidateService();
+    private final SharedCatalogService catalogService = new SharedCatalogService();
+    private final RecruitmentRequestDAO requisitionDAO = new RecruitmentRequestDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -49,10 +56,33 @@ public class CandidateServlet extends HttpServlet {
             recruiterId = currentUser.getId();
         }
 
-        List<Candidate> list = candidateService.getCandidates(search, status, recruiterId);
+        int page = 1;
+        int pageSize = 10;
+        try {
+            if (request.getParameter("page") != null) {
+                page = Integer.parseInt(request.getParameter("page"));
+            }
+        } catch (NumberFormatException ignored) {}
+
+        List<Candidate> list = candidateService.getCandidates(search, status, recruiterId, page, pageSize);
+        int totalCandidates = candidateService.countCandidates(search, status, recruiterId);
+        int totalPages = (int) Math.ceil((double) totalCandidates / pageSize);
+
         request.setAttribute("candidates", list);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalCount", totalCandidates);
+        request.setAttribute("pageSize", pageSize);
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
+        List<SharedCatalogItem> applicationSources =
+                catalogService.getItems(SharedCatalogType.APPLICATION_SOURCE);
+        List<SharedCatalogItem> rejectionReasons =
+                catalogService.getItems(SharedCatalogType.REJECTION_REASON);
+        request.setAttribute("applicationSources", applicationSources);
+        request.setAttribute("rejectionReasons", rejectionReasons);
+        List<RecruitmentRequest> requisitions = requisitionDAO.findAll(null, null, null);
+        request.setAttribute("requisitions", requisitions);
 
         request.getRequestDispatcher("/WEB-INF/views/candidates/list.jsp").forward(request, response);
     }
@@ -76,15 +106,24 @@ public class CandidateServlet extends HttpServlet {
                 c.setFullName(request.getParameter("fullName"));
                 c.setEmail(request.getParameter("email"));
                 c.setPhone(request.getParameter("phone"));
+                String reqId = request.getParameter("requisitionId");
+                if (reqId != null && !reqId.trim().isEmpty()) {
+                    c.setRequisitionId(reqId.trim());
+                }
+                c.setApplicationSourceId(request.getParameter("applicationSourceId"));
                 c.setStatus(request.getParameter("status"));
                 c.setCvUrl(request.getParameter("cvUrl"));
                 c.setNotes(request.getParameter("notes"));
-                candidateService.createCandidate(c);
+                if (!candidateService.createCandidate(c)) {
+                    throw new IllegalStateException("Không thể thêm hồ sơ ứng viên.");
+                }
                 if (session != null) session.setAttribute("flashSuccess", "Thêm hồ sơ ứng viên thành công!");
             } else if ("/candidates/update-status".equals(path)) {
                 String id = request.getParameter("candidateId");
                 String newStatus = request.getParameter("status");
-                candidateService.updateStatus(id, newStatus);
+                if (!candidateService.updateStatus(id, newStatus, request.getParameter("rejectionReasonId"))) {
+                    throw new IllegalStateException("Không thể cập nhật trạng thái hồ sơ ứng viên.");
+                }
                 if (session != null) session.setAttribute("flashSuccess", "Đã cập nhật trạng thái ứng viên thành công!");
             }
         } catch (Exception e) {

@@ -35,48 +35,104 @@
         - redirect (Phiên hết hạn): Tiêu chí US 2 yêu cầu thông báo rõ ràng khi phiên hết hạn.
         ======================================================================
     -->
-    <c:if test="${not empty errorMessage}">
-        <div class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-            <div>${errorMessage}</div>
-        </div>
-    </c:if>
+    <div id="toastNotificationContainer" class="toast-notification-container" aria-live="polite" aria-atomic="true">
+        <c:if test="${not empty errorMessage}">
+            <div class="toast-notification-item toast-item-error" data-auto-dismiss="6500">
+                <div class="toast-icon-box"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                <div class="toast-body-content">
+                    <div class="toast-header-title">Đăng nhập thất bại</div>
+                    <div class="toast-message-text">${errorMessage}</div>
+                </div>
+                <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                <div class="toast-progress-bar"></div>
+            </div>
+            <div class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <div>${errorMessage}</div>
+            </div>
+        </c:if>
 
-    <c:if test="${param.loggedOut == 'true'}">
-        <div class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
-            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
-            <div>Bạn đã đăng xuất an toàn khỏi hệ thống.</div>
-        </div>
-    </c:if>
+        <c:if test="${param.loggedOut == 'true'}">
+            <div class="toast-notification-item toast-item-success" data-auto-dismiss="5000">
+                <div class="toast-icon-box"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="toast-body-content">
+                    <div class="toast-header-title">Đã đăng xuất</div>
+                    <div class="toast-message-text">Bạn đã đăng xuất an toàn khỏi hệ thống.</div>
+                </div>
+                <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                <div class="toast-progress-bar"></div>
+            </div>
+            <div class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                <div>Bạn đã đăng xuất an toàn khỏi hệ thống.</div>
+            </div>
+        </c:if>
 
-    <c:if test="${param.resetSuccess == 'true'}">
-        <div class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
-            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
-            <div>Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới của bạn.</div>
-        </div>
-    </c:if>
+        <c:if test="${param.resetSuccess == 'true'}">
+            <div class="toast-notification-item toast-item-success" data-auto-dismiss="6000">
+                <div class="toast-icon-box"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="toast-body-content">
+                    <div class="toast-header-title">Thành công</div>
+                    <div class="toast-message-text">Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới.</div>
+                </div>
+                <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                <div class="toast-progress-bar"></div>
+            </div>
+            <div class="alert alert-success py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+                <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                <div>Đặt lại mật khẩu thành công! Vui lòng đăng nhập với mật khẩu mới của bạn.</div>
+            </div>
+        </c:if>
 
-    <c:if test="${param.sessionRevoked == 'true'}">
-        <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
-            <i class="bi bi-shield-exclamation me-2 fs-5"></i>
-            <div>Phiên đăng nhập đã bị thu hồi do tài khoản đã đổi mật khẩu hoặc được cập nhật vai trò. Vui lòng đăng nhập lại.</div>
-        </div>
-    </c:if>
+        <c:if test="${param.sessionRevoked == 'true'}">
+            <div class="toast-notification-item toast-item-warning" data-auto-dismiss="7000">
+                <div class="toast-icon-box"><i class="bi bi-shield-exclamation"></i></div>
+                <div class="toast-body-content">
+                    <div class="toast-header-title">Thu hồi phiên</div>
+                    <div class="toast-message-text">Phiên đăng nhập đã bị thu hồi do tài khoản đã đổi mật khẩu hoặc được cập nhật vai trò.</div>
+                </div>
+                <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                <div class="toast-progress-bar"></div>
+            </div>
+            <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+                <i class="bi bi-shield-exclamation me-2 fs-5"></i>
+                <div>Phiên đăng nhập đã bị thu hồi do tài khoản đã đổi mật khẩu hoặc được cập nhật vai trò. Vui lòng đăng nhập lại.</div>
+            </div>
+        </c:if>
 
-    <c:if test="${param.locked == 'true'}">
-        <div class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
-            <i class="bi bi-lock-fill me-2 fs-5"></i>
-            <div>Tài khoản của bạn đã bị Quản trị viên khóa. Mọi phiên làm việc đã bị thu hồi.</div>
-        </div>
-    </c:if>
+        <c:if test="${param.locked == 'true'}">
+            <div class="toast-notification-item toast-item-error" data-auto-dismiss="7500">
+                <div class="toast-icon-box"><i class="bi bi-lock-fill"></i></div>
+                <div class="toast-body-content">
+                    <div class="toast-header-title">Tài khoản bị khóa</div>
+                    <div class="toast-message-text">Tài khoản của bạn đã bị Quản trị viên khóa. Mọi phiên làm việc đã bị thu hồi.</div>
+                </div>
+                <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                <div class="toast-progress-bar"></div>
+            </div>
+            <div class="alert alert-danger py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+                <i class="bi bi-lock-fill me-2 fs-5"></i>
+                <div>Tài khoản của bạn đã bị Quản trị viên khóa. Mọi phiên làm việc đã bị thu hồi.</div>
+            </div>
+        </c:if>
 
-    <!-- [US 2 Tiêu chí 3]: Phiên hết hạn đưa về trang đăng nhập kèm thông báo rõ ràng -->
-    <c:if test="${not empty param.redirect && param.loggedOut != 'true' && param.sessionRevoked != 'true' && param.locked != 'true'}">
-        <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
-            <i class="bi bi-clock-history me-2 fs-5"></i>
-            <div>Phiên làm việc của bạn đã hết hạn do không hoạt động. Vui lòng đăng nhập lại để tiếp tục.</div>
-        </div>
-    </c:if>
+        <!-- [US 2 Tiêu chí 3]: Phiên hết hạn đưa về trang đăng nhập kèm thông báo rõ ràng -->
+        <c:if test="${not empty param.redirect && param.loggedOut != 'true' && param.sessionRevoked != 'true' && param.locked != 'true'}">
+            <div class="toast-notification-item toast-item-warning" data-auto-dismiss="7000">
+                <div class="toast-icon-box"><i class="bi bi-clock-history"></i></div>
+                <div class="toast-body-content">
+                    <div class="toast-header-title">Phiên làm việc hết hạn</div>
+                    <div class="toast-message-text">Phiên làm việc của bạn đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.</div>
+                </div>
+                <button type="button" class="toast-close-btn" onclick="window.dismissToast(this.closest('.toast-notification-item'))" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+                <div class="toast-progress-bar"></div>
+            </div>
+            <div class="alert alert-warning py-2 px-3 mb-3 small d-flex align-items-center" role="alert">
+                <i class="bi bi-clock-history me-2 fs-5"></i>
+                <div>Phiên làm việc của bạn đã hết hạn do không hoạt động. Vui lòng đăng nhập lại để tiếp tục.</div>
+            </div>
+        </c:if>
+    </div>
 
     <!-- [US 1]: Form đăng nhập email nội bộ và mật khẩu -->
     <form action="${pageContext.request.contextPath}/auth/login" method="POST">
@@ -132,6 +188,7 @@
 
 <!-- Bootstrap 5.3.3 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
 <script>
     const toggleBtn = document.getElementById('togglePassword');
     const pwdInput = document.getElementById('password');
@@ -141,6 +198,15 @@
             const isPassword = pwdInput.type === 'password';
             pwdInput.type = isPassword ? 'text' : 'password';
             eyeIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        });
+    }
+
+    // Đảm bảo xóa cờ nếu đang ở form đăng nhập
+    sessionStorage.removeItem('showLoginSuccessToast');
+    const loginForm = document.querySelector('form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function() {
+            sessionStorage.setItem('showLoginSuccessToast', 'true');
         });
     }
 </script>

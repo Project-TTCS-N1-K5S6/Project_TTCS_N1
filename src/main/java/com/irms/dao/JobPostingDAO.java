@@ -350,6 +350,53 @@ public class JobPostingDAO extends BaseDAO {
         return null;
     }
 
+    public JobPosting findById(String id) {
+        if (id == null || id.trim().isEmpty()) return null;
+        JobPosting byReq = findByRequisitionId(id);
+        if (byReq != null && byReq.getId() != null) {
+            return byReq;
+        }
+
+        String sql = "SELECT r.id AS req_id, r.code AS req_code, r.title AS req_title, r.position_title, " +
+                "r.department_id, d.name AS department_name, r.headcount, r.recruitment_reason, " +
+                "r.min_salary, r.max_salary, r.currency, r.deadline, r.job_description, r.job_requirements, " +
+                "r.salary_explanation, r.status AS req_status, r.created_at AS req_created_at, " +
+                "jp.id AS jp_id, jp.title AS jp_title, jp.platform AS jp_platform, " +
+                "COALESCE(jp.status, 'DRAFT') AS jp_status, " +
+                "COALESCE(jp.current_version, 0) AS jp_version, " +
+                "jp.published_at AS jp_published_at, jp.published_by AS jp_published_by, " +
+                "u_pub.full_name AS published_by_name, " +
+                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count, " +
+                "jp.job_description AS jp_job_description, jp.work_location_id AS jp_work_location_id, " +
+                "jp.work_location AS jp_work_location, jp.work_mode_id AS jp_work_mode_id, " +
+                "jp.work_mode AS jp_work_mode, jp.application_deadline AS jp_deadline, " +
+                "jp.is_salary_visible AS jp_salary_visible, jp.min_salary AS jp_min_salary, " +
+                "jp.max_salary AS jp_max_salary, jp.currency AS jp_currency " +
+                "FROM job_postings jp " +
+                "LEFT JOIN recruitment_requisitions r ON jp.requisition_id = r.id " +
+                "LEFT JOIN departments d ON r.department_id = d.id " +
+                "LEFT JOIN users u_pub ON jp.published_by = u_pub.id " +
+                "WHERE jp.id = ?";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, id.trim());
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToPosting(rs);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm bài đăng theo id: " + id, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
     /**
      * KN-120 (1) + (3): Xuất bản bài đăng
      * Yêu cầu:
