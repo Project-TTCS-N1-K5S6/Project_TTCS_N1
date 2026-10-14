@@ -11,7 +11,6 @@ import java.io.IOException;
  * Controller hiển thị giao diện Placeholder cho các phân hệ theo lộ trình mở rộng
  */
 @WebServlet(name = "PlaceholderServlet", urlPatterns = {
-        "/job-postings/*",
         "/interviews/*",
         "/offers/*",
         "/onboarding/*",
@@ -27,7 +26,6 @@ public class PlaceholderServlet extends HttpServlet {
         String moduleName = "Phân hệ nghiệp vụ";
 
         if (uri.contains("recruitment-requests")) moduleName = "Quản lý Yêu cầu tuyển dụng";
-        else if (uri.contains("job-postings")) moduleName = "Quản lý Tin tuyển dụng";
         else if (uri.contains("interviews")) moduleName = "Điều phối Lịch phỏng vấn & Đánh giá";
         else if (uri.contains("offers")) moduleName = "Thư mời nhận việc (Offer Letter)";
         else if (uri.contains("onboarding")) moduleName = "Quy trình Tiếp nhận nhân sự (Onboarding)";

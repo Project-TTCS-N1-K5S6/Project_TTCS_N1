@@ -5,10 +5,13 @@ import com.irms.model.Department;
 import com.irms.model.JobPostPublication;
 import com.irms.model.JobPosting;
 import com.irms.model.RecruitmentRequest;
+import com.irms.model.SharedCatalogItem;
+import com.irms.model.SharedCatalogType;
 import com.irms.model.User;
 import com.irms.service.DepartmentService;
 import com.irms.service.JobPublishingService;
 import com.irms.service.RecruitmentRequestService;
+import com.irms.service.SharedCatalogService;
 import com.irms.util.JsonUtil;
 import com.irms.util.SecurityUtil;
 
@@ -19,15 +22,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Controller xử lý Quản lý Xuất bản bài đăng (KN-120)
- * 1. Tin phải duyệt trước khi show công khai
+ * Controller xử lý Quản lý Xuất bản bài đăng (KN-120) và Tạo nhanh Bài đăng Tuyển dụng (KN-204, KN-207)
+ * 1. Tin phải duyệt trước khi show công khai (KN-208)
  * 2. Xem trước đúng như giao diện khai báo trước khi xuất bản
  * 3. Ghi lại bản xuất và thời điểm
+ * 4. Tạo nhanh bài đăng từ yêu cầu tuyển dụng đã duyệt (KN-204, KN-205, KN-206, KN-207)
  */
 @WebServlet(name = "JobPublishingServlet", urlPatterns = {
         "/post-publishing",
@@ -37,6 +44,13 @@ import java.util.Map;
         "/post-publishing/approve",
         "/post-publishing/history",
         "/post-publishing/version-detail",
+        "/post-publishing/quick-create",
+        "/post-publishing/create",
+        "/post-publishing/requisition-data",
+        "/post-publishing/approved-requisitions",
+        "/job-postings",
+        "/job-postings/create",
+        "/job-postings/quick-create",
         "/careers",
         "/careers/job"
 })
@@ -52,6 +66,12 @@ public class JobPublishingServlet extends HttpServlet {
             throws ServletException, IOException {
         String path = request.getServletPath();
 
+        // 0. Điều hướng URL /job-postings về /post-publishing
+        if ("/job-postings".equals(path)) {
+            response.sendRedirect(request.getContextPath() + "/post-publishing");
+            return;
+        }
+
         // 1. Cổng tuyển dụng công khai cho ứng viên (Public Career Portal)
         if ("/careers".equals(path)) {
             showPublicCareerPortal(request, response);
@@ -60,6 +80,24 @@ public class JobPublishingServlet extends HttpServlet {
 
         if ("/careers/job".equals(path)) {
             showPublicJobDetail(request, response);
+            return;
+        }
+
+        // KN-204: Màn hình tạo nhanh bài đăng tuyển dụng
+        if ("/post-publishing/create".equals(path) || "/job-postings/create".equals(path)) {
+            showCreateJobPostingPage(request, response);
+            return;
+        }
+
+        // KN-206: API lấy thông tin yêu cầu tuyển dụng nguồn và mô tả chuẩn hóa
+        if ("/post-publishing/requisition-data".equals(path)) {
+            handleRequisitionDataApi(request, response);
+            return;
+        }
+
+        // KN-208: API lấy danh sách yêu cầu tuyển dụng đã duyệt để tạo bài đăng
+        if ("/post-publishing/approved-requisitions".equals(path)) {
+            handleApprovedRequisitionsApi(request, response);
             return;
         }
 
@@ -90,6 +128,13 @@ public class JobPublishingServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         String path = request.getServletPath();
+
+        // KN-207: API tạo bài đăng từ yêu cầu tuyển dụng đã duyệt
+        if ("/post-publishing/quick-create".equals(path) || "/job-postings/quick-create".equals(path)
+                || "/post-publishing/create".equals(path) || "/job-postings/create".equals(path)) {
+            handleQuickCreate(request, response);
+            return;
+        }
 
         if ("/post-publishing/publish".equals(path)) {
             handlePublish(request, response);
@@ -135,8 +180,16 @@ public class JobPublishingServlet extends HttpServlet {
         int pendingApprovalCount = publishingService.countPostings(null, null, "PENDING", null);
         int draftCount = publishingService.countPostings(null, null, "DRAFT", null);
 
+        SharedCatalogService catalogService = new SharedCatalogService();
+        List<SharedCatalogItem> workLocations = catalogService.getItems(SharedCatalogType.WORK_LOCATION);
+        List<SharedCatalogItem> workModes = catalogService.getItems(SharedCatalogType.WORK_MODE);
+        List<RecruitmentRequest> approvedRequisitions = publishingService.getApprovedRequisitions();
+
         request.setAttribute("postings", postings);
         request.setAttribute("departments", departments);
+        request.setAttribute("workLocations", workLocations);
+        request.setAttribute("workModes", workModes);
+        request.setAttribute("approvedRequisitions", approvedRequisitions);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalCount", totalPostings);
@@ -382,5 +435,293 @@ public class JobPublishingServlet extends HttpServlet {
 
         request.setAttribute("job", posting);
         request.getRequestDispatcher("/WEB-INF/views/publishing/job-detail.jsp").forward(request, response);
+    }
+
+    /**
+     * KN-206: API lấy dữ liệu chi tiết của yêu cầu tuyển dụng đã duyệt
+     * Chuẩn hóa mô tả công việc (gạch đầu dòng, khoảng trắng) nhưng giữ nguyên yêu cầu gốc.
+     */
+    private void handleRequisitionDataApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String reqId = request.getParameter("id");
+        if (reqId == null || reqId.trim().isEmpty()) {
+            reqId = request.getParameter("requisitionId");
+        }
+        if (reqId == null || reqId.trim().isEmpty()) {
+            JsonUtil.sendJsonResponse(response, 400, Map.of("error", "Thiếu mã định danh yêu cầu tuyển dụng!"));
+            return;
+        }
+
+        RecruitmentRequest req = requisitionService.getRequestById(reqId.trim());
+        if (req == null) {
+            JsonUtil.sendJsonResponse(response, 404, Map.of("error", "Không tìm thấy yêu cầu tuyển dụng!"));
+            return;
+        }
+
+        // KN-208: Kiểm tra trạng thái đã duyệt
+        boolean isApproved = publishingService.isEligibleForPublish(req);
+        if (!isApproved) {
+            JsonUtil.sendJsonResponse(response, 400, Map.of(
+                    "error", "Yêu cầu tuyển dụng chưa ở trạng thái Đã duyệt (" + req.getStatusLabel() + "), không thể tạo bài đăng tuyển dụng!",
+                    "isApproved", false,
+                    "status", req.getStatus(),
+                    "statusLabel", req.getStatusLabel()
+            ));
+            return;
+        }
+
+        // KN-206: Chuẩn hóa nội dung mô tả công việc
+        String normalizedJd = publishingService.normalizeJobDescription(req.getJobDescription());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", req.getId());
+        data.put("code", req.getCode());
+        data.put("title", req.getTitle());
+        data.put("positionTitle", req.getPositionTitle() != null ? req.getPositionTitle() : req.getTitle());
+        data.put("departmentId", req.getDepartmentId());
+        data.put("departmentName", req.getDepartmentName() != null ? req.getDepartmentName() : "Toàn công ty");
+        data.put("headcount", req.getHeadcount());
+        data.put("deadline", req.getDeadline() != null ? new SimpleDateFormat("yyyy-MM-dd").format(req.getDeadline()) : "");
+        data.put("deadlineFormatted", req.getDeadline() != null ? new SimpleDateFormat("dd/MM/yyyy").format(req.getDeadline()) : "Chưa xác định");
+        data.put("minSalary", req.getMinSalary());
+        data.put("maxSalary", req.getMaxSalary());
+        data.put("salaryVisible", req.getMinSalary() != null || req.getMaxSalary() != null);
+        data.put("formattedSalaryRange", req.getFormattedSalaryRange());
+        data.put("workLocation", req.getWorkLocation());
+        data.put("workMode", req.getWorkMode());
+        data.put("rawJobDescription", req.getJobDescription());
+        data.put("normalizedJobDescription", normalizedJd);
+        data.put("jobRequirements", req.getJobRequirements());
+        data.put("status", req.getStatus());
+        data.put("statusLabel", req.getStatusLabel());
+        data.put("isApproved", true);
+
+        JsonUtil.sendJsonResponse(response, 200, data);
+    }
+
+    /**
+     * KN-208: API trả về danh sách các yêu cầu tuyển dụng đã duyệt để tạo bài đăng
+     */
+    private void handleApprovedRequisitionsApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        List<RecruitmentRequest> approvedList = publishingService.getApprovedRequisitions();
+        JsonUtil.sendJsonResponse(response, 200, approvedList);
+    }
+
+    /**
+     * KN-204: Màn hình tạo nhanh bài đăng tuyển dụng
+     */
+    private void showCreateJobPostingPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+
+        // Phân quyền tạo bài đăng tuyển dụng
+        if (!publishingService.canManageJobPostings(currentUser)) {
+            request.setAttribute("errorMessage", "Bạn không có quyền tạo bài đăng tuyển dụng!");
+            request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+            return;
+        }
+
+        String reqId = request.getParameter("requisitionId");
+        if (reqId == null || reqId.trim().isEmpty()) {
+            reqId = request.getParameter("id");
+        }
+
+        RecruitmentRequest selectedReq = null;
+        JobPosting draftPosting = new JobPosting();
+
+        if (reqId != null && !reqId.trim().isEmpty()) {
+            selectedReq = requisitionService.getRequestById(reqId.trim());
+            if (selectedReq == null) {
+                if (session != null) {
+                    session.setAttribute("flashError", "Không tìm thấy yêu cầu tuyển dụng nguồn!");
+                }
+                response.sendRedirect(request.getContextPath() + "/post-publishing");
+                return;
+            }
+
+            // KN-208: Kiểm tra trạng thái đã duyệt
+            if (!publishingService.isEligibleForPublish(selectedReq)) {
+                if (session != null) {
+                    session.setAttribute("flashError", "Chỉ những yêu cầu tuyển dụng có trạng thái Đã duyệt mới được phép tạo bài đăng tuyển dụng! (Trạng thái hiện tại: " + selectedReq.getStatusLabel() + ")");
+                }
+                response.sendRedirect(request.getContextPath() + "/post-publishing");
+                return;
+            }
+
+            // Kế thừa và chuẩn hóa
+            draftPosting.setRequisitionId(selectedReq.getId());
+            draftPosting.setTitle(selectedReq.getTitle());
+            draftPosting.setJobDescription(publishingService.normalizeJobDescription(selectedReq.getJobDescription()));
+            draftPosting.setApplicationDeadline(selectedReq.getDeadline());
+            draftPosting.setMinSalary(selectedReq.getMinSalary());
+            draftPosting.setMaxSalary(selectedReq.getMaxSalary());
+            draftPosting.setSalaryVisible(selectedReq.getMinSalary() != null || selectedReq.getMaxSalary() != null);
+            draftPosting.setWorkLocation(selectedReq.getWorkLocation());
+            draftPosting.setWorkMode(selectedReq.getWorkMode());
+        }
+
+        SharedCatalogService catalogService = new SharedCatalogService();
+        List<SharedCatalogItem> workLocations = catalogService.getItems(SharedCatalogType.WORK_LOCATION);
+        List<SharedCatalogItem> workModes = catalogService.getItems(SharedCatalogType.WORK_MODE);
+        List<RecruitmentRequest> approvedRequisitions = publishingService.getApprovedRequisitions();
+
+        request.setAttribute("selectedReq", selectedReq);
+        request.setAttribute("draftPosting", draftPosting);
+        request.setAttribute("approvedRequisitions", approvedRequisitions);
+        request.setAttribute("workLocations", workLocations);
+        request.setAttribute("workModes", workModes);
+        request.setAttribute("activeMenu", "post-publishing");
+
+        request.getRequestDispatcher("/WEB-INF/views/publishing/create.jsp").forward(request, response);
+    }
+
+    /**
+     * KN-207: Xử lý tiếp nhận và tạo bài đăng tuyển dụng từ form / modal
+     */
+    private void handleQuickCreate(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        String ip = SecurityUtil.getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        boolean isAjax = "XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))
+                || (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"))
+                || "json".equalsIgnoreCase(request.getParameter("format"));
+
+        // Phân quyền
+        if (!publishingService.canManageJobPostings(currentUser)) {
+            String errMsg = "Bạn không có quyền thực hiện thao tác tạo bài đăng tuyển dụng!";
+            if (isAjax) {
+                JsonUtil.sendJsonResponse(response, 403, Map.of("success", false, "error", errMsg));
+            } else {
+                if (session != null) session.setAttribute("flashError", errMsg);
+                response.sendRedirect(request.getContextPath() + "/post-publishing");
+            }
+            return;
+        }
+
+        String reqId = request.getParameter("requisitionId");
+        String title = request.getParameter("title");
+        String jobDescription = request.getParameter("jobDescription");
+        String workLocationId = request.getParameter("workLocationId");
+        String workLocation = request.getParameter("workLocation");
+        String workModeId = request.getParameter("workModeId");
+        String workMode = request.getParameter("workMode");
+        String deadlineStr = request.getParameter("applicationDeadline");
+        String salaryVisibleStr = request.getParameter("salaryVisible");
+        String minSalaryStr = request.getParameter("minSalary");
+        String maxSalaryStr = request.getParameter("maxSalary");
+        String currency = request.getParameter("currency");
+        String publishImmediatelyStr = request.getParameter("publishImmediately");
+
+        boolean salaryVisible = "true".equalsIgnoreCase(salaryVisibleStr) || "on".equalsIgnoreCase(salaryVisibleStr) || "1".equals(salaryVisibleStr);
+        boolean publishImmediately = "true".equalsIgnoreCase(publishImmediatelyStr) || "on".equalsIgnoreCase(publishImmediatelyStr) || "1".equals(publishImmediatelyStr);
+
+        JobPosting posting = new JobPosting();
+        posting.setRequisitionId(reqId != null ? reqId.trim() : null);
+        posting.setTitle(title != null ? title.trim() : null);
+        posting.setJobDescription(jobDescription);
+        posting.setWorkLocationId(workLocationId != null ? workLocationId.trim() : null);
+        posting.setWorkLocation(workLocation != null ? workLocation.trim() : null);
+        posting.setWorkModeId(workModeId != null ? workModeId.trim() : null);
+        posting.setWorkMode(workMode != null ? workMode.trim() : null);
+        posting.setSalaryVisible(salaryVisible);
+        posting.setCurrency(currency != null && !currency.trim().isEmpty() ? currency.trim() : "VND");
+        posting.setStatus(publishImmediately ? "PUBLISHED" : "DRAFT");
+
+        // Parse deadline
+        if (deadlineStr != null && !deadlineStr.trim().isEmpty()) {
+            try {
+                posting.setApplicationDeadline(Date.valueOf(deadlineStr.trim()));
+            } catch (IllegalArgumentException e) {
+                try {
+                    java.util.Date parsed = new SimpleDateFormat("dd/MM/yyyy").parse(deadlineStr.trim());
+                    posting.setApplicationDeadline(new Date(parsed.getTime()));
+                } catch (Exception ex) {
+                    String err = "Định dạng hạn nhận hồ sơ không hợp lệ (hỗ trợ yyyy-MM-dd hoặc dd/MM/yyyy)!";
+                    if (isAjax) {
+                        JsonUtil.sendJsonResponse(response, 400, Map.of("success", false, "error", err));
+                    } else {
+                        if (session != null) session.setAttribute("flashError", err);
+                        response.sendRedirect(request.getContextPath() + "/post-publishing/create?requisitionId=" + (reqId != null ? reqId : ""));
+                    }
+                    return;
+                }
+            }
+        }
+
+        // Parse lương nếu salaryVisible == true
+        if (salaryVisible) {
+            if (minSalaryStr != null && !minSalaryStr.trim().isEmpty()) {
+                try {
+                    String cleanMin = minSalaryStr.replaceAll("[,\\s]", "");
+                    posting.setMinSalary(new BigDecimal(cleanMin));
+                } catch (NumberFormatException e) {
+                    String err = "Mức lương tối thiểu không đúng định dạng số!";
+                    if (isAjax) {
+                        JsonUtil.sendJsonResponse(response, 400, Map.of("success", false, "error", err));
+                    } else {
+                        if (session != null) session.setAttribute("flashError", err);
+                        response.sendRedirect(request.getContextPath() + "/post-publishing/create?requisitionId=" + (reqId != null ? reqId : ""));
+                    }
+                    return;
+                }
+            }
+            if (maxSalaryStr != null && !maxSalaryStr.trim().isEmpty()) {
+                try {
+                    String cleanMax = maxSalaryStr.replaceAll("[,\\s]", "");
+                    posting.setMaxSalary(new BigDecimal(cleanMax));
+                } catch (NumberFormatException e) {
+                    String err = "Mức lương tối đa không đúng định dạng số!";
+                    if (isAjax) {
+                        JsonUtil.sendJsonResponse(response, 400, Map.of("success", false, "error", err));
+                    } else {
+                        if (session != null) session.setAttribute("flashError", err);
+                        response.sendRedirect(request.getContextPath() + "/post-publishing/create?requisitionId=" + (reqId != null ? reqId : ""));
+                    }
+                    return;
+                }
+            }
+        } else {
+            posting.setMinSalary(null);
+            posting.setMaxSalary(null);
+        }
+
+        try {
+            JobPosting created = publishingService.createQuickJobPosting(posting, currentUser, ip, userAgent);
+            String successMsg = "Tạo nhanh bài đăng tuyển dụng thành công" + (publishImmediately ? " và đã xuất bản!" : " (Lưu nháp)!");
+            if (isAjax) {
+                Map<String, Object> respMap = new HashMap<>();
+                respMap.put("success", true);
+                respMap.put("message", successMsg);
+                respMap.put("postingId", created.getId());
+                respMap.put("requisitionId", created.getRequisitionId());
+                respMap.put("status", created.getStatus());
+                respMap.put("redirectUrl", request.getContextPath() + "/post-publishing");
+                JsonUtil.sendJsonResponse(response, 200, respMap);
+            } else {
+                if (session != null) session.setAttribute("flashSuccess", successMsg);
+                response.sendRedirect(request.getContextPath() + "/post-publishing");
+            }
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            String errMsg = e.getMessage();
+            if (isAjax) {
+                JsonUtil.sendJsonResponse(response, 400, Map.of("success", false, "error", errMsg));
+            } else {
+                if (session != null) session.setAttribute("flashError", errMsg);
+                response.sendRedirect(request.getContextPath() + "/post-publishing/create?requisitionId=" + (reqId != null ? reqId : ""));
+            }
+        } catch (Exception e) {
+            String errMsg = "Lỗi trong quá trình tạo bài đăng: " + e.getMessage();
+            if (isAjax) {
+                JsonUtil.sendJsonResponse(response, 500, Map.of("success", false, "error", errMsg));
+            } else {
+                if (session != null) session.setAttribute("flashError", errMsg);
+                response.sendRedirect(request.getContextPath() + "/post-publishing");
+            }
+        }
     }
 }

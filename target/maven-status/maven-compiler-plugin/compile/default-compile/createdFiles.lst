@@ -9,11 +9,13 @@ com\irms\controller\JobPublishingServlet.class
 com\irms\model\CompanyProfile$2.class
 com\irms\model\SharedCatalogItem.class
 com\irms\controller\SalaryRangeServlet.class
+com\irms\model\DepartmentHeadcountBudget.class
 com\irms\service\CompanyProfileService.class
 com\irms\model\ExcelUserRow.class
 com\irms\model\CompetencyFrameworkCriterion.class
 com\irms\util\JsonUtil.class
 com\irms\util\SecurityUtil.class
+com\irms\controller\HeadcountBudgetServlet.class
 com\irms\model\PositionCompetencyFramework.class
 com\irms\model\CompanyProfile$CoreValueItem.class
 com\irms\model\Permission.class
@@ -27,8 +29,10 @@ com\irms\model\SharedCatalogType.class
 com\irms\controller\PlaceholderServlet.class
 com\irms\filter\EncodingFilter.class
 com\irms\model\CompanyProfile$PerkItem.class
+com\irms\dao\HeadcountBudgetDAO.class
 com\irms\model\RecruitmentRequest.class
 com\irms\config\DBConnection.class
+com\irms\model\BudgetSubtask.class
 com\irms\model\CompanyProfile$1.class
 com\irms\service\AuditService.class
 com\irms\model\CompetencyFramework.class
@@ -41,7 +45,9 @@ com\irms\util\PasswordUtil.class
 com\irms\model\CompanyProfile.class
 com\irms\service\EmailService$1.class
 com\irms\model\SalaryRange.class
+com\irms\service\HeadcountBudgetService.class
 com\irms\model\Department.class
+com\irms\service\HeadcountBudgetService$QuotaCheckResult.class
 com\irms\util\EmailTemplateUtil.class
 com\irms\model\EmailOutboxItem.class
 com\irms\model\CompanyProfile$3.class

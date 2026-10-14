@@ -241,8 +241,8 @@ public class AuthFilter implements Filter {
             }
         }
 
-        // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing) [KN-120]
-        if (path.startsWith("/post-publishing")) {
+        // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing, /job-postings) [KN-120, KN-204, KN-207]
+        if (path.startsWith("/post-publishing") || path.startsWith("/job-postings")) {
             boolean isAuthorizedPublish = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
                     || currentUser.hasRole("RECRUITER")
                     || currentUser.hasPermission("job_postings.view")

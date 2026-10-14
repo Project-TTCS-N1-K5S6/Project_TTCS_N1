@@ -1,4 +1,43 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.ApprovalMatrixTest
 -------------------------------------------------------------------------------
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.135 s -- in com.irms.ApprovalMatrixTest
+Tests run: 11, Failures: 0, Errors: 6, Skipped: 0, Time elapsed: 1.686 s <<< FAILURE! -- in com.irms.ApprovalMatrixTest
+com.irms.ApprovalMatrixTest.testCreateValidApprovalMatrix -- Time elapsed: 1.438 s <<< ERROR!
+java.lang.IllegalArgumentException: Phòng ban áp dụng không tồn tại hoặc đã bị xóa!
+	at com.irms.service.ApprovalMatrixService.validateMatrix(ApprovalMatrixService.java:141)
+	at com.irms.service.ApprovalMatrixService.createMatrix(ApprovalMatrixService.java:61)
+	at com.irms.ApprovalMatrixTest.testCreateValidApprovalMatrix(ApprovalMatrixTest.java:58)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
+
+com.irms.ApprovalMatrixTest.testApproveStepFlow -- Time elapsed: 0.022 s <<< ERROR!
+java.lang.IllegalArgumentException: Chưa có Ma trận phê duyệt nào được cấu hình cho phòng ban này. Vui lòng liên hệ Quản trị viên vào 'Quản trị hệ thống -> Ma trận phê duyệt' để thiết lập trước khi gửi duyệt!
+	at com.irms.service.ApprovalMatrixService.resolveApprovalSteps(ApprovalMatrixService.java:234)
+	at com.irms.service.ApprovalMatrixService.saveRequisitionApprovalChain(ApprovalMatrixService.java:368)
+	at com.irms.ApprovalMatrixTest.testApproveStepFlow(ApprovalMatrixTest.java:256)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
+
+com.irms.ApprovalMatrixTest.testResolveChainWithinThreshold -- Time elapsed: 0.021 s <<< ERROR!
+java.lang.IllegalArgumentException: Chưa có Ma trận phê duyệt nào được cấu hình cho phòng ban này. Vui lòng liên hệ Quản trị viên vào 'Quản trị hệ thống -> Ma trận phê duyệt' để thiết lập trước khi gửi duyệt!
+	at com.irms.service.ApprovalMatrixService.resolveApprovalSteps(ApprovalMatrixService.java:234)
+	at com.irms.ApprovalMatrixTest.testResolveChainWithinThreshold(ApprovalMatrixTest.java:132)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
+
+com.irms.ApprovalMatrixTest.testRunningWorkflowSnapshotImmutability -- Time elapsed: 0.020 s <<< ERROR!
+java.lang.IllegalArgumentException: Chưa có Ma trận phê duyệt nào được cấu hình cho phòng ban này. Vui lòng liên hệ Quản trị viên vào 'Quản trị hệ thống -> Ma trận phê duyệt' để thiết lập trước khi gửi duyệt!
+	at com.irms.service.ApprovalMatrixService.resolveApprovalSteps(ApprovalMatrixService.java:234)
+	at com.irms.service.ApprovalMatrixService.saveRequisitionApprovalChain(ApprovalMatrixService.java:368)
+	at com.irms.ApprovalMatrixTest.testRunningWorkflowSnapshotImmutability(ApprovalMatrixTest.java:202)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
+
+com.irms.ApprovalMatrixTest.testAutoEscalateWhenSalaryExceedsThreshold -- Time elapsed: 0.017 s <<< ERROR!
+java.lang.IllegalArgumentException: Chưa có Ma trận phê duyệt nào được cấu hình cho phòng ban này. Vui lòng liên hệ Quản trị viên vào 'Quản trị hệ thống -> Ma trận phê duyệt' để thiết lập trước khi gửi duyệt!
+	at com.irms.service.ApprovalMatrixService.resolveApprovalSteps(ApprovalMatrixService.java:234)
+	at com.irms.ApprovalMatrixTest.testAutoEscalateWhenSalaryExceedsThreshold(ApprovalMatrixTest.java:156)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
+
+com.irms.ApprovalMatrixTest.testStepOrderSequentialAndNoDuplicates -- Time elapsed: 0.016 s <<< ERROR!
+java.lang.IllegalArgumentException: Chưa có Ma trận phê duyệt nào được cấu hình cho phòng ban này. Vui lòng liên hệ Quản trị viên vào 'Quản trị hệ thống -> Ma trận phê duyệt' để thiết lập trước khi gửi duyệt!
+	at com.irms.service.ApprovalMatrixService.resolveApprovalSteps(ApprovalMatrixService.java:234)
+	at com.irms.ApprovalMatrixTest.testStepOrderSequentialAndNoDuplicates(ApprovalMatrixTest.java:178)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
+
