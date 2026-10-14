@@ -150,6 +150,38 @@ public class JobPublishingService {
     }
 
     /**
+     * KN-219, KN-222, KN-223: Tìm kiếm và lọc danh sách việc làm công khai với phân trang
+     */
+    public List<JobPosting> getPublicJobs(String keyword, String departmentId, String locationId, String workType, String sortBy, int page, int limit) {
+        int p = Math.max(1, page);
+        int size = (limit > 0) ? Math.min(limit, 100) : 9;
+        int offset = (p - 1) * size;
+        return jobPostingDAO.findPublicJobs(keyword, departmentId, locationId, workType, sortBy, offset, size);
+    }
+
+    public int countPublicJobs(String keyword, String departmentId, String locationId, String workType) {
+        return jobPostingDAO.countPublicJobs(keyword, departmentId, locationId, workType);
+    }
+
+    /**
+     * Kiểm tra một bài đăng có đủ điều kiện hiển thị công khai hay không
+     * Điều kiện: status == 'PUBLISHED' && expired_at >= current_time
+     */
+    public boolean isPubliclyEligible(JobPosting posting) {
+        if (posting == null) return false;
+        if (!"PUBLISHED".equalsIgnoreCase(posting.getStatus())) {
+            return false;
+        }
+        if (posting.isExpired()) {
+            return false;
+        }
+        if (posting.getRequisition() != null && !posting.isApproved()) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Tạo dữ liệu snapshot chi tiết chuẩn hóa để lưu trữ lịch sử
      */
     public String createSnapshotJson(RecruitmentRequest req) {

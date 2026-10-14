@@ -63,7 +63,8 @@ public class AuthFilter implements Filter {
         // ----------------------------------------------------------------------
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
             path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about") ||
-            path.startsWith("/careers")) {
+            path.startsWith("/careers") || path.startsWith("/jobs") ||
+            path.startsWith("/api/v1/public/") || path.startsWith("/api/public/")) {
             chain.doFilter(request, response);
             return;
         }
@@ -241,8 +242,8 @@ public class AuthFilter implements Filter {
             }
         }
 
-        // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing) [KN-120]
-        if (path.startsWith("/post-publishing")) {
+        // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing, /job-postings) [KN-120, KN-204, KN-207]
+        if (path.startsWith("/post-publishing") || path.startsWith("/job-postings")) {
             boolean isAuthorizedPublish = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
                     || currentUser.hasRole("RECRUITER")
                     || currentUser.hasPermission("job_postings.view")

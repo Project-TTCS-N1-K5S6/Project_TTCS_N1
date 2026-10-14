@@ -48,6 +48,12 @@ public class RecruitmentRequest implements Serializable {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // Địa điểm làm việc & Hình thức làm việc (KN-206)
+    private String workLocationId;
+    private String workLocation;
+    private String workModeId;
+    private String workMode;
+
     // Phân hệ Định biên & Ngân sách (KN-199 & KN-201): Xác nhận ghi đè khi vượt chỉ tiêu
     private boolean isBudgetOverridden = false;
     private String budgetOverrideReason;
@@ -285,5 +291,17 @@ public class RecruitmentRequest implements Serializable {
         Long remaining = getDaysRemaining();
         return remaining != null && remaining >= 0 && remaining <= 7;
     }
+
+    public String getWorkLocationId() { return workLocationId; }
+    public void setWorkLocationId(String workLocationId) { this.workLocationId = workLocationId; }
+
+    public String getWorkLocation() { return workLocation; }
+    public void setWorkLocation(String workLocation) { this.workLocation = workLocation; }
+
+    public String getWorkModeId() { return workModeId; }
+    public void setWorkModeId(String workModeId) { this.workModeId = workModeId; }
+
+    public String getWorkMode() { return workMode; }
+    public void setWorkMode(String workMode) { this.workMode = workMode; }
 }
 
