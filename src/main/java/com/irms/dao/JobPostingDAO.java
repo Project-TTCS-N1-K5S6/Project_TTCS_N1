@@ -103,11 +103,16 @@ public class JobPostingDAO extends BaseDAO {
             DatabaseMetaData meta = conn.getMetaData();
             stmt = conn.createStatement();
             addColumnIfNotExists(meta, stmt, "job_postings", "job_description", "LONGTEXT NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "description", "LONGTEXT NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "department_id", "VARCHAR(36) NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "work_location_id", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "location_id", "VARCHAR(36) NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "work_location", "VARCHAR(255) NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "work_mode_id", "VARCHAR(36) NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "work_mode", "VARCHAR(100) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "work_type", "VARCHAR(100) NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "application_deadline", "DATE NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "expired_at", "TIMESTAMP NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "is_salary_visible", "BOOLEAN NOT NULL DEFAULT TRUE");
             addColumnIfNotExists(meta, stmt, "job_postings", "min_salary", "DECIMAL(15, 2) NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "max_salary", "DECIMAL(15, 2) NULL");
@@ -613,48 +618,110 @@ public class JobPostingDAO extends BaseDAO {
     }
 
     /**
-     * Lấy danh sách tin tuyển dụng công khai cho ứng viên (CHỈ TIN ĐÃ DUYỆT VÀ ĐANG XUẤT BẢN)
+     * KN-219, KN-222, KN-223: Tìm kiếm và lọc danh sách việc làm công khai
+     * - Công khai không cần đăng nhập
+     * - Chỉ trả về tin đã xuất bản (status = 'PUBLISHED') và còn hạn (expired_at >= NOW())
+     * - Tìm kiếm từ khóa (q / keyword) case-insensitive trên title và description
+     * - Lọc theo phòng ban (department_id), địa điểm (location_id), hình thức làm việc (work_type)
+     * - Sắp xếp mặc định mới nhất lên đầu (COALESCE(published_at, created_at) DESC)
+     * - Phân trang theo offset và limit
      */
-    public List<JobPosting> findPublicPublishedPosts(String search, String deptId, int offset, int limit) {
+    public List<JobPosting> findPublicJobs(String keyword, String departmentId, String locationId, String workType, String sortBy, int offset, int limit) {
         List<JobPosting> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT r.id AS req_id, r.code AS req_code, r.title AS req_title, r.position_title, " +
-                "r.department_id, d.name AS department_name, r.headcount, r.recruitment_reason, " +
-                "r.min_salary, r.max_salary, r.currency, r.deadline, r.job_description, r.job_requirements, " +
-                "r.salary_explanation, r.status AS req_status, r.created_at AS req_created_at, " +
+                "COALESCE(jp.department_id, r.department_id) AS department_id, " +
+                "COALESCE(jp.department_id, r.department_id) AS jp_department_id, " +
+                "d.name AS department_name, r.headcount, r.recruitment_reason, " +
+                "COALESCE(jp.min_salary, r.min_salary) AS min_salary, " +
+                "COALESCE(jp.max_salary, r.max_salary) AS max_salary, " +
+                "COALESCE(jp.currency, r.currency, 'VND') AS currency, " +
+                "COALESCE(jp.application_deadline, r.deadline) AS deadline, " +
+                "COALESCE(jp.description, jp.job_description, r.job_description) AS job_description, " +
+                "r.job_requirements, r.salary_explanation, r.status AS req_status, r.created_at AS req_created_at, " +
                 "jp.id AS jp_id, jp.title AS jp_title, jp.platform AS jp_platform, jp.status AS jp_status, " +
                 "jp.current_version AS jp_version, jp.published_at AS jp_published_at, jp.published_by AS jp_published_by, " +
                 "u_pub.full_name AS published_by_name, " +
                 "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count, " +
-                "jp.job_description AS jp_job_description, jp.work_location_id AS jp_work_location_id, " +
-                "jp.work_location AS jp_work_location, jp.work_mode_id AS jp_work_mode_id, " +
-                "jp.work_mode AS jp_work_mode, jp.application_deadline AS jp_deadline, " +
-                "jp.is_salary_visible AS jp_salary_visible, jp.min_salary AS jp_min_salary, " +
-                "jp.max_salary AS jp_max_salary, jp.currency AS jp_currency " +
+                "COALESCE(jp.description, jp.job_description, r.job_description) AS jp_description, " +
+                "COALESCE(jp.job_description, jp.description, r.job_description) AS jp_job_description, " +
+                "COALESCE(jp.location_id, jp.work_location_id, r.work_location_id) AS jp_location_id, " +
+                "COALESCE(jp.work_location_id, jp.location_id, r.work_location_id) AS jp_work_location_id, " +
+                "COALESCE(jp.work_location, loc_sc.value, 'Toàn quốc') AS jp_work_location, " +
+                "COALESCE(jp.work_mode_id, r.work_mode_id) AS jp_work_mode_id, " +
+                "COALESCE(jp.work_type, jp.work_mode, mode_sc.value, 'Toàn thời gian') AS jp_work_type, " +
+                "COALESCE(jp.work_mode, jp.work_type, mode_sc.value, 'Toàn thời gian') AS jp_work_mode, " +
+                "COALESCE(jp.application_deadline, r.deadline) AS jp_deadline, " +
+                "COALESCE(jp.expired_at, TIMESTAMP(CONCAT(COALESCE(jp.application_deadline, r.deadline), ' 23:59:59'))) AS jp_expired_at, " +
+                "jp.is_salary_visible AS jp_salary_visible, " +
+                "COALESCE(jp.min_salary, r.min_salary) AS jp_min_salary, " +
+                "COALESCE(jp.max_salary, r.max_salary) AS jp_max_salary, " +
+                "COALESCE(jp.currency, r.currency, 'VND') AS jp_currency " +
                 "FROM job_postings jp " +
-                "JOIN recruitment_requisitions r ON jp.requisition_id = r.id " +
-                "LEFT JOIN departments d ON r.department_id = d.id " +
+                "LEFT JOIN recruitment_requisitions r ON jp.requisition_id = r.id " +
+                "LEFT JOIN departments d ON COALESCE(jp.department_id, r.department_id) = d.id " +
+                "LEFT JOIN shared_catalogs loc_sc ON COALESCE(jp.location_id, jp.work_location_id, r.work_location_id) = loc_sc.id " +
+                "LEFT JOIN shared_catalogs mode_sc ON COALESCE(jp.work_mode_id, r.work_mode_id) = mode_sc.id " +
                 "LEFT JOIN users u_pub ON jp.published_by = u_pub.id " +
-                "WHERE jp.status = 'PUBLISHED' AND r.status IN ('APPROVED', 'OPEN') "
+                "WHERE LOWER(jp.status) = 'published' " +
+                "AND ( " +
+                "    (jp.expired_at IS NOT NULL AND jp.expired_at >= CURRENT_TIMESTAMP) " +
+                "    OR (jp.expired_at IS NULL AND jp.application_deadline IS NOT NULL AND jp.application_deadline >= CURRENT_DATE()) " +
+                "    OR (jp.expired_at IS NULL AND jp.application_deadline IS NULL AND r.deadline IS NOT NULL AND r.deadline >= CURRENT_DATE()) " +
+                "    OR (jp.expired_at IS NULL AND jp.application_deadline IS NULL AND r.deadline IS NULL) " +
+                ") " +
+                "AND (r.status IS NULL OR r.status IN ('APPROVED', 'OPEN')) "
         );
 
         List<Object> params = new ArrayList<>();
 
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (LOWER(r.code) LIKE ? OR LOWER(r.title) LIKE ? OR LOWER(r.position_title) LIKE ?) ");
-            String term = "%" + search.trim().toLowerCase() + "%";
+        // KN-222: Tìm kiếm từ khóa case-insensitive trên tiêu đề và mô tả
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (LOWER(jp.title) LIKE ? OR LOWER(COALESCE(jp.description, jp.job_description, r.job_description, '')) LIKE ? OR (r.title IS NOT NULL AND LOWER(r.title) LIKE ?)) ");
+            String term = "%" + keyword.trim().toLowerCase() + "%";
             params.add(term);
             params.add(term);
             params.add(term);
         }
 
-        if (deptId != null && !deptId.trim().isEmpty()) {
-            sql.append("AND r.department_id = ? ");
-            params.add(deptId.trim());
+        // KN-223: Lọc theo phòng ban (department_id)
+        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
+            sql.append("AND (jp.department_id = ? OR r.department_id = ?) ");
+            params.add(departmentId.trim());
+            params.add(departmentId.trim());
         }
 
-        sql.append("ORDER BY jp.published_at DESC");
-        if (limit < Integer.MAX_VALUE) {
+        // KN-223: Lọc theo địa điểm (location_id)
+        if (locationId != null && !locationId.trim().isEmpty() && !"ALL".equalsIgnoreCase(locationId)) {
+            sql.append("AND (jp.location_id = ? OR jp.work_location_id = ? OR r.work_location_id = ? OR LOWER(COALESCE(jp.work_location, loc_sc.value, '')) LIKE ?) ");
+            params.add(locationId.trim());
+            params.add(locationId.trim());
+            params.add(locationId.trim());
+            params.add("%" + locationId.trim().toLowerCase() + "%");
+        }
+
+        // KN-223: Lọc theo hình thức làm việc (work_type)
+        if (workType != null && !workType.trim().isEmpty() && !"ALL".equalsIgnoreCase(workType)) {
+            sql.append("AND (jp.work_type = ? OR jp.work_mode = ? OR jp.work_mode_id = ? OR r.work_mode_id = ? OR LOWER(COALESCE(jp.work_type, jp.work_mode, mode_sc.value, '')) LIKE ?) ");
+            params.add(workType.trim());
+            params.add(workType.trim());
+            params.add(workType.trim());
+            params.add(workType.trim());
+            params.add("%" + workType.trim().toLowerCase() + "%");
+        }
+
+        // Sắp xếp
+        if ("deadline".equalsIgnoreCase(sortBy)) {
+            sql.append(" ORDER BY COALESCE(jp.expired_at, jp.application_deadline, r.deadline) ASC, jp.id DESC");
+        } else if ("title_asc".equalsIgnoreCase(sortBy)) {
+            sql.append(" ORDER BY jp.title ASC, jp.id DESC");
+        } else {
+            // Mặc định mới nhất lên đầu (KN-219)
+            sql.append(" ORDER BY COALESCE(jp.published_at, jp.created_at) DESC, jp.id DESC");
+        }
+
+        // Phân trang
+        if (limit > 0 && limit < Integer.MAX_VALUE) {
             sql.append(" LIMIT ? OFFSET ?");
             params.add(limit);
             params.add(offset);
@@ -674,11 +741,88 @@ public class JobPostingDAO extends BaseDAO {
                 list.add(mapResultSetToPosting(rs));
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi lấy tin tuyển dụng công khai", e);
+            logger.log(Level.SEVERE, "Lỗi tìm kiếm danh sách việc làm công khai", e);
         } finally {
             close(conn, ps, rs);
         }
         return list;
+    }
+
+    public int countPublicJobs(String keyword, String departmentId, String locationId, String workType) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM job_postings jp " +
+                "LEFT JOIN recruitment_requisitions r ON jp.requisition_id = r.id " +
+                "LEFT JOIN shared_catalogs loc_sc ON COALESCE(jp.location_id, jp.work_location_id, r.work_location_id) = loc_sc.id " +
+                "LEFT JOIN shared_catalogs mode_sc ON COALESCE(jp.work_mode_id, r.work_mode_id) = mode_sc.id " +
+                "WHERE LOWER(jp.status) = 'published' " +
+                "AND ( " +
+                "    (jp.expired_at IS NOT NULL AND jp.expired_at >= CURRENT_TIMESTAMP) " +
+                "    OR (jp.expired_at IS NULL AND jp.application_deadline IS NOT NULL AND jp.application_deadline >= CURRENT_DATE()) " +
+                "    OR (jp.expired_at IS NULL AND jp.application_deadline IS NULL AND r.deadline IS NOT NULL AND r.deadline >= CURRENT_DATE()) " +
+                "    OR (jp.expired_at IS NULL AND jp.application_deadline IS NULL AND r.deadline IS NULL) " +
+                ") " +
+                "AND (r.status IS NULL OR r.status IN ('APPROVED', 'OPEN')) "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (LOWER(jp.title) LIKE ? OR LOWER(COALESCE(jp.description, jp.job_description, r.job_description, '')) LIKE ? OR (r.title IS NOT NULL AND LOWER(r.title) LIKE ?)) ");
+            String term = "%" + keyword.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+
+        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
+            sql.append("AND (jp.department_id = ? OR r.department_id = ?) ");
+            params.add(departmentId.trim());
+            params.add(departmentId.trim());
+        }
+
+        if (locationId != null && !locationId.trim().isEmpty() && !"ALL".equalsIgnoreCase(locationId)) {
+            sql.append("AND (jp.location_id = ? OR jp.work_location_id = ? OR r.work_location_id = ? OR LOWER(COALESCE(jp.work_location, loc_sc.value, '')) LIKE ?) ");
+            params.add(locationId.trim());
+            params.add(locationId.trim());
+            params.add(locationId.trim());
+            params.add("%" + locationId.trim().toLowerCase() + "%");
+        }
+
+        if (workType != null && !workType.trim().isEmpty() && !"ALL".equalsIgnoreCase(workType)) {
+            sql.append("AND (jp.work_type = ? OR jp.work_mode = ? OR jp.work_mode_id = ? OR r.work_mode_id = ? OR LOWER(COALESCE(jp.work_type, jp.work_mode, mode_sc.value, '')) LIKE ?) ");
+            params.add(workType.trim());
+            params.add(workType.trim());
+            params.add(workType.trim());
+            params.add(workType.trim());
+            params.add("%" + workType.trim().toLowerCase() + "%");
+        }
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số lượng việc làm công khai", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy danh sách tin tuyển dụng công khai cho ứng viên (Tương thích ngược)
+     */
+    public List<JobPosting> findPublicPublishedPosts(String search, String deptId, int offset, int limit) {
+        return findPublicJobs(search, deptId, null, null, "newest", offset, limit);
     }
 
     public void incrementViews(String postingId) {
@@ -733,11 +877,16 @@ public class JobPostingDAO extends BaseDAO {
         jp.setRequisition(req);
 
         try { jp.setJobDescription(rs.getString("jp_job_description")); } catch (SQLException ignored) {}
+        try { jp.setDescription(rs.getString("jp_description")); } catch (SQLException ignored) {}
+        try { jp.setDepartmentId(rs.getString("jp_department_id")); } catch (SQLException ignored) {}
         try { jp.setWorkLocationId(rs.getString("jp_work_location_id")); } catch (SQLException ignored) {}
+        try { jp.setLocationId(rs.getString("jp_location_id")); } catch (SQLException ignored) {}
         try { jp.setWorkLocation(rs.getString("jp_work_location")); } catch (SQLException ignored) {}
         try { jp.setWorkModeId(rs.getString("jp_work_mode_id")); } catch (SQLException ignored) {}
         try { jp.setWorkMode(rs.getString("jp_work_mode")); } catch (SQLException ignored) {}
+        try { jp.setWorkType(rs.getString("jp_work_type")); } catch (SQLException ignored) {}
         try { jp.setApplicationDeadline(rs.getDate("jp_deadline")); } catch (SQLException ignored) {}
+        try { jp.setExpiredAt(rs.getTimestamp("jp_expired_at")); } catch (SQLException ignored) {}
         try { jp.setSalaryVisible(rs.getBoolean("jp_salary_visible")); } catch (SQLException ignored) {}
         try { jp.setMinSalary(rs.getBigDecimal("jp_min_salary")); } catch (SQLException ignored) {}
         try { jp.setMaxSalary(rs.getBigDecimal("jp_max_salary")); } catch (SQLException ignored) {}

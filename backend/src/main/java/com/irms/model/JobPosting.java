@@ -36,6 +36,13 @@ public class JobPosting implements Serializable {
     private String departmentName;
     private String requisitionStatus; // DRAFT, PENDING_APPROVAL, APPROVED, OPEN, CLOSED, REJECTED
 
+    // Các trường chuẩn hóa phục vụ Danh sách việc làm công khai (KN-220, KN-219, KN-222, KN-223)
+    private Timestamp expiredAt;
+    private String departmentId;
+    private String locationId;
+    private String workType;
+    private String description;
+
     // Các trường phục vụ chức năng Tạo nhanh bài đăng (KN-204, KN-205, KN-206)
     private String jobDescription;
     private String workLocationId;
@@ -167,6 +174,7 @@ public class JobPosting implements Serializable {
     }
 
     public String getStatusLabel() {
+        if ("ARCHIVED".equalsIgnoreCase(status)) return "Đã lưu trữ";
         if ("INTERNAL".equalsIgnoreCase(platform)) {
             if ("PUBLISHED".equalsIgnoreCase(status)) return "Đang đăng";
             if ("UNPUBLISHED".equalsIgnoreCase(status)) return "Đã gỡ";
@@ -182,6 +190,7 @@ public class JobPosting implements Serializable {
     }
 
     public String getStatusBadgeClass() {
+        if ("ARCHIVED".equalsIgnoreCase(status)) return "bg-secondary text-white";
         if ("PUBLISHED".equalsIgnoreCase(status)) return "bg-success text-white";
         if ("INTERNAL".equalsIgnoreCase(platform)) {
             if ("UNPUBLISHED".equalsIgnoreCase(status)) return "bg-secondary text-white";
@@ -262,5 +271,85 @@ public class JobPosting implements Serializable {
             return "Lên đến " + df.format(maxSalary) + " " + cur;
         }
         return "Thỏa thuận";
+    }
+
+    // Getters & Setters cho các trường chuẩn hóa danh sách công khai (KN-220, KN-219, KN-222, KN-223)
+    public Timestamp getExpiredAt() {
+        if (expiredAt != null) return expiredAt;
+        java.sql.Date dl = getApplicationDeadline();
+        if (dl != null) {
+            return new Timestamp(dl.getTime() + 86399000L); // 23:59:59 của ngày hết hạn
+        }
+        return null;
+    }
+    public void setExpiredAt(Timestamp expiredAt) {
+        this.expiredAt = expiredAt;
+    }
+
+    public String getDepartmentId() {
+        if (departmentId != null && !departmentId.trim().isEmpty()) {
+            return departmentId;
+        }
+        return (requisition != null) ? requisition.getDepartmentId() : null;
+    }
+    public void setDepartmentId(String departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public String getLocationId() {
+        if (locationId != null && !locationId.trim().isEmpty()) {
+            return locationId;
+        }
+        return workLocationId;
+    }
+    public void setLocationId(String locationId) {
+        this.locationId = locationId;
+        if (this.workLocationId == null) {
+            this.workLocationId = locationId;
+        }
+    }
+
+    public String getWorkType() {
+        if (workType != null && !workType.trim().isEmpty()) {
+            return workType;
+        }
+        return workMode;
+    }
+    public void setWorkType(String workType) {
+        this.workType = workType;
+        if (this.workMode == null) {
+            this.workMode = workType;
+        }
+    }
+
+    public String getDescription() {
+        if (description != null && !description.trim().isEmpty()) {
+            return description;
+        }
+        return getJobDescription();
+    }
+    public void setDescription(String description) {
+        this.description = description;
+        if (this.jobDescription == null) {
+            this.jobDescription = description;
+        }
+    }
+
+    public boolean isExpired() {
+        Timestamp exp = getExpiredAt();
+        if (exp != null) {
+            return exp.getTime() < System.currentTimeMillis();
+        }
+        return false;
+    }
+
+    public boolean isPubliclyVisible() {
+        return isPublished() && !isExpired() && (requisition == null || isApproved());
+    }
+
+    public String getFormattedExpiredAt() {
+        Timestamp exp = getExpiredAt();
+        if (exp == null) return "--";
+        return new SimpleDateFormat("dd/MM/yyyy HH:mm").format(exp);
     }
 }

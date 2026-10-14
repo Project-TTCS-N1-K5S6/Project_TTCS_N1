@@ -52,13 +52,16 @@ import java.util.Map;
         "/job-postings/create",
         "/job-postings/quick-create",
         "/careers",
-        "/careers/job"
+        "/careers/job",
+        "/jobs",
+        "/jobs/detail"
 })
 public class JobPublishingServlet extends HttpServlet {
 
     private final JobPublishingService publishingService = new JobPublishingService();
     private final DepartmentService departmentService = new DepartmentService();
     private final RecruitmentRequestService requisitionService = new RecruitmentRequestService();
+    private final com.irms.dao.SharedCatalogDAO sharedCatalogDAO = new com.irms.dao.SharedCatalogDAO();
     private final Gson gson = new Gson();
 
     @Override
@@ -73,12 +76,12 @@ public class JobPublishingServlet extends HttpServlet {
         }
 
         // 1. Cổng tuyển dụng công khai cho ứng viên (Public Career Portal)
-        if ("/careers".equals(path)) {
+        if ("/careers".equals(path) || "/jobs".equals(path)) {
             showPublicCareerPortal(request, response);
             return;
         }
 
-        if ("/careers/job".equals(path)) {
+        if ("/careers/job".equals(path) || "/jobs/detail".equals(path)) {
             showPublicJobDetail(request, response);
             return;
         }
@@ -388,25 +391,71 @@ public class JobPublishingServlet extends HttpServlet {
      */
     private void showPublicCareerPortal(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String search = request.getParameter("search");
-        String deptId = request.getParameter("deptId");
+        String keyword = request.getParameter("q");
+        if (keyword == null || keyword.trim().isEmpty()) {
+            keyword = request.getParameter("keyword");
+        }
+        if (keyword == null || keyword.trim().isEmpty()) {
+            keyword = request.getParameter("search");
+        }
+
+        String deptId = request.getParameter("department_id");
+        if (deptId == null || deptId.trim().isEmpty()) {
+            deptId = request.getParameter("department");
+        }
+        if (deptId == null || deptId.trim().isEmpty()) {
+            deptId = request.getParameter("deptId");
+        }
+
+        String locationId = request.getParameter("location_id");
+        if (locationId == null || locationId.trim().isEmpty()) {
+            locationId = request.getParameter("location");
+        }
+
+        String workType = request.getParameter("work_type");
+        if (workType == null || workType.trim().isEmpty()) {
+            workType = request.getParameter("work_mode");
+        }
+
+        String sortBy = request.getParameter("sort");
 
         int page = 1;
-        int pageSize = 12;
+        int pageSize = 9;
         try {
             if (request.getParameter("page") != null) {
-                page = Integer.parseInt(request.getParameter("page"));
+                page = Math.max(1, Integer.parseInt(request.getParameter("page")));
             }
         } catch (NumberFormatException ignored) {}
 
-        List<JobPosting> publicJobs = publishingService.getPublicPublishedPosts(search, deptId, page, pageSize);
+        try {
+            if (request.getParameter("limit") != null) {
+                pageSize = Math.max(1, Math.min(100, Integer.parseInt(request.getParameter("limit"))));
+            }
+        } catch (NumberFormatException ignored) {}
+
+        List<JobPosting> publicJobs = publishingService.getPublicJobs(keyword, deptId, locationId, workType, sortBy, page, pageSize);
+        int totalJobs = publishingService.countPublicJobs(keyword, deptId, locationId, workType);
+        int totalPages = (totalJobs > 0) ? (int) Math.ceil((double) totalJobs / pageSize) : 1;
+
         List<Department> departments = departmentService.getAllDepartments();
+        List<com.irms.model.SharedCatalogItem> locations = sharedCatalogDAO.findAll(com.irms.model.SharedCatalogType.WORK_LOCATION);
+        List<com.irms.model.SharedCatalogItem> workTypes = sharedCatalogDAO.findAll(com.irms.model.SharedCatalogType.WORK_MODE);
 
         request.setAttribute("publicJobs", publicJobs);
-        request.setAttribute("departments", departments);
-        request.setAttribute("paramSearch", search);
-        request.setAttribute("paramDept", deptId);
+        request.setAttribute("totalJobs", totalJobs);
+        request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
+        request.setAttribute("pageSize", pageSize);
+        request.setAttribute("departments", departments);
+        request.setAttribute("locations", locations);
+        request.setAttribute("workTypes", workTypes);
+
+        request.setAttribute("paramSearch", keyword != null ? keyword : "");
+        request.setAttribute("paramKeyword", keyword != null ? keyword : "");
+        request.setAttribute("paramDept", deptId != null ? deptId : "");
+        request.setAttribute("paramLocation", locationId != null ? locationId : "");
+        request.setAttribute("paramWorkType", workType != null ? workType : "");
+        request.setAttribute("paramSort", sortBy != null ? sortBy : "newest");
 
         request.getRequestDispatcher("/WEB-INF/views/publishing/careers.jsp").forward(request, response);
     }

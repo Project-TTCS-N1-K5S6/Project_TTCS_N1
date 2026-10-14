@@ -227,26 +227,32 @@ DROP TABLE IF EXISTS job_postings;
 CREATE TABLE job_postings (
     id VARCHAR(36) PRIMARY KEY,
     requisition_id VARCHAR(36) NOT NULL,
+    department_id VARCHAR(36) NULL,
     title VARCHAR(255) NOT NULL,
+    description MEDIUMTEXT NULL,
     job_description MEDIUMTEXT NULL,
     work_location_id VARCHAR(36) NULL,
+    location_id VARCHAR(36) NULL,
     work_location VARCHAR(255) NULL,
     work_mode_id VARCHAR(36) NULL,
     work_mode VARCHAR(100) NULL,
+    work_type VARCHAR(100) NULL,
     application_deadline DATE NULL,
+    expired_at TIMESTAMP NULL,
     salary_visible BOOLEAN DEFAULT TRUE,
     min_salary DECIMAL(15,2) NULL,
     max_salary DECIMAL(15,2) NULL,
     currency VARCHAR(10) DEFAULT 'VND',
     platform VARCHAR(100) DEFAULT 'INTERNAL', -- 'INTERNAL', 'CAREER_SITE', 'LINKEDIN', 'TOPCV'
-    status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED', -- 'PUBLISHED', 'UNPUBLISHED', 'CLOSED', 'DRAFT'
+    status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED', -- 'PUBLISHED', 'UNPUBLISHED', 'CLOSED', 'DRAFT', 'ARCHIVED'
     views_count INT DEFAULT 0,
     posted_url VARCHAR(255) NULL,
     published_at TIMESTAMP NULL,
     unpublished_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_jp_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE
+    CONSTRAINT fk_jp_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_jp_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 13. Bảng Ứng viên (candidates)
@@ -394,6 +400,11 @@ CREATE INDEX idx_pcf_framework ON position_competency_frameworks(framework_id);
 CREATE INDEX idx_pcf_position ON position_competency_frameworks(position_id);
 CREATE INDEX idx_jp_req ON job_postings(requisition_id);
 CREATE INDEX idx_jp_status ON job_postings(status);
+CREATE INDEX idx_jp_expired_at ON job_postings(expired_at);
+CREATE INDEX idx_jp_dept_id ON job_postings(department_id);
+CREATE INDEX idx_jp_loc_id ON job_postings(location_id);
+CREATE INDEX idx_jp_work_type ON job_postings(work_type);
+CREATE INDEX idx_jp_pub_exp ON job_postings(status, expired_at);
 
 -- 19. Bảng Nhật ký & Chuỗi cấp duyệt yêu cầu tuyển dụng (recruitment_approval_logs)
 DROP TABLE IF EXISTS recruitment_approval_logs;

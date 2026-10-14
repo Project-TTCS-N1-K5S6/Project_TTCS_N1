@@ -57,6 +57,7 @@ E:\ttcs_n1\src\main\java\com\irms\model\User.java
 E:\ttcs_n1\src\main\java\com\irms\config\DBConnection.java
 E:\ttcs_n1\src\main\java\com\irms\filter\EncodingFilter.java
 E:\ttcs_n1\src\main\java\com\irms\model\RecruiterAssignment.java
+E:\ttcs_n1\src\main\java\com\irms\controller\PublicJobApiServlet.java
 E:\ttcs_n1\src\main\java\com\irms\model\SalaryRange.java
 E:\ttcs_n1\src\main\java\com\irms\dao\DepartmentDAO.java
 E:\ttcs_n1\src\main\java\com\irms\model\SharedCatalogItem.java
