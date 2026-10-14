@@ -20,8 +20,11 @@ public class Candidate implements Serializable {
     private String email;
     private String phone;
     private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED
+    private String trackingCode;
     private String cvUrl;
     private String notes;
+    private String coverLetter;
+    private String ipAddress;
     private String departmentId;
     private String departmentName;
     private Timestamp createdAt;
@@ -62,11 +65,20 @@ public class Candidate implements Serializable {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public String getTrackingCode() { return trackingCode; }
+    public void setTrackingCode(String trackingCode) { this.trackingCode = trackingCode; }
+
     public String getCvUrl() { return cvUrl; }
     public void setCvUrl(String cvUrl) { this.cvUrl = cvUrl; }
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getCoverLetter() { return coverLetter; }
+    public void setCoverLetter(String coverLetter) { this.coverLetter = coverLetter; }
+
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
     public String getDepartmentId() { return departmentId; }
     public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }

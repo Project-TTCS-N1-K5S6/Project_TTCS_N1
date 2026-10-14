@@ -91,4 +91,64 @@ public class EmailTemplateUtil {
                 + "</td></tr></table>"
                 + "</body></html>";
     }
+
+    /**
+     * Mẫu email: Xác nhận nộp hồ sơ ứng tuyển thành công (APPLICATION_CONFIRMATION)
+     * - KN-235: Tên ứng viên, Vị trí ứng tuyển, Mã tra cứu hồ sơ và thời gian nộp
+     */
+    public static String buildApplicationConfirmationEmail(String fullName, String positionTitle,
+                                                           String departmentName, String trackingCode,
+                                                           String submittedAt, String cvFileName) {
+        String safeName = (fullName != null && !fullName.trim().isEmpty()) ? fullName : "Bạn";
+        String safePos = (positionTitle != null && !positionTitle.trim().isEmpty()) ? positionTitle : "Vị trí tuyển dụng";
+        String safeDept = (departmentName != null && !departmentName.trim().isEmpty()) ? departmentName : "Doanh nghiệp";
+        String safeCode = (trackingCode != null && !trackingCode.trim().isEmpty()) ? trackingCode : "N/A";
+        String safeTime = (submittedAt != null && !submittedAt.trim().isEmpty()) ? submittedAt : "Vừa xong";
+        String safeCV = (cvFileName != null && !cvFileName.trim().isEmpty()) ? cvFileName : "Tệp CV đính kèm";
+
+        return "<!DOCTYPE html>"
+                + "<html lang=\"vi\">"
+                + "<head><meta charset=\"UTF-8\"><title>Xác nhận nộp hồ sơ ứng tuyển</title></head>"
+                + "<body style=\"margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;\">"
+                + "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background-color: #f1f5f9; padding: 35px 15px;\">"
+                + "<tr><td align=\"center\">"
+                + "<table width=\"620\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0;\">"
+                + "  <!-- Header -->"
+                + "  <tr><td style=\"background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%); padding: 35px 30px; text-align: center; color: #ffffff;\">"
+                + "    <div style=\"display: inline-block; background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;\">IRMS Careers Portal</div>"
+                + "    <h1 style=\"margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.3px;\">XÁC NHẬN NỘP HỒ SƠ THÀNH CÔNG</h1>"
+                + "    <p style=\"margin: 8px 0 0; font-size: 14px; opacity: 0.9;\">Cảm ơn bạn đã quan tâm đến cơ hội nghề nghiệp cùng chúng tôi</p>"
+                + "  </td></tr>"
+                + "  <!-- Body Content -->"
+                + "  <tr><td style=\"padding: 35px 30px; color: #334155; line-height: 1.6;\">"
+                + "    <h3 style=\"margin: 0 0 15px; color: #0f172a; font-size: 18px;\">Xin chào <strong>" + safeName + "</strong>,</h3>"
+                + "    <p style=\"margin: 0 0 20px; font-size: 14.5px;\">Hệ thống tuyển dụng IRMS đã tiếp nhận thành công hồ sơ ứng tuyển của bạn cho vị trí <strong>" + safePos + "</strong>.</p>"
+                + "    <!-- Tracking Code Box -->"
+                + "    <div style=\"background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px dashed #22c55e; border-radius: 10px; padding: 22px 20px; text-align: center; margin: 25px 0;\">"
+                + "      <div style=\"font-size: 12px; font-weight: 700; color: #15803d; text-transform: uppercase; letter-spacing: 1px;\">MÃ TRA CỨU HỒ SƠ ỨNG TUYỂN</div>"
+                + "      <div style=\"font-family: 'Courier New', Courier, monospace; font-size: 24px; font-weight: 800; color: #166534; margin: 8px 0; letter-spacing: 2px;\">" + safeCode + "</div>"
+                + "      <div style=\"font-size: 12px; color: #166534;\">Vui lòng lưu lại mã này để theo dõi tiến độ xét duyệt hồ sơ của bạn</div>"
+                + "    </div>"
+                + "    <!-- Information Summary Table -->"
+                + "    <table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px;\">"
+                + "      <tr><td style=\"padding: 12px 18px; font-size: 13.5px; color: #64748b; border-bottom: 1px solid #e2e8f0; width: 38%;\">Vị trí ứng tuyển:</td><td style=\"padding: 12px 18px; font-size: 13.5px; color: #0f172a; font-weight: 600; border-bottom: 1px solid #e2e8f0;\">" + safePos + "</td></tr>"
+                + "      <tr><td style=\"padding: 12px 18px; font-size: 13.5px; color: #64748b; border-bottom: 1px solid #e2e8f0;\">Phòng ban phụ trách:</td><td style=\"padding: 12px 18px; font-size: 13.5px; color: #0f172a; border-bottom: 1px solid #e2e8f0;\">" + safeDept + "</td></tr>"
+                + "      <tr><td style=\"padding: 12px 18px; font-size: 13.5px; color: #64748b; border-bottom: 1px solid #e2e8f0;\">Thời gian nộp:</td><td style=\"padding: 12px 18px; font-size: 13.5px; color: #0f172a; border-bottom: 1px solid #e2e8f0;\">" + safeTime + "</td></tr>"
+                + "      <tr><td style=\"padding: 12px 18px; font-size: 13.5px; color: #64748b;\">Tệp CV đã gửi:</td><td style=\"padding: 12px 18px; font-size: 13.5px; color: #2563eb; font-weight: 500;\">" + safeCV + "</td></tr>"
+                + "    </table>"
+                + "    <!-- Next Steps Note -->"
+                + "    <div style=\"background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px;\">"
+                + "      <p style=\"margin: 0; font-size: 13px; color: #1e40af; line-height: 1.5;\"><strong>Quy trình tiếp theo:</strong> Đội ngũ Tuyển dụng sẽ sàng lọc hồ sơ và liên hệ với bạn trong vòng 3-5 ngày làm việc nếu hồ sơ đáp ứng yêu cầu của vị trí.</p>"
+                + "    </div>"
+                + "    <p style=\"margin: 0; font-size: 14px; color: #475569;\">Chúc bạn có một trải nghiệm tuyển dụng tuyệt vời cùng IRMS!</p>"
+                + "  </td></tr>"
+                + "  <!-- Footer -->"
+                + "  <tr><td style=\"background-color: #f8fafc; padding: 22px 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;\">"
+                + "    <p style=\"margin: 0 0 5px;\">Thư xác nhận được gửi tự động từ Hệ thống Quản lý Tuyển dụng IRMS.</p>"
+                + "    <p style=\"margin: 0;\">&copy; 2026 IRMS Recruitment Platform. Mọi quyền được bảo lưu.</p>"
+                + "  </td></tr>"
+                + "</table>"
+                + "</td></tr></table>"
+                + "</body></html>";
+    }
 }

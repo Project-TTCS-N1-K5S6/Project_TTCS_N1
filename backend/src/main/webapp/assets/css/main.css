@@ -3,7 +3,7 @@
 }
 
 html, body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Poppins", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: #f8fafc;
   color: #1e293b;
   min-height: 100vh;
@@ -25,8 +25,8 @@ html, body {
 
 .app-sidebar {
   width: 260px;
-  background-color: #0f172a;
-  color: #cbd5e1;
+  background-color: #ffffff;
+  color: #475569;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -36,60 +36,63 @@ html, body {
   z-index: 1040;
   transition: transform 0.25s ease-in-out;
   overflow-y: auto;
+  border-right: 1px solid #eef2f6;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.02);
 }
 .app-sidebar::-webkit-scrollbar {
   width: 5px;
 }
 .app-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(148, 163, 184, 0.2);
   border-radius: 4px;
 }
 .app-sidebar .sidebar-header {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
-  padding: 0 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
 }
 .app-sidebar .sidebar-header .brand-logo {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #0f172a;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 .app-sidebar .sidebar-header .brand-logo .logo-icon {
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
   color: #ffffff;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
 }
 .app-sidebar .sidebar-menu {
-  padding: 1rem 0.75rem;
+  padding: 1rem 0.85rem;
   flex: 1;
 }
 .app-sidebar .sidebar-menu .menu-header {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: #94a3b8;
-  padding: 0.75rem 0.75rem 0.35rem 0.75rem;
+  padding: 0.75rem 0.85rem 0.35rem 0.85rem;
 }
 .app-sidebar .sidebar-menu .nav-item {
   margin-bottom: 0.25rem;
 }
 .app-sidebar .sidebar-menu .nav-item .nav-link {
-  color: #cbd5e1;
+  color: #64748b;
   padding: 0.65rem 0.85rem;
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -98,31 +101,60 @@ html, body {
   transition: all 0.2s ease;
 }
 .app-sidebar .sidebar-menu .nav-item .nav-link i {
-  font-size: 1.1rem;
-  width: 20px;
+  font-size: 1.15rem;
+  width: 22px;
   text-align: center;
   color: #94a3b8;
   transition: color 0.2s ease;
 }
 .app-sidebar .sidebar-menu .nav-item .nav-link:hover {
-  background-color: #1e293b;
-  color: #ffffff;
+  background-color: #f8fafc;
+  color: #2563eb;
 }
 .app-sidebar .sidebar-menu .nav-item .nav-link:hover i {
-  color: #ffffff;
+  color: #2563eb;
 }
 .app-sidebar .sidebar-menu .nav-item .nav-link.active {
-  background-color: #2563eb;
-  color: #ffffff;
+  background-color: #eff6ff;
+  color: #2563eb;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  box-shadow: none;
 }
 .app-sidebar .sidebar-menu .nav-item .nav-link.active i {
-  color: #ffffff;
+  color: #2563eb;
 }
 .app-sidebar .sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+  background-color: #ffffff;
+}
+
+/* Thẻ hỗ trợ trực tuyến (Live Chat / Maria) ở menu bên trái theo ảnh mẫu */
+.sidebar-live-chat-card {
+  background-color: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  margin: 0.5rem 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.sidebar-live-chat-card .chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+}
+.sidebar-live-chat-card .chat-status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: auto;
+  box-shadow: 0 0 0 2px #ffffff;
 }
 
 .app-main {
@@ -138,31 +170,43 @@ html, body {
   transition: margin-left 0.25s ease-in-out;
 }
 .app-main .app-header {
-  height: 64px;
+  min-height: 72px;
+  height: auto;
   background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 1.75rem;
+  border-bottom: 1px solid #eef2f6;
+  padding: 0.75rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 1020;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
 }
 .app-main .app-header .header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
+}
+.app-main .app-header .header-left .header-welcome .welcome-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+.app-main .app-header .header-left .header-welcome .welcome-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.2;
 }
 .app-main .app-header .header-left .sidebar-toggle-btn {
   background: none;
   border: none;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   color: #64748b;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
   display: none;
 }
 .app-main .app-header .header-left .sidebar-toggle-btn:hover {
@@ -172,38 +216,68 @@ html, body {
 .app-main .app-header .header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
 }
-.app-main .app-header .header-right .user-dropdown-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: #1e293b;
-}
-.app-main .app-header .header-right .user-dropdown-btn .user-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb, #8b5cf6);
-  color: #ffffff;
-  font-weight: 700;
-  display: flex;
+
+/* Nút tròn / bo góc cho Search & Bell theo ảnh mẫu */
+.header-action-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  color: #475569;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
 }
-.app-main .app-header .header-right .user-dropdown-btn .user-info {
-  text-align: left;
-  line-height: 1.2;
+.header-action-btn:hover {
+  background-color: #f1f5f9;
+  color: #2563eb;
+  border-color: #cbd5e1;
 }
-.app-main .app-header .header-right .user-dropdown-btn .user-info .name {
-  font-size: 0.9rem;
+.header-action-btn .btn-badge-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+}
+
+/* User profile pill dạng viên thuốc ở Header bên phải */
+.header-user-pill {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 4px 14px 4px 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: #0f172a;
+  transition: all 0.2s ease;
+}
+.header-user-pill:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #2563eb;
+}
+.header-user-pill .pill-name {
   font-weight: 600;
+  font-size: 0.925rem;
 }
-.app-main .app-header .header-right .user-dropdown-btn .user-info .role {
-  font-size: 0.75rem;
+.header-user-pill .pill-arrow {
   color: #64748b;
+  font-size: 0.8rem;
 }
 .app-main .app-content {
   flex: 1;
@@ -212,7 +286,12 @@ html, body {
   width: 100%;
   max-width: 100%;
 }
+.app-footer,
 .app-main .app-footer {
+  margin-top: auto;
+  width: 100%;
+  flex-shrink: 0;
+  clear: both;
   padding: 1rem 1.75rem;
   border-top: 1px solid #e2e8f0;
   background-color: #ffffff;
@@ -252,10 +331,10 @@ html, body {
 }
 .stat-card {
   background-color: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
+  border: 1px solid #eef2f6;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   align-items: center;
@@ -263,7 +342,403 @@ html, body {
 }
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   RISAPPS THEME STYLES (ĐỒNG BỘ THEO 4 ẢNH MẪU THAM KHẢO)
+   ========================================================================== */
+
+/* 1. Thẻ KPI Tổng quan (Dashboard Top KPI Cards - Image 2) */
+.ris-kpi-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eef2f6;
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.ris-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.06);
+}
+.ris-kpi-card .kpi-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.ris-kpi-card .kpi-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.15;
+}
+.ris-kpi-card .kpi-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #2563eb;
+  background-color: #eff6ff;
+  flex-shrink: 0;
+}
+.ris-kpi-card .kpi-label {
+  font-size: 0.88rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.ris-kpi-card .kpi-trend {
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.ris-kpi-card .kpi-trend.up {
+  color: #10b981;
+}
+.ris-kpi-card .kpi-trend.down {
+  color: #ef4444;
+}
+
+/* 2. Thẻ Phòng ban (Departemen Cards - Image 1) */
+.ris-dept-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eef2f6;
+  padding: 1.15rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.ris-dept-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 14px -3px rgba(0, 0, 0, 0.06);
+}
+.ris-dept-card .dept-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.ris-dept-card .dept-count {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.1;
+}
+.ris-dept-card .dept-unit {
+  font-size: 0.825rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+.ris-dept-card .dept-action-plus {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.ris-dept-card .dept-action-plus:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+.ris-dept-card .dept-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+.ris-dept-card .dept-status {
+  font-size: 0.825rem;
+  font-weight: 600;
+}
+.ris-dept-card .dept-status.fulfilled {
+  color: #10b981;
+}
+.ris-dept-card .dept-status.unfulfilled {
+  color: #ef4444;
+}
+
+/* 3. Thẻ Tin tuyển dụng (Job Vacancy Cards - Image 1) */
+.ris-job-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eef2f6;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  height: 100%;
+  display: flex;
+  gap: 1.25rem;
+}
+.ris-job-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.07);
+}
+.ris-job-card .job-img-box {
+  width: 140px;
+  height: 140px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #1d4ed8, #06b6d4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 2.5rem;
+}
+.ris-job-card .job-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ris-job-card .job-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.ris-job-card .job-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
+}
+.ris-job-card .job-company {
+  font-size: 0.825rem;
+  color: #64748b;
+  margin-bottom: 0.65rem;
+}
+.ris-job-card .job-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.35rem 0.75rem;
+  font-size: 0.785rem;
+  color: #64748b;
+  margin-bottom: 0.85rem;
+}
+.ris-job-card .job-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.ris-job-card .job-meta-item i {
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+.ris-job-card .job-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+@media (max-width: 575.98px) {
+  .ris-job-card {
+    flex-direction: column;
+  }
+  .ris-job-card .job-img-box {
+    width: 100%;
+    height: 120px;
+  }
+}
+
+/* 4. Thẻ Ứng viên KPI (Candidate List 6 Stat Cards - Image 4) */
+.ris-cand-kpi-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eef2f6;
+  padding: 1.15rem 1.35rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  height: 100%;
+}
+.ris-cand-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px -3px rgba(0, 0, 0, 0.06);
+}
+.ris-cand-kpi-card .cand-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.ris-cand-kpi-card .cand-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.1;
+}
+.ris-cand-kpi-card .cand-unit {
+  font-size: 0.825rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+.ris-cand-kpi-card .cand-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+.ris-cand-kpi-card .cand-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 0.35rem;
+}
+.ris-cand-kpi-card .cand-date {
+  font-size: 0.775rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+}
+
+/* 5. Ô tìm kiếm phong cách RisApps với kính lúp bên phải (Images 1, 2, 4) */
+.ris-search-wrapper {
+  position: relative;
+  display: inline-block;
+  min-width: 260px;
+}
+.ris-search-wrapper .ris-search-input {
+  width: 100%;
+  padding: 0.55rem 2.5rem 0.55rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  font-size: 0.875rem;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.ris-search-wrapper .ris-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.ris-search-wrapper .search-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+/* 6. Huy hiệu Trạng thái dạng viên thuốc có chấm tròn (Status Badge Pill - Images 2 & 4) */
+.badge-pill-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.badge-pill-status::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+.badge-pill-status.warning {
+  background-color: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #ffedd5;
+}
+.badge-pill-status.success {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #dcfce7;
+}
+.badge-pill-status.danger {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+}
+.badge-pill-status.info {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+.badge-pill-status.secondary {
+  background-color: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* 7. Nút hành động viền mỏng dạng viên thuốc (Actions Button - Images 2 & 4) */
+.btn-ris-action {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.btn-ris-action:hover {
+  background-color: #f8fafc;
+  color: #2563eb;
+  border-color: #cbd5e1;
+}
+.btn-ris-primary {
+  background-color: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+  padding: 0.45rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.15s ease;
+}
+.btn-ris-primary:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
 }
 .stat-card .stat-icon {
   width: 52px;
@@ -789,4 +1264,731 @@ html, body {
     padding: 1.5rem 1.25rem;
   }
 }
+
+/* ==========================================================================
+   USER AVATAR & HEADER LOGO STYLING
+   ========================================================================== */
+.user-avatar-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #2563eb, #8b5cf6);
+  color: #ffffff;
+  font-weight: 700;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.85rem;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.2);
+  border: 1.5px solid #ffffff;
+  overflow: hidden !important;
+  aspect-ratio: 1 / 1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-nav-link:hover .user-avatar {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.user-avatar-img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+  display: block !important;
+}
+
+.avatar-letter {
+  line-height: 1;
+  user-select: none;
+}
+
+.avatar-camera-btn {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.user-avatar-wrapper:hover .avatar-camera-btn {
+  opacity: 1;
+  transform: scale(1.2);
+  background-color: #1d4ed8;
+}
+
+.avatar-preview-box {
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(135deg, #2563eb, #8b5cf6);
+}
+
+.preset-avatar-card {
+  transition: all 0.2s ease;
+}
+
+.preset-avatar-card:hover {
+  transform: translateY(-2px);
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ==========================================================================
+   HỆ THỐNG THÔNG BÁO NỔI GÓC DƯỚI BÊN PHẢI (BOTTOM-RIGHT FLOATING TOASTS)
+   ========================================================================== */
+.toast-notification-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 12px;
+  max-width: 420px;
+  width: calc(100vw - 48px);
+  pointer-events: none;
+}
+
+@media (max-width: 576px) {
+  .toast-notification-container {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}
+
+.toast-notification-item {
+  pointer-events: auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.16), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  position: relative;
+  overflow: hidden;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  animation: toastSlideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.25s ease, opacity 0.25s ease, margin 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.toast-notification-item.toast-closing {
+  animation: toastSlideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastSlideInRight {
+  from {
+    transform: translate3d(110%, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOutRight {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(110%, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* Icon box */
+.toast-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Content */
+.toast-body-content {
+  flex-grow: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.toast-header-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  margin-bottom: 4px;
+  color: #0f172a;
+}
+
+.toast-message-text {
+  font-size: 0.855rem;
+  line-height: 1.45;
+  color: #475569;
+  word-break: break-word;
+}
+
+/* Close button */
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.toast-close-btn:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+/* Progress bar */
+.toast-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+}
+
+/* Variants */
+.toast-item-success {
+  border-left: 4px solid #10b981;
+}
+.toast-item-success .toast-icon-box {
+  background-color: #d1fae5;
+  color: #059669;
+}
+.toast-item-success .toast-progress-bar {
+  background-color: #10b981;
+}
+
+.toast-item-error, .toast-item-danger {
+  border-left: 4px solid #ef4444;
+}
+.toast-item-error .toast-icon-box, .toast-item-danger .toast-icon-box {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+.toast-item-error .toast-progress-bar, .toast-item-danger .toast-progress-bar {
+  background-color: #ef4444;
+}
+
+.toast-item-warning {
+  border-left: 4px solid #f59e0b;
+}
+.toast-item-warning .toast-icon-box {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+.toast-item-warning .toast-progress-bar {
+  background-color: #f59e0b;
+}
+
+.toast-item-info {
+  border-left: 4px solid #3b82f6;
+}
+.toast-item-info .toast-icon-box {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+.toast-item-info .toast-progress-bar {
+  background-color: #3b82f6;
+}
+
+/* ==========================================================================
+   SƠ ĐỒ CÂY CẤU TRÚC PHÒNG BAN & TỔ CHỨC (VISUAL ORG CHART - IMAGE 5)
+   ========================================================================== */
+.org-chart-wrapper {
+  background: #2b3545; /* Tông màu nền trầm sang trọng làm nổi bật thẻ trắng như Ảnh 5 */
+  border-radius: 16px;
+  padding: 3rem 1.5rem 2.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-height: 480px;
+  display: flex;
+  justify-content: center;
+}
+.org-chart-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+.org-chart-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.org-tree, .org-tree ul {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding: 1.5rem 0 0 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.org-tree li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 1.5rem 1rem 0 1rem;
+}
+
+/* Đường nối cành cây (Connectors) */
+.org-tree li::before, .org-tree li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 50%;
+  border-top: 2px solid #818cf8;
+  width: 50%;
+  height: 1.5rem;
+}
+.org-tree li::after {
+  right: auto;
+  left: 50%;
+  border-left: 2px solid #818cf8;
+}
+
+.org-tree li:only-child::after, .org-tree li:only-child::before {
+  display: none;
+}
+.org-tree li:only-child {
+  padding-top: 0;
+}
+.org-tree li:first-child::before, .org-tree li:last-child::after {
+  border: 0 none;
+}
+.org-tree li:last-child::before {
+  border-right: 2px solid #818cf8;
+  border-radius: 0 8px 0 0;
+}
+.org-tree li:first-child::after {
+  border-radius: 8px 0 0 0;
+}
+
+/* Đường nhánh trỏ từ thẻ cha xuống các thẻ con */
+.org-tree ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-left: 2px solid #818cf8;
+  width: 0;
+  height: 1.5rem;
+}
+
+/* Thẻ phòng ban (Org Node Card theo đúng Ảnh 5) */
+.org-node-card {
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 14px;
+  width: 230px;
+  min-height: 120px;
+  padding: 1.75rem 1rem 1.4rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.org-node-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 18px 30px -5px rgba(0, 0, 0, 0.35);
+  border-color: #3b82f6;
+}
+
+/* Avatar trên đỉnh thẻ */
+.org-node-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 3px solid #2b3545;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+.org-node-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Tên phòng ban & Người quản lý */
+.org-node-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-bottom: 0.2rem;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.org-node-manager {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+.org-node-meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Badge số lượng đơn vị trực thuộc ở chân thẻ (Khớp Ảnh 5) */
+.org-node-badge {
+  position: absolute;
+  bottom: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e3a8a;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 14px;
+  border-radius: 6px;
+  border: 2px solid #2b3545;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+/* Thanh nút thao tác trên thẻ */
+.org-node-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed #e2e8f0;
+  width: 100%;
+  justify-content: center;
+}
+.org-node-actions .btn-node-action {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.org-node-actions .btn-node-action:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+.org-node-actions .btn-node-action.btn-node-danger:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* Trạng thái ngưng áp dụng của node */
+.org-node-card.inactive-node {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  opacity: 0.75;
+}
+.org-node-card.inactive-node .org-node-name {
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+/* ==========================================================================
+   APPROVAL WORKFLOW & TIMELINE (NHẬT KÝ & CHUỖI CẤP DUYỆT)
+   Subtasks: KN-154, KN-155, KN-156, KN-157, KN-158, KN-159, KN-160, KN-161
+   ========================================================================== */
+
+/* Hộp thông báo Đang chờ ai */
+.approval-waiting-box {
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.approval-waiting-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+/* Stepper ngang */
+.approval-stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  margin: 1.5rem 0 2rem 0;
+  padding: 0 1rem;
+}
+.approval-stepper-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  text-align: center;
+}
+.approval-stepper-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+.approval-stepper-item.completed:not(:last-child)::after {
+  background: #10b981;
+}
+.approval-stepper-item.rejected:not(:last-child)::after {
+  background: #ef4444;
+}
+.approval-stepper-item.changes-requested:not(:last-child)::after {
+  background: #f59e0b;
+}
+
+.approval-stepper-node {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #64748b;
+  position: relative;
+  z-index: 2;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.approval-stepper-item.completed .approval-stepper-node {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.approval-stepper-item.active .approval-stepper-node {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.2);
+  animation: pulse-border 2s infinite;
+}
+
+.approval-stepper-item.rejected .approval-stepper-node {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.approval-stepper-item.changes-requested .approval-stepper-node {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.approval-stepper-item.waiting .approval-stepper-node {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+.approval-stepper-title {
+  margin-top: 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  max-width: 140px;
+}
+.approval-stepper-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* Thẻ lịch sử từng bước phê duyệt (Read-only cards) */
+.approval-step-card {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 1.15rem;
+  margin-bottom: 1rem;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border-left-width: 5px;
+}
+.approval-step-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+.approval-step-card.status-approved {
+  border-left-color: #10b981;
+}
+.approval-step-card.status-pending {
+  border-left-color: #f59e0b;
+  background: #fffdfa;
+}
+.approval-step-card.status-waiting {
+  border-left-color: #cbd5e1;
+  background: #fcfdfe;
+}
+.approval-step-card.status-rejected {
+  border-left-color: #ef4444;
+  background: #fef7f7;
+}
+.approval-step-card.status-changes_requested {
+  border-left-color: #f59e0b;
+  background: #fffdf5;
+}
+.approval-step-card.status-skipped {
+  border-left-color: #94a3b8;
+  opacity: 0.8;
+}
+
+/* Khối trích dẫn ý kiến người duyệt */
+.approval-comment-box {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #3b82f6;
+  font-size: 0.85rem;
+  color: #334155;
+  margin-top: 0.65rem;
+  position: relative;
+}
+.approval-comment-box.comment-approved {
+  border-left-color: #10b981;
+  background: #f0fdf4;
+}
+.approval-comment-box.comment-rejected {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+.approval-comment-box.comment-changes-requested,
+.approval-comment-box.comment-warning {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+/* Huy hiệu khóa lịch sử bảo mật (Immutability Lock) */
+.approval-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 30px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.25rem 0.65rem;
+}
+
+/* Avatar biểu tượng người duyệt */
+.approver-avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #3730a3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
 

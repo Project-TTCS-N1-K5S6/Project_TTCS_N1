@@ -78,6 +78,10 @@ public class SalaryRangeDAO extends BaseDAO {
      * @param level Lọc theo cấp bậc (Junior, Senior, Lead, Manager...)
      */
     public List<SalaryRange> findAll(String search, String departmentId, String level) {
+        return findAll(search, departmentId, level, 0, Integer.MAX_VALUE);
+    }
+
+    public List<SalaryRange> findAll(String search, String departmentId, String level, int offset, int limit) {
         List<SalaryRange> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT s.*, d.name AS department_name FROM salary_ranges s " +
@@ -104,6 +108,11 @@ public class SalaryRangeDAO extends BaseDAO {
         }
 
         sql.append("ORDER BY s.position_title ASC, s.min_salary ASC, s.created_at DESC");
+        if (limit < Integer.MAX_VALUE) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(limit);
+            params.add(offset);
+        }
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -124,6 +133,48 @@ public class SalaryRangeDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return list;
+    }
+
+    public int countAll(String search, String departmentId, String level) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM salary_ranges s WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(s.position_title) LIKE ? OR LOWER(s.position_code) LIKE ?) ");
+            String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+        }
+
+        if (departmentId != null && !departmentId.trim().isEmpty()) {
+            sql.append("AND s.department_id = ? ");
+            params.add(departmentId.trim());
+        }
+
+        if (level != null && !level.trim().isEmpty()) {
+            sql.append("AND s.level = ? ");
+            params.add(level.trim());
+        }
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi đếm số lượng dải lương", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return 0;
     }
 
     /**
@@ -170,6 +221,7 @@ public class SalaryRangeDAO extends BaseDAO {
         }
         return null;
     }
+
 
     /**
      * Tìm dải lương theo ID

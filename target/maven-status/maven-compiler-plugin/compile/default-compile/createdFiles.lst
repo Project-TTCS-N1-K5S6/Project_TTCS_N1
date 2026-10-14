@@ -1,4 +1,3 @@
-com\irms\controller\JobPublishingServlet.class
 com\irms\model\RecruitmentRequest.class
 com\irms\model\JobPosting.class
 com\irms\dao\JobPostingDAO.class

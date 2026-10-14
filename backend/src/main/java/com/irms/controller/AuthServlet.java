@@ -139,14 +139,18 @@ public class AuthServlet extends HttpServlet {
                 return;
             }
 
+            // Thông báo đăng nhập thành công
+            session.setAttribute("flashSuccess", "Đăng nhập thành công! Chào mừng " + (user.getFullName() != null ? user.getFullName() : "bạn") + " trở lại hệ thống.");
+
             // [US 1 Tiêu chí 1]: Chuyển hướng tới trang mong muốn hoặc trang chủ tương ứng với vai trò
             if (redirect != null && !redirect.trim().isEmpty() && !redirect.startsWith("/auth/") && !redirect.equals("/") && !redirect.equals("/dashboard")) {
-                response.sendRedirect(request.getContextPath() + redirect);
+                String target = redirect + (redirect.contains("?") ? "&" : "?") + "loginSuccess=true";
+                response.sendRedirect(request.getContextPath() + target);
             } else {
                 if ((user.hasRole("RECRUITER") || user.hasRole("INTERVIEWER")) && !user.hasRole("ADMIN") && !user.hasRole("HR_MANAGER")) {
-                    response.sendRedirect(request.getContextPath() + "/candidates");
+                    response.sendRedirect(request.getContextPath() + "/candidates?loginSuccess=true");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/dashboard");
+                    response.sendRedirect(request.getContextPath() + "/dashboard?loginSuccess=true");
                 }
             }
         } catch (Exception e) {
@@ -203,7 +207,13 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         String email = request.getParameter("email");
         String appUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath();
-        authService.requestPasswordReset(email, appUrl);
+        try {
+            authService.requestPasswordReset(email, appUrl);
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/auth/forgot-password.jsp").forward(request, response);
+            return;
+        }
 
         // Generic Safe Response chống User Enumeration
         request.setAttribute("successMessage",

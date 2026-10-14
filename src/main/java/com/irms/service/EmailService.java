@@ -116,10 +116,52 @@ public class EmailService {
             return EmailTemplateUtil.buildResetPasswordEmail(fullName, resetLink);
         } else if ("ACCOUNT_ACTIVATION".equalsIgnoreCase(template)) {
             return EmailTemplateUtil.buildAccountActivationEmail(fullName, recipient, tempPass);
+        } else if ("APPLICATION_CONFIRMATION".equalsIgnoreCase(template)) {
+            String positionTitle = "";
+            String departmentName = "";
+            String trackingCode = "";
+            String submittedAt = "";
+            String cvFileName = "";
+            try {
+                if (payloadJson != null && !payloadJson.trim().isEmpty()) {
+                    JsonObject json = JsonParser.parseString(payloadJson).getAsJsonObject();
+                    if (json.has("positionTitle")) positionTitle = json.get("positionTitle").getAsString();
+                    if (json.has("departmentName")) departmentName = json.get("departmentName").getAsString();
+                    if (json.has("trackingCode")) trackingCode = json.get("trackingCode").getAsString();
+                    if (json.has("submittedAt")) submittedAt = json.get("submittedAt").getAsString();
+                    if (json.has("cvFileName")) cvFileName = json.get("cvFileName").getAsString();
+                }
+            } catch (Exception ignored) {}
+            return EmailTemplateUtil.buildApplicationConfirmationEmail(fullName, positionTitle, departmentName, trackingCode, submittedAt, cvFileName);
         }
 
         // Mặc định nếu không trùng template
         return "<p>" + payloadJson + "</p>";
+    }
+
+    /**
+     * [KN-235]: Gửi email xác nhận nộp hồ sơ ứng tuyển thành công bất đồng bộ (Non-blocking)
+     */
+    public static void sendApplicationConfirmationAsync(String toEmail, String candidateName,
+                                                        String positionTitle, String departmentName,
+                                                        String trackingCode, String submittedAt,
+                                                        String cvFileName) {
+        if (toEmail == null || toEmail.trim().isEmpty()) {
+            return;
+        }
+
+        scheduler.submit(() -> {
+            try {
+                String subject = "[IRMS] Xác nhận tiếp nhận hồ sơ ứng tuyển - Mã tra cứu: " + trackingCode;
+                String html = EmailTemplateUtil.buildApplicationConfirmationEmail(
+                        candidateName, positionTitle, departmentName, trackingCode, submittedAt, cvFileName
+                );
+                sendHtmlEmail(toEmail.trim(), subject, html);
+                LOGGER.info("[EmailService] Đã kích hoạt gửi xác nhận ứng tuyển tới ứng viên: " + toEmail + " (" + trackingCode + ")");
+            } catch (Throwable t) {
+                LOGGER.log(Level.WARNING, "[EmailService] Không thể gửi email xác nhận ứng tuyển tới " + toEmail, t);
+            }
+        });
     }
 
     /**

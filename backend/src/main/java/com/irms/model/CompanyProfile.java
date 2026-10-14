@@ -246,6 +246,7 @@ public class CompanyProfile implements Serializable {
             Type listType = new TypeToken<ArrayList<String>>() {}.getType();
             return new Gson().fromJson(galleryUrls, listType);
         } catch (Exception e) {
+            // Fallback: nếu lưu dạng dấu phẩy hoặc newline
             List<String> list = new ArrayList<>();
             for (String s : galleryUrls.split("[,\n\r]+")) {
                 if (!s.trim().isEmpty()) list.add(s.trim());

@@ -24,7 +24,7 @@ public class PasswordResetDAO extends BaseDAO {
      */
     public boolean createResetToken(String userId, String token) {
         String sql = "INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at) " +
-                     "VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE))";
+                     "VALUES (?, ?, ?, NOW() + INTERVAL '30 minutes')";
         Connection conn = null;
         PreparedStatement ps = null;
         try {

@@ -9,6 +9,7 @@ import com.irms.util.PasswordUtil;
 import com.irms.util.SecurityUtil;
 
 import java.sql.Timestamp;
+import java.sql.SQLException;
 
 /**
  * Xử lý nghiệp vụ Xác thực, Đăng nhập, Khóa tài khoản và Đổi mật khẩu
@@ -46,7 +47,12 @@ public class AuthService {
             throw new Exception("Vui lòng nhập đầy đủ Email và Mật khẩu.");
         }
 
-        User user = userDAO.findByEmail(email.trim());
+        User user;
+        try {
+            user = userDAO.findByEmail(email.trim());
+        } catch (SQLException e) {
+            throw new Exception("Hệ thống tạm thời không thể xác thực đăng nhập. Vui lòng thử lại sau.", e);
+        }
         if (user == null) {
             // [US 1]: Không tiết lộ email có tồn tại hay không nhằm phòng ngừa User Enumeration
             throw new Exception("Email hoặc mật khẩu không chính xác.");
@@ -156,10 +162,15 @@ public class AuthService {
      *   + Email không tồn tại vẫn trả về cùng 1 thông báo (User Enumeration Protection).
      *   + Lưu token vào password_reset_tokens và hàng đợi email_outbox.
      */
-    public void requestPasswordReset(String email, String appUrl) {
+    public void requestPasswordReset(String email, String appUrl) throws Exception {
         if (email == null || email.trim().isEmpty()) return;
 
-        User user = userDAO.findByEmail(email.trim());
+        User user;
+        try {
+            user = userDAO.findByEmail(email.trim());
+        } catch (SQLException e) {
+            throw new Exception("Hệ thống tạm thời không thể xử lý yêu cầu. Vui lòng thử lại sau.", e);
+        }
         if (user != null) {
             String token = SecurityUtil.generateUUID();
             passwordResetDAO.createResetToken(user.getId(), token);

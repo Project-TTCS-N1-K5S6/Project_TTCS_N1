@@ -251,7 +251,10 @@
                             <option value="OVERDUE" class="text-danger fw-bold" ${paramStatus == 'OVERDUE' ? 'selected' : ''}>⚠️ Quá hạn cần người</option>
                             <option value="DUE_SOON" class="text-warning-emphasis fw-bold" ${paramStatus == 'DUE_SOON' ? 'selected' : ''}>⏳ Sắp đến hạn (&le; 7 ngày)</option>
                             <option value="OPEN" ${paramStatus == 'OPEN' ? 'selected' : ''}>Đang tuyển dụng</option>
+                            <option value="APPROVED" ${paramStatus == 'APPROVED' ? 'selected' : ''}>Đã duyệt</option>
                             <option value="PENDING_APPROVAL" ${paramStatus == 'PENDING_APPROVAL' ? 'selected' : ''}>Chờ phê duyệt</option>
+                            <option value="CHANGES_REQUESTED" ${paramStatus == 'CHANGES_REQUESTED' ? 'selected' : ''}>Yêu cầu bổ sung</option>
+                            <option value="REJECTED" ${paramStatus == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
                             <option value="FULFILLED" ${paramStatus == 'FULFILLED' ? 'selected' : ''}>Đã tuyển đủ</option>
                             <option value="PAUSED" ${paramStatus == 'PAUSED' ? 'selected' : ''}>Tạm dừng</option>
                             <option value="CANCELLED" ${paramStatus == 'CANCELLED' ? 'selected' : ''}>Đã huỷ</option>
@@ -485,6 +488,14 @@
                                                            class="btn btn-outline-success" title="Phân bổ Recruiter (KN-116)">
                                                             <i class="bi bi-person-lines-fill"></i>
                                                         </a>
+                                                    </c:if>
+                                                    <!-- KN-204: Tạo nhanh bài đăng tuyển dụng nếu đã duyệt -->
+                                                    <c:if test="${r.status == 'APPROVED' || r.status == 'OPEN'}">
+                                                        <button type="button" class="btn btn-outline-warning text-dark" 
+                                                                onclick="openQuickCreateModal('${r.id}')"
+                                                                title="Tạo nhanh bài đăng tuyển dụng (KN-204)">
+                                                            <i class="bi bi-lightning-charge-fill text-warning"></i>
+                                                        </button>
                                                     </c:if>
                                                     <!-- Quản lý xuất bản tin tuyển dụng -->
                                                     <a href="${pageContext.request.contextPath}/post-publishing?search=${r.code}" 
@@ -852,12 +863,175 @@
                     <i class="bi bi-diagram-3-fill me-1"></i>Xem Nhật ký & Chuỗi cấp duyệt
                 </button>
                 <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="modalQuickPostBtn" class="btn btn-warning btn-sm text-dark fw-semibold" style="display:none;" onclick="openQuickPostFromDetail()">
+                        <i class="bi bi-lightning-charge-fill me-1"></i>Tạo nhanh bài đăng
+                    </button>
                     <a id="modalCopyBtn" href="#" class="btn btn-outline-success btn-sm" title="KN-115: Sao chép JD và yêu cầu thành bản nháp mới">
                         <i class="bi bi-copy me-1"></i>Sao chép JD &amp; Yêu cầu
                     </a>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- MODAL: TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG (KN-204, KN-206, KN-207) -->
+<!-- ============================================================== -->
+<div class="modal fade" id="quickJobPostingModal" tabindex="-1" aria-labelledby="quickJobPostingModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0">
+            <form id="quickJobPostingForm" method="POST" action="${pageContext.request.contextPath}/post-publishing/quick-create">
+                <div class="modal-header bg-gradient bg-primary text-white py-3">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="quickJobPostingModalLabel">
+                            <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Tạo nhanh Bài đăng Tuyển dụng
+                        </h5>
+                        <small class="text-white-50">Kế thừa và chuẩn hóa tự động từ yêu cầu tuyển dụng đã duyệt (KN-204)</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Error alert placeholder -->
+                    <div id="quickPostErrorAlert" class="alert alert-danger py-2 px-3 small d-none mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <span id="quickPostErrorMessage"></span>
+                    </div>
+
+                    <!-- 1. Chọn yêu cầu nguồn -->
+                    <div class="mb-3">
+                        <label for="modalRequisitionSelect" class="form-label text-xs fw-bold text-uppercase text-dark">
+                            Yêu cầu tuyển dụng nguồn (Đã duyệt) <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="modalRequisitionSelect" name="requisitionId" required onchange="onModalRequisitionChanged(this.value)">
+                            <option value="">-- Chọn yêu cầu tuyển dụng đã duyệt --</option>
+                            <c:forEach var="req" items="${approvedRequisitions}">
+                                <option value="${req.id}">
+                                    [${req.code}] ${req.positionTitle} - ${req.departmentName} (${req.statusLabel})
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+
+                    <!-- Thông tin tóm tắt yêu cầu nguồn -->
+                    <div id="modalReqSummaryBox" class="p-3 bg-light rounded border mb-3 d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle-fill me-1"></i><span id="mSumStatus">Đã duyệt</span>
+                            </span>
+                            <span class="text-xs text-muted font-monospace" id="mSumCode"></span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1" id="mSumTitle"></h6>
+                        <div class="row g-2 text-xs text-secondary mt-1">
+                            <div class="col-sm-6"><i class="bi bi-building me-1 text-primary"></i>Phòng ban: <strong class="text-dark" id="mSumDept"></strong></div>
+                            <div class="col-sm-6"><i class="bi bi-people me-1 text-primary"></i>Chỉ tiêu: <strong class="text-dark" id="mSumHeadcount"></strong></div>
+                            <div class="col-sm-6"><i class="bi bi-cash me-1 text-primary"></i>Dải lương gốc: <strong class="text-dark" id="mSumSalary"></strong></div>
+                            <div class="col-sm-6"><i class="bi bi-calendar-event me-1 text-primary"></i>Hạn nhận gốc: <strong class="text-dark" id="mSumDeadline"></strong></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Tiêu đề bài đăng -->
+                    <div class="mb-3">
+                        <label for="mPostTitle" class="form-label text-xs fw-bold text-uppercase text-dark">
+                            Tiêu đề bài đăng tuyển dụng <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control fw-semibold" id="mPostTitle" name="title" required placeholder="Nhập tiêu đề bài đăng..." />
+                    </div>
+
+                    <!-- 3. Mô tả công việc (Kế thừa và chuẩn hóa) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="mPostDescription" class="form-label text-xs fw-bold text-uppercase text-dark mb-0">
+                                Mô tả công việc (JD) &amp; Yêu cầu <span class="text-danger">*</span>
+                            </label>
+                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 text-xs" onclick="reNormalizeModalDescription()">
+                                <i class="bi bi-magic me-1"></i>Chuẩn hóa lại JD
+                            </button>
+                        </div>
+                        <textarea class="form-control font-monospace" id="mPostDescription" name="jobDescription" rows="8" style="font-size: 0.88rem; line-height: 1.5;" required placeholder="Nội dung JD kế thừa tự động từ yêu cầu tuyển dụng..."></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">Chỉnh sửa JD tại đây độc lập, không làm thay đổi nội dung yêu cầu gốc.</small>
+                            <small id="mJdCharCount" class="text-muted">0 ký tự</small>
+                        </div>
+                    </div>
+
+                    <!-- 4. Địa điểm, hình thức & hạn nhận hồ sơ -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="mWorkLocation" class="form-label text-xs fw-bold text-uppercase text-dark">
+                                Địa điểm làm việc <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="mWorkLocation" name="workLocation" required placeholder="Ví dụ: Hà Nội, TP. Hồ Chí Minh..." list="mWorkLocationsList" />
+                            <datalist id="mWorkLocationsList">
+                                <c:forEach var="loc" items="${workLocations}">
+                                    <option value="${loc.value}"></option>
+                                </c:forEach>
+                            </datalist>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="mWorkMode" class="form-label text-xs fw-bold text-uppercase text-dark">
+                                Hình thức làm việc <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="mWorkMode" name="workMode" required placeholder="Ví dụ: Toàn thời gian, Hybrid..." list="mWorkModesList" />
+                            <datalist id="mWorkModesList">
+                                <c:forEach var="mode" items="${workModes}">
+                                    <option value="${mode.value}"></option>
+                                </c:forEach>
+                            </datalist>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="mApplicationDeadline" class="form-label text-xs fw-bold text-uppercase text-dark">
+                                Hạn nhận hồ sơ <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="mApplicationDeadline" name="applicationDeadline" required />
+                            <div class="form-text small text-muted">Hạn nhận hồ sơ phải từ hôm nay trở đi.</div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Cấu hình Mức lương (KN-204, KN-205) -->
+                    <div class="p-3 bg-light rounded border mb-3">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" role="switch" id="mSalaryVisibleSwitch" name="salaryVisible" value="true" onchange="toggleModalSalaryVisibility(this.checked)">
+                            <label class="form-check-label fw-bold text-dark" for="mSalaryVisibleSwitch">
+                                Hiển thị mức lương trên bài đăng
+                            </label>
+                        </div>
+                        <div id="mSalaryRangeSection" class="row g-2 d-none">
+                            <div class="col-sm-6">
+                                <label for="mMinSalary" class="form-label text-xs fw-semibold text-muted text-uppercase">Lương tối thiểu (VND):</label>
+                                <input type="number" step="100000" min="0" class="form-control form-control-sm" id="mMinSalary" name="minSalary" placeholder="0" />
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="mMaxSalary" class="form-label text-xs fw-semibold text-muted text-uppercase">Lương tối đa (VND):</label>
+                                <input type="number" step="100000" min="0" class="form-control form-control-sm" id="mMaxSalary" name="maxSalary" placeholder="Không giới hạn" />
+                            </div>
+                        </div>
+                        <div id="mSalaryHiddenNotice" class="text-xs text-muted">
+                            <i class="bi bi-shield-lock me-1"></i>Mức lương sẽ được ẩn trên bài đăng và hiển thị <strong>"Thỏa thuận"</strong> đối với ứng viên.
+                        </div>
+                    </div>
+
+                    <!-- 6. Tùy chọn xuất bản ngay -->
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="mPublishImmediately" name="publishImmediately" value="true">
+                        <label class="form-check-label fw-semibold text-dark" for="mPublishImmediately">
+                            Xuất bản công khai ngay sau khi tạo
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 bg-light d-flex justify-content-between">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                        <a href="${pageContext.request.contextPath}/post-publishing/create" id="mOpenFullPageBtn" class="btn btn-link btn-sm text-decoration-none">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Mở màn hình đầy đủ
+                        </a>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm px-4 fw-bold" id="mSubmitBtn">
+                        <i class="bi bi-check2-circle me-1"></i>Tạo bài đăng
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -962,11 +1136,25 @@
                         </div>
                     </div>
 
-                    <!-- Khung thao tác phê duyệt (Hiển thị nếu người dùng hiện tại có quyền tại cấp đang chờ) (KN-154) -->
+                    <!-- Lịch sử ý kiến & vết phê duyệt qua các vòng (KN-183, KN-188) -->
+                    <div id="apprHistoriesSection" class="mb-4" style="display: none;">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-clock-history text-primary"></i>
+                                Lịch sử phê duyệt &amp; Ý kiến phản hồi qua các vòng
+                            </h6>
+                            <span class="badge bg-light text-secondary border">Bảo mật bất biến</span>
+                        </div>
+                        <div id="apprHistoriesList" class="p-3 bg-light rounded border">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+
+                    <!-- Khung thao tác phê duyệt (Hiển thị nếu người dùng hiện tại có quyền tại cấp đang chờ) (KN-154, KN-186) -->
                     <div id="apprActionFormCard" class="card border-primary border-2 shadow-sm mb-2" style="display: none;">
                         <div class="card-header bg-primary-subtle border-primary py-2.5 d-flex align-items-center justify-content-between">
                             <span class="fw-bold text-primary small">
-                                <i class="bi bi-pencil-square me-1"></i> Thao tác Phê duyệt / Từ chối (Dành cho bạn)
+                                <i class="bi bi-pencil-square me-1"></i> Thao tác Phê duyệt / Đánh giá hồ sơ (Dành cho bạn)
                             </span>
                             <span class="badge bg-primary text-white" id="actionCurrentStepName"></span>
                         </div>
@@ -974,18 +1162,24 @@
                             <form id="actionApprovalForm" onsubmit="return false;">
                                 <input type="hidden" id="actionRequisitionId" value="">
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-dark">
-                                        Ý kiến người duyệt / Góp ý <span class="text-danger">* (Bắt buộc nếu từ chối)</span>
+                                    <label class="form-label small fw-bold text-dark" for="actionComment">
+                                        Ý kiến người duyệt / Lý do <span class="text-danger" id="commentRequiredHint">* (Bắt buộc khi Từ chối hoặc Yêu cầu bổ sung)</span>
                                     </label>
                                     <textarea id="actionComment" class="form-control form-control-sm" rows="3" 
-                                              placeholder="Nhập nhận xét, hướng dẫn hoặc lý do từ chối..."></textarea>
+                                              placeholder="Nhập nhận xét phê duyệt, lý do từ chối hoặc hướng dẫn bổ sung thông tin..."></textarea>
+                                    <div id="actionCommentValidation" class="invalid-feedback">
+                                        Vui lòng nhập lý do/ý kiến khi thực hiện Từ chối hoặc Yêu cầu bổ sung!
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                <div class="d-flex align-items-center justify-content-end gap-2 flex-wrap">
                                     <button type="button" class="btn btn-sm btn-outline-danger px-3" onclick="submitApprovalDecision('REJECT')">
-                                        <i class="bi bi-x-circle me-1"></i> Từ chối yêu cầu
+                                        <i class="bi bi-x-circle me-1"></i> Từ chối
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-warning text-dark px-3 shadow-sm" onclick="submitApprovalDecision('REQUEST_CHANGES')">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Yêu cầu bổ sung
                                     </button>
                                     <button type="button" class="btn btn-sm btn-success px-3 shadow-sm" onclick="submitApprovalDecision('APPROVE')">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Đồng ý phê duyệt
+                                        <i class="bi bi-check-circle-fill me-1"></i> Duyệt
                                     </button>
                                 </div>
                             </form>
@@ -1206,6 +1400,15 @@ function viewDetails(id, code, pos, dept, count, reason, sal, deadline, statusLa
         copyBtn.href = '${pageContext.request.contextPath}/recruitment-requests/create?copyFrom=' + encodeURIComponent(id);
     }
 
+    var quickPostBtn = document.getElementById('modalQuickPostBtn');
+    if (quickPostBtn) {
+        if (statusCode === 'APPROVED' || statusCode === 'OPEN') {
+            quickPostBtn.style.display = 'inline-block';
+        } else {
+            quickPostBtn.style.display = 'none';
+        }
+    }
+
     var jd = document.getElementById('jd-' + id) ? document.getElementById('jd-' + id).textContent.trim() : '';
     var req = document.getElementById('req-' + id) ? document.getElementById('req-' + id).textContent.trim() : '';
     var exp = document.getElementById('exp-' + id) ? document.getElementById('exp-' + id).textContent.trim() : '';
@@ -1414,6 +1617,9 @@ function renderApprovalModalData(data) {
         } else if (s.status === 'REJECTED') {
             itemClass += ' rejected';
             nodeContent = '<i class="bi bi-x-lg"></i>';
+        } else if (s.status === 'CHANGES_REQUESTED') {
+            itemClass += ' changes-requested';
+            nodeContent = '<i class="bi bi-arrow-counterclockwise"></i>';
         } else {
             itemClass += ' waiting';
             nodeContent = '<i class="bi bi-clock"></i>';
@@ -1428,7 +1634,7 @@ function renderApprovalModalData(data) {
         stepperEl.appendChild(stepItem);
     });
 
-    // 3. Render danh sách thẻ chi tiết từng bước & Ý kiến (KN-160, KN-161)
+    // 3. Render danh sách thẻ chi tiết từng bước & Ý kiến (KN-160, KN-161, KN-188)
     var stepsListEl = document.getElementById('apprStepsList');
     stepsListEl.innerHTML = '';
 
@@ -1462,7 +1668,9 @@ function renderApprovalModalData(data) {
         // Ý kiến người duyệt
         var commentHtml = '';
         if (s.comment && s.comment.trim().length > 0) {
-            var commentTypeClass = s.status === 'APPROVED' ? 'comment-approved' : (s.status === 'REJECTED' ? 'comment-rejected' : '');
+            var commentTypeClass = s.status === 'APPROVED' ? 'comment-approved' : 
+                (s.status === 'REJECTED' ? 'comment-rejected' : 
+                (s.status === 'CHANGES_REQUESTED' ? 'comment-warning' : ''));
             commentHtml = 
                 '<div class="approval-comment-box ' + commentTypeClass + '">' +
                     '<i class="bi bi-chat-quote-fill me-1 opacity-75"></i>' +
@@ -1498,12 +1706,46 @@ function renderApprovalModalData(data) {
         stepsListEl.appendChild(card);
     });
 
-    // 4. Form thao tác duyệt (KN-154)
+    // 3b. Render Lịch sử ý kiến & Vết phê duyệt qua các vòng (KN-183, KN-188)
+    var historiesSection = document.getElementById('apprHistoriesSection');
+    var historiesList = document.getElementById('apprHistoriesList');
+    var histories = data.histories || [];
+    if (histories && histories.length > 0) {
+        historiesSection.style.display = 'block';
+        historiesList.innerHTML = '';
+        histories.forEach(function(h) {
+            var item = document.createElement('div');
+            item.className = 'border-bottom pb-2 mb-2';
+            var actionBadge = '<span class="badge ' + (h.action_badge_class || 'bg-secondary') + '">' + escapeHtml(h.action_label || h.action) + '</span>';
+            var actorInfo = escapeHtml(h.actor_name || 'Người dùng') + (h.actor_job_title ? ' (' + escapeHtml(h.actor_job_title) + ')' : '');
+            var commentText = h.comment && h.comment.trim().length > 0 ? 
+                '<div class="mt-1 text-dark small fst-italic"><i class="bi bi-chat-left-quote me-1 text-muted"></i>"' + escapeHtml(h.comment) + '"</div>' : 
+                '<div class="mt-1 text-muted small fst-italic">Không có ghi chú</div>';
+            
+            item.innerHTML = 
+                '<div class="d-flex align-items-center justify-content-between flex-wrap gap-2">' +
+                    '<div class="d-flex align-items-center gap-2">' +
+                        actionBadge +
+                        '<strong class="small text-dark">' + escapeHtml(h.step_name) + '</strong>' +
+                        '<span class="text-muted small">&bull; ' + actorInfo + '</span>' +
+                    '</div>' +
+                    '<small class="text-muted"><i class="bi bi-calendar3 me-1"></i>' + escapeHtml(h.created_at || '') + '</small>' +
+                '</div>' +
+                commentText;
+            historiesList.appendChild(item);
+        });
+    } else {
+        historiesSection.style.display = 'none';
+    }
+
+    // 4. Form thao tác duyệt (KN-154, KN-186)
     var actionCard = document.getElementById('apprActionFormCard');
     if (data.canCurrentUserApprove && data.isPendingApproval) {
         actionCard.style.display = 'block';
         document.getElementById('actionCurrentStepName').textContent = data.currentStepName || 'Cấp hiện tại';
-        document.getElementById('actionComment').value = '';
+        var commentEl = document.getElementById('actionComment');
+        commentEl.value = '';
+        commentEl.classList.remove('is-invalid');
     } else {
         actionCard.style.display = 'none';
     }
@@ -1515,16 +1757,31 @@ function renderApprovalModalData(data) {
 function submitApprovalDecision(action) {
     if (!currentApprovalReqId) return;
 
-    var comment = document.getElementById('actionComment').value.trim();
-    if (action === 'REJECT' && !comment) {
-        alert('Vui lòng nhập lý do từ chối phê duyệt để gửi phản hồi cho người lập phiếu!');
-        document.getElementById('actionComment').focus();
+    var commentEl = document.getElementById('actionComment');
+    var comment = commentEl.value.trim();
+    commentEl.classList.remove('is-invalid');
+
+    // KN-187: Ràng buộc Validation - Bắt buộc phải nhập ý kiến/lý do khi Từ chối hoặc Yêu cầu bổ sung
+    if ((action === 'REJECT' || action === 'REQUEST_CHANGES') && !comment) {
+        commentEl.classList.add('is-invalid');
+        var hintMsg = (action === 'REJECT') ? 
+            'Bắt buộc nhập lý do từ chối phê duyệt để gửi phản hồi cho người lập phiếu!' : 
+            'Bắt buộc nhập ý kiến hướng dẫn khi yêu cầu bổ sung thông tin cho hồ sơ!';
+        var feedbackEl = document.getElementById('actionCommentValidation');
+        if (feedbackEl) feedbackEl.textContent = hintMsg;
+        commentEl.focus();
+        alert(hintMsg);
         return;
     }
 
-    var confirmMsg = action === 'APPROVE' ? 
-        'Bạn có chắc chắn muốn ĐỒNG Ý PHÊ DUYỆT hồ sơ tuyển dụng này ở cấp hiện tại?' :
-        'Bạn có chắc chắn muốn TỪ CHỐI hồ sơ tuyển dụng này?';
+    var confirmMsg = '';
+    if (action === 'APPROVE') {
+        confirmMsg = 'Bạn có chắc chắn muốn ĐỒNG Ý PHÊ DUYỆT hồ sơ tuyển dụng này ở cấp hiện tại?';
+    } else if (action === 'REQUEST_CHANGES') {
+        confirmMsg = 'Bạn có chắc chắn muốn YÊU CẦU BỔ SUNG thông tin cho hồ sơ tuyển dụng này? (Hồ sơ sẽ được trả về cho Người tạo hoàn thiện)';
+    } else {
+        confirmMsg = 'Bạn có chắc chắn muốn TỪ CHỐI hồ sơ tuyển dụng này?';
+    }
 
     if (!confirm(confirmMsg)) return;
 
@@ -1556,7 +1813,7 @@ function submitApprovalDecision(action) {
         } else {
             openApprovalModal(currentApprovalReqId);
         }
-        // Tải lại trang sau 1.5 giây để cập nhật bảng danh sách
+        // Tải lại trang sau 1.2 giây để cập nhật bảng danh sách
         setTimeout(function() {
             window.location.reload();
         }, 1200);
@@ -1565,4 +1822,242 @@ function submitApprovalDecision(action) {
         alert('Lỗi kết nối máy chủ: ' + err.message);
     });
 }
+
+// ==============================================================
+// LOGIC MODAL TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG (KN-204, KN-206, KN-207)
+// ==============================================================
+var listQuickModalInstance = null;
+
+function openQuickPostFromDetail() {
+    var detailModalEl = document.getElementById('detailModal');
+    var detailModalInstance = bootstrap.Modal.getInstance(detailModalEl);
+    if (detailModalInstance) {
+        detailModalInstance.hide();
+    }
+    if (currentDetailId) {
+        openQuickCreateModal(currentDetailId);
+    }
+}
+
+function openQuickCreateModal(reqId) {
+    if (!listQuickModalInstance) {
+        listQuickModalInstance = new bootstrap.Modal(document.getElementById('quickJobPostingModal'));
+    }
+
+    document.getElementById('quickPostErrorAlert').classList.add('d-none');
+    document.getElementById('quickPostErrorMessage').innerText = '';
+    var form = document.getElementById('quickJobPostingForm');
+    form.reset();
+
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('mApplicationDeadline').setAttribute('min', today);
+
+    var sel = document.getElementById('modalRequisitionSelect');
+    if (reqId) {
+        sel.value = reqId;
+        onModalRequisitionChanged(reqId);
+        document.getElementById('mOpenFullPageBtn').href = '${pageContext.request.contextPath}/post-publishing/create?requisitionId=' + encodeURIComponent(reqId);
+    } else {
+        document.getElementById('modalReqSummaryBox').classList.add('d-none');
+        document.getElementById('mOpenFullPageBtn').href = '${pageContext.request.contextPath}/post-publishing/create';
+    }
+
+    listQuickModalInstance.show();
+}
+
+function updateModalCharCount() {
+    var el = document.getElementById('mPostDescription');
+    var cnt = document.getElementById('mJdCharCount');
+    if (el && cnt) {
+        cnt.innerText = el.value.length + ' ký tự';
+    }
+}
+document.getElementById('mPostDescription').addEventListener('input', updateModalCharCount);
+
+function toggleModalSalaryVisibility(visible) {
+    var sec = document.getElementById('mSalaryRangeSection');
+    var noti = document.getElementById('mSalaryHiddenNotice');
+    if (visible) {
+        sec.classList.remove('d-none');
+        noti.classList.add('d-none');
+    } else {
+        sec.classList.add('d-none');
+        noti.classList.remove('d-none');
+        document.getElementById('mMinSalary').value = '';
+        document.getElementById('mMaxSalary').value = '';
+    }
+}
+
+function reNormalizeModalDescription() {
+    var el = document.getElementById('mPostDescription');
+    if (!el || !el.value) return;
+    var text = el.value;
+    text = text.replace(/^[\s]*[•\*\+\–\—]\s+/gm, '- ');
+    text = text.replace(/\n{3,}/g, '\n\n');
+    el.value = text.trim();
+    updateModalCharCount();
+}
+
+function onModalRequisitionChanged(reqId) {
+    var sumBox = document.getElementById('modalReqSummaryBox');
+    var errAlert = document.getElementById('quickPostErrorAlert');
+    errAlert.classList.add('d-none');
+
+    if (!reqId) {
+        sumBox.classList.add('d-none');
+        document.getElementById('mOpenFullPageBtn').href = '${pageContext.request.contextPath}/post-publishing/create';
+        return;
+    }
+
+    document.getElementById('mOpenFullPageBtn').href = '${pageContext.request.contextPath}/post-publishing/create?requisitionId=' + encodeURIComponent(reqId);
+
+    fetch('${pageContext.request.contextPath}/post-publishing/requisition-data?id=' + encodeURIComponent(reqId))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) {
+                errAlert.classList.remove('d-none');
+                document.getElementById('quickPostErrorMessage').innerText = data.error;
+                return;
+            }
+
+            sumBox.classList.remove('d-none');
+            document.getElementById('mSumStatus').innerText = data.statusLabel || 'Đã duyệt';
+            document.getElementById('mSumCode').innerText = data.code || '';
+            document.getElementById('mSumTitle').innerText = data.positionTitle || data.title || '';
+            document.getElementById('mSumDept').innerText = data.departmentName || '';
+            document.getElementById('mSumHeadcount').innerText = (data.headcount || 1) + ' người';
+            document.getElementById('mSumSalary').innerText = data.formattedSalaryRange || 'Thỏa thuận';
+            document.getElementById('mSumDeadline').innerText = data.deadlineFormatted || 'Chưa đặt';
+
+            // Tiêu đề bài đăng
+            document.getElementById('mPostTitle').value = data.title || data.positionTitle || '';
+
+            // Kế thừa và chuẩn hóa JD (KN-206)
+            document.getElementById('mPostDescription').value = data.normalizedJobDescription || data.rawJobDescription || '';
+            updateModalCharCount();
+
+            // Địa điểm & hình thức
+            if (data.workLocation) document.getElementById('mWorkLocation').value = data.workLocation;
+            else document.getElementById('mWorkLocation').value = 'Hà Nội, Việt Nam';
+
+            if (data.workMode) document.getElementById('mWorkMode').value = data.workMode;
+            else document.getElementById('mWorkMode').value = 'Toàn thời gian';
+
+            // Hạn nhận
+            if (data.deadline) document.getElementById('mApplicationDeadline').value = data.deadline;
+
+            // Lương
+            var salarySwitch = document.getElementById('mSalaryVisibleSwitch');
+            if (data.salaryVisible && (data.minSalary || data.maxSalary)) {
+                salarySwitch.checked = true;
+                toggleModalSalaryVisibility(true);
+                if (data.minSalary) document.getElementById('mMinSalary').value = data.minSalary;
+                if (data.maxSalary) document.getElementById('mMaxSalary').value = data.maxSalary;
+            } else {
+                salarySwitch.checked = false;
+                toggleModalSalaryVisibility(false);
+            }
+        })
+        .catch(function(err) {
+            errAlert.classList.remove('d-none');
+            document.getElementById('quickPostErrorMessage').innerText = 'Không thể tải thông tin yêu cầu tuyển dụng: ' + err;
+        });
+}
+
+// Submit xử lý AJAX
+document.getElementById('quickJobPostingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var errAlert = document.getElementById('quickPostErrorAlert');
+    var errMsgSpan = document.getElementById('quickPostErrorMessage');
+    errAlert.classList.add('d-none');
+
+    var reqId = document.getElementById('modalRequisitionSelect').value;
+    if (!reqId) {
+        errAlert.classList.remove('d-none');
+        errMsgSpan.innerText = 'Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!';
+        return;
+    }
+
+    var title = document.getElementById('mPostTitle').value.trim();
+    if (!title) {
+        errAlert.classList.remove('d-none');
+        errMsgSpan.innerText = 'Vui lòng nhập tiêu đề bài đăng!';
+        return;
+    }
+
+    var jd = document.getElementById('mPostDescription').value.trim();
+    if (!jd) {
+        errAlert.classList.remove('d-none');
+        errMsgSpan.innerText = 'Vui lòng nhập mô tả công việc (JD)!';
+        return;
+    }
+
+    var deadline = document.getElementById('mApplicationDeadline').value;
+    if (deadline) {
+        var selected = new Date(deadline);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selected < today) {
+            errAlert.classList.remove('d-none');
+            errMsgSpan.innerText = 'Hạn nhận hồ sơ không thể ở trong quá khứ!';
+            return;
+        }
+    }
+
+    var isSalaryVisible = document.getElementById('mSalaryVisibleSwitch').checked;
+    if (isSalaryVisible) {
+        var minVal = parseFloat(document.getElementById('mMinSalary').value);
+        var maxVal = parseFloat(document.getElementById('mMaxSalary').value);
+        if (!isNaN(minVal) && minVal < 0) {
+            errAlert.classList.remove('d-none');
+            errMsgSpan.innerText = 'Mức lương tối thiểu không được là số âm!';
+            return;
+        }
+        if (!isNaN(maxVal) && maxVal < 0) {
+            errAlert.classList.remove('d-none');
+            errMsgSpan.innerText = 'Mức lương tối đa không được là số âm!';
+            return;
+        }
+        if (!isNaN(minVal) && !isNaN(maxVal) && minVal > maxVal) {
+            errAlert.classList.remove('d-none');
+            errMsgSpan.innerText = 'Mức lương tối thiểu không được lớn hơn mức lương tối đa!';
+            return;
+        }
+    }
+
+    var submitBtn = document.getElementById('mSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang tạo...';
+
+    var formData = new URLSearchParams(new FormData(this));
+
+    fetch('${pageContext.request.contextPath}/post-publishing/quick-create', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        body: formData.toString()
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Tạo bài đăng';
+
+        if (!data.success) {
+            errAlert.classList.remove('d-none');
+            errMsgSpan.innerText = data.error || 'Có lỗi xảy ra khi tạo bài đăng!';
+        } else {
+            alert(data.message || 'Tạo bài đăng thành công!');
+            window.location.href = '${pageContext.request.contextPath}/post-publishing';
+        }
+    })
+    .catch(function(err) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Tạo bài đăng';
+        errAlert.classList.remove('d-none');
+        errMsgSpan.innerText = 'Lỗi kết nối máy chủ: ' + err;
+    });
+});
 </script>

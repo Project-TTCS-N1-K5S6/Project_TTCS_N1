@@ -115,14 +115,14 @@
                     <div class="col-12 col-sm-6 col-md-3">
                         <select class="form-select" name="level">
                             <option value="">-- Tất cả cấp bậc --</option>
-                            <option value="Intern" ${paramLevel == 'Intern' ? 'selected' : ''}>Intern (Thực tập)</option>
-                            <option value="Fresher" ${paramLevel == 'Fresher' ? 'selected' : ''}>Fresher</option>
-                            <option value="Junior" ${paramLevel == 'Junior' ? 'selected' : ''}>Junior</option>
-                            <option value="Middle" ${paramLevel == 'Middle' ? 'selected' : ''}>Middle / Chuyên viên</option>
-                            <option value="Senior" ${paramLevel == 'Senior' ? 'selected' : ''}>Senior</option>
-                            <option value="Lead" ${paramLevel == 'Lead' ? 'selected' : ''}>Lead / Trưởng nhóm</option>
-                            <option value="Manager" ${paramLevel == 'Manager' ? 'selected' : ''}>Manager / Trưởng phòng</option>
-                            <option value="Director" ${paramLevel == 'Director' ? 'selected' : ''}>Director / Giám đốc</option>
+                            <option value="Intern" ${paramLevel == 'Intern' ? 'selected' : ''}>Thực tập sinh (Intern)</option>
+                            <option value="Fresher" ${paramLevel == 'Fresher' ? 'selected' : ''}>Mới tốt nghiệp (Fresher)</option>
+                            <option value="Junior" ${paramLevel == 'Junior' ? 'selected' : ''}>Nhân viên (Junior)</option>
+                            <option value="Middle" ${paramLevel == 'Middle' ? 'selected' : ''}>Chuyên viên (Middle)</option>
+                            <option value="Senior" ${paramLevel == 'Senior' ? 'selected' : ''}>Chuyên viên cấp cao (Senior)</option>
+                            <option value="Lead" ${paramLevel == 'Lead' ? 'selected' : ''}>Trưởng nhóm (Lead)</option>
+                            <option value="Manager" ${paramLevel == 'Manager' ? 'selected' : ''}>Trưởng phòng (Manager)</option>
+                            <option value="Director" ${paramLevel == 'Director' ? 'selected' : ''}>Giám đốc khối (Director)</option>
                             <c:forEach var="lvl" items="${levels}">
                                 <c:if test="${lvl != 'Intern' && lvl != 'Fresher' && lvl != 'Junior' && lvl != 'Middle' && lvl != 'Senior' && lvl != 'Lead' && lvl != 'Manager' && lvl != 'Director'}">
                                     <option value="${lvl}" ${paramLevel == lvl ? 'selected' : ''}>${lvl}</option>
@@ -235,6 +235,32 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Phân trang phía Server (Backend Pagination) -->
+                <c:if test="${totalPages > 1}">
+                    <div class="p-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <small class="text-muted">Hiển thị trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong> (Tổng cộng <strong>${totalCount}</strong> dải lương)</small>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/salary-ranges?page=${currentPage - 1}&search=${paramSearch}&deptId=${paramDeptId}&level=${paramLevel}" aria-label="Trang trước">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <li class="page-item ${currentPage == p ? 'active' : ''}">
+                                        <a class="page-link" href="${pageContext.request.contextPath}/salary-ranges?page=${p}&search=${paramSearch}&deptId=${paramDeptId}&level=${paramLevel}">${p}</a>
+                                    </li>
+                                </c:forEach>
+                                <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/salary-ranges?page=${currentPage + 1}&search=${paramSearch}&deptId=${paramDeptId}&level=${paramLevel}" aria-label="Trang sau">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </c:if>
             </div>
         </div>
 

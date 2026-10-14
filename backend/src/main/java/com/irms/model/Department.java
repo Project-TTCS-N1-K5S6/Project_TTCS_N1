@@ -128,6 +128,9 @@ public class Department implements Serializable {
     public int getUserCount() { return userCount; }
     public void setUserCount(int userCount) { this.userCount = userCount; }
 
+    public int getHeadcount() { return userCount; }
+    public void setHeadcount(int headcount) { this.userCount = headcount; }
+
     public int getChildrenCount() { return childrenCount; }
     public void setChildrenCount(int childrenCount) { this.childrenCount = childrenCount; }
 

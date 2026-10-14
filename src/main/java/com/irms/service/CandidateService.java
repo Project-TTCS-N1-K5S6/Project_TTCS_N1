@@ -6,8 +6,12 @@ import com.irms.model.Candidate;
 import com.irms.model.SharedCatalogType;
 import com.irms.util.SecurityUtil;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * Xử lý nghiệp vụ Hồ sơ Ứng viên & Pipeline tuyển dụng
@@ -92,5 +96,111 @@ public class CandidateService {
                 || !catalogDAO.isValueInType(rejectionReasonId, SharedCatalogType.REJECTION_REASON)) {
             throw new IllegalArgumentException("Hãy chọn lý do loại hồ sơ hợp lệ.");
         }
+    }
+
+    /**
+     * [KN-231]: Kiểm tra xem ứng viên đã nộp đơn vào vị trí này chưa
+     */
+    public boolean hasAlreadyApplied(String email, String requisitionId) {
+        if (email == null || requisitionId == null) return false;
+        return candidateDAO.existsByEmailAndRequisition(email.trim().toLowerCase(), requisitionId.trim());
+    }
+
+    /**
+     * [KN-233]: Sinh mã tra cứu hồ sơ duy nhất toàn hệ thống (APP-YYYYMMDD-XXXX)
+     */
+    public String generateUniqueTrackingCode() {
+        String datePrefix = new SimpleDateFormat("yyyyMMdd").format(new Date());
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Loại bỏ ký tự dễ nhầm lẫn như 0, O, 1, I
+        Random random = new Random();
+        String code;
+        int attempts = 0;
+        do {
+            StringBuilder sb = new StringBuilder("APP-");
+            sb.append(datePrefix).append("-");
+            for (int i = 0; i < 4; i++) {
+                sb.append(chars.charAt(random.nextInt(chars.length())));
+            }
+            code = sb.toString();
+            attempts++;
+            if (attempts > 100) {
+                code = "APP-" + datePrefix + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                break;
+            }
+        } while (candidateDAO.existsTrackingCode(code));
+
+        return code;
+    }
+
+    /**
+     * [KN-233]: Tiếp nhận và xử lý nộp hồ sơ ứng tuyển công khai
+     */
+    public Candidate applyPublicJob(Candidate candidate) {
+        if (candidate == null) {
+            throw new IllegalArgumentException("Dữ liệu hồ sơ ứng tuyển không được để trống.");
+        }
+
+        // Validate Full Name
+        if (candidate.getFullName() == null || candidate.getFullName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ và tên ứng viên không được để trống.");
+        }
+
+        // Validate Email (KN-230)
+        String email = candidate.getEmail();
+        if (email == null || !email.trim().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException("Địa chỉ email không đúng định dạng hợp lệ.");
+        }
+        candidate.setEmail(email.trim().toLowerCase());
+
+        // Validate Phone (KN-230: Định dạng số điện thoại Việt Nam: 10 chữ số bắt đầu bằng 0)
+        String phone = candidate.getPhone();
+        if (phone == null || !phone.trim().replaceAll("[\\s.-]", "").matches("^0[3|5|7|8|9][0-9]{8}$")) {
+            throw new IllegalArgumentException("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại di động Việt Nam gồm 10 chữ số (bắt đầu bằng 03, 05, 07, 08, 09).");
+        }
+        candidate.setPhone(phone.trim().replaceAll("[\\s.-]", ""));
+
+        // Validate Requisition ID
+        if (candidate.getRequisitionId() == null || candidate.getRequisitionId().trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin vị trí tuyển dụng ứng tuyển.");
+        }
+
+        // [KN-231]: Kiểm tra nộp trùng
+        if (hasAlreadyApplied(candidate.getEmail(), candidate.getRequisitionId())) {
+            throw new IllegalStateException("Bạn đã nộp hồ sơ ứng tuyển vào vị trí này trước đó với email " + candidate.getEmail() + ". Hệ thống không cho phép nộp lại nhiều lần.");
+        }
+
+        // Validate CV URL
+        if (candidate.getCvUrl() == null || candidate.getCvUrl().trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng tải lên tệp CV đính kèm.");
+        }
+
+        // Xử lý nguồn ứng tuyển (mặc định Trang tuyển dụng nếu rỗng)
+        if (candidate.getApplicationSourceId() == null || candidate.getApplicationSourceId().trim().isEmpty()) {
+            candidate.setApplicationSourceId("cat-src-career-site");
+        }
+
+        // Sinh ID và Tracking Code độc nhất (KN-233)
+        candidate.setId(SecurityUtil.generateUUID());
+        if (candidate.getTrackingCode() == null || candidate.getTrackingCode().trim().isEmpty()) {
+            candidate.setTrackingCode(generateUniqueTrackingCode());
+        }
+        candidate.setStatus("APPLIED");
+
+        boolean inserted = candidateDAO.insertApplication(candidate);
+        if (!inserted) {
+            throw new RuntimeException("Không thể lưu thông tin hồ sơ ứng tuyển vào hệ thống.");
+        }
+
+        return candidate;
+    }
+
+    /**
+     * [KN-233]: Tra cứu hồ sơ ứng tuyển theo mã tra cứu
+     */
+    public Candidate getCandidateByTrackingCode(String trackingCode) {
+        if (trackingCode == null || trackingCode.trim().isEmpty()) {
+            return null;
+        }
+        return candidateDAO.findByTrackingCode(trackingCode.trim());
     }
 }

@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 Test set: com.irms.HeadcountBudgetTest
 -------------------------------------------------------------------------------
-Tests run: 7, Failures: 6, Errors: 1, Skipped: 0, Time elapsed: 0.128 s <<< FAILURE! -- in com.irms.HeadcountBudgetTest
-com.irms.HeadcountBudgetTest.testRealtimeQuotaCheckCalculations -- Time elapsed: 0.016 s <<< FAILURE!
+Tests run: 7, Failures: 6, Errors: 1, Skipped: 0, Time elapsed: 0.512 s <<< FAILURE! -- in com.irms.HeadcountBudgetTest
+com.irms.HeadcountBudgetTest.testRealtimeQuotaCheckCalculations -- Time elapsed: 0.050 s <<< FAILURE!
 java.lang.AssertionError: Phòng ban TECH năm 2026 phải có định biên
 	at org.junit.Assert.fail(Assert.java:89)
 	at org.junit.Assert.assertTrue(Assert.java:42)
@@ -10,7 +10,7 @@ java.lang.AssertionError: Phòng ban TECH năm 2026 phải có định biên
 	at com.irms.HeadcountBudgetTest.testRealtimeQuotaCheckCalculations(HeadcountBudgetTest.java:137)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
 
-com.irms.HeadcountBudgetTest.testCompanyKpiSummary -- Time elapsed: 0.014 s <<< FAILURE!
+com.irms.HeadcountBudgetTest.testCompanyKpiSummary -- Time elapsed: 0.068 s <<< FAILURE!
 java.lang.AssertionError
 	at org.junit.Assert.fail(Assert.java:87)
 	at org.junit.Assert.assertTrue(Assert.java:42)
@@ -18,7 +18,7 @@ java.lang.AssertionError
 	at com.irms.HeadcountBudgetTest.testCompanyKpiSummary(HeadcountBudgetTest.java:231)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
 
-com.irms.HeadcountBudgetTest.testRequisitionOverridePermissionCheck -- Time elapsed: 0.016 s <<< FAILURE!
+com.irms.HeadcountBudgetTest.testRequisitionOverridePermissionCheck -- Time elapsed: 0.048 s <<< FAILURE!
 java.lang.AssertionError
 	at org.junit.Assert.fail(Assert.java:87)
 	at org.junit.Assert.assertTrue(Assert.java:42)
@@ -26,7 +26,7 @@ java.lang.AssertionError
 	at com.irms.HeadcountBudgetTest.testRequisitionOverridePermissionCheck(HeadcountBudgetTest.java:194)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
 
-com.irms.HeadcountBudgetTest.testSubtaskStatusUpdateAndCompletionRate -- Time elapsed: 0.017 s <<< FAILURE!
+com.irms.HeadcountBudgetTest.testSubtaskStatusUpdateAndCompletionRate -- Time elapsed: 0.091 s <<< FAILURE!
 java.lang.AssertionError
 	at org.junit.Assert.fail(Assert.java:87)
 	at org.junit.Assert.assertTrue(Assert.java:42)
@@ -35,7 +35,7 @@ java.lang.AssertionError
 	at com.irms.HeadcountBudgetTest.testSubtaskStatusUpdateAndCompletionRate(HeadcountBudgetTest.java:240)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
 
-com.irms.HeadcountBudgetTest.testSubtasksKN195ToKN201Exist -- Time elapsed: 0.022 s <<< FAILURE!
+com.irms.HeadcountBudgetTest.testSubtasksKN195ToKN201Exist -- Time elapsed: 0.037 s <<< FAILURE!
 java.lang.AssertionError
 	at org.junit.Assert.fail(Assert.java:87)
 	at org.junit.Assert.assertTrue(Assert.java:42)
@@ -43,7 +43,7 @@ java.lang.AssertionError
 	at com.irms.HeadcountBudgetTest.testSubtasksKN195ToKN201Exist(HeadcountBudgetTest.java:67)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:583)
 
-com.irms.HeadcountBudgetTest.testTablesAndColumnsExist -- Time elapsed: 0.009 s <<< ERROR!
+com.irms.HeadcountBudgetTest.testTablesAndColumnsExist -- Time elapsed: 0.084 s <<< ERROR!
 com.mysql.cj.jdbc.exceptions.CommunicationsException: 
 Communications link failure
 
@@ -85,7 +85,7 @@ Caused by: java.net.ConnectException: Connection refused
 	at com.mysql.cj.protocol.a.NativeSocketConnection.connect(NativeSocketConnection.java:63)
 	... 11 more
 
-com.irms.HeadcountBudgetTest.testBudgetCrudAndUniqueConstraint -- Time elapsed: 0.025 s <<< FAILURE!
+com.irms.HeadcountBudgetTest.testBudgetCrudAndUniqueConstraint -- Time elapsed: 0.125 s <<< FAILURE!
 java.lang.AssertionError: Tạo mới định biên phải thành công
 	at org.junit.Assert.fail(Assert.java:89)
 	at org.junit.Assert.assertTrue(Assert.java:42)

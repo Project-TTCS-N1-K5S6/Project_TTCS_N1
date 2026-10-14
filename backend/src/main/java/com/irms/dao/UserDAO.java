@@ -13,7 +13,7 @@ import java.util.logging.Level;
  */
 public class UserDAO extends BaseDAO {
 
-    public User findByEmail(String email) {
+    public User findByEmail(String email) throws SQLException {
         String sql = "SELECT u.*, d.name AS department_name FROM users u " +
                      "LEFT JOIN departments d ON u.department_id = d.id " +
                      "WHERE u.email = ?";
@@ -31,11 +31,86 @@ public class UserDAO extends BaseDAO {
                 return user;
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo email: " + email, e);
+            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo email", e);
+            throw e;
         } finally {
             close(conn, ps, rs);
         }
         return null;
+    }
+
+    public User findByEmployeeCode(String employeeCode) {
+        if (employeeCode == null || employeeCode.trim().isEmpty()) return null;
+        String sql = "SELECT u.*, d.name AS department_name FROM users u " +
+                     "LEFT JOIN departments d ON u.department_id = d.id " +
+                     "WHERE u.employee_code = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, employeeCode.trim());
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                User user = mapResultSetToUser(rs);
+                loadUserRolesAndPermissions(conn, user);
+                return user;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm người dùng theo mã nhân viên: " + employeeCode, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
+    public java.util.Set<String> getAllEmployeeCodes() {
+        java.util.Set<String> set = new java.util.HashSet<>();
+        String sql = "SELECT employee_code FROM users WHERE employee_code IS NOT NULL";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String code = rs.getString(1);
+                if (code != null && !code.trim().isEmpty()) {
+                    set.add(code.trim().toUpperCase());
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách mã nhân viên", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return set;
+    }
+
+    public java.util.Set<String> getAllEmails() {
+        java.util.Set<String> set = new java.util.HashSet<>();
+        String sql = "SELECT email FROM users WHERE email IS NOT NULL";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                String email = rs.getString(1);
+                if (email != null && !email.trim().isEmpty()) {
+                    set.add(email.trim().toLowerCase());
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách email", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return set;
     }
 
     public User findById(String id) {
@@ -61,6 +136,26 @@ public class UserDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return null;
+    }
+
+    public boolean updatePersonalProfile(String userId, String fullName, String phone, String jobTitle) {
+        String sql = "UPDATE users SET full_name = ?, phone = ?, job_title = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, fullName);
+            ps.setString(2, phone);
+            ps.setString(3, jobTitle);
+            ps.setString(4, userId);
+            return ps.executeUpdate() == 1;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật hồ sơ cá nhân", e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
     }
 
     public List<User> findAll(String search, String deptId, String status, int offset, int limit) {
@@ -325,7 +420,7 @@ public class UserDAO extends BaseDAO {
      *   + Cập nhật vai trò có hiệu lực ngay ở thao tác kế tiếp (US 9).
      */
     public User findSessionStateById(String userId) {
-        String sql = "SELECT id, status, session_version, must_change_password FROM users WHERE id = ?";
+        String sql = "SELECT id, status, session_version, must_change_password, avatar_url FROM users WHERE id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -340,6 +435,7 @@ public class UserDAO extends BaseDAO {
                 u.setStatus(rs.getString("status"));
                 u.setSessionVersion(rs.getInt("session_version"));
                 u.setMustChangePassword(rs.getBoolean("must_change_password"));
+                u.setAvatarUrl(rs.getString("avatar_url"));
                 loadUserRolesAndPermissions(conn, u);
                 return u;
             }
@@ -374,6 +470,27 @@ public class UserDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return 0;
+    }
+
+    /**
+     * Cập nhật ảnh đại diện người dùng
+     */
+    public boolean updateAvatar(String userId, String avatarUrl) {
+        String sql = "UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, avatarUrl);
+            ps.setString(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật avatar cho userId: " + userId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
     }
 
     /**
@@ -529,6 +646,11 @@ public class UserDAO extends BaseDAO {
         u.setJobTitle(rs.getString("job_title"));
         u.setDepartmentId(rs.getString("department_id"));
         u.setDepartmentName(rs.getString("department_name"));
+        try {
+            u.setAvatarUrl(rs.getString("avatar_url"));
+        } catch (SQLException ignored) {
+            u.setAvatarUrl(null);
+        }
         u.setPasswordHash(rs.getString("password_hash"));
         u.setStatus(rs.getString("status"));
         u.setFailedLoginAttempts(rs.getInt("failed_login_attempts"));

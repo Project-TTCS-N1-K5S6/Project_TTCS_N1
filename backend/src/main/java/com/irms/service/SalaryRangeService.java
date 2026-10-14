@@ -25,6 +25,17 @@ public class SalaryRangeService {
         return salaryRangeDAO.findAll(search, deptId, level);
     }
 
+    public List<SalaryRange> getSalaryRanges(String search, String deptId, String level, int page, int pageSize) {
+        int p = Math.max(1, page);
+        int size = Math.max(1, pageSize);
+        int offset = (p - 1) * size;
+        return salaryRangeDAO.findAll(search, deptId, level, offset, size);
+    }
+
+    public int countSalaryRanges(String search, String deptId, String level) {
+        return salaryRangeDAO.countAll(search, deptId, level);
+    }
+
     public SalaryRange getSalaryRangeById(String id) {
         if (id == null || id.trim().isEmpty()) return null;
         return salaryRangeDAO.findById(id.trim());

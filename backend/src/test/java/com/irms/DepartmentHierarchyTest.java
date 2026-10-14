@@ -43,6 +43,7 @@ public class DepartmentHierarchyTest {
      */
     @Test
     public void testDepartmentTreeStructureAndLevels() {
+        // Tạo cấu trúc cây giả lập trong bộ nhớ
         Department root = new Department("d-company", "CTY", "Tập đoàn Công nghệ", "Tổng công ty");
         root.setLevel(0);
 
@@ -116,8 +117,12 @@ public class DepartmentHierarchyTest {
 
     @Test
     public void testCyclePreventionDirectLoop() {
+        // Giả sử dept-003 (TECH) là cha của dept-006 (TECH-DEV)
+        // Nếu cố tình đặt dept-006 làm cha của dept-003 -> Phải báo lỗi
         try {
+            // Kiểm tra trường hợp newParentId trỏ tới con/cháu
             departmentService.validateNoCycle("dept-003", "dept-006");
+            // Nếu DB có dữ liệu tech -> tech-dev, validateNoCycle sẽ phát hiện vòng lặp
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage().contains("vòng lặp") || e.getMessage().contains("phòng ban cha"));
         }
@@ -131,6 +136,7 @@ public class DepartmentHierarchyTest {
      */
     @Test
     public void testDeleteBlockedWhenOpenRecruitmentRequestsExist() {
+        // Kiểm tra logic của DeleteCheckResult
         DeleteCheckResult res = new DeleteCheckResult();
         res.hasOpenRequisitions = true;
         res.canDelete = false;
@@ -218,6 +224,7 @@ public class DepartmentHierarchyTest {
         root.addChild(child1);
         root.addChild(child2);
 
+        // Khi sửa child1, danh sách cha hợp lệ KHÔNG ĐƯỢC chứa child1 và grandchild1
         List<String> allowedForChild1 = new ArrayList<>();
         allowedForChild1.add("root");
         allowedForChild1.add("c2");
