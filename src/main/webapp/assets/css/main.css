@@ -1823,6 +1823,9 @@ html, body {
 .approval-stepper-item.rejected:not(:last-child)::after {
   background: #ef4444;
 }
+.approval-stepper-item.changes-requested:not(:last-child)::after {
+  background: #f59e0b;
+}
 
 .approval-stepper-node {
   width: 46px;
@@ -1862,6 +1865,13 @@ html, body {
   border-color: #ef4444;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.approval-stepper-item.changes-requested .approval-stepper-node {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
 }
 
 .approval-stepper-item.waiting .approval-stepper-node {
@@ -1918,6 +1928,10 @@ html, body {
   border-left-color: #ef4444;
   background: #fef7f7;
 }
+.approval-step-card.status-changes_requested {
+  border-left-color: #f59e0b;
+  background: #fffdf5;
+}
 .approval-step-card.status-skipped {
   border-left-color: #94a3b8;
   opacity: 0.8;
@@ -1941,6 +1955,11 @@ html, body {
 .approval-comment-box.comment-rejected {
   border-left-color: #ef4444;
   background: #fef2f2;
+}
+.approval-comment-box.comment-changes-requested,
+.approval-comment-box.comment-warning {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
 }
 
 /* Huy hiệu khóa lịch sử bảo mật (Immutability Lock) */

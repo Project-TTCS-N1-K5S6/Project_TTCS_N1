@@ -177,9 +177,19 @@ public class RecruitmentRequest implements Serializable {
                "CLOSED".equalsIgnoreCase(status);
     }
 
+    public boolean isApproved() {
+        return "APPROVED".equalsIgnoreCase(status);
+    }
+
+    public boolean isChangesRequested() {
+        return "CHANGES_REQUESTED".equalsIgnoreCase(status);
+    }
+
     public String getStatusBadgeClass() {
         if ("DRAFT".equalsIgnoreCase(status)) return "bg-secondary text-white";
         if ("PENDING_APPROVAL".equalsIgnoreCase(status)) return "bg-warning text-dark";
+        if ("APPROVED".equalsIgnoreCase(status)) return "bg-success text-white";
+        if ("CHANGES_REQUESTED".equalsIgnoreCase(status)) return "bg-warning-subtle text-warning-emphasis border border-warning";
         if ("OPEN".equalsIgnoreCase(status)) return "bg-success text-white";
         if ("FULFILLED".equalsIgnoreCase(status) || "Đã tuyển đủ".equalsIgnoreCase(closeReason)) return "bg-teal-custom text-white";
         if ("PAUSED".equalsIgnoreCase(status) || "Tạm dừng".equalsIgnoreCase(closeReason)) return "bg-warning-subtle text-warning-emphasis border border-warning";
@@ -192,6 +202,8 @@ public class RecruitmentRequest implements Serializable {
     public String getStatusLabel() {
         if ("DRAFT".equalsIgnoreCase(status)) return "Bản nháp";
         if ("PENDING_APPROVAL".equalsIgnoreCase(status)) return "Chờ phê duyệt";
+        if ("APPROVED".equalsIgnoreCase(status)) return "Đã duyệt";
+        if ("CHANGES_REQUESTED".equalsIgnoreCase(status)) return "Yêu cầu bổ sung";
         if ("OPEN".equalsIgnoreCase(status)) return "Đang tuyển";
         if ("FULFILLED".equalsIgnoreCase(status)) return "Đã tuyển đủ";
         if ("PAUSED".equalsIgnoreCase(status)) return "Tạm dừng";

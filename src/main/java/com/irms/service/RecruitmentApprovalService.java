@@ -44,6 +44,7 @@ public class RecruitmentApprovalService {
         private List<Map<String, String>> eligibleApprovers = new ArrayList<>();
         private boolean isFullyApproved;
         private boolean isRejected;
+        private boolean isChangesRequested;
 
         public boolean isHasNextStep() { return hasNextStep; }
         public void setHasNextStep(boolean hasNextStep) { this.hasNextStep = hasNextStep; }
@@ -71,6 +72,9 @@ public class RecruitmentApprovalService {
 
         public boolean isRejected() { return isRejected; }
         public void setRejected(boolean rejected) { isRejected = rejected; }
+
+        public boolean isChangesRequested() { return isChangesRequested; }
+        public void setChangesRequested(boolean changesRequested) { this.isChangesRequested = changesRequested; }
     }
 
     /**
@@ -118,7 +122,13 @@ public class RecruitmentApprovalService {
             return info;
         }
 
-        if ("OPEN".equalsIgnoreCase(req.getStatus()) || "CLOSED".equalsIgnoreCase(req.getStatus())) {
+        if ("CHANGES_REQUESTED".equalsIgnoreCase(req.getStatus())) {
+            info.setChangesRequested(true);
+            info.setWaitingForText("Hồ sơ đã được trả về cho Người tạo để bổ sung thông tin");
+            return info;
+        }
+
+        if ("APPROVED".equalsIgnoreCase(req.getStatus()) || "OPEN".equalsIgnoreCase(req.getStatus()) || "CLOSED".equalsIgnoreCase(req.getStatus())) {
             info.setFullyApproved(true);
             info.setWaitingForText("Hồ sơ đã hoàn tất phê duyệt qua tất cả các cấp");
             return info;
@@ -127,18 +137,25 @@ public class RecruitmentApprovalService {
         // Lấy bước hiện tại đang PENDING
         RecruitmentApprovalLog pendingStep = approvalDAO.getCurrentPendingStep(requisitionId);
         if (pendingStep == null) {
-            // Kiểm tra xem có bước nào REJECTED không
+            // Kiểm tra xem có bước nào REJECTED hoặc CHANGES_REQUESTED không
             List<RecruitmentApprovalLog> steps = approvalDAO.findByRequisitionId(requisitionId);
             boolean rejected = false;
+            boolean changesRequested = false;
             for (RecruitmentApprovalLog s : steps) {
                 if (s.isRejected()) {
                     rejected = true;
                     break;
                 }
+                if (s.isChangesRequested()) {
+                    changesRequested = true;
+                }
             }
             if (rejected) {
                 info.setRejected(true);
                 info.setWaitingForText("Hồ sơ đã bị từ chối ở một cấp trước đó");
+            } else if (changesRequested) {
+                info.setChangesRequested(true);
+                info.setWaitingForText("Hồ sơ đã được trả về cho Người tạo để bổ sung thông tin");
             } else {
                 info.setFullyApproved(true);
                 info.setWaitingForText("Hồ sơ đã hoàn tất phê duyệt");
@@ -238,27 +255,42 @@ public class RecruitmentApprovalService {
         }
 
         String normAction = (action != null) ? action.trim().toUpperCase() : "";
-        if (!"APPROVE".equals(normAction) && !"REJECT".equals(normAction)) {
-            throw new IllegalArgumentException("Hành động không hợp lệ: " + action + " (Chỉ chấp nhận APPROVE hoặc REJECT)");
+        if ("CHANGES_REQUESTED".equals(normAction) || "REQUIRE_SUPPLEMENT".equals(normAction)) {
+            normAction = "REQUEST_CHANGES";
         }
 
-        // Nếu từ chối, bắt buộc nhập ý kiến lý do
+        if (!"APPROVE".equals(normAction) && !"REJECT".equals(normAction) && !"REQUEST_CHANGES".equals(normAction)) {
+            throw new IllegalArgumentException("Hành động không hợp lệ: " + action + " (Chỉ chấp nhận APPROVE, REJECT hoặc REQUEST_CHANGES)");
+        }
+
+        // KN-187: Ràng buộc Validation - Bắt buộc phải nhập ý kiến/lý do khi Từ chối hoặc Yêu cầu bổ sung
         if ("REJECT".equals(normAction)) {
             if (comment == null || comment.trim().isEmpty()) {
                 throw new IllegalArgumentException("Vui lòng nhập lý do từ chối phê duyệt để phản hồi cho người lập phiếu!");
             }
+        } else if ("REQUEST_CHANGES".equals(normAction)) {
+            if (comment == null || comment.trim().isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng nhập ý kiến chi tiết khi yêu cầu bổ sung thông tin để phản hồi cho người lập phiếu!");
+            }
         }
 
-        String statusToRecord = "APPROVE".equals(normAction) ? "APPROVED" : "REJECTED";
+        String statusToRecord;
+        if ("APPROVE".equals(normAction)) {
+            statusToRecord = "APPROVED";
+        } else if ("REJECT".equals(normAction)) {
+            statusToRecord = "REJECTED";
+        } else {
+            statusToRecord = "CHANGES_REQUESTED";
+        }
 
-        // Ghi nhận quyết định vào bước hiện tại (KN-154, KN-155: khóa lịch sử)
+        // Ghi nhận quyết định vào bước hiện tại (KN-154, KN-155, KN-183: khóa lịch sử và lưu vết)
         boolean success = approvalDAO.recordApprovalDecision(pendingStep.getId(), actor.getId(), statusToRecord, comment);
         if (!success) {
             throw new RuntimeException("Ghi nhận quyết định phê duyệt thất bại!");
         }
 
         if ("APPROVE".equals(normAction)) {
-            // Thử kích hoạt bước tiếp theo
+            // KN-184: Chuyển cấp phê duyệt kế tiếp khi nhấn Duyệt
             boolean nextActivated = approvalDAO.activateNextStep(requisitionId, pendingStep.getStepOrder());
             if (nextActivated) {
                 // Vẫn còn bước tiếp theo -> Hồ sơ vẫn giữ PENDING_APPROVAL
@@ -266,16 +298,15 @@ public class RecruitmentApprovalService {
                         "Đã phê duyệt " + pendingStep.getStepName() + " của yêu cầu: " + req.getCode() + " - Ý kiến: " + (comment != null ? comment : "Đồng ý"),
                         ip, userAgent);
             } else {
-                // Không còn bước tiếp theo -> ĐÃ HOÀN TẤT DUYỆT CẢ 3 CẤP!
-                // Chuyển Requisition sang OPEN (Đang tuyển)
-                req.setStatus("OPEN");
+                // KN-185: Không còn bước tiếp theo -> Cấp phê duyệt cuối cùng hoàn tất "Duyệt" -> Chuyển trạng thái sang "Đã duyệt" (APPROVED)
+                req.setStatus("APPROVED");
                 requisitionDAO.update(req);
 
                 auditService.log(actor.getId(), "REQUISITION_FULLY_APPROVED", "REQUISITION", requisitionId,
-                        "Hoàn tất toàn bộ chuỗi phê duyệt yêu cầu tuyển dụng: " + req.getCode() + " -> Trạng thái chuyển thành ĐANG TUYỂN",
+                        "Hoàn tất toàn bộ chuỗi phê duyệt yêu cầu tuyển dụng: " + req.getCode() + " -> Trạng thái chuyển thành ĐÃ DUYỆT",
                         ip, userAgent);
             }
-        } else {
+        } else if ("REJECT".equals(normAction)) {
             // TỪ CHỐI (REJECT) -> Bỏ qua toàn bộ các cấp sau
             approvalDAO.skipSubsequentSteps(requisitionId, pendingStep.getStepOrder());
             // Cập nhật Requisition sang REJECTED
@@ -284,6 +315,15 @@ public class RecruitmentApprovalService {
 
             auditService.log(actor.getId(), "REQUISITION_REJECTED", "REQUISITION", requisitionId,
                     "Từ chối tại " + pendingStep.getStepName() + " của yêu cầu: " + req.getCode() + " - Lý do: " + comment,
+                    ip, userAgent);
+        } else {
+            // KN-181 & KN-182: YÊU CẦU BỔ SUNG (REQUEST_CHANGES)
+            // Trả hồ sơ về cho Người tạo (Creator) và giữ nguyên toàn bộ lịch sử phê duyệt trước đó
+            req.setStatus("CHANGES_REQUESTED");
+            requisitionDAO.update(req);
+
+            auditService.log(actor.getId(), "REQUISITION_CHANGES_REQUESTED", "REQUISITION", requisitionId,
+                    "Yêu cầu bổ sung tại " + pendingStep.getStepName() + " của yêu cầu: " + req.getCode() + " - Ý kiến: " + comment,
                     ip, userAgent);
         }
 
@@ -318,7 +358,9 @@ public class RecruitmentApprovalService {
         state.put("statusBadgeClass", req.getStatusBadgeClass());
         state.put("isDraft", "DRAFT".equalsIgnoreCase(req.getStatus()));
         state.put("isPendingApproval", "PENDING_APPROVAL".equalsIgnoreCase(req.getStatus()));
-        state.put("isOpen", "OPEN".equalsIgnoreCase(req.getStatus()));
+        state.put("isApproved", "APPROVED".equalsIgnoreCase(req.getStatus()) || nextInfo.isFullyApproved());
+        state.put("isChangesRequested", "CHANGES_REQUESTED".equalsIgnoreCase(req.getStatus()) || nextInfo.isChangesRequested());
+        state.put("isOpen", "OPEN".equalsIgnoreCase(req.getStatus()) || "APPROVED".equalsIgnoreCase(req.getStatus()));
         state.put("isRejected", "REJECTED".equalsIgnoreCase(req.getStatus()) || nextInfo.isRejected());
         state.put("isFullyApproved", nextInfo.isFullyApproved());
         state.put("currentStepOrder", nextInfo.getStepOrder());
@@ -347,12 +389,14 @@ public class RecruitmentApprovalService {
             stepMap.put("isLocked", s.isLocked()); // KN-155, KN-160: Đã khóa chỉ đọc
             stepMap.put("isApproved", s.isApproved());
             stepMap.put("isRejected", s.isRejected());
+            stepMap.put("isChangesRequested", s.isChangesRequested());
             stepMap.put("isPending", s.isPending());
             stepMap.put("isWaiting", s.isWaiting());
             stepMap.put("isSkipped", s.isSkipped());
             stepList.add(stepMap);
         }
         state.put("steps", stepList);
+        state.put("histories", approvalDAO.getApprovalHistories(requisitionId));
 
         return state;
     }

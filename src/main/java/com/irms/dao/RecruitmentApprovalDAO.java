@@ -4,8 +4,11 @@ import com.irms.model.RecruitmentApprovalLog;
 import com.irms.util.SecurityUtil;
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -46,6 +49,22 @@ public class RecruitmentApprovalDAO extends BaseDAO {
                          "INDEX idx_appr_status (status)" +
                          ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
             stmt.executeUpdate(sql);
+
+            String histSql = "CREATE TABLE IF NOT EXISTS recruitment_approval_histories (" +
+                             "id VARCHAR(36) PRIMARY KEY, " +
+                             "requisition_id VARCHAR(36) NOT NULL, " +
+                             "step_order INT NOT NULL, " +
+                             "step_name VARCHAR(150) NOT NULL, " +
+                             "action VARCHAR(50) NOT NULL, " +
+                             "actor_id VARCHAR(36) NULL, " +
+                             "actor_name VARCHAR(150) NULL, " +
+                             "actor_role VARCHAR(50) NULL, " +
+                             "comment TEXT NULL, " +
+                             "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                             "INDEX idx_appr_hist_req (requisition_id, created_at), " +
+                             "INDEX idx_appr_hist_action (action)" +
+                             ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            stmt.executeUpdate(histSql);
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Không thể khởi tạo schema recruitment_approval_logs: " + e.getMessage());
         } finally {
@@ -253,13 +272,14 @@ public class RecruitmentApprovalDAO extends BaseDAO {
             throw new IllegalArgumentException("Không tìm thấy bước phê duyệt ID: " + stepId);
         }
 
-        if (existing.isApproved() || existing.isRejected()) {
+        if (existing.isApproved() || existing.isRejected() || existing.isChangesRequested()) {
             throw new IllegalStateException("LỊCH SỬ PHÊ DUYỆT ĐÃ KHÓA: Bước này đã có quyết định (" + 
                     existing.getStatusLabel() + ") và không thể chỉnh sửa hoặc xóa theo quy định kiểm toán!");
         }
 
-        if (!"APPROVED".equalsIgnoreCase(status) && !"REJECTED".equalsIgnoreCase(status)) {
-            throw new IllegalArgumentException("Trạng thái quyết định không hợp lệ: " + status + " (Chỉ chấp nhận APPROVED hoặc REJECTED)");
+        String normStatus = (status != null) ? status.trim().toUpperCase() : "";
+        if (!"APPROVED".equals(normStatus) && !"REJECTED".equals(normStatus) && !"CHANGES_REQUESTED".equals(normStatus)) {
+            throw new IllegalArgumentException("Trạng thái quyết định không hợp lệ: " + status + " (Chỉ chấp nhận APPROVED, REJECTED hoặc CHANGES_REQUESTED)");
         }
 
         String sql = "UPDATE recruitment_approval_logs SET " +
@@ -271,15 +291,131 @@ public class RecruitmentApprovalDAO extends BaseDAO {
         try {
             conn = getConnection();
             ps = conn.prepareStatement(sql);
-            ps.setString(1, status.toUpperCase());
+            ps.setString(1, normStatus);
             ps.setString(2, approverId);
             ps.setString(3, comment);
             ps.setString(4, stepId);
 
             int updated = ps.executeUpdate();
-            return updated > 0;
+            if (updated > 0) {
+                // Lưu lịch sử phê duyệt vĩnh viễn (KN-183)
+                recordApprovalHistory(existing.getRequisitionId(), existing.getStepOrder(), existing.getStepName(), normStatus, approverId, comment);
+                return true;
+            }
+            return false;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi ghi nhận quyết định phê duyệt: " + stepId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    /**
+     * KN-183: Lưu lịch sử phê duyệt và ý kiến phản hồi theo từng bước vào bảng recruitment_approval_histories
+     */
+    public boolean recordApprovalHistory(String requisitionId, int stepOrder, String stepName, String action, String actorId, String comment) {
+        String actorName = "Người phê duyệt";
+        String actorRole = "";
+        Map<String, String> userMap = findUserBasicInfo(actorId);
+        if (userMap != null) {
+            if (userMap.get("fullName") != null) actorName = userMap.get("fullName");
+            if (userMap.get("jobTitle") != null) actorRole = userMap.get("jobTitle");
+        }
+
+        String sql = "INSERT INTO recruitment_approval_histories " +
+                     "(id, requisition_id, step_order, step_name, action, actor_id, actor_name, actor_role, comment) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, SecurityUtil.generateUUID());
+            ps.setString(2, requisitionId);
+            ps.setInt(3, stepOrder);
+            ps.setString(4, stepName);
+            ps.setString(5, action.toUpperCase());
+            ps.setString(6, actorId);
+            ps.setString(7, actorName);
+            ps.setString(8, actorRole);
+            ps.setString(9, comment);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Lỗi lưu lịch sử phê duyệt: " + e.getMessage());
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    /**
+     * KN-183 & KN-188: Lấy danh sách lịch sử phê duyệt của một yêu cầu
+     */
+    public List<Map<String, Object>> getApprovalHistories(String requisitionId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT * FROM recruitment_approval_histories WHERE requisition_id = ? ORDER BY created_at ASC";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, requisitionId);
+            rs = ps.executeQuery();
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
+            while (rs.next()) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", rs.getString("id"));
+                map.put("requisitionId", rs.getString("requisition_id"));
+                map.put("stepOrder", rs.getInt("step_order"));
+                map.put("stepName", rs.getString("step_name"));
+                String act = rs.getString("action");
+                map.put("action", act);
+                if ("APPROVED".equalsIgnoreCase(act)) {
+                    map.put("actionLabel", "Đã duyệt");
+                    map.put("actionBadgeClass", "bg-success text-white");
+                } else if ("REJECTED".equalsIgnoreCase(act)) {
+                    map.put("actionLabel", "Từ chối");
+                    map.put("actionBadgeClass", "bg-danger text-white");
+                } else if ("CHANGES_REQUESTED".equalsIgnoreCase(act)) {
+                    map.put("actionLabel", "Yêu cầu bổ sung");
+                    map.put("actionBadgeClass", "bg-warning text-dark");
+                } else {
+                    map.put("actionLabel", act);
+                    map.put("actionBadgeClass", "bg-secondary text-white");
+                }
+                map.put("actorId", rs.getString("actor_id"));
+                map.put("actorName", rs.getString("actor_name"));
+                map.put("actorRole", rs.getString("actor_role"));
+                map.put("comment", rs.getString("comment"));
+                Timestamp ts = rs.getTimestamp("created_at");
+                map.put("createdAt", ts != null ? sdf.format(ts) : "--");
+                list.add(map);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Lỗi lấy danh sách lịch sử phê duyệt: " + e.getMessage());
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    /**
+     * KN-181: Khi Người tạo nộp lại hồ sơ sau khi bổ sung, tái kích hoạt bước CHANGES_REQUESTED về PENDING
+     */
+    public boolean reactivateChangesRequestedStep(String requisitionId) {
+        String sql = "UPDATE recruitment_approval_logs SET status = 'PENDING', decision_date = NULL " +
+                     "WHERE requisition_id = ? AND status = 'CHANGES_REQUESTED'";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, requisitionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tái kích hoạt cấp duyệt yêu cầu bổ sung: " + requisitionId, e);
             return false;
         } finally {
             close(conn, ps);
@@ -337,7 +473,7 @@ public class RecruitmentApprovalDAO extends BaseDAO {
         // Kiểm tra xem đã có bước nào APPROVED hoặc REJECTED chưa
         List<RecruitmentApprovalLog> steps = findByRequisitionId(requisitionId);
         for (RecruitmentApprovalLog s : steps) {
-            if (s.isApproved() || s.isRejected()) {
+            if (s.isApproved() || s.isRejected() || s.isChangesRequested()) {
                 throw new UnsupportedOperationException("LỊCH SỬ PHÊ DUYỆT ĐÃ KHÓA: Hồ sơ đã phát sinh nhật ký phê duyệt thực tế, tuyệt đối không được xóa!");
             }
         }

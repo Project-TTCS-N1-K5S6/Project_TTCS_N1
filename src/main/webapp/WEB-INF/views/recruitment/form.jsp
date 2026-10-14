@@ -89,12 +89,13 @@
                     <!-- Stepper Timeline (KN-159) -->
                     <div class="approval-stepper px-2 py-3 bg-light rounded border mb-4">
                         <c:forEach var="s" items="${approvalSteps}">
-                            <div class="approval-stepper-item ${s.status == 'APPROVED' ? 'completed' : (s.status == 'PENDING' ? 'active' : (s.status == 'REJECTED' ? 'rejected' : 'waiting'))}">
+                            <div class="approval-stepper-item ${s.status == 'APPROVED' ? 'completed' : (s.status == 'PENDING' ? 'active' : (s.status == 'REJECTED' ? 'rejected' : (s.status == 'CHANGES_REQUESTED' ? 'changes-requested' : 'waiting')))}">
                                 <div class="approval-stepper-node">
                                     <c:choose>
                                         <c:when test="${s.status == 'APPROVED'}"><i class="bi bi-check-lg"></i></c:when>
                                         <c:when test="${s.status == 'PENDING'}"><i class="bi bi-hourglass-split"></i></c:when>
                                         <c:when test="${s.status == 'REJECTED'}"><i class="bi bi-x-lg"></i></c:when>
+                                        <c:when test="${s.status == 'CHANGES_REQUESTED'}"><i class="bi bi-arrow-counterclockwise"></i></c:when>
                                         <c:otherwise><i class="bi bi-clock"></i></c:otherwise>
                                     </c:choose>
                                 </div>
@@ -108,7 +109,7 @@
                     <div class="row g-3">
                         <c:forEach var="s" items="${approvalSteps}">
                             <div class="col-12 col-md-4">
-                                <div class="approval-step-card h-100 ${s.status == 'APPROVED' ? 'status-approved' : (s.status == 'PENDING' ? 'status-pending' : (s.status == 'REJECTED' ? 'status-rejected' : 'status-waiting'))}">
+                                <div class="approval-step-card h-100 ${s.status == 'APPROVED' ? 'status-approved' : (s.status == 'PENDING' ? 'status-pending' : (s.status == 'REJECTED' ? 'status-rejected' : (s.status == 'CHANGES_REQUESTED' ? 'status-changes_requested' : 'status-waiting')))}">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="fw-bold text-dark small">${s.stepName}</span>
                                         <span class="badge ${s.statusBadgeClass}" style="font-size: 0.68rem;">${s.statusLabel}</span>
@@ -141,7 +142,7 @@
                                         <small class="text-muted d-block" style="font-size: 0.72rem;">Ý kiến người duyệt:</small>
                                         <c:choose>
                                             <c:when test="${not empty s.comment}">
-                                                <div class="approval-comment-box ${s.status == 'APPROVED' ? 'comment-approved' : (s.status == 'REJECTED' ? 'comment-rejected' : '')} py-1 px-2 mt-1" style="font-size: 0.78rem;">
+                                                <div class="approval-comment-box ${s.status == 'APPROVED' ? 'comment-approved' : (s.status == 'REJECTED' ? 'comment-rejected' : (s.status == 'CHANGES_REQUESTED' ? 'comment-changes-requested' : ''))} py-1 px-2 mt-1" style="font-size: 0.78rem;">
                                                     "${s.comment}"
                                                 </div>
                                             </c:when>
@@ -154,6 +155,16 @@
                             </div>
                         </c:forEach>
                     </div>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${reqItem.changesRequested || reqItem.status == 'CHANGES_REQUESTED'}">
+            <div class="alert alert-warning border-warning d-flex align-items-center gap-3 p-3 mb-4 shadow-sm" role="alert">
+                <div class="fs-3 text-warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div>
+                    <h6 class="alert-heading fw-bold mb-1">Hồ sơ được yêu cầu bổ sung thông tin</h6>
+                    <p class="mb-0 small">Hồ sơ này đã được cấp phê duyệt trả về để bổ sung hoặc hoàn thiện lại nội dung. Vui lòng xem nhận xét của người duyệt, cập nhật các trường thông tin cần thiết và bấm <strong>Gửi phê duyệt</strong> để tiếp tục quy trình.</p>
                 </div>
             </div>
         </c:if>

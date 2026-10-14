@@ -195,7 +195,7 @@ CREATE TABLE recruitment_requisitions (
     job_description LONGTEXT NULL, -- Soạn mô tả công việc
     job_requirements LONGTEXT NULL, -- Soạn yêu cầu ứng viên
     salary_explanation TEXT NULL, -- Bắt buộc nếu dải lương đề xuất nằm ngoài dải chuẩn của chức danh
-    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', -- 'DRAFT', 'PENDING_APPROVAL', 'OPEN', 'FULFILLED', 'PAUSED', 'CANCELLED', 'CLOSED', 'REJECTED'
+    status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', -- 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'CHANGES_REQUESTED', 'OPEN', 'FULFILLED', 'PAUSED', 'CANCELLED', 'CLOSED', 'REJECTED'
     close_status VARCHAR(50) NULL, -- 'FULFILLED', 'PAUSED', 'CANCELLED'
     close_reason VARCHAR(255) NULL, -- Lý do riêng biệt tương ứng từng trạng thái
     close_notes TEXT NULL, -- Ghi chú chi tiết lý do đóng
@@ -405,7 +405,7 @@ CREATE TABLE recruitment_approval_logs (
     required_role VARCHAR(50) NOT NULL, -- 'HIRING_MANAGER', 'HR_MANAGER', 'APPROVER'
     assigned_user_id VARCHAR(36) NULL, -- Người được gán phụ trách duyệt cụ thể (nếu có)
     approver_id VARCHAR(36) NULL, -- Người thực tế đã phê duyệt / từ chối
-    status VARCHAR(50) NOT NULL DEFAULT 'WAITING', -- 'WAITING', 'PENDING', 'APPROVED', 'REJECTED', 'SKIPPED'
+    status VARCHAR(50) NOT NULL DEFAULT 'WAITING', -- 'WAITING', 'PENDING', 'APPROVED', 'REJECTED', 'CHANGES_REQUESTED', 'SKIPPED'
     decision_date TIMESTAMP NULL, -- Thời điểm phê duyệt
     comment TEXT NULL, -- Ý kiến đóng góp / lý do phê duyệt hoặc từ chối
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
