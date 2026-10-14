@@ -1,17 +1,21 @@
 package com.irms.dao;
 
+import com.google.gson.Gson;
 import com.irms.model.JobPostPublication;
 import com.irms.model.JobPosting;
 import com.irms.model.RecruitmentRequest;
 import com.irms.util.SecurityUtil;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -39,6 +43,16 @@ public class JobPostingDAO extends BaseDAO {
                     "platform VARCHAR(100) DEFAULT 'CAREER_PORTAL', " +
                     "status VARCHAR(50) NOT NULL DEFAULT 'DRAFT', " +
                     "current_version INT NOT NULL DEFAULT 1, " +
+                    "job_description LONGTEXT NULL, " +
+                    "work_location_id VARCHAR(36) NULL, " +
+                    "work_location VARCHAR(255) NULL, " +
+                    "work_mode_id VARCHAR(36) NULL, " +
+                    "work_mode VARCHAR(100) NULL, " +
+                    "application_deadline DATE NULL, " +
+                    "is_salary_visible BOOLEAN NOT NULL DEFAULT TRUE, " +
+                    "min_salary DECIMAL(15, 2) NULL, " +
+                    "max_salary DECIMAL(15, 2) NULL, " +
+                    "currency VARCHAR(10) NOT NULL DEFAULT 'VND', " +
                     "published_at TIMESTAMP NULL, " +
                     "published_by VARCHAR(36) NULL, " +
                     "unpublished_at TIMESTAMP NULL, " +
@@ -72,11 +86,53 @@ public class JobPostingDAO extends BaseDAO {
                     ")";
             stmt.executeUpdate(sql2);
 
+            // 3. Đảm bảo các cột mới phục vụ Tạo nhanh bài đăng (KN-204, KN-205, KN-206) tồn tại nếu bảng đã có sẵn
+            ensureJobPostingColumns(conn);
+
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Không thể tự động khởi tạo bảng job_postings / job_post_publications: " + e.getMessage());
         } finally {
             closeQuietly(stmt);
             closeQuietly(conn);
+        }
+    }
+
+    private void ensureJobPostingColumns(Connection conn) {
+        Statement stmt = null;
+        try {
+            DatabaseMetaData meta = conn.getMetaData();
+            stmt = conn.createStatement();
+            addColumnIfNotExists(meta, stmt, "job_postings", "job_description", "LONGTEXT NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "work_location_id", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "work_location", "VARCHAR(255) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "work_mode_id", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "work_mode", "VARCHAR(100) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "application_deadline", "DATE NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "is_salary_visible", "BOOLEAN NOT NULL DEFAULT TRUE");
+            addColumnIfNotExists(meta, stmt, "job_postings", "min_salary", "DECIMAL(15, 2) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "max_salary", "DECIMAL(15, 2) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "currency", "VARCHAR(10) NOT NULL DEFAULT 'VND'");
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Không thể kiểm tra/cập nhật cột cho job_postings: " + e.getMessage());
+        } finally {
+            closeQuietly(stmt);
+        }
+    }
+
+    private void addColumnIfNotExists(DatabaseMetaData meta, Statement stmt, String tableName, String columnName, String columnDef) {
+        try (ResultSet rs = meta.getColumns(null, null, tableName, columnName)) {
+            if (!rs.next()) {
+                try (ResultSet rsUpper = meta.getColumns(null, null, tableName.toUpperCase(), columnName.toUpperCase())) {
+                    if (!rsUpper.next()) {
+                        String sql = "ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef;
+                        stmt.executeUpdate(sql);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            try {
+                stmt.executeUpdate("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef);
+            } catch (SQLException ignored2) {}
         }
     }
 
@@ -101,7 +157,12 @@ public class JobPostingDAO extends BaseDAO {
                 "COALESCE(jp.current_version, 0) AS jp_version, " +
                 "jp.published_at AS jp_published_at, jp.published_by AS jp_published_by, " +
                 "u_pub.full_name AS published_by_name, " +
-                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count " +
+                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count, " +
+                "jp.job_description AS jp_job_description, jp.work_location_id AS jp_work_location_id, " +
+                "jp.work_location AS jp_work_location, jp.work_mode_id AS jp_work_mode_id, " +
+                "jp.work_mode AS jp_work_mode, jp.application_deadline AS jp_deadline, " +
+                "jp.is_salary_visible AS jp_salary_visible, jp.min_salary AS jp_min_salary, " +
+                "jp.max_salary AS jp_max_salary, jp.currency AS jp_currency " +
                 "FROM recruitment_requisitions r " +
                 "LEFT JOIN departments d ON r.department_id = d.id " +
                 "LEFT JOIN job_postings jp ON r.id = jp.requisition_id " +
@@ -253,7 +314,12 @@ public class JobPostingDAO extends BaseDAO {
                 "COALESCE(jp.current_version, 0) AS jp_version, " +
                 "jp.published_at AS jp_published_at, jp.published_by AS jp_published_by, " +
                 "u_pub.full_name AS published_by_name, " +
-                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count " +
+                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count, " +
+                "jp.job_description AS jp_job_description, jp.work_location_id AS jp_work_location_id, " +
+                "jp.work_location AS jp_work_location, jp.work_mode_id AS jp_work_mode_id, " +
+                "jp.work_mode AS jp_work_mode, jp.application_deadline AS jp_deadline, " +
+                "jp.is_salary_visible AS jp_salary_visible, jp.min_salary AS jp_min_salary, " +
+                "jp.max_salary AS jp_max_salary, jp.currency AS jp_currency " +
                 "FROM recruitment_requisitions r " +
                 "LEFT JOIN departments d ON r.department_id = d.id " +
                 "LEFT JOIN job_postings jp ON r.id = jp.requisition_id " +
@@ -559,7 +625,12 @@ public class JobPostingDAO extends BaseDAO {
                 "jp.id AS jp_id, jp.title AS jp_title, jp.platform AS jp_platform, jp.status AS jp_status, " +
                 "jp.current_version AS jp_version, jp.published_at AS jp_published_at, jp.published_by AS jp_published_by, " +
                 "u_pub.full_name AS published_by_name, " +
-                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count " +
+                "jp.unpublished_at AS jp_unpublished_at, jp.public_url, jp.views_count, " +
+                "jp.job_description AS jp_job_description, jp.work_location_id AS jp_work_location_id, " +
+                "jp.work_location AS jp_work_location, jp.work_mode_id AS jp_work_mode_id, " +
+                "jp.work_mode AS jp_work_mode, jp.application_deadline AS jp_deadline, " +
+                "jp.is_salary_visible AS jp_salary_visible, jp.min_salary AS jp_min_salary, " +
+                "jp.max_salary AS jp_max_salary, jp.currency AS jp_currency " +
                 "FROM job_postings jp " +
                 "JOIN recruitment_requisitions r ON jp.requisition_id = r.id " +
                 "LEFT JOIN departments d ON r.department_id = d.id " +
@@ -660,6 +731,18 @@ public class JobPostingDAO extends BaseDAO {
         req.setCreatedAt(rs.getTimestamp("req_created_at"));
 
         jp.setRequisition(req);
+
+        try { jp.setJobDescription(rs.getString("jp_job_description")); } catch (SQLException ignored) {}
+        try { jp.setWorkLocationId(rs.getString("jp_work_location_id")); } catch (SQLException ignored) {}
+        try { jp.setWorkLocation(rs.getString("jp_work_location")); } catch (SQLException ignored) {}
+        try { jp.setWorkModeId(rs.getString("jp_work_mode_id")); } catch (SQLException ignored) {}
+        try { jp.setWorkMode(rs.getString("jp_work_mode")); } catch (SQLException ignored) {}
+        try { jp.setApplicationDeadline(rs.getDate("jp_deadline")); } catch (SQLException ignored) {}
+        try { jp.setSalaryVisible(rs.getBoolean("jp_salary_visible")); } catch (SQLException ignored) {}
+        try { jp.setMinSalary(rs.getBigDecimal("jp_min_salary")); } catch (SQLException ignored) {}
+        try { jp.setMaxSalary(rs.getBigDecimal("jp_max_salary")); } catch (SQLException ignored) {}
+        try { jp.setCurrency(rs.getString("jp_currency")); } catch (SQLException ignored) {}
+
         return jp;
     }
 
@@ -751,8 +834,10 @@ public class JobPostingDAO extends BaseDAO {
     }
 
     public boolean insert(JobPosting p) {
-        String sql = "INSERT INTO job_postings (id, requisition_id, title, platform, status, public_url, published_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO job_postings (id, requisition_id, title, platform, status, public_url, published_at, " +
+                     "job_description, work_location_id, work_location, work_mode_id, work_mode, " +
+                     "application_deadline, is_salary_visible, min_salary, max_salary, currency) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
@@ -765,6 +850,16 @@ public class JobPostingDAO extends BaseDAO {
             ps.setString(5, p.getStatus());
             ps.setString(6, p.getPublicUrl() != null ? p.getPublicUrl() : p.getPostedUrl());
             ps.setTimestamp(7, p.getPublishedAt());
+            ps.setString(8, p.getJobDescription());
+            ps.setString(9, p.getWorkLocationId());
+            ps.setString(10, p.getWorkLocation());
+            ps.setString(11, p.getWorkModeId());
+            ps.setString(12, p.getWorkMode());
+            ps.setDate(13, p.getApplicationDeadline());
+            ps.setBoolean(14, p.isSalaryVisible());
+            ps.setBigDecimal(15, p.getMinSalary());
+            ps.setBigDecimal(16, p.getMaxSalary());
+            ps.setString(17, p.getCurrency() != null ? p.getCurrency() : "VND");
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi thêm tin tuyển dụng mới", e);
@@ -772,6 +867,187 @@ public class JobPostingDAO extends BaseDAO {
         } finally {
             close(conn, ps);
         }
+    }
+
+    /**
+     * KN-207, KN-208: Tạo nhanh bài đăng từ yêu cầu tuyển dụng đã duyệt
+     * Kiểm tra trạng thái Đã duyệt, phòng tránh trùng lặp, ghi bản xuất nếu xuất bản ngay
+     */
+    public JobPosting createQuickPosting(JobPosting posting, String actorId, String actorName) throws SQLException {
+        Connection conn = null;
+        PreparedStatement psCheck = null;
+        PreparedStatement psInsert = null;
+        ResultSet rsCheck = null;
+
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Kiểm tra trạng thái yêu cầu tuyển dụng nguồn (KN-208: BẮT BUỘC ĐÃ DUYỆT - APPROVED hoặc OPEN)
+            String sqlCheck = "SELECT status, title, code FROM recruitment_requisitions WHERE id = ?";
+            psCheck = conn.prepareStatement(sqlCheck);
+            psCheck.setString(1, posting.getRequisitionId());
+            rsCheck = psCheck.executeQuery();
+            if (!rsCheck.next()) {
+                throw new IllegalArgumentException("Không tìm thấy yêu cầu tuyển dụng nguồn có ID: " + posting.getRequisitionId());
+            }
+            String reqStatus = rsCheck.getString("status");
+            if (reqStatus == null || (!"APPROVED".equalsIgnoreCase(reqStatus.trim()) && !"OPEN".equalsIgnoreCase(reqStatus.trim()))) {
+                throw new IllegalStateException("Chỉ những yêu cầu tuyển dụng ở trạng thái Đã duyệt mới được phép tạo bài đăng! Trạng thái hiện tại: " 
+                        + (reqStatus != null ? reqStatus : "Chưa xác định"));
+            }
+
+            // 2. Phòng tránh tạo bài đăng trùng lặp do gửi yêu cầu liên tiếp (Idempotency)
+            String dupSql = "SELECT id FROM job_postings WHERE requisition_id = ? AND title = ? AND created_at >= NOW() - INTERVAL 5 SECOND";
+            try (PreparedStatement psDup = conn.prepareStatement(dupSql)) {
+                psDup.setString(1, posting.getRequisitionId());
+                psDup.setString(2, posting.getTitle());
+                try (ResultSet rsDup = psDup.executeQuery()) {
+                    if (rsDup.next()) {
+                        posting.setId(rsDup.getString("id"));
+                        conn.commit();
+                        return posting;
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            // 3. Chuẩn bị định danh duy nhất (UUID)
+            if (posting.getId() == null || posting.getId().trim().isEmpty()) {
+                posting.setId(SecurityUtil.generateUUID());
+            }
+
+            // 4. Lưu bài đăng vào cơ sở dữ liệu
+            String insertSql = "INSERT INTO job_postings (" +
+                    "id, requisition_id, title, platform, status, current_version, " +
+                    "job_description, work_location_id, work_location, work_mode_id, work_mode, " +
+                    "application_deadline, is_salary_visible, min_salary, max_salary, currency, " +
+                    "published_at, published_by, created_at, updated_at) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+
+            psInsert = conn.prepareStatement(insertSql);
+            psInsert.setString(1, posting.getId());
+            psInsert.setString(2, posting.getRequisitionId());
+            psInsert.setString(3, posting.getTitle());
+            psInsert.setString(4, posting.getPlatform() != null ? posting.getPlatform() : "CAREER_PORTAL");
+            psInsert.setString(5, posting.getStatus() != null ? posting.getStatus() : "PUBLISHED");
+            psInsert.setInt(6, posting.getCurrentVersion() > 0 ? posting.getCurrentVersion() : 1);
+            psInsert.setString(7, posting.getJobDescription());
+            psInsert.setString(8, posting.getWorkLocationId());
+            psInsert.setString(9, posting.getWorkLocation());
+            psInsert.setString(10, posting.getWorkModeId());
+            psInsert.setString(11, posting.getWorkMode());
+            psInsert.setDate(12, posting.getApplicationDeadline());
+            psInsert.setBoolean(13, posting.isSalaryVisible());
+            psInsert.setBigDecimal(14, posting.getMinSalary());
+            psInsert.setBigDecimal(15, posting.getMaxSalary());
+            psInsert.setString(16, posting.getCurrency() != null ? posting.getCurrency() : "VND");
+
+            if ("PUBLISHED".equalsIgnoreCase(posting.getStatus())) {
+                psInsert.setTimestamp(17, new java.sql.Timestamp(System.currentTimeMillis()));
+                psInsert.setString(18, actorId);
+            } else {
+                psInsert.setNull(17, java.sql.Types.TIMESTAMP);
+                psInsert.setString(18, actorId);
+            }
+
+            psInsert.executeUpdate();
+
+            // 5. Nếu xuất bản ngay, ghi nhận bản xuất và thời điểm (KN-120 compliance)
+            if ("PUBLISHED".equalsIgnoreCase(posting.getStatus())) {
+                String pubId = SecurityUtil.generateUUID();
+                String pubSql = "INSERT INTO job_post_publications " +
+                        "(id, requisition_id, job_posting_id, version_number, version_label, channel, status, " +
+                        "published_at, published_by, published_by_name, snapshot_title, snapshot_data, change_summary, created_at) " +
+                        "VALUES (?, ?, ?, 1, 'Bản xuất #1', ?, 'PUBLISHED', CURRENT_TIMESTAMP, ?, ?, ?, ?, 'Tạo nhanh bài đăng tuyển dụng', CURRENT_TIMESTAMP)";
+                try (PreparedStatement psPub = conn.prepareStatement(pubSql)) {
+                    psPub.setString(1, pubId);
+                    psPub.setString(2, posting.getRequisitionId());
+                    psPub.setString(3, posting.getId());
+                    psPub.setString(4, posting.getPlatform());
+                    psPub.setString(5, actorId);
+                    psPub.setString(6, actorName != null ? actorName : "Hệ thống");
+                    psPub.setString(7, posting.getTitle());
+
+                    Map<String, Object> snap = new HashMap<>();
+                    snap.put("id", posting.getId());
+                    snap.put("title", posting.getTitle());
+                    snap.put("jobDescription", posting.getJobDescription());
+                    snap.put("workLocation", posting.getWorkLocation());
+                    snap.put("workMode", posting.getWorkMode());
+                    snap.put("deadline", posting.getApplicationDeadline() != null ? posting.getApplicationDeadline().toString() : null);
+                    snap.put("isSalaryVisible", posting.isSalaryVisible());
+                    snap.put("salaryRange", posting.getFormattedSalaryRange());
+                    psPub.setString(8, new Gson().toJson(snap));
+
+                    psPub.executeUpdate();
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Không thể tự động ghi lịch sử bản xuất: " + e.getMessage());
+                }
+            }
+
+            conn.commit();
+            return posting;
+        } catch (SQLException | RuntimeException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+            }
+            throw e;
+        } finally {
+            closeQuietly(rsCheck);
+            closeQuietly(psCheck);
+            closeQuietly(psInsert);
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
+        }
+    }
+
+    /**
+     * Lấy danh sách các yêu cầu tuyển dụng đã duyệt (APPROVED hoặc OPEN) để phục vụ tạo nhanh bài đăng
+     */
+    public List<RecruitmentRequest> findApprovedRequisitionsForPosting() {
+        List<RecruitmentRequest> list = new ArrayList<>();
+        String sql = "SELECT r.id, r.code, r.title, r.position_title, r.department_id, d.name AS department_name, " +
+                "r.headcount, r.recruitment_reason, r.min_salary, r.max_salary, r.currency, r.deadline, " +
+                "r.job_description, r.job_requirements, r.work_location_id, r.work_mode_id, r.status, r.created_at " +
+                "FROM recruitment_requisitions r " +
+                "LEFT JOIN departments d ON r.department_id = d.id " +
+                "WHERE r.status IN ('APPROVED', 'OPEN') " +
+                "ORDER BY r.created_at DESC";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                RecruitmentRequest req = new RecruitmentRequest();
+                req.setId(rs.getString("id"));
+                req.setCode(rs.getString("code"));
+                req.setTitle(rs.getString("title"));
+                req.setPositionTitle(rs.getString("position_title"));
+                req.setDepartmentId(rs.getString("department_id"));
+                req.setDepartmentName(rs.getString("department_name"));
+                req.setHeadcount(rs.getInt("headcount"));
+                req.setRecruitmentReason(rs.getString("recruitment_reason"));
+                req.setMinSalary(rs.getBigDecimal("min_salary"));
+                req.setMaxSalary(rs.getBigDecimal("max_salary"));
+                req.setCurrency(rs.getString("currency"));
+                req.setDeadline(rs.getDate("deadline"));
+                req.setJobDescription(rs.getString("job_description"));
+                req.setJobRequirements(rs.getString("job_requirements"));
+                req.setWorkLocationId(rs.getString("work_location_id"));
+                req.setWorkModeId(rs.getString("work_mode_id"));
+                req.setStatus(rs.getString("status"));
+                list.add(req);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách yêu cầu đã duyệt cho bài đăng", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
     }
 
     private JobPosting mapSimpleResultSet(ResultSet rs) throws SQLException {
@@ -790,6 +1066,17 @@ public class JobPostingDAO extends BaseDAO {
         try { p.setUnpublishedAt(rs.getTimestamp("unpublished_at")); } catch (SQLException ignored) {}
         try { p.setCreatedAt(rs.getTimestamp("created_at")); } catch (SQLException ignored) {}
         try { p.setUpdatedAt(rs.getTimestamp("updated_at")); } catch (SQLException ignored) {}
+
+        try { p.setJobDescription(rs.getString("job_description")); } catch (SQLException ignored) {}
+        try { p.setWorkLocationId(rs.getString("work_location_id")); } catch (SQLException ignored) {}
+        try { p.setWorkLocation(rs.getString("work_location")); } catch (SQLException ignored) {}
+        try { p.setWorkModeId(rs.getString("work_mode_id")); } catch (SQLException ignored) {}
+        try { p.setWorkMode(rs.getString("work_mode")); } catch (SQLException ignored) {}
+        try { p.setApplicationDeadline(rs.getDate("application_deadline")); } catch (SQLException ignored) {}
+        try { p.setSalaryVisible(rs.getBoolean("is_salary_visible")); } catch (SQLException ignored) {}
+        try { p.setMinSalary(rs.getBigDecimal("min_salary")); } catch (SQLException ignored) {}
+        try { p.setMaxSalary(rs.getBigDecimal("max_salary")); } catch (SQLException ignored) {}
+        try { p.setCurrency(rs.getString("currency")); } catch (SQLException ignored) {}
         return p;
     }
 

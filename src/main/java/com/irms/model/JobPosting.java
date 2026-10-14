@@ -36,6 +36,18 @@ public class JobPosting implements Serializable {
     private String departmentName;
     private String requisitionStatus; // DRAFT, PENDING_APPROVAL, APPROVED, OPEN, CLOSED, REJECTED
 
+    // Các trường phục vụ chức năng Tạo nhanh bài đăng (KN-204, KN-205, KN-206)
+    private String jobDescription;
+    private String workLocationId;
+    private String workLocation;
+    private String workModeId;
+    private String workMode;
+    private java.sql.Date applicationDeadline;
+    private boolean salaryVisible = true;
+    private java.math.BigDecimal minSalary;
+    private java.math.BigDecimal maxSalary;
+    private String currency = "VND";
+
     public JobPosting() {}
 
     public JobPosting(String id, String requisitionId, String title, String platform, String status) {
@@ -187,5 +199,68 @@ public class JobPosting implements Serializable {
         if ("LINKEDIN".equalsIgnoreCase(platform)) return "LinkedIn";
         if ("TOPCV".equalsIgnoreCase(platform)) return "TopCV";
         return platform != null ? platform : "";
+    }
+
+    // Getters & Setters cho các trường Tạo nhanh bài đăng (KN-204, KN-205, KN-206)
+    public String getJobDescription() {
+        if (jobDescription != null && !jobDescription.trim().isEmpty()) {
+            return jobDescription;
+        }
+        return (requisition != null) ? requisition.getJobDescription() : null;
+    }
+    public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
+
+    public String getWorkLocationId() { return workLocationId; }
+    public void setWorkLocationId(String workLocationId) { this.workLocationId = workLocationId; }
+
+    public String getWorkLocation() { return workLocation; }
+    public void setWorkLocation(String workLocation) { this.workLocation = workLocation; }
+
+    public String getWorkModeId() { return workModeId; }
+    public void setWorkModeId(String workModeId) { this.workModeId = workModeId; }
+
+    public String getWorkMode() { return workMode; }
+    public void setWorkMode(String workMode) { this.workMode = workMode; }
+
+    public java.sql.Date getApplicationDeadline() {
+        if (applicationDeadline != null) return applicationDeadline;
+        return (requisition != null) ? requisition.getDeadline() : null;
+    }
+    public void setApplicationDeadline(java.sql.Date applicationDeadline) { this.applicationDeadline = applicationDeadline; }
+
+    public boolean isSalaryVisible() { return salaryVisible; }
+    public void setSalaryVisible(boolean salaryVisible) { this.salaryVisible = salaryVisible; }
+
+    public java.math.BigDecimal getMinSalary() { return minSalary; }
+    public void setMinSalary(java.math.BigDecimal minSalary) { this.minSalary = minSalary; }
+
+    public java.math.BigDecimal getMaxSalary() { return maxSalary; }
+    public void setMaxSalary(java.math.BigDecimal maxSalary) { this.maxSalary = maxSalary; }
+
+    public String getCurrency() { return currency != null ? currency : "VND"; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public String getFormattedDeadline() {
+        java.sql.Date dl = getApplicationDeadline();
+        if (dl == null) return "--";
+        return new SimpleDateFormat("dd/MM/yyyy").format(dl);
+    }
+
+    public String getFormattedSalaryRange() {
+        if (!salaryVisible) {
+            return "Thỏa thuận";
+        }
+        String cur = getCurrency();
+        java.text.DecimalFormatSymbols symbols = new java.text.DecimalFormatSymbols();
+        symbols.setGroupingSeparator('.');
+        java.text.DecimalFormat df = new java.text.DecimalFormat("#,###", symbols);
+        if (minSalary != null && maxSalary != null) {
+            return df.format(minSalary) + " - " + df.format(maxSalary) + " " + cur;
+        } else if (minSalary != null) {
+            return "Từ " + df.format(minSalary) + " " + cur;
+        } else if (maxSalary != null) {
+            return "Lên đến " + df.format(maxSalary) + " " + cur;
+        }
+        return "Thỏa thuận";
     }
 }

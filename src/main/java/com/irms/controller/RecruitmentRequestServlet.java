@@ -9,7 +9,10 @@ import com.irms.service.DepartmentService;
 import com.irms.service.HeadcountBudgetService;
 import com.irms.service.RecruitmentRequestService;
 import com.irms.service.SalaryRangeService;
+import com.irms.service.SharedCatalogService;
 import com.irms.service.UserService;
+import com.irms.model.SharedCatalogItem;
+import com.irms.model.SharedCatalogType;
 import com.irms.util.JsonUtil;
 import com.irms.util.SecurityUtil;
 
@@ -168,10 +171,18 @@ public class RecruitmentRequestServlet extends HttpServlet {
         List<User> recruiters = userService.getUsers(null, null, "ACTIVE", 1, 500);
         Map<String, Integer> stats = requisitionService.getProgressMonitoringStats();
 
+        SharedCatalogService catalogService = new SharedCatalogService();
+        List<SharedCatalogItem> workLocations = catalogService.getItems(SharedCatalogType.WORK_LOCATION);
+        List<SharedCatalogItem> workModes = catalogService.getItems(SharedCatalogType.WORK_MODE);
+        List<RecruitmentRequest> approvedRequisitions = new com.irms.service.JobPublishingService().getApprovedRequisitions();
+
         request.setAttribute("requisitions", list);
         request.setAttribute("departments", departments);
         request.setAttribute("recruiters", recruiters);
         request.setAttribute("stats", stats);
+        request.setAttribute("workLocations", workLocations);
+        request.setAttribute("workModes", workModes);
+        request.setAttribute("approvedRequisitions", approvedRequisitions);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalCount", totalRequests);

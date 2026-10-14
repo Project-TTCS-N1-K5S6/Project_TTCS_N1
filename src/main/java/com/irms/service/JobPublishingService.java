@@ -9,8 +9,11 @@ import com.irms.model.JobPosting;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.User;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -172,5 +175,201 @@ public class JobPublishingService {
         map.put("recruiterName", req.getRecruiterName());
         map.put("snapshotCreatedAt", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()));
         return gson.toJson(map);
+    }
+
+    // =========================================================================
+    // Nghiệp vụ Tạo nhanh Bài đăng Tuyển dụng (KN-204, KN-205, KN-206, KN-207, KN-208)
+    // =========================================================================
+
+    /**
+     * KN-206: Chuẩn hóa nội dung mô tả công việc
+     * - Kế thừa từ yêu cầu tuyển dụng gốc
+     * - Làm sạch dòng trống dư thừa, chuẩn hóa bullet points
+     * - Giữ nguyên vẹn toàn bộ câu chữ, thông tin nghiệp vụ, không thêm bớt thông tin sai lệch
+     */
+    public String normalizeJobDescription(String raw) {
+        if (raw == null || raw.trim().isEmpty()) {
+            return "";
+        }
+        String text = raw.replace("\r\n", "\n").replace("\r", "\n");
+        String[] lines = text.split("\n");
+        StringBuilder sb = new StringBuilder();
+        int consecutiveBlankLines = 0;
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) {
+                consecutiveBlankLines++;
+                if (consecutiveBlankLines <= 1) {
+                    sb.append("\n");
+                }
+                continue;
+            }
+            consecutiveBlankLines = 0;
+
+            // Chuẩn hóa ký tự đầu dòng thành "- "
+            if (trimmed.startsWith("•") || trimmed.startsWith("*") || trimmed.startsWith("+")
+                    || trimmed.startsWith("–") || trimmed.startsWith("—")) {
+                String itemContent = trimmed.substring(1).trim();
+                sb.append("- ").append(itemContent).append("\n");
+            } else {
+                sb.append(trimmed).append("\n");
+            }
+        }
+
+        return sb.toString().trim();
+    }
+
+    /**
+     * Kiểm tra quyền thực hiện thao tác tạo bài đăng tuyển dụng
+     */
+    public boolean canManageJobPostings(User actor) {
+        if (actor == null) return false;
+        return actor.hasRole("ADMIN") || actor.hasRole("HR_MANAGER") || actor.hasRole("RECRUITER")
+                || actor.hasPermission("job_postings.manage");
+    }
+
+    /**
+     * KN-205 & KN-208: Backend kiểm tra dữ liệu bắt buộc & điều kiện phê duyệt
+     */
+    public List<String> validateQuickPosting(JobPosting posting, RecruitmentRequest req) {
+        List<String> errors = new ArrayList<>();
+        if (posting == null) {
+            errors.add("Dữ liệu bài đăng tuyển dụng không được để trống.");
+            return errors;
+        }
+
+        // 1. Kiểm tra yêu cầu tuyển dụng nguồn
+        if (req == null) {
+            errors.add("Yêu cầu tuyển dụng nguồn không tồn tại.");
+            return errors;
+        }
+
+        // 2. KN-208: Kiểm tra trạng thái Đã duyệt của yêu cầu tuyển dụng nguồn
+        if (!isEligibleForPublish(req)) {
+            errors.add("Chỉ những yêu cầu tuyển dụng ở trạng thái \"Đã duyệt\" mới được phép tạo bài đăng! Trạng thái hiện tại: " 
+                    + req.getStatusLabel() + ".");
+        }
+
+        // 3. Tiêu đề bài đăng
+        if (posting.getTitle() == null || posting.getTitle().trim().isEmpty()) {
+            errors.add("Tiêu đề bài đăng tuyển dụng là bắt buộc và không được để trống.");
+        } else if (posting.getTitle().trim().length() > 255) {
+            errors.add("Tiêu đề bài đăng không được vượt quá 255 ký tự.");
+        }
+
+        // 4. Nội dung mô tả công việc
+        if (posting.getJobDescription() == null || posting.getJobDescription().trim().isEmpty()) {
+            errors.add("Nội dung mô tả công việc là bắt buộc và không được để trống.");
+        }
+
+        // 5. Địa điểm làm việc
+        if ((posting.getWorkLocation() == null || posting.getWorkLocation().trim().isEmpty())
+                && (posting.getWorkLocationId() == null || posting.getWorkLocationId().trim().isEmpty())) {
+            errors.add("Địa điểm làm việc là bắt buộc. Vui lòng chọn hoặc nhập địa điểm làm việc.");
+        }
+
+        // 6. Hình thức làm việc
+        if ((posting.getWorkMode() == null || posting.getWorkMode().trim().isEmpty())
+                && (posting.getWorkModeId() == null || posting.getWorkModeId().trim().isEmpty())) {
+            errors.add("Hình thức làm việc là bắt buộc. Vui lòng chọn hình thức làm việc.");
+        }
+
+        // 7. Hạn nhận hồ sơ
+        if (posting.getApplicationDeadline() == null) {
+            errors.add("Hạn nhận hồ sơ là bắt buộc.");
+        } else {
+            LocalDate deadlineDate = posting.getApplicationDeadline().toLocalDate();
+            LocalDate today = LocalDate.now();
+            if (deadlineDate.isBefore(today)) {
+                errors.add("Hạn nhận hồ sơ không hợp lệ (không được ở quá khứ so với ngày hiện tại).");
+            }
+        }
+
+        // 8. Kiểm tra khoảng lương
+        if (posting.isSalaryVisible()) {
+            BigDecimal min = posting.getMinSalary();
+            BigDecimal max = posting.getMaxSalary();
+            BigDecimal maxAllowed = new BigDecimal("1000000000000");
+
+            if (min != null) {
+                if (min.compareTo(BigDecimal.ZERO) < 0) {
+                    errors.add("Mức lương tối thiểu không được là số âm.");
+                }
+                if (min.compareTo(maxAllowed) > 0) {
+                    errors.add("Mức lương tối thiểu vượt quá giới hạn cho phép.");
+                }
+            }
+            if (max != null) {
+                if (max.compareTo(BigDecimal.ZERO) < 0) {
+                    errors.add("Mức lương tối đa không được là số âm.");
+                }
+                if (max.compareTo(maxAllowed) > 0) {
+                    errors.add("Mức lương tối đa vượt quá giới hạn cho phép.");
+                }
+            }
+            if (min != null && max != null) {
+                if (min.compareTo(max) > 0) {
+                    errors.add("Khoảng lương không hợp lệ: Mức lương tối thiểu không được lớn hơn mức lương tối đa.");
+                }
+            }
+        }
+
+        return errors;
+    }
+
+    /**
+     * KN-205 & KN-208: Xác thực bài đăng tuyển dụng tạo nhanh, ném ngoại lệ nếu vi phạm
+     */
+    public void assertValidQuickPosting(JobPosting posting, RecruitmentRequest req) {
+        List<String> errors = validateQuickPosting(posting, req);
+        if (!errors.isEmpty()) {
+            if (req != null && !isEligibleForPublish(req)) {
+                throw new IllegalStateException(String.join("; ", errors));
+            }
+            throw new IllegalArgumentException(String.join("; ", errors));
+        }
+    }
+
+    /**
+     * KN-207: Tạo nhanh bài đăng từ yêu cầu tuyển dụng đã duyệt
+     */
+    public JobPosting createQuickJobPosting(JobPosting posting, User actor, String ip, String userAgent) throws SQLException {
+        if (!canManageJobPostings(actor)) {
+            throw new SecurityException("Bạn không có quyền thực hiện thao tác tạo bài đăng tuyển dụng!");
+        }
+
+        if (posting == null || posting.getRequisitionId() == null || posting.getRequisitionId().trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin yêu cầu tuyển dụng nguồn!");
+        }
+
+        RecruitmentRequest req = requestDAO.findById(posting.getRequisitionId().trim());
+        assertValidQuickPosting(posting, req);
+
+        // Nếu người dùng chọn không hiển thị lương, lưu giá trị theo quy ước không hiển thị (null)
+        if (!posting.isSalaryVisible()) {
+            posting.setMinSalary(null);
+            posting.setMaxSalary(null);
+        }
+
+        String actorId = (actor != null) ? actor.getId() : "system";
+        String actorName = (actor != null) ? actor.getFullName() : "Hệ thống";
+
+        JobPosting created = jobPostingDAO.createQuickPosting(posting, actorId, actorName);
+
+        // Ghi nhật ký kiểm toán
+        String desc = "Tạo nhanh bài đăng tuyển dụng: " + created.getTitle() + 
+                      " (Mã yêu cầu: " + req.getCode() + ", Trạng thái: " + created.getStatus() + ")";
+        auditService.log(actorId, "JOB_POST_QUICK_CREATED", "JOB_POSTING", created.getId(), desc, ip, userAgent);
+
+        return created;
+    }
+
+    public List<RecruitmentRequest> getApprovedRequisitions() {
+        return jobPostingDAO.findApprovedRequisitionsForPosting();
+    }
+
+    public JobPostingDAO getJobPostingDAO() {
+        return jobPostingDAO;
     }
 }
