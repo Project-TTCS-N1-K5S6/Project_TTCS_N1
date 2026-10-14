@@ -18,6 +18,7 @@ import com.irms.util.SecurityUtil;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Xử lý nghiệp vụ Yêu cầu tuyển dụng (Job Requisitions)
@@ -42,15 +43,42 @@ public class RecruitmentRequestService {
         return requestDAO.findAll(search, status, departmentId);
     }
 
+    public List<RecruitmentRequest> getAllRequests(String search, String status, String departmentId,
+                                                   String recruiterId, String fromDate, String toDate, String dateType) {
+        return requestDAO.findAll(search, status, departmentId, recruiterId, fromDate, toDate, dateType, 0, Integer.MAX_VALUE);
+    }
+
     public List<RecruitmentRequest> getRequests(String search, String status, String departmentId, int page, int pageSize) {
+        return getRequests(search, status, departmentId, null, null, null, null, page, pageSize);
+    }
+
+    /**
+     * [KN-109 / KN-118]: Lấy danh sách yêu cầu tuyển dụng với bộ lọc đa tiêu chí:
+     * - Trạng thái (hỗ trợ OVERDUE, DUE_SOON, CLOSED_ALL, ...)
+     * - Phòng ban
+     * - Recruiter phụ trách
+     * - Khoảng thời gian (theo ngày cần người hoặc ngày mở/tạo)
+     */
+    public List<RecruitmentRequest> getRequests(String search, String status, String departmentId,
+                                                String recruiterId, String fromDate, String toDate, String dateType,
+                                                int page, int pageSize) {
         int p = Math.max(1, page);
         int size = Math.max(1, pageSize);
         int offset = (p - 1) * size;
-        return requestDAO.findAll(search, status, departmentId, offset, size);
+        return requestDAO.findAll(search, status, departmentId, recruiterId, fromDate, toDate, dateType, offset, size);
     }
 
     public int countRequests(String search, String status, String departmentId) {
         return requestDAO.countAll(search, status, departmentId);
+    }
+
+    public int countRequests(String search, String status, String departmentId,
+                             String recruiterId, String fromDate, String toDate, String dateType) {
+        return requestDAO.countAll(search, status, departmentId, recruiterId, fromDate, toDate, dateType);
+    }
+
+    public Map<String, Integer> getProgressMonitoringStats() {
+        return requestDAO.getProgressMonitoringStats();
     }
     public RecruitmentRequest getRequestById(String id) {
         return requestDAO.findById(id);

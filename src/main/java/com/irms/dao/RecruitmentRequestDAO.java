@@ -5,7 +5,9 @@ import com.irms.model.RecruitmentRequest;
 import java.sql.*;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -78,10 +80,23 @@ public class RecruitmentRequestDAO extends BaseDAO {
     }
 
     public List<RecruitmentRequest> findAll(String search, String status, String departmentId) {
-        return findAll(search, status, departmentId, 0, Integer.MAX_VALUE);
+        return findAll(search, status, departmentId, null, null, null, null, 0, Integer.MAX_VALUE);
     }
 
     public List<RecruitmentRequest> findAll(String search, String status, String departmentId, int offset, int limit) {
+        return findAll(search, status, departmentId, null, null, null, null, offset, limit);
+    }
+
+    /**
+     * [KN-109 / KN-118]: Tra cứu danh sách yêu cầu tuyển dụng với bộ lọc đa tiêu chí:
+     * - Trạng thái (hỗ trợ OVERDUE - Quá hạn cần người, DUE_SOON - Sắp đến hạn ≤ 7 ngày, CLOSED_ALL, ...)
+     * - Phòng ban
+     * - Recruiter phụ trách (chính hoặc hỗ trợ)
+     * - Khoảng thời gian (theo ngày cần người deadline hoặc ngày mở/tạo created_at)
+     */
+    public List<RecruitmentRequest> findAll(String search, String status, String departmentId,
+                                            String recruiterId, String fromDate, String toDate,
+                                            String dateType, int offset, int limit) {
         List<RecruitmentRequest> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT r.*, d.name AS department_name, " +
@@ -103,31 +118,9 @@ public class RecruitmentRequestDAO extends BaseDAO {
         );
 
         List<Object> params = new ArrayList<>();
+        appendFilterConditions(sql, params, search, status, departmentId, recruiterId, fromDate, toDate, dateType);
 
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (LOWER(r.code) LIKE ? OR LOWER(r.title) LIKE ? OR LOWER(r.position_title) LIKE ?) ");
-            String term = "%" + search.trim().toLowerCase() + "%";
-            params.add(term);
-            params.add(term);
-            params.add(term);
-        }
-
-        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
-            if ("CLOSED_ALL".equalsIgnoreCase(status)) {
-                sql.append("AND (r.status IN ('CLOSED', 'FULFILLED', 'PAUSED', 'CANCELLED')) ");
-            } else {
-                sql.append("AND (r.status = ? OR r.close_status = ?) ");
-                params.add(status.trim());
-                params.add(status.trim());
-            }
-        }
-
-        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
-            sql.append("AND r.department_id = ? ");
-            params.add(departmentId.trim());
-        }
-
-        sql.append("ORDER BY r.created_at DESC");
+        sql.append("ORDER BY (CASE WHEN r.deadline IS NOT NULL AND r.deadline < CURRENT_DATE AND r.status NOT IN ('FULFILLED', 'CANCELLED', 'CLOSED') THEN 0 ELSE 1 END), r.created_at DESC");
         if (limit < Integer.MAX_VALUE) {
             sql.append(" LIMIT ? OFFSET ?");
             params.add(limit);
@@ -156,31 +149,14 @@ public class RecruitmentRequestDAO extends BaseDAO {
     }
 
     public int countAll(String search, String status, String departmentId) {
+        return countAll(search, status, departmentId, null, null, null, null);
+    }
+
+    public int countAll(String search, String status, String departmentId,
+                        String recruiterId, String fromDate, String toDate, String dateType) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM recruitment_requisitions r WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
-
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (LOWER(r.code) LIKE ? OR LOWER(r.title) LIKE ? OR LOWER(r.position_title) LIKE ?) ");
-            String term = "%" + search.trim().toLowerCase() + "%";
-            params.add(term);
-            params.add(term);
-            params.add(term);
-        }
-
-        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
-            if ("CLOSED_ALL".equalsIgnoreCase(status)) {
-                sql.append("AND (r.status IN ('CLOSED', 'FULFILLED', 'PAUSED', 'CANCELLED')) ");
-            } else {
-                sql.append("AND (r.status = ? OR r.close_status = ?) ");
-                params.add(status.trim());
-                params.add(status.trim());
-            }
-        }
-
-        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
-            sql.append("AND r.department_id = ? ");
-            params.add(departmentId.trim());
-        }
+        appendFilterConditions(sql, params, search, status, departmentId, recruiterId, fromDate, toDate, dateType);
 
         Connection conn = null;
         PreparedStatement ps = null;
@@ -201,6 +177,114 @@ public class RecruitmentRequestDAO extends BaseDAO {
             close(conn, ps, rs);
         }
         return 0;
+    }
+
+    private void appendFilterConditions(StringBuilder sql, List<Object> params,
+                                        String search, String status, String departmentId,
+                                        String recruiterId, String fromDate, String toDate, String dateType) {
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (LOWER(r.code) LIKE ? OR LOWER(r.title) LIKE ? OR LOWER(r.position_title) LIKE ?) ");
+            String term = "%" + search.trim().toLowerCase() + "%";
+            params.add(term);
+            params.add(term);
+            params.add(term);
+        }
+
+        if (status != null && !status.trim().isEmpty() && !"ALL".equalsIgnoreCase(status)) {
+            if ("OVERDUE".equalsIgnoreCase(status)) {
+                sql.append("AND r.deadline IS NOT NULL AND r.deadline < CURRENT_DATE AND r.status NOT IN ('FULFILLED', 'CANCELLED', 'CLOSED') ");
+            } else if ("DUE_SOON".equalsIgnoreCase(status)) {
+                sql.append("AND r.deadline IS NOT NULL AND r.deadline >= CURRENT_DATE AND r.deadline <= DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY) AND r.status NOT IN ('FULFILLED', 'CANCELLED', 'CLOSED') ");
+            } else if ("CLOSED_ALL".equalsIgnoreCase(status)) {
+                sql.append("AND (r.status IN ('CLOSED', 'FULFILLED', 'PAUSED', 'CANCELLED')) ");
+            } else {
+                sql.append("AND (r.status = ? OR r.close_status = ?) ");
+                params.add(status.trim());
+                params.add(status.trim());
+            }
+        }
+
+        if (departmentId != null && !departmentId.trim().isEmpty() && !"ALL".equalsIgnoreCase(departmentId)) {
+            sql.append("AND r.department_id = ? ");
+            params.add(departmentId.trim());
+        }
+
+        if (recruiterId != null && !recruiterId.trim().isEmpty() && !"ALL".equalsIgnoreCase(recruiterId)) {
+            sql.append("AND (r.recruiter_id = ? OR EXISTS (SELECT 1 FROM requisition_recruiters rr WHERE rr.requisition_id = r.id AND rr.recruiter_id = ?)) ");
+            params.add(recruiterId.trim());
+            params.add(recruiterId.trim());
+        }
+
+        boolean isDeadlineDate = (dateType == null || dateType.trim().isEmpty() || "deadline".equalsIgnoreCase(dateType));
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            try {
+                if (isDeadlineDate) {
+                    sql.append("AND r.deadline >= ? ");
+                    params.add(java.sql.Date.valueOf(fromDate.trim()));
+                } else {
+                    sql.append("AND r.created_at >= ? ");
+                    params.add(java.sql.Timestamp.valueOf(fromDate.trim() + " 00:00:00"));
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            try {
+                if (isDeadlineDate) {
+                    sql.append("AND r.deadline <= ? ");
+                    params.add(java.sql.Date.valueOf(toDate.trim()));
+                } else {
+                    sql.append("AND r.created_at <= ? ");
+                    params.add(java.sql.Timestamp.valueOf(toDate.trim() + " 23:59:59"));
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    /**
+     * [KN-109 / KN-118]: Thống kê chỉ số KPI Giám sát & Cảnh báo Tiến độ Tuyển dụng:
+     * - total: Tổng số vị trí
+     * - open: Vị trí đang tuyển
+     * - overdue: Vị trí quá ngày cần người (Cảnh báo đỏ)
+     * - dueSoon: Vị trí sắp đến hạn trong vòng 7 ngày (Cảnh báo vàng)
+     * - fulfilled: Vị trí đã tuyển đủ
+     */
+    public Map<String, Integer> getProgressMonitoringStats() {
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("total", 0);
+        stats.put("open", 0);
+        stats.put("overdue", 0);
+        stats.put("dueSoon", 0);
+        stats.put("fulfilled", 0);
+
+        String sql = "SELECT " +
+                "COUNT(*) AS total_count, " +
+                "COUNT(CASE WHEN r.status = 'OPEN' THEN 1 END) AS open_count, " +
+                "COUNT(CASE WHEN r.deadline IS NOT NULL AND r.deadline < CURRENT_DATE AND r.status NOT IN ('FULFILLED', 'CANCELLED', 'CLOSED') THEN 1 END) AS overdue_count, " +
+                "COUNT(CASE WHEN r.deadline IS NOT NULL AND r.deadline >= CURRENT_DATE AND r.deadline <= DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY) AND r.status NOT IN ('FULFILLED', 'CANCELLED', 'CLOSED') THEN 1 END) AS due_soon_count, " +
+                "COUNT(CASE WHEN r.status = 'FULFILLED' OR r.close_status = 'FULFILLED' THEN 1 END) AS fulfilled_count " +
+                "FROM recruitment_requisitions r";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                stats.put("total", rs.getInt("total_count"));
+                stats.put("open", rs.getInt("open_count"));
+                stats.put("overdue", rs.getInt("overdue_count"));
+                stats.put("dueSoon", rs.getInt("due_soon_count"));
+                stats.put("fulfilled", rs.getInt("fulfilled_count"));
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy thống kê giám sát tiến độ tuyển dụng", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return stats;
     }
     public RecruitmentRequest findById(String id) {
         String sql = "SELECT r.*, d.name AS department_name, " +

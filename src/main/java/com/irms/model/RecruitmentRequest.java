@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
 /**
@@ -218,4 +220,58 @@ public class RecruitmentRequest implements Serializable {
 
     public Timestamp getBudgetOverriddenAt() { return budgetOverriddenAt; }
     public void setBudgetOverriddenAt(Timestamp budgetOverriddenAt) { this.budgetOverriddenAt = budgetOverriddenAt; }
+
+    /**
+     * [KN-109 / KN-118]: Số ngày mở của yêu cầu tuyển dụng.
+     * Tính từ ngày tạo (createdAt) tới ngày hiện tại (hoặc ngày đóng nếu đã kết thúc).
+     */
+    public long getDaysOpen() {
+        if (createdAt == null) return 0;
+        LocalDate startDate = createdAt.toLocalDateTime().toLocalDate();
+        LocalDate endDate = (isTerminal() && closedAt != null) ? closedAt.toLocalDateTime().toLocalDate() : LocalDate.now();
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        return Math.max(0, days);
+    }
+
+    /**
+     * [KN-109 / KN-118]: Số ngày còn lại tới ngày cần người (deadline).
+     * > 0: Còn n ngày.
+     * = 0: Hôm nay là hạn chót.
+     * < 0: Quá hạn |n| ngày.
+     * null: Chưa đặt ngày cần người.
+     */
+    public Long getDaysRemaining() {
+        if (deadline == null) return null;
+        LocalDate today = LocalDate.now();
+        LocalDate deadlineDate = deadline.toLocalDate();
+        return ChronoUnit.DAYS.between(today, deadlineDate);
+    }
+
+    /**
+     * [KN-109 / KN-118]: Kiểm tra yêu cầu tuyển dụng có bị quá ngày cần người hay không.
+     * Quá hạn khi deadline < hôm nay và yêu cầu chưa kết thúc (isTerminal() == false).
+     */
+    public boolean isOverdue() {
+        if (deadline == null || isTerminal()) return false;
+        return deadline.toLocalDate().isBefore(LocalDate.now());
+    }
+
+    /**
+     * [KN-109 / KN-118]: Số ngày quá hạn cần người (số dương).
+     */
+    public long getDaysOverdue() {
+        if (!isOverdue()) return 0;
+        Long remaining = getDaysRemaining();
+        return remaining != null ? Math.abs(remaining) : 0;
+    }
+
+    /**
+     * [KN-109 / KN-118]: Kiểm tra yêu cầu sắp đến hạn cần người (trong vòng 7 ngày).
+     */
+    public boolean isDueSoon() {
+        if (deadline == null || isTerminal() || isOverdue()) return false;
+        Long remaining = getDaysRemaining();
+        return remaining != null && remaining >= 0 && remaining <= 7;
+    }
 }
+

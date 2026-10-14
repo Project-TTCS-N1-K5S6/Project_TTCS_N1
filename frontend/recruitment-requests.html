@@ -40,6 +40,34 @@
             background-color: #fef2f2;
             box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
         }
+        .table-danger-custom {
+            background-color: #fff1f2 !important;
+        }
+        .table-danger-custom td {
+            background-color: transparent !important;
+        }
+        .table-warning-custom {
+            background-color: #fffbeb !important;
+        }
+        .table-warning-custom td {
+            background-color: transparent !important;
+        }
+        .pulse-badge {
+            animation: pulseAlert 1.8s infinite;
+        }
+        @keyframes pulseAlert {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        .kpi-card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .kpi-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.10) !important;
+        }
     </style>
 </head>
 <body>
@@ -147,64 +175,211 @@
                 <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'"></button>
             </div>
 
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <!-- Header phân hệ [KN-109 / KN-118] -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                 <div>
-                    <h4 class="fw-bold mb-1">
-                        <i class="bi bi-file-earmark-text text-primary me-2"></i>Yêu cầu tuyển dụng
-                    </h4>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h4 class="fw-bold mb-0">
+                            <i class="bi bi-file-earmark-text text-primary me-2"></i>Giám sát &amp; Cảnh báo Tiến độ Tuyển dụng
+                        </h4>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 0.75rem;">KN-109 / KN-118</span>
+                    </div>
                     <p class="text-muted small mb-0">
-                        Quản lý toàn diện yêu cầu tuyển dụng, đóng/kết thúc vị trí, tự động gỡ tin và kiểm soát ứng viên pipeline.
+                        Theo dõi tiến độ, số ngày mở, thời hạn cần người và tự động cảnh báo các vị trí quá hạn cần tuyển gấp.
                     </p>
                 </div>
-                <a href="recruitment-request-create.html" class="btn btn-primary shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="recruitment-request-create.html" class="btn btn-primary shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Tạo yêu cầu tuyển dụng
+                    </a>
+                </div>
             </div>
 
-            <!-- Bộ lọc trạng thái -->
-            <div class="card mb-3 border shadow-sm">
-                <div class="card-body py-3">
-                    <div class="row g-2 align-items-center">
-                        <div class="col-12 col-md-4">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                                <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm theo mã, chức danh..." oninput="renderTable()">
+            <!-- Banner Cảnh báo quá hạn [KN-118] -->
+            <div id="overdueAlertBanner" class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between p-3 mb-3 border-danger shadow-sm rounded-3" style="display:none;" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-danger text-white p-2 me-3 pulse-badge d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading fw-bold mb-1 text-danger">
+                            CẢNH BÁO TIẾN ĐỘ: Có <span id="bannerOverdueCount">0</span> vị trí tuyển dụng đã QUÁ NGÀY CẦN NGƯỜI!
+                        </h6>
+                        <div class="small text-danger-emphasis">
+                            Các yêu cầu này được đánh dấu nổi bật với viền đỏ và huy hiệu cảnh báo. Đề nghị Recruiter và Trưởng phòng phụ trách ưu tiên đẩy nhanh tiến độ hoặc cập nhật kế hoạch.
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2 mt-md-0">
+                    <button type="button" class="btn btn-sm btn-danger shadow-sm" onclick="filterByQuickStatus('OVERDUE')">
+                        <i class="bi bi-funnel-fill me-1"></i> Xem danh sách quá hạn
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thẻ KPI Giám sát & Cảnh báo Tiến độ Tuyển dụng (KN-109 / KN-118) -->
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3 col-xl">
+                    <div class="card border shadow-sm kpi-card-hover h-100" onclick="filterByQuickStatus('')">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Tổng vị trí</div>
+                                    <div class="fs-4 fw-bold text-dark mt-1" id="kpiTotal">0</div>
+                                </div>
+                                <div class="rounded-circle bg-primary-subtle text-primary p-2 fs-5">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4">
-                            <select id="statusFilter" class="form-select form-select-sm" onchange="renderTable()">
-                                <option value="">-- Tất cả trạng thái --</option>
-                                <option value="OPEN">Đang tuyển dụng</option>
-                                <option value="FULFILLED">Đã tuyển đủ</option>
-                                <option value="PAUSED">Tạm dừng</option>
-                                <option value="CANCELLED">Đã huỷ</option>
-                                <option value="CLOSED_ALL">Tất cả đã đóng / kết thúc</option>
-                                <option value="PENDING_APPROVAL">Chờ phê duyệt</option>
-                                <option value="DRAFT">Lưu nháp (Draft)</option>
-                            </select>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-xl">
+                    <div class="card border shadow-sm kpi-card-hover h-100" onclick="filterByQuickStatus('OPEN')">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Đang tuyển dụng</div>
+                                    <div class="fs-4 fw-bold text-success mt-1" id="kpiOpen">0</div>
+                                </div>
+                                <div class="rounded-circle bg-success-subtle text-success p-2 fs-5">
+                                    <i class="bi bi-broadcast"></i>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-12 col-md-4 text-end">
-                            <span class="text-muted small">Tổng số: <b id="totalCount" class="text-dark">0</b> phiếu yêu cầu</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-xl">
+                    <div class="card border-danger shadow-sm kpi-card-hover h-100 bg-danger-subtle" style="border-width: 2px;" onclick="filterByQuickStatus('OVERDUE')">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-danger small fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>QUÁ HẠN CẦN NGƯỜI</div>
+                                    <div class="fs-4 fw-bold text-danger mt-1"><span id="kpiOverdue">0</span> <span class="fs-7 fw-normal text-danger">vị trí</span></div>
+                                </div>
+                                <div class="rounded-circle bg-danger text-white p-2 fs-5 pulse-badge">
+                                    <i class="bi bi-alarm"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-xl">
+                    <div class="card border-warning shadow-sm kpi-card-hover h-100" onclick="filterByQuickStatus('DUE_SOON')">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-warning-emphasis small fw-bold"><i class="bi bi-hourglass-split me-1"></i>Sắp đến hạn (&le; 7 ngày)</div>
+                                    <div class="fs-4 fw-bold text-warning-emphasis mt-1" id="kpiDueSoon">0</div>
+                                </div>
+                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis p-2 fs-5">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 col-xl">
+                    <div class="card border shadow-sm kpi-card-hover h-100" onclick="filterByQuickStatus('FULFILLED')">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Đã tuyển đủ</div>
+                                    <div class="fs-4 fw-bold text-dark mt-1" id="kpiFulfilled">0</div>
+                                </div>
+                                <div class="rounded-circle bg-info-subtle text-info p-2 fs-5">
+                                    <i class="bi bi-check2-circle"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Bảng danh sách yêu cầu -->
+            <!-- Bộ lọc đa tiêu chí: Trạng thái, Phòng ban, Recruiter phụ trách, Khoảng thời gian (KN-109 / KN-118) -->
+            <div class="card mb-3 border shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-md-3">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Tìm kiếm</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="Mã, chức danh, tiêu đề..." oninput="renderTable()">
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-3 col-lg-2">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Phòng ban</label>
+                            <select id="departmentFilter" class="form-select form-select-sm" onchange="renderTable()">
+                                <option value="">-- Tất cả phòng ban --</option>
+                                <option value="Khối Công nghệ Thông tin">Khối Công nghệ Thông tin</option>
+                                <option value="Ban Nhân sự & Tuyển dụng">Ban Nhân sự & Tuyển dụng</option>
+                                <option value="Khối Kinh doanh & Thị trường">Khối Kinh doanh & Thị trường</option>
+                                <option value="Ban Quản lý & Pháp chế">Ban Quản lý & Pháp chế</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3 col-lg-2">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Recruiter phụ trách</label>
+                            <select id="recruiterFilter" class="form-select form-select-sm" onchange="renderTable()">
+                                <option value="">-- Tất cả Recruiter --</option>
+                                <option value="recruiter_01">Nguyễn Thị Mai</option>
+                                <option value="recruiter_02">Trần Văn Bình</option>
+                                <option value="recruiter_03">Lê Hoàng Nam</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3 col-lg-2">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Trạng thái</label>
+                            <select id="statusFilter" class="form-select form-select-sm" onchange="renderTable()">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="OVERDUE" class="text-danger fw-bold">⚠️ Quá hạn cần người</option>
+                                <option value="DUE_SOON" class="text-warning-emphasis fw-bold">⏳ Sắp đến hạn (&le; 7 ngày)</option>
+                                <option value="OPEN">Đang tuyển dụng</option>
+                                <option value="PENDING_APPROVAL">Chờ phê duyệt</option>
+                                <option value="FULFILLED">Đã tuyển đủ</option>
+                                <option value="PAUSED">Tạm dừng</option>
+                                <option value="CANCELLED">Đã huỷ</option>
+                                <option value="CLOSED_ALL">Tất cả đã đóng / kết thúc</option>
+                                <option value="DRAFT">Lưu nháp (Draft)</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3 col-lg-3">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Lọc khoảng thời gian theo</label>
+                            <select id="dateTypeFilter" class="form-select form-select-sm" onchange="renderTable()">
+                                <option value="deadline">Ngày cần người (Deadline)</option>
+                                <option value="created">Ngày mở / tạo yêu cầu</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-4">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Từ ngày</label>
+                            <input type="date" id="fromDateFilter" class="form-control form-control-sm" onchange="renderTable()">
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-4">
+                            <label class="form-label small text-muted mb-1 fw-semibold">Đến ngày</label>
+                            <input type="date" id="toDateFilter" class="form-control form-control-sm" onchange="renderTable()">
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-4 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" onclick="resetFilters()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Đặt lại bộ lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng danh sách yêu cầu tuyển dụng & Giám sát tiến độ -->
             <div class="card mb-4 shadow-sm border">
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-custom table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 130px;">Mã yêu cầu</th>
+                                    <th style="width: 120px;">Mã yêu cầu</th>
                                     <th>Chức danh &amp; Tiêu đề</th>
-                                    <th>Phòng ban</th>
-                                    <th class="text-center" style="width: 90px;">SL tuyển</th>
-                                    <th>Lý do tuyển</th>
-                                    <th>Dải lương đề xuất</th>
-                                    <th>Ngày cần người</th>
-                                    <th class="text-center" style="width: 140px;">Trạng thái</th>
+                                    <th>Phòng ban &amp; Recruiter</th>
+                                    <th class="text-center" style="width: 80px;">SL tuyển</th>
+                                    <th style="width: 130px;">Thời gian mở</th>
+                                    <th style="width: 175px;">Hạn cần &amp; Còn lại</th>
+                                    <th>Dải lương</th>
+                                    <th class="text-center" style="width: 130px;">Trạng thái</th>
                                     <th class="text-end pe-3" style="width: 150px;">Thao tác</th>
                                 </tr>
                             </thead>
@@ -537,11 +712,14 @@ var defaultRequisitions = [
         title: "Tuyển dụng Kỹ sư Java Backend Senior",
         positionTitle: "Kỹ sư Java Backend (Senior)",
         departmentName: "Khối Công nghệ Thông tin",
+        recruiterId: "recruiter_01",
+        recruiterName: "Nguyễn Thị Mai",
         headcount: 2,
         recruitmentReason: "NEW_HEADCOUNT",
         minSalary: 25000000,
         maxSalary: 45000000,
-        deadline: "2026-11-30",
+        createdAt: "2026-09-15",
+        deadline: "2026-10-10", // Đã quá hạn so với ngày 14/10/2026 -> CẢNH BÁO
         salaryExplanation: "",
         status: "OPEN",
         activeCandidatesCount: 3,
@@ -554,11 +732,14 @@ var defaultRequisitions = [
         title: "Tuyển dụng Chuyên viên Tuyển dụng Nhân sự",
         positionTitle: "Chuyên viên Tuyển dụng (Recruiter)",
         departmentName: "Ban Nhân sự & Tuyển dụng",
+        recruiterId: "recruiter_02",
+        recruiterName: "Trần Văn Bình",
         headcount: 1,
         recruitmentReason: "REPLACEMENT",
         minSalary: 10000000,
         maxSalary: 18000000,
-        deadline: "2026-11-15",
+        createdAt: "2026-10-01",
+        deadline: "2026-10-18", // Sắp đến hạn (còn 4 ngày)
         salaryExplanation: "",
         status: "OPEN",
         activeCandidatesCount: 1,
@@ -571,11 +752,15 @@ var defaultRequisitions = [
         title: "Tuyển dụng Trưởng nhóm Kinh doanh B2B",
         positionTitle: "Trưởng nhóm Kinh doanh B2B",
         departmentName: "Khối Kinh doanh & Thị trường",
+        recruiterId: "recruiter_03",
+        recruiterName: "Lê Hoàng Nam",
         headcount: 1,
         recruitmentReason: "REPLACEMENT",
         minSalary: 25000000,
         maxSalary: 42000000,
+        createdAt: "2026-09-01",
         deadline: "2026-10-01",
+        closedAt: "2026-10-01",
         salaryExplanation: "",
         status: "FULFILLED",
         closeStatus: "FULFILLED",
@@ -591,16 +776,16 @@ var defaultRequisitions = [
         title: "Tuyển dụng Kỹ sư Trí tuệ Nhân tạo AI/ML",
         positionTitle: "Kỹ sư AI/ML",
         departmentName: "Khối Công nghệ Thông tin",
+        recruiterId: "recruiter_01",
+        recruiterName: "Nguyễn Thị Mai",
         headcount: 1,
         recruitmentReason: "NEW_HEADCOUNT",
         minSalary: 30000000,
         maxSalary: 50000000,
-        deadline: "2026-10-15",
+        createdAt: "2026-09-20",
+        deadline: "2026-11-15",
         salaryExplanation: "",
-        status: "PAUSED",
-        closeStatus: "PAUSED",
-        closeReason: "Tạm dừng kế hoạch tuyển dụng quý này",
-        closeNotes: "Tạm dừng do đóng băng ngân sách Q4 để tái cơ cấu phòng ban.",
+        status: "OPEN",
         activeCandidatesCount: 0,
         jobDescription: "- Nghiên cứu áp dụng LLM vào tự động hóa tuyển dụng.",
         jobRequirements: "- Thành thạo Python, PyTorch, LangChain."
@@ -611,11 +796,15 @@ var defaultRequisitions = [
         title: "Tuyển dụng Chuyên viên Pháp chế Doanh nghiệp",
         positionTitle: "Chuyên viên Pháp chế",
         departmentName: "Ban Quản lý & Pháp chế",
+        recruiterId: "recruiter_02",
+        recruiterName: "Trần Văn Bình",
         headcount: 1,
         recruitmentReason: "NEW_HEADCOUNT",
         minSalary: 15000000,
         maxSalary: 25000000,
+        createdAt: "2026-09-10",
         deadline: "2026-10-10",
+        closedAt: "2026-10-10",
         salaryExplanation: "",
         status: "CANCELLED",
         closeStatus: "CANCELLED",
@@ -628,16 +817,61 @@ var defaultRequisitions = [
 ];
 
 function getStoredRequisitions() {
-    var stored = localStorage.getItem('irms_requisitions');
+    var stored = localStorage.getItem('irms_requisitions_v2');
     if (!stored) {
-        localStorage.setItem('irms_requisitions', JSON.stringify(defaultRequisitions));
+        localStorage.setItem('irms_requisitions_v2', JSON.stringify(defaultRequisitions));
         return defaultRequisitions;
     }
     return JSON.parse(stored);
 }
 
 function saveRequisitions(list) {
-    localStorage.setItem('irms_requisitions', JSON.stringify(list));
+    localStorage.setItem('irms_requisitions_v2', JSON.stringify(list));
+}
+
+// Tính số ngày chênh lệch giữa 2 ngày YYYY-MM-DD
+function diffDays(d1Str, d2Str) {
+    if (!d1Str || !d2Str) return 0;
+    var d1 = new Date(d1Str + "T00:00:00");
+    var d2 = new Date(d2Str + "T00:00:00");
+    var diffTime = d2.getTime() - d1.getTime();
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function getTodayStr() {
+    var today = new Date();
+    var y = today.getFullYear();
+    var m = String(today.getMonth() + 1).padStart(2, '0');
+    var d = String(today.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+}
+
+function calcDaysOpen(r) {
+    if (!r.createdAt) return 0;
+    var endDateStr = r.closedAt ? r.closedAt : getTodayStr();
+    var diff = diffDays(r.createdAt, endDateStr);
+    return Math.max(0, diff);
+}
+
+function calcDaysRemaining(r) {
+    if (!r.deadline) return null;
+    return diffDays(getTodayStr(), r.deadline);
+}
+
+function isTerminalStatus(st) {
+    return st === 'FULFILLED' || st === 'PAUSED' || st === 'CANCELLED' || st === 'CLOSED';
+}
+
+function isOverdue(r) {
+    if (isTerminalStatus(r.status) || !r.deadline) return false;
+    var rem = calcDaysRemaining(r);
+    return rem !== null && rem < 0;
+}
+
+function isDueSoon(r) {
+    if (isTerminalStatus(r.status) || !r.deadline) return false;
+    var rem = calcDaysRemaining(r);
+    return rem !== null && rem >= 0 && rem <= 7;
 }
 
 function onStatusChanged() {
@@ -731,6 +965,7 @@ function handleCloseSubmit(e) {
         item.closeStatus = status;
         item.closeReason = reason;
         item.closeNotes = notes;
+        item.closedAt = getTodayStr();
         item.activeCandidatesCount = 0;
         saveRequisitions(list);
     }
@@ -760,36 +995,110 @@ function getStatusBadge(st, closeReason) {
     return '<span class="badge bg-secondary">' + st + '</span>';
 }
 
+function filterByQuickStatus(status) {
+    document.getElementById('statusFilter').value = status;
+    renderTable();
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('departmentFilter').value = '';
+    document.getElementById('recruiterFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dateTypeFilter').value = 'deadline';
+    document.getElementById('fromDateFilter').value = '';
+    document.getElementById('toDateFilter').value = '';
+    renderTable();
+}
+
 function renderTable() {
     var list = getStoredRequisitions();
-    var search = document.getElementById('searchInput').value.trim().toLowerCase();
-    var status = document.getElementById('statusFilter').value;
+    
+    // 1. Cập nhật số liệu KPI thống kê toàn bộ hệ thống
+    var statTotal = list.length;
+    var statOpen = list.filter(function(x) { return x.status === 'OPEN'; }).length;
+    var statOverdue = list.filter(function(x) { return isOverdue(x); }).length;
+    var statDueSoon = list.filter(function(x) { return isDueSoon(x); }).length;
+    var statFulfilled = list.filter(function(x) { return x.status === 'FULFILLED' || x.closeStatus === 'FULFILLED'; }).length;
 
+    document.getElementById('kpiTotal').textContent = statTotal;
+    document.getElementById('kpiOpen').textContent = statOpen;
+    document.getElementById('kpiOverdue').textContent = statOverdue;
+    document.getElementById('kpiDueSoon').textContent = statDueSoon;
+    document.getElementById('kpiFulfilled').textContent = statFulfilled;
+
+    // Cập nhật banner cảnh báo quá hạn
+    var banner = document.getElementById('overdueAlertBanner');
+    if (statOverdue > 0) {
+        banner.style.display = 'flex';
+        document.getElementById('bannerOverdueCount').textContent = statOverdue;
+    } else {
+        banner.style.display = 'none';
+    }
+
+    // 2. Lấy tham số bộ lọc đa tiêu chí
+    var search = document.getElementById('searchInput').value.trim().toLowerCase();
+    var department = document.getElementById('departmentFilter').value;
+    var recruiter = document.getElementById('recruiterFilter').value;
+    var status = document.getElementById('statusFilter').value;
+    var dateType = document.getElementById('dateTypeFilter').value;
+    var fromDate = document.getElementById('fromDateFilter').value;
+    var toDate = document.getElementById('toDateFilter').value;
+
+    // 3. Lọc danh sách
     var filtered = list.filter(function(item) {
+        // Tìm kiếm
         var matchSearch = !search || item.code.toLowerCase().includes(search) || item.positionTitle.toLowerCase().includes(search) || (item.title && item.title.toLowerCase().includes(search));
+        
+        // Phòng ban
+        var matchDept = !department || item.departmentName === department;
+
+        // Recruiter
+        var matchRecruiter = !recruiter || item.recruiterId === recruiter;
+
+        // Trạng thái (hỗ trợ OVERDUE và DUE_SOON)
         var matchStatus = true;
-        if (status === 'CLOSED_ALL') {
-            matchStatus = (item.status === 'CLOSED' || item.status === 'FULFILLED' || item.status === 'PAUSED' || item.status === 'CANCELLED');
+        if (status === 'OVERDUE') {
+            matchStatus = isOverdue(item);
+        } else if (status === 'DUE_SOON') {
+            matchStatus = isDueSoon(item);
+        } else if (status === 'CLOSED_ALL') {
+            matchStatus = isTerminalStatus(item.status);
         } else if (status) {
             matchStatus = (item.status === status || item.closeStatus === status);
         }
-        return matchSearch && matchStatus;
+
+        // Khoảng thời gian
+        var matchDate = true;
+        var targetDate = (dateType === 'created') ? item.createdAt : item.deadline;
+        if (fromDate && targetDate && targetDate < fromDate) matchDate = false;
+        if (toDate && targetDate && targetDate > toDate) matchDate = false;
+
+        return matchSearch && matchDept && matchRecruiter && matchStatus && matchDate;
     });
 
-    document.getElementById('totalCount').textContent = filtered.length;
+    // 4. Sắp xếp: Ưu tiên quá hạn lên đầu
+    filtered.sort(function(a, b) {
+        var aOver = isOverdue(a) ? 1 : 0;
+        var bOver = isOverdue(b) ? 1 : 0;
+        if (aOver !== bOver) return bOver - aOver;
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+
     var tbody = document.getElementById('requisitionTableBody');
     tbody.innerHTML = '';
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Không tìm thấy yêu cầu tuyển dụng nào.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Không tìm thấy yêu cầu tuyển dụng nào phù hợp bộ lọc.</td></tr>';
         return;
     }
 
     filtered.forEach(function(r) {
-        var isTerminal = (r.status === 'FULFILLED' || r.status === 'PAUSED' || r.status === 'CANCELLED' || r.status === 'CLOSED');
-        var reasonBadge = (r.recruitmentReason === 'REPLACEMENT') 
-            ? '<span class="badge bg-warning-subtle text-dark border border-warning-subtle"><i class="bi bi-arrow-repeat me-1"></i>Thay thế</span>'
-            : '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-person-plus me-1"></i>Tăng mới</span>';
+        var isTerminal = isTerminalStatus(r.status);
+        var overdue = isOverdue(r);
+        var dueSoon = isDueSoon(r);
+        var daysOpen = calcDaysOpen(r);
+        var daysRem = calcDaysRemaining(r);
 
         var salText = (r.minSalary && r.maxSalary) ? (new Intl.NumberFormat('vi-VN').format(r.minSalary) + ' - ' + new Intl.NumberFormat('vi-VN').format(r.maxSalary) + ' VND') : 'Thỏa thuận';
 
@@ -797,8 +1106,28 @@ function renderTable() {
             ? '<span class="badge bg-info-subtle text-info border border-info-subtle ms-1" style="font-size:11px;" title="' + r.activeCandidatesCount + ' ứng viên trong pipeline"><i class="bi bi-people-fill me-1"></i>' + r.activeCandidatesCount + '</span>'
             : '';
 
+        // Badge ngày cần người & thời hạn còn lại
+        var deadlineBadge = '';
+        if (r.deadline) {
+            if (overdue) {
+                deadlineBadge = '<span class="badge bg-danger text-white px-2 py-1 shadow-sm pulse-badge mt-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>Quá hạn ' + Math.abs(daysRem) + ' ngày</span>';
+            } else if (daysRem === 0) {
+                deadlineBadge = '<span class="badge bg-warning text-dark px-2 py-1 mt-1"><i class="bi bi-bell-fill me-1"></i>Đến hạn hôm nay</span>';
+            } else if (dueSoon) {
+                deadlineBadge = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1 mt-1"><i class="bi bi-hourglass-split me-1"></i>Còn ' + daysRem + ' ngày</span>';
+            } else {
+                deadlineBadge = '<span class="badge bg-light text-secondary border px-2 py-1 mt-1"><i class="bi bi-check-circle me-1 text-success"></i>Còn ' + daysRem + ' ngày</span>';
+            }
+        } else {
+            deadlineBadge = '<span class="text-muted small fst-italic">Chưa đặt</span>';
+        }
+
+        var rowClass = overdue 
+            ? 'table-danger-custom border-start border-danger border-4' 
+            : (dueSoon ? 'table-warning-custom border-start border-warning border-3' : '');
+
         var closeButton = (!isTerminal && r.status !== 'DRAFT') 
-            ? '<button type="button" class="btn btn-outline-danger" onclick="openCloseModal(\'' + r.id + '\', \'' + r.code + '\', \'' + r.positionTitle + '\')" title="Đóng / Chuyển trạng thái kết thúc"><i class="bi bi-stop-circle-fill"></i> Đóng</button>'
+            ? '<button type="button" class="btn btn-outline-danger" onclick="openCloseModal(\'' + r.id + '\', \'' + r.code + '\', \'' + r.positionTitle + '\')" title="Đóng / Chuyển trạng thái kết thúc"><i class="bi bi-stop-circle-fill"></i></button>'
             : '';
 
         var editButton = (!isTerminal) 
@@ -806,14 +1135,15 @@ function renderTable() {
             : '';
 
         var tr = document.createElement('tr');
+        tr.className = rowClass;
         tr.innerHTML = 
-            '<td><span class="badge bg-light text-dark border font-monospace px-2 py-1">' + r.code + '</span></td>' +
-            '<td><div class="fw-bold text-dark d-flex align-items-center">' + r.positionTitle + candidateBadge + '</div><small class="text-muted">' + (r.title || '') + '</small></td>' +
-            '<td><span class="fw-semibold text-secondary"><i class="bi bi-building me-1 small"></i>' + (r.departmentName || 'Chưa gán') + '</span></td>' +
+            '<td><span class="badge bg-light text-dark border font-monospace px-2 py-1">' + r.code + '</span><div class="text-xs text-muted mt-1">' + (r.createdAt || '') + '</div></td>' +
+            '<td><div class="fw-bold text-dark d-flex align-items-center">' + (overdue ? '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>' : '') + r.positionTitle + candidateBadge + '</div><small class="text-muted text-truncate d-inline-block" style="max-width:250px;">' + (r.title || '') + '</small></td>' +
+            '<td><div class="fw-semibold text-secondary"><i class="bi bi-building me-1 small"></i>' + (r.departmentName || 'Chưa gán') + '</div><div class="text-xs text-muted mt-1"><i class="bi bi-person-badge text-primary me-1"></i>' + (r.recruiterName || 'Chưa phân bổ') + '</div></td>' +
             '<td class="text-center"><span class="badge bg-primary-subtle text-primary border">' + r.headcount + ' người</span></td>' +
-            '<td>' + reasonBadge + '</td>' +
-            '<td><div class="fw-semibold text-dark">' + salText + '</div></td>' +
-            '<td><span class="text-dark fw-semibold"><i class="bi bi-calendar-event me-1 text-muted"></i>' + (r.deadline || 'Chưa đặt') + '</span></td>' +
+            '<td><div class="fw-bold text-dark"><i class="bi bi-clock-history text-secondary me-1"></i>' + daysOpen + ' ngày mở</div><div class="text-xs text-muted mt-1">Từ ' + (r.createdAt || '') + '</div></td>' +
+            '<td><div class="fw-semibold text-dark"><i class="bi bi-calendar-event me-1 text-muted"></i>' + (r.deadline || 'Chưa đặt') + '</div>' + deadlineBadge + '</td>' +
+            '<td><div class="fw-semibold text-dark small">' + salText + '</div></td>' +
             '<td class="text-center">' + getStatusBadge(r.status, r.closeReason) + '</td>' +
             '<td class="text-end pe-3">' +
                 '<div class="btn-group btn-group-sm">' +
