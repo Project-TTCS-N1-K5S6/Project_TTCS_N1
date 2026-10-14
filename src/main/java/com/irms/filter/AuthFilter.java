@@ -187,6 +187,20 @@ public class AuthFilter implements Filter {
             }
         }
 
+        // 5.0 Phân hệ Quản lý Định biên & Ngân sách Nhân sự (/headcount-budgets) [KN-195 -> KN-201]
+        if (path.startsWith("/headcount-budgets")) {
+            boolean isAuthorizedBudget = currentUser.hasRole("ADMIN")
+                    || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasRole("HIRING_MANAGER")
+                    || currentUser.hasPermission("budget.view")
+                    || currentUser.hasPermission("budget.manage")
+                    || currentUser.hasPermission("budget.override");
+            if (!isAuthorizedBudget) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // 5.1 Phân hệ Khung năng lực (/competency-frameworks): Kiểm tra quyền competencies.view hoặc ADMIN hoặc HR_MANAGER
         if (path.startsWith("/competency-frameworks")) {
             boolean isAuthorizedCompetency = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")

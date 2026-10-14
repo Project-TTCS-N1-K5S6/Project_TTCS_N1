@@ -24,7 +24,8 @@ public class DatabaseIntegrityTest {
                 "recruitment_requisitions", "candidates", "salary_ranges",
                 "competency_criteria", "questions", "competency_frameworks",
                 "competency_framework_criteria", "position_competency_frameworks",
-                "approval_matrices", "approval_matrix_steps", "requisition_approval_steps"
+                "approval_matrices", "approval_matrix_steps", "requisition_approval_steps",
+                "department_headcount_budgets", "budget_subtasks"
             };
 
             for (String table : tables) {

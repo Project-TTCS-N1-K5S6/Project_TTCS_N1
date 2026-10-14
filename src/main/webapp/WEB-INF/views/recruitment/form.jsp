@@ -271,6 +271,86 @@
                                         <i class="bi bi-info-circle me-1"></i>Không được ở quá khứ
                                     </div>
                                 </div>
+
+                                <!-- BẢNG THEO DÕI ĐỊNH BIÊN & CẢNH BÁO VƯỢT CHỈ TIÊU (KN-195 -> KN-201) -->
+                                <div class="col-12 mt-2" id="headcountBudgetSection">
+                                    <div class="p-3 rounded border bg-light" id="budgetQuotaBox">
+                                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-wallet2 text-primary fs-5"></i>
+                                                <span class="fw-bold small text-dark">Kiểm soát Định biên &amp; Ngân sách phòng ban:</span>
+                                                <span class="badge bg-secondary-subtle text-secondary border" id="quotaStatusBadge">Chưa chọn phòng ban</span>
+                                            </div>
+                                            <div class="small text-muted" id="fiscalYearLabel"></div>
+                                        </div>
+
+                                        <!-- Thẻ thông tin Headcount & Ngân sách -->
+                                        <div class="row g-2 text-center" id="quotaStatsRow" style="display: none;">
+                                            <div class="col-6 col-md-3">
+                                                <div class="border rounded bg-white p-2">
+                                                    <div class="text-muted text-xs">Chỉ tiêu Headcount</div>
+                                                    <div class="fw-bold text-dark fs-6" id="targetHeadcountDisplay">--</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <div class="border rounded bg-white p-2">
+                                                    <div class="text-muted text-xs">Đã sử dụng</div>
+                                                    <div class="fw-bold text-warning-emphasis fs-6" id="usedHeadcountDisplay">--</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <div class="border rounded bg-white p-2">
+                                                    <div class="text-muted text-xs">Headcount còn lại</div>
+                                                    <div class="fw-bold fs-6" id="remainingHeadcountDisplay">--</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-3">
+                                                <div class="border rounded bg-white p-2">
+                                                    <div class="text-muted text-xs">Ngân sách còn lại</div>
+                                                    <div class="fw-bold fs-6" id="remainingBudgetDisplay">--</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hộp cảnh báo vượt chỉ tiêu -->
+                                        <div class="alert alert-danger d-flex align-items-start gap-2 mt-3 mb-0" id="quotaWarningAlert" style="display: none !important;">
+                                            <i class="bi bi-exclamation-octagon-fill fs-5 mt-1 flex-shrink-0"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold mb-1" id="quotaWarningTitle">CẢNH BÁO CHẶN: Vượt chỉ tiêu định biên hoặc ngân sách!</h6>
+                                                <p class="small mb-2" id="quotaWarningDesc"></p>
+                                                
+                                                <!-- Khu vực xác nhận ghi đè dành riêng cho Trưởng phòng Nhân sự -->
+                                                <c:choose>
+                                                    <c:when test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('budget.override')}">
+                                                        <div class="p-3 bg-white border border-danger-subtle rounded mt-2">
+                                                            <div class="form-check mb-2">
+                                                                <input class="form-check-input" type="checkbox" name="isBudgetOverridden" id="isBudgetOverriddenCheck" value="true"
+                                                                       ${reqItem.budgetOverridden ? 'checked' : ''} onchange="toggleOverrideReason(this.checked)">
+                                                                <label class="form-check-label fw-bold text-danger small" for="isBudgetOverriddenCheck">
+                                                                    <i class="bi bi-shield-lock-fill me-1"></i>Xác nhận ghi đè vượt chỉ tiêu (Quyền Trưởng phòng Nhân sự / Quản trị hệ thống)
+                                                                </label>
+                                                            </div>
+                                                            <div id="overrideReasonContainer" style="${reqItem.budgetOverridden ? '' : 'display: none;'}">
+                                                                <label class="form-label small fw-semibold text-dark">
+                                                                    Lý do ghi đè chỉ tiêu <span class="text-danger">*</span>
+                                                                </label>
+                                                                <textarea name="budgetOverrideReason" id="budgetOverrideReasonInput" class="form-control form-control-sm"
+                                                                          rows="2" placeholder="Bắt buộc nhập lý do đặc biệt cho phép vượt định biên / ngân sách..."><c:out value="${reqItem.budgetOverrideReason}" /></textarea>
+                                                                <div class="text-xs text-muted mt-1">Thông tin xác nhận, thời gian và lý do sẽ được lưu vào nhật ký kiểm toán hệ thống.</div>
+                                                            </div>
+                                                        </div>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div class="p-2 bg-white border border-danger-subtle rounded mt-2 text-danger small">
+                                                            <i class="bi bi-shield-exclamation me-1"></i>
+                                                            <strong>Lưu ý:</strong> Bạn không có thẩm quyền xác nhận ghi đè. Cần Trưởng phòng Nhân sự xác nhận và ghi rõ lý do trước khi gửi duyệt phiếu yêu cầu này.
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -645,6 +725,29 @@ document.getElementById('requisitionForm').addEventListener('submit', function(e
                 }
             }
         }
+
+        // TIÊU CHÍ QUAN TRỌNG (KN-195, KN-199): Kiểm tra vượt chỉ tiêu Định biên & Ngân sách phòng ban
+        if (isQuotaExceeded) {
+            var overrideCheck = document.getElementById('isBudgetOverriddenCheck');
+            if (!overrideCheck || !overrideCheck.checked) {
+                var errMsg = (currentQuotaData && currentQuotaData.message) 
+                        ? currentQuotaData.message 
+                        : 'Yêu cầu tuyển dụng vượt chỉ tiêu định biên hoặc ngân sách phòng ban!';
+                alert(errMsg + '\n\nTheo quy định, cần Trưởng phòng Nhân sự xác nhận ghi đè và ghi rõ lý do trước khi gửi duyệt phiếu yêu cầu này.');
+                document.getElementById('headcountBudgetSection').scrollIntoView({ behavior: 'smooth' });
+                e.preventDefault();
+                return false;
+            }
+
+            var reason = document.getElementById('budgetOverrideReasonInput').value.trim();
+            if (!reason) {
+                alert('YÊU CẦU BẮT BUỘC:\nTrường hợp vượt chỉ tiêu định biên/ngân sách, bạn bắt buộc phải nhập lý do xác nhận ghi đè!');
+                document.getElementById('budgetOverrideReasonInput').focus();
+                document.getElementById('budgetOverrideReasonInput').classList.add('is-invalid');
+                e.preventDefault();
+                return false;
+            }
+        }
     }
 });
 
@@ -666,6 +769,124 @@ function insertReqTemplate() {
     document.getElementById('jobRequirementsInput').value = template;
 }
 
+// =========================================================================
+// XỬ LÝ KIỂM TRA ĐỊNH BIÊN & NGÂN SÁCH THỜI GIAN THỰC (KN-195 -> KN-201)
+// =========================================================================
+var isQuotaExceeded = false;
+var currentQuotaData = null;
+
+function toggleOverrideReason(checked) {
+    var container = document.getElementById('overrideReasonContainer');
+    if (container) {
+        container.style.display = checked ? 'block' : 'none';
+        if (checked) {
+            document.getElementById('budgetOverrideReasonInput').focus();
+        }
+    }
+}
+
+function checkHeadcountBudget() {
+    var deptId = document.getElementById('departmentSelect').value;
+    var deadlineVal = document.getElementById('deadlineInput').value;
+    var headcountVal = document.getElementById('headcountInput').value || 1;
+    var maxSal = document.getElementById('maxSalaryInput').value || '';
+    var minSal = document.getElementById('minSalaryInput').value || '';
+    var salaryVal = maxSal || minSal;
+    var year = deadlineVal ? new Date(deadlineVal).getFullYear() : new Date().getFullYear();
+    var reqId = '${reqItem.id}' || '';
+
+    var badge = document.getElementById('quotaStatusBadge');
+    var statsRow = document.getElementById('quotaStatsRow');
+    var warningAlert = document.getElementById('quotaWarningAlert');
+    var warningTitle = document.getElementById('quotaWarningTitle');
+    var warningDesc = document.getElementById('quotaWarningDesc');
+    var yearLabel = document.getElementById('fiscalYearLabel');
+
+    if (!deptId) {
+        badge.className = 'badge bg-secondary-subtle text-secondary border';
+        badge.innerText = 'Chưa chọn phòng ban';
+        statsRow.style.display = 'none';
+        warningAlert.style.setProperty('display', 'none', 'important');
+        yearLabel.innerText = '';
+        isQuotaExceeded = false;
+        currentQuotaData = null;
+        return;
+    }
+
+    yearLabel.innerText = 'Năm tài chính: ' + year;
+
+    var url = '${pageContext.request.contextPath}/recruitment-requests/api/budget-check' +
+              '?departmentId=' + encodeURIComponent(deptId) +
+              '&deadline=' + encodeURIComponent(deadlineVal) +
+              '&headcount=' + encodeURIComponent(headcountVal) +
+              '&maxSalary=' + encodeURIComponent(maxSal) +
+              '&minSalary=' + encodeURIComponent(minSal) +
+              '&requisitionId=' + encodeURIComponent(reqId);
+
+    fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            currentQuotaData = data;
+            statsRow.style.display = 'flex';
+
+            if (!data.configured) {
+                // Chưa khai báo định biên: coi như cảnh báo chặn
+                badge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                badge.innerText = 'Chưa khai báo định biên';
+
+                document.getElementById('targetHeadcountDisplay').innerText = '--';
+                document.getElementById('usedHeadcountDisplay').innerText = '--';
+                document.getElementById('remainingHeadcountDisplay').innerText = '--';
+                document.getElementById('remainingBudgetDisplay').innerText = '--';
+
+                warningTitle.innerText = 'CHƯA CÓ DỮ LIỆU ĐỊNH BIÊN & NGÂN SÁCH';
+                warningDesc.innerText = data.message;
+                warningAlert.style.setProperty('display', 'flex', 'important');
+                isQuotaExceeded = true;
+
+            } else {
+                document.getElementById('targetHeadcountDisplay').innerText = data.targetHeadcount + ' người';
+                document.getElementById('usedHeadcountDisplay').innerText = data.usedHeadcount + ' người';
+                
+                var remHcElem = document.getElementById('remainingHeadcountDisplay');
+                remHcElem.innerText = data.remainingHeadcount + ' người';
+                remHcElem.className = 'fw-bold fs-6 ' + (data.remainingHeadcount < 0 ? 'text-danger' : 'text-success');
+
+                var remBgElem = document.getElementById('remainingBudgetDisplay');
+                remBgElem.innerText = data.formattedRemainingBudget;
+                remBgElem.className = 'fw-bold fs-6 ' + (data.remainingSalaryBudget < 0 ? 'text-danger' : 'text-success');
+
+                if (data.exceeded) {
+                    badge.className = 'badge bg-danger text-white';
+                    badge.innerText = 'Vượt chỉ tiêu định biên/ngân sách';
+
+                    warningTitle.innerText = 'CẢNH BÁO CHẶN: VƯỢT CHỈ TIÊU ĐỊNH BIÊN HOẶC NGÂN SÁCH!';
+                    warningDesc.innerText = data.message;
+                    warningAlert.style.setProperty('display', 'flex', 'important');
+                    isQuotaExceeded = true;
+                } else {
+                    badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
+                    badge.innerText = 'Định biên hợp lệ (' + data.remainingHeadcount + ' HC còn lại)';
+                    warningAlert.style.setProperty('display', 'none', 'important');
+                    isQuotaExceeded = false;
+                }
+            }
+        })
+        .catch(function(err) {
+            console.error('Lỗi kiểm tra định biên:', err);
+        });
+}
+
+// Bắt sự kiện thay đổi kiểm tra định biên
+document.getElementById('departmentSelect').addEventListener('change', checkHeadcountBudget);
+document.getElementById('headcountInput').addEventListener('input', checkHeadcountBudget);
+document.getElementById('minSalaryInput').addEventListener('input', checkHeadcountBudget);
+document.getElementById('maxSalaryInput').addEventListener('input', checkHeadcountBudget);
+document.getElementById('deadlineInput').addEventListener('change', checkHeadcountBudget);
+
 // Chạy kiểm tra khởi tạo khi tải trang
-window.addEventListener('DOMContentLoaded', checkSalaryBenchmark);
+window.addEventListener('DOMContentLoaded', function() {
+    checkSalaryBenchmark();
+    checkHeadcountBudget();
+});
 </script>

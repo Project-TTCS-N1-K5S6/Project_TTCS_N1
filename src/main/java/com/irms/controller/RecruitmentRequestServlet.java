@@ -6,6 +6,7 @@ import com.irms.model.RequisitionApprovalStep;
 import com.irms.model.SalaryRange;
 import com.irms.model.User;
 import com.irms.service.DepartmentService;
+import com.irms.service.HeadcountBudgetService;
 import com.irms.service.RecruitmentRequestService;
 import com.irms.service.SalaryRangeService;
 import com.irms.util.JsonUtil;
@@ -41,7 +42,8 @@ import java.util.Map;
         "/recruitment-requests/approve-step",
         "/recruitment-requests/reject-step",
         "/recruitment-requests/api/approval-chain",
-        "/recruitment-requests/api/approve"
+        "/recruitment-requests/api/approve",
+        "/recruitment-requests/api/budget-check"
 })
 public class RecruitmentRequestServlet extends HttpServlet {
 
@@ -49,6 +51,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
     private final DepartmentService departmentService = new DepartmentService();
     private final SalaryRangeService salaryRangeService = new SalaryRangeService();
     private final com.irms.service.RecruitmentApprovalService approvalService = new com.irms.service.RecruitmentApprovalService();
+    private final HeadcountBudgetService headcountBudgetService = new HeadcountBudgetService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -70,6 +73,12 @@ public class RecruitmentRequestServlet extends HttpServlet {
         // 2. AJAX API: Lấy dải chuẩn theo vị trí & phòng ban để phản hồi tức thời
         if ("/recruitment-requests/api/salary-benchmark".equals(path)) {
             handleSalaryBenchmarkApi(request, response);
+            return;
+        }
+
+        // AJAX API: Tra cứu ngân sách và headcount còn lại theo phòng ban (KN-196)
+        if ("/recruitment-requests/api/budget-check".equals(path)) {
+            handleBudgetCheckApi(request, response);
             return;
         }
 
@@ -181,12 +190,17 @@ public class RecruitmentRequestServlet extends HttpServlet {
             request.setAttribute("isCopy", true);
         }
 
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        boolean canOverrideBudget = (currentUser != null && (currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER") || currentUser.hasPermission("budget.override")));
+
         request.setAttribute("departments", departments);
         request.setAttribute("salaryRanges", salaryRanges);
         request.setAttribute("nextCode", requisitionService.getNextCode());
         request.setAttribute("todayDate", LocalDate.now().toString());
         request.setAttribute("isEdit", false);
         request.setAttribute("activeMenu", "requisitions");
+        request.setAttribute("canOverrideBudget", canOverrideBudget);
 
         request.getRequestDispatcher("/WEB-INF/views/recruitment/form.jsp").forward(request, response);
     }
@@ -213,6 +227,10 @@ public class RecruitmentRequestServlet extends HttpServlet {
         // Lấy dải lương chuẩn hiện tại
         SalaryRange standard = requisitionService.getStandardSalaryRange(reqItem.getDepartmentId(), reqItem.getPositionTitle());
 
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+        boolean canOverrideBudget = (currentUser != null && (currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER") || currentUser.hasPermission("budget.override")));
+
         request.setAttribute("reqItem", reqItem);
         request.setAttribute("standardRange", standard);
         request.setAttribute("departments", departments);
@@ -220,10 +238,9 @@ public class RecruitmentRequestServlet extends HttpServlet {
         request.setAttribute("todayDate", LocalDate.now().toString());
         request.setAttribute("isEdit", true);
         request.setAttribute("activeMenu", "requisitions");
+        request.setAttribute("canOverrideBudget", canOverrideBudget);
 
         // Chuỗi cấp duyệt và phân cấp phê duyệt (KN-158, KN-159)
-        HttpSession session = request.getSession(false);
-        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
         if (!"DRAFT".equalsIgnoreCase(reqItem.getStatus())) {
             request.setAttribute("approvalSteps", approvalService.getApprovalChain(id));
             request.setAttribute("nextApproverInfo", approvalService.getNextApproverInfo(id));
@@ -295,6 +312,12 @@ public class RecruitmentRequestServlet extends HttpServlet {
             req.setJobRequirements(request.getParameter("jobRequirements"));
             req.setSalaryExplanation(request.getParameter("salaryExplanation"));
 
+            // Phân hệ Định biên & Ngân sách (KN-199, KN-201): Xác nhận ghi đè khi vượt chỉ tiêu
+            String overrideParam = request.getParameter("isBudgetOverridden");
+            boolean isOverridden = "true".equalsIgnoreCase(overrideParam) || "on".equalsIgnoreCase(overrideParam);
+            req.setBudgetOverridden(isOverridden);
+            req.setBudgetOverrideReason(request.getParameter("budgetOverrideReason"));
+
             if (isEdit) {
                 if (!requisitionService.updateRequest(req, isDraft, actorId, ip, userAgent)) {
                     throw new IllegalStateException("Không thể lưu yêu cầu tuyển dụng. Vui lòng thử lại.");
@@ -317,7 +340,8 @@ public class RecruitmentRequestServlet extends HttpServlet {
             // Khi có lỗi nghiệp vụ (ví dụ ngày ở quá khứ, lương ngoài chuẩn thiếu giải trình...)
             if (session != null) session.setAttribute("flashError", e.getMessage());
 
-            // Đưa lại dữ liệu vào request để người dùng không phải nhập lại
+            boolean canOverrideBudget = (currentUser != null && (currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER") || currentUser.hasPermission("budget.override")));
+            request.setAttribute("canOverrideBudget", canOverrideBudget);
             request.setAttribute("reqItem", req);
             request.setAttribute("departments", departmentService.getAllDepartments());
             request.setAttribute("salaryRanges", salaryRangeService.getAllSalaryRanges());
@@ -608,5 +632,49 @@ public class RecruitmentRequestServlet extends HttpServlet {
             if (session != null) session.setAttribute("flashError", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/recruitment-requests");
+    }
+
+    /**
+     * KN-196: API tra cứu ngân sách và headcount còn lại theo phòng ban để phục vụ màn hình requisition
+     */
+    private void handleBudgetCheckApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String departmentId = request.getParameter("departmentId");
+        String headcountStr = request.getParameter("headcount");
+        String maxSalaryStr = request.getParameter("maxSalary");
+        String minSalaryStr = request.getParameter("minSalary");
+        String deadlineStr = request.getParameter("deadline");
+        String requisitionId = request.getParameter("requisitionId");
+
+        int headcount = 1;
+        try {
+            if (headcountStr != null && !headcountStr.trim().isEmpty()) {
+                headcount = Integer.parseInt(headcountStr.trim());
+            }
+        } catch (Exception ignored) {}
+
+        BigDecimal salary = BigDecimal.ZERO;
+        try {
+            if (maxSalaryStr != null && !maxSalaryStr.trim().isEmpty()) {
+                salary = new BigDecimal(maxSalaryStr.trim().replace(".", "").replace(",", ""));
+            } else if (minSalaryStr != null && !minSalaryStr.trim().isEmpty()) {
+                salary = new BigDecimal(minSalaryStr.trim().replace(".", "").replace(",", ""));
+            }
+        } catch (Exception ignored) {}
+
+        int fiscalYear = LocalDate.now().getYear();
+        if (deadlineStr != null && deadlineStr.trim().length() >= 4) {
+            try {
+                fiscalYear = LocalDate.parse(deadlineStr.trim()).getYear();
+            } catch (Exception ignored) {}
+        }
+
+        HttpSession session = request.getSession(false);
+        User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
+
+        Map<String, Object> result = headcountBudgetService.checkRequisitionBudget(
+                departmentId, fiscalYear, headcount, salary, requisitionId, currentUser);
+
+        JsonUtil.sendJsonResponse(response, 200, result);
     }
 }

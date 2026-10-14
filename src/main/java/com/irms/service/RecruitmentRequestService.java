@@ -1,10 +1,13 @@
 package com.irms.service;
 
 import com.irms.dao.CandidateDAO;
+import com.irms.dao.HeadcountBudgetDAO;
 import com.irms.dao.JobPostingDAO;
 import com.irms.dao.RecruitmentApprovalDAO;
 import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.dao.SalaryRangeDAO;
+import com.irms.dao.UserDAO;
+import com.irms.model.DepartmentHeadcountBudget;
 import com.irms.model.RecruitmentApprovalLog;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.SalaryRange;
@@ -26,11 +29,14 @@ public class RecruitmentRequestService {
     private final JobPostingDAO jobPostingDAO = new JobPostingDAO();
     private final ApprovalMatrixService approvalMatrixService = new ApprovalMatrixService();
     private final RecruitmentApprovalDAO approvalDAO = new RecruitmentApprovalDAO();
+    private final HeadcountBudgetDAO budgetDAO = new HeadcountBudgetDAO();
+    private final UserDAO userDAO = new UserDAO();
     private final AuditService auditService = new AuditService();
 
     public CandidateDAO getCandidateDAO() { return candidateDAO; }
     public JobPostingDAO getJobPostingDAO() { return jobPostingDAO; }
     public RecruitmentApprovalDAO getApprovalDAO() { return approvalDAO; }
+    public HeadcountBudgetDAO getBudgetDAO() { return budgetDAO; }
 
     public List<RecruitmentRequest> getAllRequests(String search, String status, String departmentId) {
         return requestDAO.findAll(search, status, departmentId);
@@ -163,6 +169,69 @@ public class RecruitmentRequestService {
         }
     }
 
+    /**
+     * Kiểm tra chỉ tiêu headcount và ngân sách lương của phòng ban (KN-195, KN-199)
+     * Vượt chỉ tiêu là cảnh báo chặn, cần Trưởng phòng Nhân sự xác nhận ghi đè kèm lý do.
+     */
+    public void validateBudgetAndHeadcount(RecruitmentRequest req, String actorId) {
+        if (req.getDepartmentId() == null || req.getDepartmentId().trim().isEmpty()) {
+            return;
+        }
+
+        int fiscalYear = (req.getDeadline() != null)
+                ? req.getDeadline().toLocalDate().getYear()
+                : LocalDate.now().getYear();
+
+        DepartmentHeadcountBudget budget = budgetDAO.getBudgetByDeptAndYear(req.getDepartmentId(), fiscalYear, req.getId());
+
+        if (budget == null) {
+            throw new IllegalArgumentException("Phòng ban chưa được khai báo chỉ tiêu định biên & ngân sách năm " 
+                    + fiscalYear + "! Vui lòng liên hệ Trưởng phòng Nhân sự để khai báo trước khi gửi duyệt yêu cầu.");
+        }
+
+        int remainingHc = budget.getRemainingHeadcount();
+        boolean hcExceeded = req.getHeadcount() > remainingHc;
+
+        BigDecimal salaryPerPerson = req.getMaxSalary() != null ? req.getMaxSalary() 
+                : (req.getMinSalary() != null ? req.getMinSalary() : BigDecimal.ZERO);
+        BigDecimal proposedCost = salaryPerPerson.multiply(BigDecimal.valueOf(req.getHeadcount()));
+        BigDecimal remainingBudget = budget.getRemainingSalaryBudget();
+        boolean bgExceeded = (proposedCost.compareTo(BigDecimal.ZERO) > 0 && proposedCost.compareTo(remainingBudget) > 0);
+
+        if (hcExceeded || bgExceeded) {
+            if (!req.isBudgetOverridden()) {
+                StringBuilder sb = new StringBuilder("CẢNH BÁO CHẶN: Yêu cầu tuyển dụng vượt chỉ tiêu của phòng ban năm ")
+                        .append(fiscalYear).append("! ");
+                if (hcExceeded) {
+                    sb.append("Số lượng tuyển (").append(req.getHeadcount())
+                      .append(" nhân sự) vượt quá headcount còn lại (").append(remainingHc).append(" nhân sự). ");
+                }
+                if (bgExceeded) {
+                    sb.append("Chi phí lương đề xuất vượt quá ngân sách còn lại (Còn lại: ")
+                      .append(budget.getFormattedRemainingBudget()).append("). ");
+                }
+                sb.append("Theo quy định, cần Trưởng phòng Nhân sự xác nhận ghi đè kèm lý do để tiếp tục gửi duyệt!");
+                throw new IllegalArgumentException(sb.toString());
+            }
+
+            // Người dùng chọn xác nhận ghi đè: kiểm tra thẩm quyền tại backend (chỉ HR_MANAGER hoặc ADMIN)
+            User actor = (actorId != null) ? userDAO.findById(actorId) : null;
+            boolean canOverride = (actor != null && (actor.hasRole("ADMIN") || actor.hasRole("HR_MANAGER") || actor.hasPermission("budget.override")));
+            if (!canOverride) {
+                throw new IllegalArgumentException("BẠN KHÔNG CÓ THẨM QUYỀN: Thao tác xác nhận ghi đè vượt chỉ tiêu định biên/ngân sách chỉ dành cho Trưởng phòng Nhân sự hoặc Quản trị hệ thống!");
+            }
+
+            if (req.getBudgetOverrideReason() == null || req.getBudgetOverrideReason().trim().isEmpty()) {
+                throw new IllegalArgumentException("Bắt buộc nhập lý do khi xác nhận ghi đè vượt chỉ tiêu định biên hoặc ngân sách!");
+            }
+
+            req.setBudgetOverridden(true);
+            req.setBudgetOverriddenBy(actorId);
+            req.setBudgetOverriddenAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            req.setBudgetOverrideReason(req.getBudgetOverrideReason().trim());
+        }
+    }
+
     public boolean createRequest(RecruitmentRequest req, boolean isDraft, String actorId, String ip, String userAgent) {
         if (req.getId() == null || req.getId().trim().isEmpty()) {
             req.setId(SecurityUtil.generateUUID());
@@ -174,6 +243,11 @@ public class RecruitmentRequestService {
         req.setCreatedBy(actorId);
 
         validateRequest(req, isDraft);
+
+        // Kiểm tra định biên & ngân sách phòng ban nếu gửi duyệt
+        if (!isDraft) {
+            validateBudgetAndHeadcount(req, actorId);
+        }
 
         // Xác thực ma trận phê duyệt trước khi lưu nếu gửi duyệt
         if (!isDraft) {
@@ -190,6 +264,9 @@ public class RecruitmentRequestService {
             String action = isDraft ? "REQUISITION_DRAFT_CREATED" : "REQUISITION_SUBMITTED";
             String desc = (isDraft ? "Lưu nháp yêu cầu tuyển dụng: " : "Gửi phê duyệt yêu cầu tuyển dụng: ") 
                           + req.getCode() + " - " + req.getTitle();
+            if (req.isBudgetOverridden()) {
+                desc += " [Xác nhận ghi đè vượt chỉ tiêu: " + req.getBudgetOverrideReason() + "]";
+            }
             auditService.log(actorId, action, "REQUISITION", req.getId(), desc, ip, userAgent);
         }
         return success;
@@ -203,6 +280,11 @@ public class RecruitmentRequestService {
 
         req.setStatus(isDraft ? "DRAFT" : "PENDING_APPROVAL");
         validateRequest(req, isDraft);
+
+        // Kiểm tra định biên & ngân sách phòng ban nếu gửi duyệt
+        if (!isDraft) {
+            validateBudgetAndHeadcount(req, actorId);
+        }
 
         if (!isDraft) {
             approvalMatrixService.resolveApprovalSteps(req);
@@ -219,6 +301,9 @@ public class RecruitmentRequestService {
             }
             String action = isDraft ? "REQUISITION_DRAFT_UPDATED" : "REQUISITION_SUBMITTED";
             String desc = "Cập nhật yêu cầu tuyển dụng: " + req.getCode() + " - " + req.getTitle();
+            if (req.isBudgetOverridden()) {
+                desc += " [Xác nhận ghi đè vượt chỉ tiêu: " + req.getBudgetOverrideReason() + "]";
+            }
             auditService.log(actorId, action, "REQUISITION", req.getId(), desc, ip, userAgent);
         }
         return success;

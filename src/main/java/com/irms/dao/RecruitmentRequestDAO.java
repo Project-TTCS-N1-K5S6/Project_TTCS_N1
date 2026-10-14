@@ -89,6 +89,7 @@ public class RecruitmentRequestDAO extends BaseDAO {
                 "u_mgr.full_name AS hiring_manager_name, " +
                 "u_cre.full_name AS created_by_name, " +
                 "u_cls.full_name AS closed_by_name, " +
+                "u_ovr.full_name AS budget_overridden_name, " +
                 "(SELECT COUNT(*) FROM candidates c WHERE c.requisition_id = r.id AND c.status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')) AS active_candidates_count, " +
                 "(SELECT COUNT(*) FROM job_postings jp WHERE jp.requisition_id = r.id AND jp.status = 'PUBLISHED') AS active_postings_count " +
                 "FROM recruitment_requisitions r " +
@@ -97,6 +98,7 @@ public class RecruitmentRequestDAO extends BaseDAO {
                 "LEFT JOIN users u_mgr ON r.hiring_manager_id = u_mgr.id " +
                 "LEFT JOIN users u_cre ON r.created_by = u_cre.id " +
                 "LEFT JOIN users u_cls ON r.closed_by = u_cls.id " +
+                "LEFT JOIN users u_ovr ON r.budget_overridden_by = u_ovr.id " +
                 "WHERE 1=1 "
         );
 
@@ -206,6 +208,7 @@ public class RecruitmentRequestDAO extends BaseDAO {
                      "u_mgr.full_name AS hiring_manager_name, " +
                      "u_cre.full_name AS created_by_name, " +
                      "u_cls.full_name AS closed_by_name, " +
+                     "u_ovr.full_name AS budget_overridden_name, " +
                      "(SELECT COUNT(*) FROM candidates c WHERE c.requisition_id = r.id AND c.status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')) AS active_candidates_count, " +
                      "(SELECT COUNT(*) FROM job_postings jp WHERE jp.requisition_id = r.id AND jp.status = 'PUBLISHED') AS active_postings_count " +
                      "FROM recruitment_requisitions r " +
@@ -214,6 +217,7 @@ public class RecruitmentRequestDAO extends BaseDAO {
                      "LEFT JOIN users u_mgr ON r.hiring_manager_id = u_mgr.id " +
                      "LEFT JOIN users u_cre ON r.created_by = u_cre.id " +
                      "LEFT JOIN users u_cls ON r.closed_by = u_cls.id " +
+                     "LEFT JOIN users u_ovr ON r.budget_overridden_by = u_ovr.id " +
                      "WHERE r.id = ?";
 
         Connection conn = null;
@@ -239,8 +243,9 @@ public class RecruitmentRequestDAO extends BaseDAO {
         String sql = "INSERT INTO recruitment_requisitions " +
                      "(id, code, title, position_title, department_id, headcount, recruitment_reason, " +
                      "min_salary, max_salary, currency, deadline, job_description, job_requirements, " +
-                     "salary_explanation, status, recruiter_id, hiring_manager_id, created_by) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "salary_explanation, status, recruiter_id, hiring_manager_id, created_by, " +
+                     "is_budget_overridden, budget_override_reason, budget_overridden_by, budget_overridden_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
@@ -264,6 +269,10 @@ public class RecruitmentRequestDAO extends BaseDAO {
             ps.setString(16, req.getRecruiterId());
             ps.setString(17, req.getHiringManagerId());
             ps.setString(18, req.getCreatedBy());
+            ps.setBoolean(19, req.isBudgetOverridden());
+            ps.setString(20, req.getBudgetOverrideReason());
+            ps.setString(21, req.getBudgetOverriddenBy());
+            ps.setTimestamp(22, req.getBudgetOverriddenAt());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi thêm yêu cầu tuyển dụng mới", e);
@@ -278,7 +287,8 @@ public class RecruitmentRequestDAO extends BaseDAO {
                      "title = ?, position_title = ?, department_id = ?, headcount = ?, recruitment_reason = ?, " +
                      "min_salary = ?, max_salary = ?, currency = ?, deadline = ?, job_description = ?, " +
                      "job_requirements = ?, salary_explanation = ?, status = ?, recruiter_id = ?, " +
-                     "hiring_manager_id = ? " +
+                     "hiring_manager_id = ?, is_budget_overridden = ?, budget_override_reason = ?, " +
+                     "budget_overridden_by = ?, budget_overridden_at = ? " +
                      "WHERE id = ?";
         Connection conn = null;
         PreparedStatement ps = null;
@@ -300,7 +310,11 @@ public class RecruitmentRequestDAO extends BaseDAO {
             ps.setString(13, req.getStatus());
             ps.setString(14, req.getRecruiterId());
             ps.setString(15, req.getHiringManagerId());
-            ps.setString(16, req.getId());
+            ps.setBoolean(16, req.isBudgetOverridden());
+            ps.setString(17, req.getBudgetOverrideReason());
+            ps.setString(18, req.getBudgetOverriddenBy());
+            ps.setTimestamp(19, req.getBudgetOverriddenAt());
+            ps.setString(20, req.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi cập nhật yêu cầu tuyển dụng: " + req.getId(), e);
@@ -457,6 +471,13 @@ public class RecruitmentRequestDAO extends BaseDAO {
         // Đếm số lượng liên quan
         try { req.setActiveCandidatesCount(rs.getInt("active_candidates_count")); } catch (SQLException ignored) {}
         try { req.setActiveJobPostingsCount(rs.getInt("active_postings_count")); } catch (SQLException ignored) {}
+
+        // Thông tin xác nhận ghi đè định biên & ngân sách (KN-199, KN-201)
+        try { req.setBudgetOverridden(rs.getBoolean("is_budget_overridden")); } catch (SQLException ignored) {}
+        try { req.setBudgetOverrideReason(rs.getString("budget_override_reason")); } catch (SQLException ignored) {}
+        try { req.setBudgetOverriddenBy(rs.getString("budget_overridden_by")); } catch (SQLException ignored) {}
+        try { req.setBudgetOverriddenByName(rs.getString("budget_overridden_name")); } catch (SQLException ignored) {}
+        try { req.setBudgetOverriddenAt(rs.getTimestamp("budget_overridden_at")); } catch (SQLException ignored) {}
 
         req.setCreatedAt(rs.getTimestamp("created_at"));
         req.setUpdatedAt(rs.getTimestamp("updated_at"));

@@ -62,7 +62,8 @@ public class AuthFilter implements Filter {
         // - /about-us, /company/about: Trang giới thiệu công ty công khai
         // ----------------------------------------------------------------------
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
-            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about")) {
+            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about") ||
+            path.startsWith("/careers")) {
             chain.doFilter(request, response);
             return;
         }
@@ -166,10 +167,35 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // Phân hệ Yêu cầu tuyển dụng (/recruitment-requests) - Yêu cầu quyền requisitions.view, requisitions.create, requisitions.approve hoặc ADMIN
+        if (path.startsWith("/recruitment-requests")) {
+            if (!currentUser.hasPermission("requisitions.view") &&
+                !currentUser.hasPermission("requisitions.create") &&
+                !currentUser.hasPermission("requisitions.approve") &&
+                !currentUser.hasRole("ADMIN")) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
         // 5. Phân hệ Dải lương [KN-103]: CHỈ Trưởng phòng Nhân sự (HR_MANAGER) và Quản trị hệ thống (ADMIN) mới xem & quản lý được
         if (path.startsWith("/salary-ranges")) {
             boolean isAuthorizedSalary = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER");
             if (!isAuthorizedSalary) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
+        // 5.0 Phân hệ Quản lý Định biên & Ngân sách Nhân sự (/headcount-budgets) [KN-195 -> KN-201]
+        if (path.startsWith("/headcount-budgets")) {
+            boolean isAuthorizedBudget = currentUser.hasRole("ADMIN")
+                    || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasRole("HIRING_MANAGER")
+                    || currentUser.hasPermission("budget.view")
+                    || currentUser.hasPermission("budget.manage")
+                    || currentUser.hasPermission("budget.override");
+            if (!isAuthorizedBudget) {
                 request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                 return;
             }
@@ -181,6 +207,17 @@ public class AuthFilter implements Filter {
                     || currentUser.hasPermission("competencies.view")
                     || currentUser.hasPermission("evaluations.manage");
             if (!isAuthorizedCompetency) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+        }
+
+        // 5.2 Phân hệ Ma trận phê duyệt (/admin/approval-matrix): Kiểm tra quyền approval_matrix.view hoặc ADMIN hoặc HR_MANAGER
+        if (path.startsWith("/admin/approval-matrix")) {
+            boolean isAuthorizedApprovalMatrix = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("approval_matrix.view")
+                    || currentUser.hasPermission("approval_matrix.manage");
+            if (!isAuthorizedApprovalMatrix) {
                 request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                 return;
             }
@@ -201,6 +238,19 @@ public class AuthFilter implements Filter {
                     request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
                     return;
                 }
+            }
+        }
+
+        // Phân hệ Quản lý Xuất bản bài đăng (/post-publishing) [KN-120]
+        if (path.startsWith("/post-publishing")) {
+            boolean isAuthorizedPublish = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasRole("RECRUITER")
+                    || currentUser.hasPermission("job_postings.view")
+                    || currentUser.hasPermission("job_postings.manage")
+                    || currentUser.hasPermission("requisitions.view");
+            if (!isAuthorizedPublish) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
             }
         }
 
