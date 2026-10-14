@@ -122,11 +122,23 @@ public class User implements Serializable {
     public List<String> getPermissions() { return permissions; }
     public void setPermissions(List<String> permissions) { this.permissions = permissions; }
 
+    /**
+     * Chức năng: Kiểm tra xem người dùng có sở hữu quyền hạn cụ thể hay không dựa trên danh sách quyền RBAC
+     *
+     * @param permCode Mã quyền cần kiểm tra (ví dụ: users.view, candidates.manage...)
+     * @return true nếu có quyền, ngược lại false
+     */
     public boolean hasPermission(String permCode) {
         if (permissions == null) return false;
         return permissions.contains(permCode);
     }
 
+    /**
+     * Chức năng: Kiểm tra xem người dùng có vai trò cụ thể hay không (không phân biệt chữ hoa/thường)
+     *
+     * @param roleCode Mã vai trò cần kiểm tra (ví dụ: ADMIN, HR_MANAGER, RECRUITER...)
+     * @return true nếu người dùng có vai trò đó, ngược lại false
+     */
     public boolean hasRole(String roleCode) {
         if (roles == null) return false;
         for (Role r : roles) {
@@ -137,6 +149,11 @@ public class User implements Serializable {
         return false;
     }
 
+    /**
+     * Chức năng: Tạo chuỗi văn bản nối tên các vai trò của người dùng để hiển thị trên giao diện người dùng
+     *
+     * @return Chuỗi tên vai trò phân tách bằng dấu phẩy
+     */
     public String getRolesDisplay() {
         if (roles == null || roles.isEmpty()) return "Chưa phân vai trò";
         StringBuilder sb = new StringBuilder();

@@ -18,6 +18,9 @@ public class AppContextListener implements ServletContextListener {
 
     private static final Logger LOGGER = Logger.getLogger(AppContextListener.class.getName());
 
+    /**
+     * Chức năng: Xử lý sự kiện khi ứng dụng Web bắt đầu khởi động, kích hoạt worker gửi email ngầm (Email Outbox Worker)
+     */
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         LOGGER.info("================================================================");
@@ -26,6 +29,9 @@ public class AppContextListener implements ServletContextListener {
         EmailService.startScheduledWorker();
     }
 
+    /**
+     * Chức năng: Xử lý sự kiện khi ứng dụng dừng/tắt máy chủ, dừng tiến trình email worker và giải phóng HikariCP connection pool
+     */
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
         LOGGER.info("Đang tắt hệ thống IRMS: dọn dẹp Email Worker và DB Pool...");

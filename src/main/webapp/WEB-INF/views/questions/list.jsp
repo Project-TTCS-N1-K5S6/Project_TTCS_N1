@@ -1,3 +1,14 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN NGÂN HÀNG CÂU HỎI PHỎNG VẤN & TIÊU CHÍ (questions/list.jsp)
+  Chức năng:
+  - Quản lý danh sách câu hỏi phỏng vấn theo vị trí tuyển dụng và tiêu chí năng lực.
+  - Hiển thị độ khó (Dễ - Trung bình - Khó), gợi ý câu trả lời chuẩn (Good Answer Suggestion).
+  - Modal thêm mới & chỉnh sửa câu hỏi phỏng vấn.
+  - Modal quản lý danh sách tiêu chí đánh giá năng lực kèm hướng dẫn chấm điểm.
+  - Xóa câu hỏi phỏng vấn và tiêu chí năng lực khỏi hệ thống.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN PHÂN BỔ NHÂN SỰ TUYỂN DỤNG (recruitment/assign.jsp)
+  Chức năng:
+  - Cho phép Trưởng phòng Nhân sự (HR_MANAGER) hoặc Quản trị viên phân công Chuyên viên tuyển dụng (Recruiter) phụ trách yêu cầu tuyển dụng.
+  - Hiển thị danh sách Recruiter, số lượng việc đang phụ trách (workload), năng lực tuyển dụng.
+  - Xem lịch sử các lần chuyển giao/phân bổ Recruiter (Assignment History).
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

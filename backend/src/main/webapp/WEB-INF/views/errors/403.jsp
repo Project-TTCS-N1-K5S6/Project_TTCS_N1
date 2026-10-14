@@ -1,3 +1,11 @@
+<%--
+  ==============================================================================
+  TRANG BÁO LỖI 403 FORBIDDEN (errors/403.jsp)
+  Chức năng:
+  - Hiển thị thông báo thân thiện khi người dùng truy cập trang hoặc chức năng vượt quá thẩm quyền RBAC.
+  - Cung cấp nút quay lại trang trước hoặc trở về Dashboard.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">

@@ -1,3 +1,15 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ DANH MỤC DÙNG CHUNG (shared-catalogs/list.jsp)
+  Chức năng:
+  - Quản lý các nhóm danh mục chuẩn: Nguồn ứng viên, Lý do loại hồ sơ, Địa điểm làm việc, Hình thức làm việc.
+  - Hiển thị bảng giá trị, thứ tự sắp xếp và số lượng bản ghi đang tham chiếu (reference count).
+  - Modal thêm mới giá trị danh mục (tự động tính display_order tiếp theo).
+  - Modal sửa đổi tên giá trị danh mục.
+  - Các nút hoán đổi vị trí hiển thị Lên/Xuống (Move Up/Down).
+  - Chức năng xóa giá trị danh mục có kiểm tra ràng buộc toàn vẹn dữ liệu.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

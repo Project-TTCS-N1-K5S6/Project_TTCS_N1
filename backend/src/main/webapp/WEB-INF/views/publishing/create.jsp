@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  BIỂU MẪU TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG (publishing/create.jsp)
+  Chức năng:
+  - Cho phép chọn một Yêu cầu tuyển dụng đã được phê duyệt (APPROVED) để kế thừa toàn bộ nội dung (JD, Yêu cầu, Đãi ngộ, Dải lương, Hạn nộp).
+  - Tùy chỉnh kênh đăng (Website nội bộ, LinkedIn, Facebook, VietnamWorks...), thiết lập hiển thị lương (công khai hoặc "Thỏa thuận").
+  - Chức năng Xem trước bài đăng (Live Preview) mô phỏng chính xác giao diện ứng viên nhìn thấy trước khi xuất bản chính thức.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ XUẤT BẢN BÀI ĐĂNG (publishing/index.jsp)
+  Chức năng:
+  - Hiển thị danh sách các bài đăng tuyển dụng trên toàn hệ thống (bản nháp, đã xuất bản, gỡ bài).
+  - Kiểm soát điều kiện tiên quyết: Yêu cầu tuyển dụng bắt buộc phải được phê duyệt trước khi xuất bản công khai.
+  - Xem trước bài đăng trên giao diện popup modal.
+  - Ghi vết lịch sử xuất bản (Publication History): ai xuất bản, kênh nào, thời điểm xuất bản kèm snapshot nội dung JSON.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

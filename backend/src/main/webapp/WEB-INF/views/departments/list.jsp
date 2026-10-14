@@ -1,3 +1,14 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN CƠ CẤU TỔ CHỨC & PHÒNG BAN (departments/list.jsp)
+  Chức năng:
+  - Hiển thị danh sách phòng ban và cây phân cấp cơ cấu tổ chức (Department Hierarchy).
+  - Tìm kiếm phòng ban, lọc theo trạng thái (ACTIVE / INACTIVE), hiển thị mã phòng ban, tên, trưởng bộ phận, số nhân sự.
+  - Modal thêm mới phòng ban (chọn phòng ban cha, kiểm tra chống vòng lặp phân cấp).
+  - Modal chỉnh sửa phòng ban, bật/tắt trạng thái áp dụng.
+  - Ràng buộc an toàn: Ngăn chặn xóa phòng ban nếu đang có yêu cầu tuyển dụng mở hoặc nhân sự trực thuộc, khuyến nghị chuyển sang INACTIVE.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

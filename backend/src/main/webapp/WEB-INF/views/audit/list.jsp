@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN NHẬT KÝ KIỂM TOÁN HỆ THỐNG (audit/list.jsp)
+  Chức năng:
+  - Hiển thị toàn bộ nhật ký ghi vết sự kiện bảo mật và thao tác dữ liệu trong hệ thống (Audit Logs).
+  - Ghi nhận: Thời điểm, Người thực hiện, Mã hành động (LOGIN_SUCCESS, LOGIN_FAILED, ROLE_ASSIGNED, PERMISSION_CHANGED, USER_LOCKED...), Loại thực thể, Địa chỉ IP và User-Agent.
+  - Lọc theo loại hành động và phân trang dữ liệu nhật ký phục vụ thanh tra, kiểm soát tuân thủ.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

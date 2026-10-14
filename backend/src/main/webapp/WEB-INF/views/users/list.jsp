@@ -1,3 +1,15 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN TRỊ TÀI KHOẢN NGƯỜI DÙNG (users/list.jsp)
+  Chức năng:
+  - Hiển thị danh sách nhân sự nội bộ kèm Mã NV, Họ tên, Email, Phòng ban, Trạng thái (ACTIVE, LOCKED, INACTIVE) và Vai trò.
+  - Phân trang, tìm kiếm theo từ khóa họ tên/email/mã NV, lọc theo trạng thái và vai trò.
+  - Modal thêm mới người dùng (gửi email kích hoạt tài khoản kèm mật khẩu tạm).
+  - Modal chỉnh sửa thông tin & phân quyền đa vai trò (Multi-role assignment).
+  - Modal khóa/mở khóa tài khoản (bắt buộc nhập lý do khóa, thu hồi phiên ngay lập tức).
+  - Modal cấp lại mật khẩu tạm thời (US 8) và Modal nhập danh sách nhân viên từ tệp Excel (.xlsx).
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

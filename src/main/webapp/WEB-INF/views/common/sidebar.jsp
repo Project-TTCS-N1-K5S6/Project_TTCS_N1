@@ -1,3 +1,20 @@
+<%--
+  ==============================================================================
+  THÀNH PHẦN THANH ĐIỀU HƯỚNG BÊN TRÁI (common/sidebar.jsp)
+  Chức năng:
+  - Cung cấp toàn bộ cây menu điều hướng các phân hệ theo quyền hạn RBAC của người dùng:
+    + Tổng quan (Dashboard)
+    + Yêu cầu tuyển dụng (/recruitment-requests)
+    + Phê duyệt tuyển dụng (/recruitment-requests/approvals)
+    + Xuất bản tin tuyển dụng (/post-publishing)
+    + Hồ sơ ứng viên (/candidates)
+    + Định biên & Ngân sách (/headcount-budgets)
+    + Khung năng lực (/competency-frameworks)
+    + Dải lương chuẩn (/salary-ranges)
+    + Quản trị hệ thống (Người dùng, Vai trò, Phân quyền RBAC, Ma trận phê duyệt, Audit log, Danh mục)
+  - Hỗ trợ responsive: Drawer trượt trên mobile (320px - 430px) và Sidebar cố định trên desktop.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

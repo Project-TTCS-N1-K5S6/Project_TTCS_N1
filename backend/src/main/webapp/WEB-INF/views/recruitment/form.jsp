@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  BIỂU MẪU TẠO MỚI / CHỈNH SỬA / SAO CHÉP YÊU CẦU TUYỂN DỤNG (recruitment/form.jsp)
+  Chức năng:
+  - Nhập thông tin chi tiết đợt tuyển dụng: Chức danh, Phòng ban, Số lượng định biên, Lý do tuyển, Ngày cần người.
+  - Đối chiếu dải lương chuẩn theo chức danh/phòng ban qua AJAX benchmark; bắt buộc nhập giải trình nếu mức lương vượt khung.
+  - Kiểm tra tự động định biên headcount phòng ban; cảnh báo hoặc cho phép ghi đè kèm lý do.
+  - Hỗ trợ lưu nháp (DRAFT) hoặc gửi phê duyệt ngay (PENDING_APPROVAL) để kích hoạt ma trận phê duyệt.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

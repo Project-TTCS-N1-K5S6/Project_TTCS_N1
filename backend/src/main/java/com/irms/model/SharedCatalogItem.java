@@ -2,6 +2,10 @@ package com.irms.model;
 
 import java.io.Serializable;
 
+/**
+ * Model đại diện cho một mục trong Danh mục dùng chung (bảng shared_catalog)
+ * Quản lý loại danh mục (type), giá trị hiển thị (value), thứ tự sắp xếp (displayOrder) và số lượng bản ghi đang tham chiếu (referenceCount)
+ */
 public class SharedCatalogItem implements Serializable {
     private static final long serialVersionUID = 1L;
 

@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  TRANG CHI TIẾT CÔNG VIỆC & NỘP HỒ SƠ CÔNG KHAI (publishing/job-detail.jsp)
+  Chức năng:
+  - Hiển thị đầy đủ bản mô tả công việc (JD), yêu cầu ứng viên, chế độ đãi ngộ, dải lương và hạn nộp hồ sơ.
+  - Tích hợp biểu mẫu nộp CV trực tuyến: Nhập họ tên, email, SĐT, thư giới thiệu và upload file CV (.pdf, .docx).
+  - Tích hợp widget xác thực chống bot/spam CAPTCHA và giới hạn tần suất gửi đơn (Rate Limiting).
+  - Trả về mã tra cứu tiến độ xét duyệt (APP-YYYYMMDD-XXXX) cho ứng viên sau khi nộp thành công.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

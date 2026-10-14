@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN KHAI BÁO DẢI LƯƠNG CHUẨN THEO CHỨC DANH (salary/list.jsp)
+  Chức năng:
+  - Hiển thị danh mục dải lương chuẩn (min_salary, max_salary, currency) theo từng vị trí chức danh và phòng ban.
+  - Bảo mật dữ liệu lương nhạy cảm: Chỉ ADMIN và HR_MANAGER được cấp quyền xem/sửa (salary.view / salary.manage).
+  - Modal thêm mới dải lương chuẩn (kiểm tra min <= max, không âm, chống trùng lặp dải lương cho cùng vị trí).
+  - Modal chỉnh sửa dải lương, công cụ tính toán tự động chênh lệch đề xuất tuyển dụng so với dải chuẩn.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

@@ -14,6 +14,13 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Bộ điều khiển Ngân hàng câu hỏi phỏng vấn & Tiêu chí năng lực (QuestionBankServlet)
+ * Quản lý các URL:
+ * - /admin/questions: Hiển thị và lọc danh sách câu hỏi phỏng vấn
+ * - /admin/questions/create, edit, delete: Thêm, sửa, xóa câu hỏi
+ * - /admin/criteria/create, edit, delete: Thêm, sửa, xóa tiêu chí năng lực
+ */
 @WebServlet(name = "QuestionBankServlet", urlPatterns = {
         "/admin/questions",
         "/admin/questions/create",
@@ -27,6 +34,9 @@ public class QuestionBankServlet extends HttpServlet {
     private final QuestionService questionService = new QuestionService();
     private final CompetencyCriterionService criterionService = new CompetencyCriterionService();
 
+    /**
+     * Chức năng: Hiển thị giao diện danh sách câu hỏi phỏng vấn, hỗ trợ lọc theo chức danh công việc và tiêu chí năng lực
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -44,6 +54,9 @@ public class QuestionBankServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/questions/list.jsp").forward(request, response);
     }
 
+    /**
+     * Chức năng: Điều phối xử lý các yêu cầu POST tạo mới, chỉnh sửa, xóa câu hỏi và tiêu chí đánh giá
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

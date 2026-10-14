@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ ĐỊNH BIÊN & NGÂN SÁCH NHÂN SỰ (budget/list.jsp)
+  Chức năng:
+  - Quản lý hạn mức nhân sự (Target Headcount) và ngân sách lương tối đa của từng phòng ban theo năm tài chính.
+  - Theo dõi tỷ lệ sử dụng định biên thời gian thực: Đã tuyển (Current), Đang tuyển (In progress), Còn lại (Remaining).
+  - Cảnh báo trực quan (màu vàng/đỏ) khi đợt tuyển dụng chạm hoặc vượt trần định biên được duyệt.
+  - Modal tạo mới và cập nhật kế hoạch định biên phòng ban hàng năm.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

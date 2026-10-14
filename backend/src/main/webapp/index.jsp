@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  TRANG ĐIỀU HƯỚNG GỐC CỦA ỨNG DỤNG (index.jsp)
+  Chức năng:
+  - Kiểm tra trạng thái phiên đăng nhập của người dùng khi truy cập địa chỉ gốc (/).
+  - Nếu chưa đăng nhập: Chuyển hướng tới trang Đăng nhập (/auth/login).
+  - Nếu là Recruiter / Interviewer (không có quyền quản trị): Chuyển hướng thẳng tới Pipeline ứng viên (/candidates).
+  - Nếu là Admin / HR Manager / Approver: Chuyển hướng tới Bảng điều khiển tổng quan (/dashboard).
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.irms.model.User" %>
 <%

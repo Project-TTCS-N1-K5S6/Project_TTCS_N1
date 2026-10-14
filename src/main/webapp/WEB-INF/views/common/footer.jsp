@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  THÀNH PHẦN CHÂN TRANG DÙNG CHUNG (common/footer.jsp)
+  Chức năng:
+  - Hiển thị thông tin bản quyền và phiên bản hệ thống ở chân trang giao diện nội bộ.
+  - Tải thư viện Bootstrap 5.3.3 JavaScript bundle và file kịch bản tương tác chung (main.js).
+  - Đóng các thẻ cấu trúc trang (<main>, <div>, <body>, <html>).
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 
         <footer class="app-footer">

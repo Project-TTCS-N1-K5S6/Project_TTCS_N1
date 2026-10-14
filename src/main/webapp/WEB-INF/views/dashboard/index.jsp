@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  BẢNG ĐIỀU KHIỂN TỔNG QUAN HỆ THỐNG (dashboard/index.jsp)
+  Chức năng:
+  - Hiển thị 4 thẻ KPI chính: Tổng ứng viên, Tin tuyển dụng đang mở, Yêu cầu chờ duyệt, Nhân sự đã tuyển.
+  - Biểu đồ và thống kê pipeline ứng viên theo từng giai đoạn (Ứng tuyển, Sàng lọc, Phỏng vấn, Đề nghị, Tiếp nhận).
+  - Danh sách việc cần xử lý nhanh (yêu cầu chờ phê duyệt, hồ sơ mới nộp).
+  - Lối tắt tạo yêu cầu tuyển dụng mới và chuyển đến danh sách ứng viên.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

@@ -10,8 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * Data Access Object quản lý dữ liệu Ngân hàng câu hỏi phỏng vấn (bảng questions)
+ * Thực hiện tìm kiếm, thêm mới, cập nhật, xóa câu hỏi và liên kết tiêu chí năng lực
+ */
 public class QuestionDAO extends BaseDAO {
 
+    /**
+     * Chức năng: Tìm kiếm danh sách câu hỏi phỏng vấn theo chức danh công việc và tiêu chí năng lực
+     *
+     * @param jobTitle    Chức danh vị trí công việc cần lọc
+     * @param criterionId ID tiêu chí năng lực cần lọc
+     * @return Danh sách câu hỏi phù hợp
+     */
     public List<Question> search(String jobTitle, String criterionId) {
         List<Question> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -55,10 +66,21 @@ public class QuestionDAO extends BaseDAO {
         return list;
     }
     
+    /**
+     * Chức năng: Lấy toàn bộ danh sách câu hỏi phỏng vấn trong hệ thống
+     *
+     * @return Danh sách tất cả câu hỏi
+     */
     public List<Question> findAll() {
         return search(null, null);
     }
 
+    /**
+     * Chức năng: Tìm kiếm thông tin chi tiết một câu hỏi theo mã định danh ID
+     *
+     * @param id ID của câu hỏi
+     * @return Thực thể Question nếu tìm thấy, ngược lại null
+     */
     public Question findById(String id) {
         String sql = "SELECT q.*, c.name as criterion_name FROM questions q " +
                      "LEFT JOIN competency_criteria c ON q.criterion_id = c.id WHERE q.id = ?";
@@ -81,6 +103,12 @@ public class QuestionDAO extends BaseDAO {
         return null;
     }
 
+    /**
+     * Chức năng: Thêm mới một câu hỏi phỏng vấn vào bảng questions
+     *
+     * @param q Thực thể Question chứa thông tin cần lưu
+     * @return true nếu thêm thành công, ngược lại false
+     */
     public boolean insert(Question q) {
         String sql = "INSERT INTO questions (id, content, difficulty_level, good_answer_suggestion, criterion_id, job_title) VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = null;
@@ -103,6 +131,12 @@ public class QuestionDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Cập nhật nội dung, độ khó, gợi ý câu trả lời và tiêu chí cho câu hỏi hiện có
+     *
+     * @param q Thực thể Question chứa thông tin cập nhật
+     * @return true nếu cập nhật thành công, ngược lại false
+     */
     public boolean update(Question q) {
         String sql = "UPDATE questions SET content = ?, difficulty_level = ?, good_answer_suggestion = ?, criterion_id = ?, job_title = ? WHERE id = ?";
         Connection conn = null;
@@ -125,6 +159,12 @@ public class QuestionDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Xóa một câu hỏi phỏng vấn khỏi cơ sở dữ liệu theo mã ID
+     *
+     * @param id ID của câu hỏi cần xóa
+     * @return true nếu xóa thành công, ngược lại false
+     */
     public boolean delete(String id) {
         String sql = "DELETE FROM questions WHERE id = ?";
         Connection conn = null;
@@ -142,6 +182,12 @@ public class QuestionDAO extends BaseDAO {
         }
     }
     
+    /**
+     * Chức năng: Chuyển đổi dữ liệu từ dòng ResultSet sang đối tượng Question
+     *
+     * @param rs Con trỏ ResultSet đang trỏ tới bản ghi hiện tại
+     * @return Đối tượng Question đầy đủ thông tin
+     */
     private Question mapResultSetToEntity(ResultSet rs) throws SQLException {
         Question q = new Question();
         q.setId(rs.getString("id"));

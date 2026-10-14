@@ -12,6 +12,15 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 
+/**
+ * Bộ điều khiển Danh mục dùng chung (SharedCatalogServlet)
+ * Quản lý các URL:
+ * - /admin/shared-catalogs: Xem danh sách các mục danh mục theo từng phân loại (Nguồn ứng viên, Lý do loại, Địa điểm...)
+ * - /admin/shared-catalogs/create: Thêm giá trị mới
+ * - /admin/shared-catalogs/edit: Sửa tên giá trị
+ * - /admin/shared-catalogs/delete: Xóa giá trị (kiểm tra ràng buộc tham chiếu)
+ * - /admin/shared-catalogs/move: Di chuyển thứ tự hiển thị (lên / xuống)
+ */
 @WebServlet(name = "SharedCatalogServlet", urlPatterns = {
         "/admin/shared-catalogs",
         "/admin/shared-catalogs/create",
@@ -22,6 +31,9 @@ import java.net.URLEncoder;
 public class SharedCatalogServlet extends HttpServlet {
     private final SharedCatalogService catalogService = new SharedCatalogService();
 
+    /**
+     * Chức năng: Hiển thị giao diện danh sách mục danh mục theo loại (type), tải số lượng và danh sách tương ứng
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -42,6 +54,9 @@ public class SharedCatalogServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/shared-catalogs/list.jsp").forward(request, response);
     }
 
+    /**
+     * Chức năng: Điều phối các thao tác thêm, sửa, xóa, hoán đổi thứ tự mục danh mục
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

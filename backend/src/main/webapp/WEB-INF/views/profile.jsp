@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN HỒ SƠ CÁ NHÂN (profile.jsp)
+  Chức năng:
+  - Hiển thị thông tin tài khoản cá nhân: Mã nhân viên, Họ tên, Email, SĐT, Phòng ban, Vai trò.
+  - Form cập nhật thông tin liên lạc (Họ tên, Số điện thoại di động Việt Nam, Chức danh).
+  - Liên kết chuyển nhanh tới màn hình Đổi mật khẩu tài khoản (/auth/change-password).
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

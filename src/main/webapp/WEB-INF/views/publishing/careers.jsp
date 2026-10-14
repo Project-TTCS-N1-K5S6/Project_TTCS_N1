@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  CỔNG THÔNG TIN TUYỂN DỤNG CÔNG KHAI (publishing/careers.jsp)
+  Chức năng:
+  - Trang web công khai (Public Careers Portal) cho phép ứng viên và người tìm việc xem các vị trí đang tuyển (status = published).
+  - Tìm kiếm việc làm theo từ khóa, lọc theo Phòng ban, Địa điểm làm việc, Hình thức làm việc (Full-time/Part-time/Remote).
+  - Xem tóm tắt thông tin công việc, hạn nộp hồ sơ, mức lương (hoặc "Thoả thuận").
+  - Tích hợp Modal xem chi tiết tin và Modal nộp hồ sơ ứng tuyển trực tuyến kéo-thả CV, chống spam CAPTCHA.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

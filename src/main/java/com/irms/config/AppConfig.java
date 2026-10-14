@@ -32,6 +32,9 @@ public class AppConfig {
         loadDotEnv();
     }
 
+    /**
+     * Chức năng: Tìm kiếm và nạp các biến môi trường từ tệp .env ở thư mục gốc dự án vào bộ nhớ envMap
+     */
     private static void loadDotEnv() {
         String[] potentialPaths = {
             ".env",
@@ -65,6 +68,18 @@ public class AppConfig {
         }
     }
 
+    /**
+     * Chức năng: Đọc giá trị cấu hình chuỗi theo khóa (key) với cơ chế phân tầng ưu tiên:
+     * 1. Biến từ file .env
+     * 2. Biến môi trường hệ điều hành (System Environment)
+     * 3. Xử lý alias cấu hình CSDL và máy chủ SMTP
+     * 4. Thuộc tính trong file application.properties
+     * 5. Trả về defaultValue nếu không tìm thấy
+     *
+     * @param key          Khóa cấu hình cần đọc
+     * @param defaultValue Giá trị trả về mặc định nếu không có cấu hình
+     * @return Chuỗi giá trị cấu hình tương ứng
+     */
     public static String get(String key, String defaultValue) {
         String envKey = key.replace('.', '_').toUpperCase();
 
@@ -129,6 +144,13 @@ public class AppConfig {
         return properties.getProperty(key, defaultValue);
     }
 
+    /**
+     * Chức năng: Đọc giá trị cấu hình số nguyên int theo khóa, trả về defaultValue nếu parse thất bại
+     *
+     * @param key          Khóa cấu hình
+     * @param defaultValue Giá trị số nguyên mặc định
+     * @return Số nguyên cấu hình
+     */
     public static int getInt(String key, int defaultValue) {
         try {
             return Integer.parseInt(get(key, String.valueOf(defaultValue)));
@@ -137,6 +159,13 @@ public class AppConfig {
         }
     }
 
+    /**
+     * Chức năng: Đọc giá trị cấu hình logic boolean (true/false) theo khóa
+     *
+     * @param key          Khóa cấu hình
+     * @param defaultValue Giá trị boolean mặc định
+     * @return boolean tương ứng
+     */
     public static boolean getBoolean(String key, boolean defaultValue) {
         return Boolean.parseBoolean(get(key, String.valueOf(defaultValue)));
     }

@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN CẤU HÌNH TRANG GIỚI THIỆU CÔNG TY (company/config.jsp)
+  Chức năng:
+  - Quản lý thông tin thương hiệu tuyển dụng doanh nghiệp: Tên công ty, Slogan, Giới thiệu chung, Lịch sử phát triển.
+  - Cấu hình văn hóa doanh nghiệp, giá trị cốt lõi, chế độ phúc lợi đãi ngộ và môi trường làm việc.
+  - Quản lý hình ảnh hoạt động văn phòng/sự kiện (Upload ảnh, xóa ảnh, thiết lập ảnh đại diện).
+  - Tích hợp nút xem trước (Live Preview) giao diện công khai (/about-us) trước khi lưu cấu hình.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -159,7 +169,7 @@
                                                 </label>
                                                 <div class="d-flex align-items-center gap-3 mb-2">
                                                     <div class="border rounded bg-white p-2 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                                        <img src="${profile.logoUrl}" id="previewLogoImg" class="img-fluid" style="max-height: 64px; object-fit: contain;" alt="Logo Preview" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
+                                                        <img src="${profile.logoUrl}" id="previewLogoImg" class="img-fluid" style="max-height: 64px; object-fit: contain;" alt="Logo Preview" onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
                                                     </div>
                                                     <div class="flex-fill">
                                                         <input type="file" class="form-control form-control-sm mb-1" name="logoFile" id="uploadLogoFile" accept="image/*" onchange="handleLocalImagePreview(this, 'previewLogoImg', 'editLogoUrl')">
@@ -179,7 +189,7 @@
                                                 </label>
                                                 <div class="d-flex align-items-center gap-3 mb-2">
                                                     <div class="border rounded bg-white p-1 d-flex align-items-center justify-content-center overflow-hidden" style="width: 110px; height: 80px;">
-                                                        <img src="${profile.bannerUrl}" id="previewBannerImg" class="img-fluid rounded" style="width: 100%; height: 100%; object-fit: cover;" alt="Banner Preview" onerror="this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
+                                                        <img src="${profile.bannerUrl}" id="previewBannerImg" class="img-fluid rounded" style="width: 100%; height: 100%; object-fit: cover;" alt="Banner Preview" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
                                                     </div>
                                                     <div class="flex-fill">
                                                         <input type="file" class="form-control form-control-sm mb-1" name="bannerFile" id="uploadBannerFile" accept="image/*" onchange="handleLocalImagePreview(this, 'previewBannerImg', 'editBannerUrl')">
@@ -379,7 +389,7 @@
                                 <!-- Header Mini -->
                                 <div class="p-2 border-bottom d-flex align-items-center justify-content-between bg-white">
                                     <div class="d-flex align-items-center gap-1">
-                                        <img src="${profile.logoUrl}" id="miniLogo" style="height: 18px; max-width: 60px; object-fit: contain;" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
+                                        <img src="${profile.logoUrl}" id="miniLogo" style="height: 18px; max-width: 60px; object-fit: contain;" onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
                                         <span class="fw-bold text-truncate" id="miniBrandName" style="max-width: 120px;">${profile.brandName != null ? profile.brandName : 'IRMS Group'}</span>
                                     </div>
                                     <span class="badge bg-primary-subtle text-primary" style="font-size: 9px;">Tuyển dụng</span>
@@ -450,7 +460,7 @@
                         <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm px-3 py-2 sticky-top">
                             <div class="container-fluid">
                                 <a class="navbar-brand d-flex align-items-center gap-2" href="javascript:void(0);">
-                                    <img src="${profile.logoUrl}" id="pvNavLogo" style="height: 36px; max-width: 120px; object-fit: contain;" alt="Logo" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
+                                    <img src="${profile.logoUrl}" id="pvNavLogo" style="height: 36px; max-width: 120px; object-fit: contain;" alt="Logo" onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
                                     <span class="fw-bold text-dark fs-6" id="pvNavBrand">${profile.brandName != null ? profile.brandName : profile.companyName}</span>
                                 </a>
                                 <div class="d-flex align-items-center gap-2 ms-auto">
@@ -551,7 +561,7 @@
                                     </div>
                                     <div class="col-12 col-lg-6">
                                         <div class="rounded-4 overflow-hidden shadow-sm">
-                                            <img src="${profile.bannerUrl}" id="pvCultureImg" class="img-fluid" style="width: 100%; height: 260px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
+                                            <img src="${profile.bannerUrl}" id="pvCultureImg" class="img-fluid" style="width: 100%; height: 260px; object-fit: cover;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
                                         </div>
                                     </div>
                                 </div>
@@ -585,7 +595,7 @@
                                 <div class="row g-4">
                                     <div class="col-12 col-md-5">
                                         <div class="d-flex align-items-center gap-2 mb-3">
-                                            <img src="${profile.logoUrl}" id="pvFooterLogo" style="height: 32px; filter: brightness(0) invert(1);" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
+                                            <img src="${profile.logoUrl}" id="pvFooterLogo" style="height: 32px; filter: brightness(0) invert(1);" onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
                                             <h6 class="fw-bold text-white mb-0" id="pvFooterCompanyName">${profile.companyName}</h6>
                                         </div>
                                         <p class="text-white-50 small mb-3" id="pvFooterSlogan">${profile.slogan}</p>
@@ -758,7 +768,7 @@ function renderGalleryList() {
         col.className = 'col-12 col-md-4';
         col.innerHTML = '<div class="card border shadow-none h-100">' +
             '<div class="position-relative" style="height: 140px; overflow: hidden;">' +
-            '<img src="' + url + '" class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src=\'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80\'">' +
+            '<img src="' + url + '" class="card-img-top" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80\'">' +
             '<button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 py-0 px-2" onclick="removeGalleryImage(' + idx + ')" title="Xóa ảnh">&times;</button>' +
             '</div>' +
             '<div class="p-2 bg-light">' +
@@ -914,7 +924,7 @@ function openLivePreviewModal() {
         const col = document.createElement('div');
         col.className = 'col-12 col-md-4';
         col.innerHTML = '<div class="rounded-3 overflow-hidden shadow-sm h-100" style="min-height: 180px;">' +
-            '<img src="' + img + '" class="img-fluid w-100 h-100" style="object-fit: cover;" onerror="this.src=\'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80\'">' +
+            '<img src="' + img + '" class="img-fluid w-100 h-100" style="object-fit: cover;" onerror="this.onerror=null; this.src=\'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80\'">' +
             '</div>';
         galleryGrid.appendChild(col);
     });

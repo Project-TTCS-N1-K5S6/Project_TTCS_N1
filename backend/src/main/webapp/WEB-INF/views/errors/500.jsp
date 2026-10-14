@@ -1,3 +1,11 @@
+<%--
+  ==============================================================================
+  TRANG BÁO LỖI 500 INTERNAL SERVER ERROR (errors/500.jsp)
+  Chức năng:
+  - Hiển thị thông báo khi máy chủ gặp sự cố xử lý logic hoặc ngoại lệ CSDL không mong muốn.
+  - Hướng dẫn người dùng kiểm tra kết nối DB và nút quay về Dashboard.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="vi">

@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  BIỂU MẪU CẤU HÌNH MA TRẬN PHÊ DUYỆT ĐA CẤP (approval/form.jsp)
+  Chức năng:
+  - Thiết lập quy tắc phê duyệt: Mã quy tắc, Tên ma trận, Phòng ban áp dụng, Điều kiện dải lương hoặc ngưỡng ngân sách.
+  - Cấu hình động các bước phê duyệt tuần tự (Step 1, Step 2, Step 3...): Chọn vai trò duyệt (APPROVER, HR_MANAGER, DEPT_HEAD), thời hạn SLA (giờ), quyền từ chối.
+  - Hỗ trợ thêm/xóa/sắp xếp thứ tự các bước duyệt linh hoạt bằng JavaScript.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

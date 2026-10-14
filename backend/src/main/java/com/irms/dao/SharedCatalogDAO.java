@@ -13,6 +13,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 
+/**
+ * Data Access Object quản lý dữ liệu Danh mục dùng chung (bảng shared_catalogs)
+ * Hỗ trợ các thao tác CRUD, sắp xếp thứ tự hiển thị (move up/down) và tính toán số lượng tham chiếu (reference_count)
+ */
 public class SharedCatalogDAO extends BaseDAO {
 
     private static final String SELECT_COLUMNS =
@@ -27,6 +31,12 @@ public class SharedCatalogDAO extends BaseDAO {
     private static final String SELECT_COLUMNS_SIMPLE =
             "SELECT sc.id, sc.type_code, sc.value, sc.display_order, 0 AS reference_count FROM shared_catalogs sc ";
 
+    /**
+     * Chức năng: Lấy danh sách các mục danh mục theo loại (type), kèm số lượng bản ghi đang tham chiếu
+     *
+     * @param type Phân loại danh mục (APPLICATION_SOURCE, REJECTION_REASON, WORK_LOCATION, WORK_MODE)
+     * @return Danh sách mục danh mục sắp xếp theo thứ tự hiển thị
+     */
     public List<SharedCatalogItem> findAll(SharedCatalogType type) {
         List<SharedCatalogItem> items = new ArrayList<>();
         String sql = SELECT_COLUMNS + "WHERE sc.type_code = ? ORDER BY sc.display_order, sc.value, sc.id";
@@ -57,6 +67,11 @@ public class SharedCatalogDAO extends BaseDAO {
         return items;
     }
 
+    /**
+     * Chức năng: Lấy tất cả các mục danh mục dùng chung thuộc mọi phân loại
+     *
+     * @return Danh sách tất cả mục danh mục
+     */
     public List<SharedCatalogItem> findAll() {
         List<SharedCatalogItem> items = new ArrayList<>();
         String sql = SELECT_COLUMNS + "ORDER BY sc.type_code, sc.display_order, sc.value, sc.id";
@@ -83,6 +98,12 @@ public class SharedCatalogDAO extends BaseDAO {
         return items;
     }
 
+    /**
+     * Chức năng: Đếm tổng số lượng mục danh mục thuộc một phân loại cụ thể
+     *
+     * @param type Phân loại danh mục cần đếm
+     * @return Số lượng mục danh mục
+     */
     public int countByType(SharedCatalogType type) {
         String sql = "SELECT COUNT(*) FROM shared_catalogs WHERE type_code = ?";
         try (Connection conn = getConnection();
@@ -97,6 +118,13 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Thêm mới một giá trị danh mục và tự động tính thứ tự hiển thị display_order tiếp theo
+     *
+     * @param type  Phân loại danh mục
+     * @param value Tên/giá trị của mục danh mục
+     * @return true nếu thêm thành công, ngược lại false
+     */
     public boolean insert(SharedCatalogType type, String value) {
         String sql = "INSERT INTO shared_catalogs (id, type_code, value, display_order) " +
                      "VALUES (?, ?, ?, ?)";
@@ -123,6 +151,13 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Cập nhật giá trị hiển thị (value) của mục danh mục theo ID
+     *
+     * @param id    ID của mục danh mục cần cập nhật
+     * @param value Giá trị hiển thị mới
+     * @return true nếu cập nhật thành công, ngược lại false
+     */
     public boolean update(String id, String value) {
         String sql = "UPDATE shared_catalogs SET value = ? WHERE id = ?";
         try (Connection conn = getConnection();
@@ -136,6 +171,12 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Tìm kiếm thông tin chi tiết một mục danh mục theo mã ID
+     *
+     * @param id ID của mục danh mục
+     * @return Thực thể SharedCatalogItem nếu tìm thấy, ngược lại null
+     */
     public SharedCatalogItem findById(String id) {
         String sql = SELECT_COLUMNS + "WHERE sc.id = ?";
         try (Connection conn = getConnection();
@@ -160,6 +201,12 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Xóa một mục danh mục theo ID
+     *
+     * @param id ID của mục danh mục cần xóa
+     * @return true nếu xóa thành công, ngược lại false
+     */
     public boolean delete(String id) {
         String sql = "DELETE FROM shared_catalogs WHERE id = ?";
         try (Connection conn = getConnection();
@@ -172,6 +219,14 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Hoán đổi thứ tự hiển thị display_order của mục danh mục (lên hoặc xuống) trong transaction an toàn
+     *
+     * @param id        ID của mục cần thay đổi vị trí
+     * @param type      Phân loại danh mục
+     * @param direction Hướng di chuyển: -1 (lên trên), 1 (xuống dưới)
+     * @return true nếu hoán đổi thành công, ngược lại false
+     */
     public boolean move(String id, SharedCatalogType type, int direction) {
         if (direction != -1 && direction != 1) {
             return false;
@@ -234,6 +289,13 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Kiểm tra xem một ID danh mục có thuộc đúng phân loại type chỉ định hay không
+     *
+     * @param id   ID của mục danh mục
+     * @param type Phân loại danh mục
+     * @return true nếu hợp lệ, ngược lại false
+     */
     public boolean isValueInType(String id, SharedCatalogType type) {
         if (id == null || id.trim().isEmpty()) {
             return true;
@@ -252,6 +314,12 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+    /**
+     * Chức năng: Chuyển đổi dòng ResultSet thành đối tượng SharedCatalogItem
+     *
+     * @param rs Con trỏ ResultSet
+     * @return Thực thể SharedCatalogItem
+     */
     private SharedCatalogItem map(ResultSet rs) throws SQLException {
         SharedCatalogItem item = new SharedCatalogItem();
         item.setId(rs.getString("id"));

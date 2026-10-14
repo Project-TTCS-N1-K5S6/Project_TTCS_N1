@@ -44,7 +44,7 @@
     <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm py-2">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="${pageContext.request.contextPath}/about-us">
-                <img src="${profile.logoUrl}" style="height: 38px; max-width: 140px; object-fit: contain;" alt="Logo" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
+                <img src="${profile.logoUrl}" style="height: 38px; max-width: 140px; object-fit: contain;" alt="Logo" onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'">
                 <span class="fw-bold text-dark fs-5">${profile.brandName != null ? profile.brandName : profile.companyName}</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNav">
@@ -182,7 +182,7 @@
                 </div>
                 <div class="col-12 col-lg-6">
                     <div class="rounded-4 overflow-hidden shadow">
-                        <img src="${profile.bannerUrl}" class="img-fluid" style="width: 100%; height: 340px; object-fit: cover;" alt="Culture" onerror="this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
+                        <img src="${profile.bannerUrl}" class="img-fluid" style="width: 100%; height: 340px; object-fit: cover;" alt="Culture" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
                     </div>
                 </div>
             </div>
@@ -224,7 +224,7 @@
                 <c:forEach var="g" items="${profile.galleryList}">
                     <div class="col-12 col-md-4">
                         <div class="rounded-4 overflow-hidden shadow-sm h-100 card-hover" style="height: 240px;">
-                            <img src="${g}" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="Gallery" onerror="this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
+                            <img src="${g}" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="Gallery" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'">
                         </div>
                     </div>
                 </c:forEach>
@@ -238,7 +238,7 @@
             <div class="row g-5">
                 <div class="col-12 col-md-5">
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <img src="${profile.logoUrl}" style="height: 40px; filter: brightness(0) invert(1);" onerror="this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'" alt="Logo">
+                        <img src="${profile.logoUrl}" style="height: 40px; filter: brightness(0) invert(1);" onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/logo-default.png'" alt="Logo">
                         <h5 class="fw-bold text-white mb-0">${profile.companyName}</h5>
                     </div>
                     <p class="text-white-50 small mb-4" style="line-height: 1.6;">${profile.slogan}</p>

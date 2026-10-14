@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN MA TRẬN PHÂN QUYỀN RBAC 10 PHÂN HỆ (permissions/matrix.jsp)
+  Chức năng:
+  - Hiển thị ma trận phân quyền trực quan theo từng vai trò (chọn vai trò qua Tabs).
+  - Nhóm các quyền theo 10 phân hệ nghiệp vụ: Quản trị người dùng, Vai trò, Yêu cầu tuyển dụng, Phê duyệt, Hồ sơ ứng viên, Định biên, Khung năng lực, Dải lương, Kiểm toán, Danh mục.
+  - Hỗ trợ chọn/bỏ chọn nhanh toàn bộ quyền của từng module (toggleModuleCheckboxes).
+  - Lưu phân quyền cập nhật ngay lập tức qua AJAX không cần tải lại trang (US 9).
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

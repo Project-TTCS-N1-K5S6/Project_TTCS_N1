@@ -3,6 +3,10 @@ package com.irms.model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
+/**
+ * Model đại diện cho Câu hỏi phỏng vấn trong Ngân hàng câu hỏi (bảng questions)
+ * Lưu trữ nội dung câu hỏi, độ khó (EASY, MEDIUM, HARD), gợi ý câu trả lời chuẩn và tiêu chí năng lực gắn liền
+ */
 public class Question implements Serializable {
     private static final long serialVersionUID = 1L;
 

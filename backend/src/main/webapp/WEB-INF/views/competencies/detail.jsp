@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN CHI TIẾT KHUNG NĂNG LỰC (competencies/detail.jsp)
+  Chức năng:
+  - Hiển thị chi tiết cấu trúc đánh giá của khung năng lực: Thông tin chung, phòng ban áp dụng, danh sách tiêu chí thành phần.
+  - Hiển thị trọng số (%), thang điểm chuẩn và hướng dẫn phỏng vấn/chấm điểm tương ứng của từng tiêu chí.
+  - Quản lý các chức danh vị trí công việc được gán áp dụng khung năng lực này.
+  - Các thao tác: Chỉnh sửa khung năng lực, Bật/Tắt hiệu lực, Gán vị trí áp dụng và Xóa khung năng lực.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

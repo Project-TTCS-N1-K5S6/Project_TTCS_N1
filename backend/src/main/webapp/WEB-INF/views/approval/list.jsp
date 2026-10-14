@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ MA TRẬN PHÊ DUYỆT (approval/list.jsp)
+  Chức năng:
+  - Hiển thị danh sách các quy tắc ma trận phê duyệt yêu cầu tuyển dụng (Approval Matrix Rules).
+  - Quản lý điều kiện áp dụng: Theo Phòng ban, Ngưỡng lương (Threshold / Range), Mức độ ưu tiên (Priority).
+  - Hiển thị số bước phê duyệt và các vai trò phê duyệt trong từng chuỗi.
+  - Hỗ trợ kích hoạt/vô hiệu hóa trạng thái (ACTIVE / INACTIVE) và liên kết chỉnh sửa cấu hình các bước.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

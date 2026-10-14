@@ -5,6 +5,12 @@
  * ============================================================
  */
 
+/**
+ * Chức năng: Chọn hoặc bỏ chọn đồng loạt tất cả các checkbox quyền thuộc về một phân hệ (Module)
+ *
+ * @param {string} moduleName Tên phân hệ (users, roles, candidates...)
+ * @param {HTMLInputElement} checkbox Ô checkbox tổng của module
+ */
 function toggleModuleCheckboxes(moduleName, checkbox) {
     const isChecked = checkbox.checked;
     const checkboxes = document.querySelectorAll(`input[data-module="${moduleName}"]`);
@@ -13,6 +19,13 @@ function toggleModuleCheckboxes(moduleName, checkbox) {
     });
 }
 
+/**
+ * Chức năng: Lưu cấu hình phân quyền của vai trò qua AJAX (POST), hiển thị trạng thái spinner và thông báo toast kết quả
+ *
+ * @param {string} roleId ID của vai trò cần gán quyền
+ * @param {HTMLFormElement} formElement Biểu mẫu chứa danh sách quyền được chọn
+ * @returns {boolean} Luôn trả về false để ngăn chặn reload trang mặc định của form
+ */
 function saveRolePermissions(roleId, formElement) {
     const formData = new FormData(formElement);
     const saveBtn = formElement.querySelector('button[type="submit"]');

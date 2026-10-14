@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  THÀNH PHẦN THANH ĐIỀU HƯỚNG TRÊN CÙNG (common/navbar.jsp)
+  Chức năng:
+  - Nút toggle mở/đóng Sidebar Drawer trên màn hình di động responsive.
+  - Lời chào người dùng theo thời gian thực (họ tên nhân viên đang đăng nhập).
+  - Nút tìm kiếm nhanh, nút chuông thông báo hệ thống.
+  - Menu người dùng (User Pill dropdown): xem hồ sơ cá nhân, đổi ảnh đại diện (Modal upload avatar), đổi mật khẩu và đăng xuất.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

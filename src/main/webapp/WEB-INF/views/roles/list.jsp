@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ VAI TRÒ HỆ THỐNG (roles/list.jsp)
+  Chức năng:
+  - Hiển thị danh mục các vai trò bảo mật RBAC (ADMIN, HR_MANAGER, RECRUITER, HIRING_MANAGER, INTERVIEWER, APPROVER).
+  - Thống kê số lượng quyền hạn gán cho từng vai trò và số lượng người dùng đang nắm giữ vai trò.
+  - Cung cấp liên kết nhanh tới màn hình Ma trận phân quyền (RBAC Matrix) để cấu hình chi tiết quyền hạn.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ YÊU CẦU TUYỂN DỤNG (recruitment/list.jsp)
+  Chức năng:
+  - Hiển thị danh sách các đề xuất/yêu cầu tuyển dụng kèm mã REQ, chức danh, phòng ban, định biên, dải lương, ngày cần người.
+  - Cảnh báo trực quan hạn chót: Đang mở (Open), Sắp đến hạn (Due soon <= 7 ngày), Quá hạn (Overdue), Đã đóng.
+  - Bộ lọc đa tiêu chí: Từ khóa, Trạng thái, Phòng ban, Recruiter phụ trách, Khoảng thời gian (theo ngày cần hoặc ngày mở).
+  - Tích hợp Modal xem tiến độ phê duyệt qua chuỗi đa cấp, Modal sao chép (Clone) yêu cầu, Modal kết thúc/đóng đợt tuyển dụng.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

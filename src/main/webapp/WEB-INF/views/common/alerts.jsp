@@ -1,3 +1,12 @@
+<%--
+  ==============================================================================
+  THÀNH PHẦN THÔNG BÁO HỆ THỐNG DÙNG CHUNG (common/alerts.jsp)
+  Chức năng:
+  - Hiển thị Toast notification tự động cho các thông báo flash: flashSuccess, flashError, flashWarning, flashInfo.
+  - Tự động đóng sau 5 giây (auto-dismiss) kèm thanh tiến trình (progress bar).
+  - Cung cấp hàm toàn cục window.showToast() cho các lời gọi AJAX phía Client.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 

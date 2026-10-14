@@ -12,10 +12,17 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
+/**
+ * Bộ điều khiển Hồ sơ cá nhân (ProfileServlet)
+ * Điều hướng xem trang thông tin cá nhân (/profile), tiếp nhận và cập nhật họ tên, SĐT, chức danh người dùng
+ */
 @WebServlet(name = "ProfileServlet", urlPatterns = "/profile")
 public class ProfileServlet extends HttpServlet {
     private final ProfileService profileService = new ProfileService();
 
+    /**
+     * Chức năng: Hiển thị giao diện thông tin hồ sơ cá nhân của người dùng đang đăng nhập
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -36,6 +43,9 @@ public class ProfileServlet extends HttpServlet {
         request.getRequestDispatcher("/WEB-INF/views/profile.jsp").forward(request, response);
     }
 
+    /**
+     * Chức năng: Tiếp nhận biểu mẫu cập nhật thông tin cá nhân (họ tên, SĐT, chức danh) và đồng bộ lại session
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

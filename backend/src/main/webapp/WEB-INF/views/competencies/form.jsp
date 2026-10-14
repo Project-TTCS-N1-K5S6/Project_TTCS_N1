@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  BIỂU MẪU THIẾT LẬP KHUNG NĂNG LỰC (competencies/form.jsp)
+  Chức năng:
+  - Khai báo thông tin khung năng lực: Mã khung, Tên khung, Phòng ban áp dụng, Mô tả mục tiêu.
+  - Chọn và gán danh sách các tiêu chí năng lực (Criteria) từ ngân hàng tiêu chí.
+  - Phân bổ trọng số phần trăm (%) cho từng tiêu chí, tự động tính tổng trọng số và cảnh báo thanh tiến trình (yêu cầu tổng = 100%).
+  - Thiết lập mức điểm chuẩn yêu cầu (Target Score: 1-5 sao) cho từng tiêu chí đánh giá phỏng vấn.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

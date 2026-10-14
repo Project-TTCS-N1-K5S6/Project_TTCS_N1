@@ -1,3 +1,13 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN QUẢN LÝ KHUNG NĂNG LỰC (competencies/list.jsp)
+  Chức năng:
+  - Hiển thị danh mục các Khung năng lực tuyển dụng (Competency Frameworks) theo từng vị trí chức danh và phòng ban.
+  - Thống kê số lượng tiêu chí đánh giá và trọng số trong từng khung năng lực.
+  - Tìm kiếm và lọc theo phòng ban, trạng thái (ACTIVE / INACTIVE).
+  - Cung cấp liên kết thêm mới, xem chi tiết đánh giá, chỉnh sửa và cấu hình gán vị trí chức danh.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>

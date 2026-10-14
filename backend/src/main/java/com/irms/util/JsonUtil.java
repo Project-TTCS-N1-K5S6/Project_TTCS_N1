@@ -16,16 +16,33 @@ public class JsonUtil {
             .serializeNulls()
             .create();
 
+    /**
+     * Chức năng: Chuyển đổi đối tượng Java thành chuỗi JSON với định dạng ngày giờ chuẩn yyyy-MM-dd HH:mm:ss
+     *
+     * @param obj Đối tượng Java cần tuần tự hóa
+     * @return Chuỗi định dạng JSON
+     */
     public static String toJson(Object obj) {
         return gson.toJson(obj);
     }
 
+    /**
+     * Chức năng: Giải tuần tự hóa chuỗi JSON thành đối tượng Java theo kiểu class chỉ định
+     *
+     * @param json     Chuỗi JSON đầu vào
+     * @param classOfT Lớp đối tượng đích
+     * @return Thực thể đối tượng Java
+     */
     public static <T> T fromJson(String json, Class<T> classOfT) {
         return gson.fromJson(json, classOfT);
     }
 
     /**
-     * Gửi phản hồi JSON về Client
+     * Chức năng: Thiết lập mã HTTP status, header application/json và gửi phản hồi JSON về Client
+     *
+     * @param response   Đối tượng HttpServletResponse
+     * @param statusCode Mã trạng thái HTTP (200, 400, 404, 500...)
+     * @param data       Đối tượng dữ liệu cần trả về dạng JSON
      */
     public static void sendJsonResponse(HttpServletResponse response, int statusCode, Object data) throws IOException {
         response.setContentType("application/json;charset=UTF-8");

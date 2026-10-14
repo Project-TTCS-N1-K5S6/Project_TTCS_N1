@@ -1,3 +1,11 @@
+<%--
+  ==============================================================================
+  GIAO DIỆN GIỮ CHỖ PHÂN HỆ ĐANG PHÁT TRIỂN (placeholder/index.jsp)
+  Chức năng:
+  - Hiển thị màn hình chờ cho các phân hệ đã được định nghĩa trong ma trận phân quyền RBAC nhưng đang trong lộ trình hoàn thiện giao diện.
+  - Hiển thị tên phân hệ (moduleName), mô tả trạng thái và nút quay về Dashboard.
+  ==============================================================================
+--%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
