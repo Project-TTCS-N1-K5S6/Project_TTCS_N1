@@ -8,6 +8,7 @@ import com.irms.model.User;
 import com.irms.service.DepartmentService;
 import com.irms.service.RecruitmentRequestService;
 import com.irms.service.SalaryRangeService;
+import com.irms.service.UserService;
 import com.irms.util.JsonUtil;
 import com.irms.util.SecurityUtil;
 
@@ -48,6 +49,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
     private final RecruitmentRequestService requisitionService = new RecruitmentRequestService();
     private final DepartmentService departmentService = new DepartmentService();
     private final SalaryRangeService salaryRangeService = new SalaryRangeService();
+    private final UserService userService = new UserService();
     private final com.irms.service.RecruitmentApprovalService approvalService = new com.irms.service.RecruitmentApprovalService();
 
     @Override
@@ -134,6 +136,13 @@ public class RecruitmentRequestServlet extends HttpServlet {
         String search = request.getParameter("search");
         String status = request.getParameter("status");
         String departmentId = request.getParameter("departmentId");
+        String recruiterId = request.getParameter("recruiterId");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+        String dateType = request.getParameter("dateType");
+        if (dateType == null || dateType.trim().isEmpty()) {
+            dateType = "deadline";
+        }
 
         int page = 1;
         int pageSize = 10;
@@ -143,13 +152,17 @@ public class RecruitmentRequestServlet extends HttpServlet {
             }
         } catch (NumberFormatException ignored) {}
 
-        List<RecruitmentRequest> list = requisitionService.getRequests(search, status, departmentId, page, pageSize);
-        int totalRequests = requisitionService.countRequests(search, status, departmentId);
+        List<RecruitmentRequest> list = requisitionService.getRequests(search, status, departmentId, recruiterId, fromDate, toDate, dateType, page, pageSize);
+        int totalRequests = requisitionService.countRequests(search, status, departmentId, recruiterId, fromDate, toDate, dateType);
         int totalPages = (int) Math.ceil((double) totalRequests / pageSize);
         List<Department> departments = departmentService.getAllDepartments();
+        List<User> recruiters = userService.getUsers(null, null, "ACTIVE", 1, 500);
+        Map<String, Integer> stats = requisitionService.getProgressMonitoringStats();
 
         request.setAttribute("requisitions", list);
         request.setAttribute("departments", departments);
+        request.setAttribute("recruiters", recruiters);
+        request.setAttribute("stats", stats);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalCount", totalRequests);
@@ -157,6 +170,10 @@ public class RecruitmentRequestServlet extends HttpServlet {
         request.setAttribute("paramSearch", search);
         request.setAttribute("paramStatus", status);
         request.setAttribute("paramDept", departmentId);
+        request.setAttribute("paramRecruiter", recruiterId);
+        request.setAttribute("paramFromDate", fromDate);
+        request.setAttribute("paramToDate", toDate);
+        request.setAttribute("paramDateType", dateType);
         request.setAttribute("activeMenu", "requisitions");
 
         request.getRequestDispatcher("/WEB-INF/views/recruitment/list.jsp").forward(request, response);

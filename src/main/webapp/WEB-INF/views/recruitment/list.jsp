@@ -41,6 +41,34 @@
     background-color: #fef2f2;
     box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
 }
+.table-danger-custom {
+    background-color: #fff1f2 !important;
+}
+.table-danger-custom td {
+    background-color: transparent !important;
+}
+.table-warning-custom {
+    background-color: #fffbeb !important;
+}
+.table-warning-custom td {
+    background-color: transparent !important;
+}
+.pulse-badge {
+    animation: pulseAlert 1.8s infinite;
+}
+@keyframes pulseAlert {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+    70% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+.kpi-card-hover {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.kpi-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.10) !important;
+}
 </style>
 
 <main class="app-main">
@@ -49,14 +77,17 @@
     <div class="app-content">
         <jsp:include page="../common/alerts.jsp" />
 
-        <!-- Header phân hệ -->
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <!-- Header phân hệ [KN-109 / KN-118] -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
             <div>
-                <h4 class="fw-bold mb-1">
-                    <i class="bi bi-file-earmark-text text-primary me-2"></i>Yêu cầu tuyển dụng
-                </h4>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <h4 class="fw-bold mb-0">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i>Giám sát &amp; Cảnh báo Tiến độ Tuyển dụng
+                    </h4>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 0.75rem;">KN-109 / KN-118</span>
+                </div>
                 <p class="text-muted small mb-0">
-                    Quản lý toàn diện yêu cầu tuyển dụng, đóng/kết thúc vị trí, tự động gỡ tin và kiểm soát ứng viên pipeline.
+                    Theo dõi tiến độ, số ngày mở, thời hạn cần người và tự động cảnh báo các vị trí quá hạn cần tuyển gấp.
                 </p>
             </div>
             <div class="d-flex align-items-center gap-2">
@@ -69,17 +100,132 @@
             </div>
         </div>
 
-        <!-- Bộ lọc trạng thái & tìm kiếm -->
-        <div class="card mb-3 border shadow-sm">
-            <div class="card-body py-3">
-                <form method="get" action="${pageContext.request.contextPath}/recruitment-requests" class="row g-2 align-items-center">
-                    <div class="col-12 col-md-4">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" name="search" class="form-control" placeholder="Tìm theo mã, chức danh, tiêu đề..." value="${paramSearch}">
+        <!-- Banner Cảnh báo nếu có vị trí quá ngày cần người [KN-118] -->
+        <c:if test="${stats.overdue > 0}">
+            <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between p-3 mb-3 border-danger shadow-sm rounded-3" role="alert">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-danger text-white p-2 me-3 pulse-badge d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading fw-bold mb-1 text-danger">
+                            CẢNH BÁO TIẾN ĐỘ: Có ${stats.overdue} vị trí tuyển dụng đã QUÁ NGÀY CẦN NGƯỜI!
+                        </h6>
+                        <div class="small text-danger-emphasis">
+                            Các yêu cầu này được đánh dấu nổi bật với viền đỏ và huy hiệu cảnh báo. Đề nghị Recruiter và Trưởng phòng phụ trách ưu tiên đẩy nhanh tiến độ hoặc cập nhật kế hoạch.
                         </div>
                     </div>
+                </div>
+                <div class="mt-2 mt-md-0">
+                    <a href="${pageContext.request.contextPath}/recruitment-requests?status=OVERDUE" class="btn btn-sm btn-danger shadow-sm">
+                        <i class="bi bi-funnel-fill me-1"></i> Xem ${stats.overdue} vị trí quá hạn
+                    </a>
+                </div>
+            </div>
+        </c:if>
+
+        <!-- Thẻ KPI Giám sát & Cảnh báo Tiến độ Tuyển dụng (KN-109 / KN-118) -->
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3 col-xl">
+                <a href="${pageContext.request.contextPath}/recruitment-requests" class="text-decoration-none">
+                    <div class="card border shadow-sm kpi-card-hover h-100 ${empty paramStatus ? 'border-primary' : ''}">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Tổng vị trí</div>
+                                    <div class="fs-4 fw-bold text-dark mt-1">${stats.total}</div>
+                                </div>
+                                <div class="rounded-circle bg-primary-subtle text-primary p-2 fs-5">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl">
+                <a href="${pageContext.request.contextPath}/recruitment-requests?status=OPEN" class="text-decoration-none">
+                    <div class="card border shadow-sm kpi-card-hover h-100 ${paramStatus == 'OPEN' ? 'border-success' : ''}">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Đang tuyển dụng</div>
+                                    <div class="fs-4 fw-bold text-success mt-1">${stats.open}</div>
+                                </div>
+                                <div class="rounded-circle bg-success-subtle text-success p-2 fs-5">
+                                    <i class="bi bi-broadcast"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl">
+                <a href="${pageContext.request.contextPath}/recruitment-requests?status=OVERDUE" class="text-decoration-none">
+                    <div class="card border-danger shadow-sm kpi-card-hover h-100 bg-danger-subtle ${paramStatus == 'OVERDUE' ? 'border-3' : ''}" style="border-width: 2px;">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-danger small fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>QUÁ HẠN CẦN NGƯỜI</div>
+                                    <div class="fs-4 fw-bold text-danger mt-1">${stats.overdue} <span class="fs-7 fw-normal text-danger">vị trí</span></div>
+                                </div>
+                                <div class="rounded-circle bg-danger text-white p-2 fs-5 pulse-badge">
+                                    <i class="bi bi-alarm"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl">
+                <a href="${pageContext.request.contextPath}/recruitment-requests?status=DUE_SOON" class="text-decoration-none">
+                    <div class="card border-warning shadow-sm kpi-card-hover h-100 ${paramStatus == 'DUE_SOON' ? 'border-2' : ''}">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-warning-emphasis small fw-bold"><i class="bi bi-hourglass-split me-1"></i>Sắp đến hạn (&le; 7 ngày)</div>
+                                    <div class="fs-4 fw-bold text-warning-emphasis mt-1">${stats.dueSoon}</div>
+                                </div>
+                                <div class="rounded-circle bg-warning-subtle text-warning-emphasis p-2 fs-5">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-3 col-xl">
+                <a href="${pageContext.request.contextPath}/recruitment-requests?status=FULFILLED" class="text-decoration-none">
+                    <div class="card border shadow-sm kpi-card-hover h-100 ${paramStatus == 'FULFILLED' ? 'border-teal' : ''}">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small fw-semibold">Đã tuyển đủ</div>
+                                    <div class="fs-4 fw-bold text-dark mt-1">${stats.fulfilled}</div>
+                                </div>
+                                <div class="rounded-circle bg-info-subtle text-info p-2 fs-5">
+                                    <i class="bi bi-check2-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Bộ lọc đa tiêu chí: Trạng thái, Phòng ban, Recruiter phụ trách, Khoảng thời gian (KN-109 / KN-118) -->
+        <div class="card mb-3 border shadow-sm">
+            <div class="card-body py-3">
+                <form method="get" action="${pageContext.request.contextPath}/recruitment-requests" class="row g-2 align-items-end">
                     <div class="col-12 col-md-3">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Tìm kiếm</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" name="search" class="form-control" placeholder="Mã, chức danh, tiêu đề..." value="${paramSearch}">
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Phòng ban</label>
                         <select name="departmentId" class="form-select form-select-sm">
                             <option value="">-- Tất cả phòng ban --</option>
                             <c:forEach var="dept" items="${departments}">
@@ -87,53 +233,82 @@
                             </c:forEach>
                         </select>
                     </div>
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Recruiter phụ trách</label>
+                        <select name="recruiterId" class="form-select form-select-sm">
+                            <option value="">-- Tất cả Recruiter --</option>
+                            <c:forEach var="rec" items="${recruiters}">
+                                <option value="${rec.id}" ${paramRecruiter == rec.id ? 'selected' : ''}>
+                                    ${rec.fullName}
+                                </option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Trạng thái</label>
                         <select name="status" class="form-select form-select-sm">
                             <option value="">-- Tất cả trạng thái --</option>
+                            <option value="OVERDUE" class="text-danger fw-bold" ${paramStatus == 'OVERDUE' ? 'selected' : ''}>⚠️ Quá hạn cần người</option>
+                            <option value="DUE_SOON" class="text-warning-emphasis fw-bold" ${paramStatus == 'DUE_SOON' ? 'selected' : ''}>⏳ Sắp đến hạn (&le; 7 ngày)</option>
                             <option value="OPEN" ${paramStatus == 'OPEN' ? 'selected' : ''}>Đang tuyển dụng</option>
+                            <option value="PENDING_APPROVAL" ${paramStatus == 'PENDING_APPROVAL' ? 'selected' : ''}>Chờ phê duyệt</option>
                             <option value="FULFILLED" ${paramStatus == 'FULFILLED' ? 'selected' : ''}>Đã tuyển đủ</option>
                             <option value="PAUSED" ${paramStatus == 'PAUSED' ? 'selected' : ''}>Tạm dừng</option>
                             <option value="CANCELLED" ${paramStatus == 'CANCELLED' ? 'selected' : ''}>Đã huỷ</option>
                             <option value="CLOSED_ALL" ${paramStatus == 'CLOSED_ALL' ? 'selected' : ''}>Tất cả đã đóng / kết thúc</option>
-                            <option value="PENDING_APPROVAL" ${paramStatus == 'PENDING_APPROVAL' ? 'selected' : ''}>Chờ phê duyệt</option>
                             <option value="DRAFT" ${paramStatus == 'DRAFT' ? 'selected' : ''}>Lưu nháp (Draft)</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-2 d-flex gap-2">
+                    <div class="col-12 col-md-3 col-lg-3">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Lọc khoảng thời gian theo</label>
+                        <select name="dateType" class="form-select form-select-sm">
+                            <option value="deadline" ${paramDateType == 'deadline' ? 'selected' : ''}>Ngày cần người (Deadline)</option>
+                            <option value="created" ${paramDateType == 'created' ? 'selected' : ''}>Ngày mở / tạo yêu cầu</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-4">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Từ ngày</label>
+                        <input type="date" name="fromDate" class="form-control form-control-sm" value="${paramFromDate}">
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-4">
+                        <label class="form-label small text-muted mb-1 fw-semibold">Đến ngày</label>
+                        <input type="date" name="toDate" class="form-control form-control-sm" value="${paramToDate}">
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-4 d-flex gap-2">
                         <button type="submit" class="btn btn-sm btn-dark flex-grow-1">
-                            <i class="bi bi-filter me-1"></i> Lọc
+                            <i class="bi bi-filter me-1"></i> Áp dụng bộ lọc
                         </button>
                         <a href="${pageContext.request.contextPath}/recruitment-requests" class="btn btn-sm btn-outline-secondary" title="Đặt lại bộ lọc">
-                            <i class="bi bi-arrow-clockwise"></i>
+                            <i class="bi bi-arrow-clockwise me-1"></i> Đặt lại
                         </a>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Bảng danh sách yêu cầu tuyển dụng -->
+        <!-- Bảng danh sách yêu cầu tuyển dụng & Giám sát tiến độ -->
         <div class="card mb-4 shadow-sm border">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 130px;">Mã yêu cầu</th>
+                                <th style="width: 120px;">Mã yêu cầu</th>
                                 <th>Chức danh &amp; Tiêu đề</th>
-                                <th>Phòng ban</th>
-                                <th class="text-center" style="width: 90px;">SL tuyển</th>
-                                <th>Lý do tuyển</th>
-                                <th>Dải lương đề xuất</th>
-                                <th>Ngày cần người</th>
-                                <th class="text-center" style="width: 140px;">Trạng thái</th>
-                                <th class="text-end pe-3" style="width: 220px;">Thao tác</th>
+                                <th>Phòng ban &amp; Recruiter</th>
+                                <th class="text-center" style="width: 80px;">SL tuyển</th>
+                                <th style="width: 130px;">Thời gian mở</th>
+                                <th style="width: 175px;">Hạn cần &amp; Còn lại</th>
+                                <th>Dải lương</th>
+                                <th class="text-center" style="width: 130px;">Trạng thái</th>
+                                <th class="text-end pe-3" style="width: 210px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:choose>
                                 <c:when test="${not empty requisitions}">
                                     <c:forEach var="r" items="${requisitions}">
-                                        <tr>
+                                        <tr class="${r.overdue ? 'table-danger-custom border-start border-danger border-4' : (r.dueSoon ? 'table-warning-custom border-start border-warning border-3' : '')}">
                                             <td>
                                                 <span class="badge bg-light text-dark border font-monospace px-2 py-1">${r.code}</span>
                                                 <div class="text-xs text-muted mt-1">
@@ -142,6 +317,9 @@
                                             </td>
                                             <td>
                                                 <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                    <c:if test="${r.overdue}">
+                                                        <i class="bi bi-exclamation-triangle-fill text-danger me-1 fs-6" title="CẢNH BÁO: Vị trí tuyển dụng này đã quá hạn ngày cần người!"></i>
+                                                    </c:if>
                                                     ${r.positionTitle}
                                                     <c:if test="${r.activeCandidatesCount > 0}">
                                                         <span class="badge bg-info-subtle text-info border border-info-subtle ms-1" 
@@ -151,12 +329,15 @@
                                                         </span>
                                                     </c:if>
                                                 </div>
-                                                <small class="text-muted text-truncate d-inline-block" style="max-width: 260px;">${r.title}</small>
+                                                <small class="text-muted text-truncate d-inline-block" style="max-width: 250px;">${r.title}</small>
                                             </td>
                                             <td>
-                                                <span class="fw-semibold text-secondary">
+                                                <div class="fw-semibold text-secondary">
                                                     <i class="bi bi-building me-1 small text-muted"></i>${r.departmentName != null ? r.departmentName : 'Chưa gán'}
-                                                </span>
+                                                </div>
+                                                <div class="text-xs text-muted mt-1">
+                                                    <i class="bi bi-person-badge text-primary me-1"></i>${not empty r.recruiterName ? r.recruiterName : '<span class="text-muted fst-italic">Chưa phân bổ</span>'}
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
@@ -164,37 +345,62 @@
                                                 </span>
                                             </td>
                                             <td>
+                                                <!-- Hiển thị Số ngày mở [KN-109 / KN-118] -->
+                                                <div class="fw-bold text-dark">
+                                                    <i class="bi bi-clock-history text-secondary me-1"></i>${r.daysOpen} ngày mở
+                                                </div>
+                                                <div class="text-xs text-muted mt-1">
+                                                    Từ <fmt:formatDate value="${r.createdAt}" pattern="dd/MM/yyyy" />
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!-- Hiển thị Ngày cần người & Số ngày còn lại / Quá hạn nổi bật [KN-109 / KN-118] -->
                                                 <c:choose>
-                                                    <c:when test="${r.recruitmentReason == 'REPLACEMENT'}">
-                                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle">
-                                                            <i class="bi bi-arrow-repeat me-1"></i>Thay thế
-                                                        </span>
+                                                    <c:when test="${r.deadline != null}">
+                                                        <div class="fw-semibold text-dark">
+                                                            <i class="bi bi-calendar-event me-1 text-muted"></i>
+                                                            <fmt:formatDate value="${r.deadline}" pattern="dd/MM/yyyy" />
+                                                        </div>
+                                                        <c:choose>
+                                                            <c:when test="${r.overdue}">
+                                                                <span class="badge bg-danger text-white px-2 py-1 shadow-sm pulse-badge mt-1" title="Đã quá hạn ${r.daysOverdue} ngày kể từ ngày cần người!">
+                                                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>Quá hạn ${r.daysOverdue} ngày
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${r.daysRemaining == 0}">
+                                                                <span class="badge bg-warning text-dark px-2 py-1 mt-1" title="Hôm nay là ngày cần người!">
+                                                                    <i class="bi bi-bell-fill me-1"></i>Đến hạn hôm nay
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${r.dueSoon}">
+                                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1 mt-1" title="Sắp đến hạn trong vòng ${r.daysRemaining} ngày!">
+                                                                    <i class="bi bi-hourglass-split me-1"></i>Còn ${r.daysRemaining} ngày
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${r.daysRemaining != null && r.daysRemaining > 7}">
+                                                                <span class="badge bg-light text-secondary border px-2 py-1 mt-1">
+                                                                    <i class="bi bi-check-circle me-1 text-success"></i>Còn ${r.daysRemaining} ngày
+                                                                </span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="badge bg-secondary-subtle text-muted px-2 py-1 mt-1">
+                                                                    ${r.statusLabel}
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                                            <i class="bi bi-person-plus me-1"></i>Tăng mới
-                                                        </span>
+                                                        <span class="text-muted small fst-italic">Chưa đặt</span>
                                                     </c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td>
-                                                <div class="fw-semibold text-dark">${r.formattedSalaryRange}</div>
+                                                <div class="fw-semibold text-dark small">${r.formattedSalaryRange}</div>
                                                 <c:if test="${not empty r.salaryExplanation}">
                                                     <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle text-xs" title="Đã có văn bản giải trình lương vượt khung chuẩn">
                                                         <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>Có giải trình
                                                     </span>
                                                 </c:if>
-                                            </td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${r.deadline != null}">
-                                                        <span class="text-dark fw-semibold">
-                                                            <i class="bi bi-calendar-event me-1 text-muted"></i>
-                                                            <fmt:formatDate value="${r.deadline}" pattern="dd/MM/yyyy" />
-                                                        </span>
-                                                    </c:when>
-                                                    <c:otherwise><span class="text-muted">Chưa đặt</span></c:otherwise>
-                                                </c:choose>
                                             </td>
                                             <td class="text-center">
                                                 <div class="cursor-pointer" onclick="openApprovalModal('${r.id}')" title="Nhấp để xem chuỗi cấp duyệt & Lịch sử" style="cursor: pointer;">
@@ -326,17 +532,17 @@
                         <nav>
                             <ul class="pagination pagination-sm mb-0">
                                 <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-                                    <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${currentPage - 1}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}" aria-label="Trang trước">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${currentPage - 1}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}&recruiterId=${paramRecruiter}&fromDate=${paramFromDate}&toDate=${paramToDate}&dateType=${paramDateType}" aria-label="Trang trước">
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <li class="page-item ${currentPage == p ? 'active' : ''}">
-                                        <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${p}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}">${p}</a>
+                                        <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${p}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}&recruiterId=${paramRecruiter}&fromDate=${paramFromDate}&toDate=${paramToDate}&dateType=${paramDateType}">${p}</a>
                                     </li>
                                 </c:forEach>
                                 <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
-                                    <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${currentPage + 1}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}" aria-label="Trang sau">
+                                    <a class="page-link" href="${pageContext.request.contextPath}/recruitment-requests?page=${currentPage + 1}&search=${paramSearch}&departmentId=${paramDept}&status=${paramStatus}&recruiterId=${paramRecruiter}&fromDate=${paramFromDate}&toDate=${paramToDate}&dateType=${paramDateType}" aria-label="Trang sau">
                                         <i class="bi bi-chevron-right"></i>
                                     </a>
                                 </li>
@@ -346,6 +552,8 @@
                 </c:if>
             </div>
         </div>
+    </div>
+
     </div>
 
 <!-- Modal Đóng / Kết thúc Yêu cầu tuyển dụng -->
