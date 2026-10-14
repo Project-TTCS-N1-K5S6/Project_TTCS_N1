@@ -1,4 +1,5 @@
 com\irms\config\AppConfig.class
+com\irms\controller\RecruitmentRequestServlet.class
 com\irms\service\JobPublishingService.class
 com\irms\dao\BaseDAO.class
 com\irms\model\Role.class
