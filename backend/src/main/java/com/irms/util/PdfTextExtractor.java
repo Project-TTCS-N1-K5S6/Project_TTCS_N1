@@ -40,6 +40,27 @@ public class PdfTextExtractor {
     private static final Pattern TITLE_METADATA_PATTERN = Pattern.compile("/Title\\s*\\((.*?)\\)");
 
     /**
+     * Trích xuất toàn bộ văn bản từ InputStream của PDF
+     */
+    public static String extractText(InputStream is) {
+        if (is == null) {
+            return "";
+        }
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                baos.write(buffer, 0, read);
+            }
+            return extractText(baos.toByteArray());
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Lỗi đọc luồng PDF InputStream trong extractText", e);
+            return "";
+        }
+    }
+
+    /**
      * Trích xuất toàn bộ văn bản từ mảng byte PDF
      */
     public static String extractText(byte[] pdfBytes) {
@@ -207,40 +228,44 @@ public class PdfTextExtractor {
         }
     }
 
+    private static final Pattern PDF_TOKEN_PATTERN = Pattern.compile(
+            "\\((.*?)\\)\\s*(?:Tj|'|\")"
+            + "|<([0-9a-fA-F\\s]+)>\\s*Tj"
+            + "|\\[([\\s\\S]*?)\\]\\s*TJ"
+            + "|T\\*"
+            + "|(?<=\\s|^)[-0-9.]+\\s+[-0-9.]+\\s+T[dD]"
+    );
+
     private static void parseTextOperators(String block, StringBuilder out) {
-        // 1. Phân tích toán tử Tj: (chuỗi văn bản) Tj
-        Matcher tjMatcher = TJ_PATTERN.matcher(block);
-        while (tjMatcher.find()) {
-            String decoded = decodePdfString(tjMatcher.group(1));
-            if (!decoded.trim().isEmpty()) {
-                out.append(decoded).append(" ");
-            }
-        }
+        if (block == null || block.isEmpty()) return;
 
-        // 2. Phân tích toán tử hex: <48656C6C6F> Tj
-        Matcher hexMatcher = HEX_STRING_PATTERN.matcher(block);
-        while (hexMatcher.find()) {
-            String decoded = decodeHexString(hexMatcher.group(1));
-            if (!decoded.trim().isEmpty()) {
-                out.append(decoded).append(" ");
-            }
-        }
-
-        // 3. Phân tích toán tử mảng TJ: [(chuỗi 1) 120 (chuỗi 2)] TJ
-        Matcher tjArrMatcher = TJ_ARRAY_PATTERN.matcher(block);
-        while (tjArrMatcher.find()) {
-            String arrayContent = tjArrMatcher.group(1);
-            Matcher innerString = Pattern.compile("\\((.*?)\\)|<([0-9a-fA-F\\s]+)>").matcher(arrayContent);
-            while (innerString.find()) {
-                if (innerString.group(1) != null) {
-                    String decoded = decodePdfString(innerString.group(1));
-                    out.append(decoded);
-                } else if (innerString.group(2) != null) {
-                    String decoded = decodeHexString(innerString.group(2));
-                    out.append(decoded);
+        Matcher m = PDF_TOKEN_PATTERN.matcher(block);
+        while (m.find()) {
+            if (m.group(1) != null) {
+                String decoded = decodePdfString(m.group(1));
+                if (!decoded.trim().isEmpty()) {
+                    out.append(decoded).append(" ");
                 }
+            } else if (m.group(2) != null) {
+                String decoded = decodeHexString(m.group(2));
+                if (!decoded.trim().isEmpty()) {
+                    out.append(decoded).append(" ");
+                }
+            } else if (m.group(3) != null) {
+                String arrayContent = m.group(3);
+                Matcher inner = Pattern.compile("\\((.*?)\\)|<([0-9a-fA-F\\s]+)>").matcher(arrayContent);
+                while (inner.find()) {
+                    if (inner.group(1) != null) {
+                        out.append(decodePdfString(inner.group(1)));
+                    } else if (inner.group(2) != null) {
+                        out.append(decodeHexString(inner.group(2)));
+                    }
+                }
+                out.append(" ");
+            } else {
+                // T* hoặc Td, TD: Chuyển dòng văn bản
+                out.append("\n");
             }
-            out.append(" ");
         }
     }
 

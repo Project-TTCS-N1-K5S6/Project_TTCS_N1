@@ -106,19 +106,19 @@ public class Candidate implements Serializable {
     }
 
     public String getExtractionStatusBadgeClass() {
-        if ("SUCCESS".equalsIgnoreCase(extractionStatus)) return "bg-success";
+        if ("SUCCESS".equalsIgnoreCase(extractionStatus)) return "bg-info text-white";
         if ("PARTIAL".equalsIgnoreCase(extractionStatus)) return "bg-warning text-dark";
-        if ("CONFIRMED".equalsIgnoreCase(extractionStatus)) return "bg-primary";
-        if ("FAILED".equalsIgnoreCase(extractionStatus)) return "bg-secondary";
-        return "bg-light text-muted border";
+        if ("CONFIRMED".equalsIgnoreCase(extractionStatus)) return "bg-success text-white";
+        if ("FAILED".equalsIgnoreCase(extractionStatus)) return "bg-danger text-white";
+        return "bg-secondary text-white";
     }
 
     public String getExtractionStatusLabel() {
-        if ("SUCCESS".equalsIgnoreCase(extractionStatus)) return "Đã trích xuất";
-        if ("PARTIAL".equalsIgnoreCase(extractionStatus)) return "Trích xuất 1 phần";
-        if ("CONFIRMED".equalsIgnoreCase(extractionStatus)) return "Đã xác nhận";
-        if ("FAILED".equalsIgnoreCase(extractionStatus)) return "Không thể trích xuất";
-        return "Chưa trích xuất";
+        if ("SUCCESS".equalsIgnoreCase(extractionStatus)) return "Đã bóc tách CV";
+        if ("PARTIAL".equalsIgnoreCase(extractionStatus)) return "Bóc tách 1 phần";
+        if ("CONFIRMED".equalsIgnoreCase(extractionStatus)) return "Đã đối chiếu";
+        if ("FAILED".equalsIgnoreCase(extractionStatus)) return "Không thể bóc tách";
+        return "Chưa bóc tách";
     }
 
     public String getNotes() { return notes; }

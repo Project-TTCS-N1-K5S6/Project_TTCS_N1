@@ -47,9 +47,9 @@ public class CVDataExtractionService {
     private static final Pattern VN_PHONE_PATTERN = Pattern.compile(
             "(?:(?:\\+84|84|0)[\\s.-]?)((?:3[2-9]|5[25689]|7[06-9]|8[1-9]|9[0-9])[0-9\\s.-]{7,11})");
 
-    // Pattern nhận diện Họ và tên có nhãn rõ ràng
+    // Pattern nhận diện Họ và tên có nhãn rõ ràng (hỗ trợ cả tiếng Việt có dấu, không dấu và tiếng Anh)
     private static final Pattern LABELED_NAME_PATTERN = Pattern.compile(
-            "(?i)(?:họ\\s*v[àa]\\s*tên|họ\\s*tên|họ\\s*&\\s*tên|họ\\s*và\\s*tên|full\\s*name|candidate\\s*name|ứng\\s*viên|tên\\s*ứng\\s*viên|tên)\\s*[:：\\-]?\\s*([^\\r\\n,;\\t:]{2,60})");
+            "(?i)(?:h[oọ]\\s*v[aà]\\s*t[eê]n|h[oọ]\\s*t[eê]n|h[oọ]\\s*&\\s*t[eê]n|full\\s*name|candidate\\s*name|[uúứ]ng\\s*vi[eê]n|t[eê]n\\s*[uúứ]ng\\s*vi[eê]n|t[eê]n|name)\\s*[:：\\-]?\\s*([^\\r\\n,;\\t:]{2,60})");
 
     // Danh sách từ khóa tiêu đề tài liệu cần loại trừ khi dò Họ tên
     private static final List<String> HEADER_BLACKLIST = Arrays.asList(
@@ -280,7 +280,11 @@ public class CVDataExtractionService {
         // 1. Kiểm tra họ tên có nhãn rõ ràng (Họ và tên: Nguyễn Văn A)
         Matcher labeledMatcher = LABELED_NAME_PATTERN.matcher(text);
         while (labeledMatcher.find()) {
-            String name = sanitizeName(labeledMatcher.group(1));
+            String raw = labeledMatcher.group(1);
+            if (raw != null) {
+                raw = raw.replaceAll("(?i)\\s+(?:email|e-mail|sđt|sdt|phone|tel|mobile|đt).*$", "");
+            }
+            String name = sanitizeName(raw);
             if (isValidName(name)) {
                 return name;
             }
