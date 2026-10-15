@@ -463,59 +463,59 @@ public class JobPublishingServlet extends HttpServlet {
     /**
      * Xem chi tiết 1 tin tuyển dụng công khai
      */
-     private void showPublicJobDetail(HttpServletRequest request, HttpServletResponse response)
-             throws ServletException, IOException {
-         String id = request.getParameter("id");
-         if (id == null || id.trim().isEmpty()) {
-             response.sendRedirect(request.getContextPath() + "/careers");
-             return;
-         }
+    private void showPublicJobDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String id = request.getParameter("id");
+        if (id == null || id.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/careers");
+            return;
+        }
 
-         JobPosting posting = publishingService.getPostingByRequisitionId(id.trim());
-         if (posting == null) {
-             posting = new com.irms.dao.JobPostingDAO().findById(id.trim());
-         }
+        JobPosting posting = publishingService.getPostingByRequisitionId(id.trim());
+        if (posting == null) {
+            posting = new com.irms.dao.JobPostingDAO().findById(id.trim());
+        }
 
-         // BẮT BUỘC KIỂM TRA: Chỉ hiển thị nếu tồn tại và ĐÃ ĐƯỢC DUYỆT
-         if (posting == null || !posting.isApproved()) {
-             request.setAttribute("errorMessage", "Tin tuyển dụng này không tồn tại hoặc chưa được phê duyệt xuất bản công khai!");
-             request.getRequestDispatcher("/WEB-INF/views/errors/404.jsp").forward(request, response);
-             return;
-         }
+        // BẮT BUỘC KIỂM TRA: Chỉ hiển thị nếu tồn tại và ĐÃ ĐƯỢC DUYỆT
+        if (posting == null || !posting.isApproved()) {
+            request.setAttribute("errorMessage", "Tin tuyển dụng này không tồn tại hoặc chưa được phê duyệt xuất bản công khai!");
+            request.getRequestDispatcher("/WEB-INF/views/errors/404.jsp").forward(request, response);
+            return;
+        }
 
-         // Kiểm tra trạng thái xuất bản, hạn nộp và trạng thái đóng tin
-         boolean isExpired = posting.isExpired();
-         if (!isExpired && posting.getApplicationDeadline() != null) {
-             long deadlineEndMs = posting.getApplicationDeadline().getTime() + 86399000L;
-             if (deadlineEndMs < System.currentTimeMillis()) {
-                 isExpired = true;
-             }
-         }
-         if (!isExpired && posting.getRequisition() != null && posting.getRequisition().getDeadline() != null) {
-             long deadlineEndMs = posting.getRequisition().getDeadline().getTime() + 86399000L;
-             if (deadlineEndMs < System.currentTimeMillis()) {
-                 isExpired = true;
-             }
-         }
+        // Kiểm tra trạng thái xuất bản, hạn nộp và trạng thái đóng tin
+        boolean isExpired = posting.isExpired();
+        if (!isExpired && posting.getApplicationDeadline() != null) {
+            long deadlineEndMs = posting.getApplicationDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
+        if (!isExpired && posting.getRequisition() != null && posting.getRequisition().getDeadline() != null) {
+            long deadlineEndMs = posting.getRequisition().getDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
 
-         boolean isClosed = "CLOSED".equalsIgnoreCase(posting.getStatus()) || "UNPUBLISHED".equalsIgnoreCase(posting.getStatus());
-         boolean isPublished = posting.isPublished();
-         boolean canApply = isPublished && !isExpired && !isClosed;
+        boolean isClosed = "CLOSED".equalsIgnoreCase(posting.getStatus()) || "UNPUBLISHED".equalsIgnoreCase(posting.getStatus());
+        boolean isPublished = posting.isPublished();
+        boolean canApply = isPublished && !isExpired && !isClosed;
 
-         // Tăng view count
-         if (posting.getId() != null) {
-             new com.irms.dao.JobPostingDAO().incrementViews(posting.getId());
-         }
+        // Tăng view count
+        if (posting.getId() != null) {
+            new com.irms.dao.JobPostingDAO().incrementViews(posting.getId());
+        }
 
-         List<SharedCatalogItem> applicationSources = sharedCatalogDAO.findAll(SharedCatalogType.APPLICATION_SOURCE);
-         request.setAttribute("applicationSources", applicationSources);
+        List<SharedCatalogItem> applicationSources = sharedCatalogDAO.findAll(SharedCatalogType.APPLICATION_SOURCE);
+        request.setAttribute("applicationSources", applicationSources);
 
-         request.setAttribute("job", posting);
-         request.setAttribute("isExpired", isExpired);
-         request.setAttribute("isClosed", isClosed);
-         request.setAttribute("canApply", canApply);
-         request.getRequestDispatcher("/WEB-INF/views/publishing/job-detail.jsp").forward(request, response);
-     }
+        request.setAttribute("job", posting);
+        request.setAttribute("isExpired", isExpired);
+        request.setAttribute("isClosed", isClosed);
+        request.setAttribute("canApply", canApply);
+        request.getRequestDispatcher("/WEB-INF/views/publishing/job-detail.jsp").forward(request, response);
+    }
 
     /**
      * KN-206: API lấy dữ liệu chi tiết của yêu cầu tuyển dụng đã duyệt

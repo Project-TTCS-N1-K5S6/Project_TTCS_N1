@@ -10,9 +10,11 @@ import com.irms.service.CVDataExtractionService;
 import com.irms.service.CVFileStorageService;
 import com.irms.service.CandidateService;
 import com.irms.service.EmailService;
+import com.irms.config.AppConfig;
 import com.irms.util.CaptchaValidatorUtil;
 import com.irms.util.JsonUtil;
 import com.irms.util.RateLimiterUtil;
+import com.irms.util.SecurityUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -23,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -348,12 +351,6 @@ public class PublicJobApplicationServlet extends HttpServlet {
         candidate.setTrackingCode(trackingCode);
         candidate.setIpAddress(clientIp);
 
-        // ======================================================================
-        // 8.1. [KN-213]: TRÍCH XUẤT THÔNG TIN TỰ ĐỘNG TỪ CV DẠNG PDF
-        // - Trích xuất Họ tên, Email, Số điện thoại từ CV PDF
-        // - Kết quả bóc tách lưu độc lập, KHÔNG tự ghi đè thông tin nộp của ứng viên
-        // - Bóc tách thất bại KHÔNG làm hỏng việc nộp hồ sơ (Fail-safe, non-blocking)
-        // ======================================================================
         if (cvUrl != null && cvUrl.toLowerCase().endsWith(".pdf")) {
             try {
                 File storedCvFile = new File(uploadRoot, cvUrl.substring(1).replace("/", File.separator));
@@ -377,8 +374,9 @@ public class PublicJobApplicationServlet extends HttpServlet {
             }
         }
 
+        String withdrawalToken = SecurityUtil.generateSecureToken();
         try {
-            candidate = candidateService.applyPublicJob(candidate);
+            candidate = candidateService.applyPublicJobWithWithdrawalToken(candidate, withdrawalToken);
         } catch (IllegalStateException e) {
             // Trường hợp phát hiện trùng lặp
             JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_CONFLICT,
@@ -398,6 +396,9 @@ public class PublicJobApplicationServlet extends HttpServlet {
         // 9. [KN-235]: GỬI EMAIL XÁC NHẬN BẤT ĐỒNG BỘ (NON-BLOCKING)
         // ======================================================================
         String submittedAtStr = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
+        String baseUrl = AppConfig.get("app.baseUrl", "http://localhost:8088").replaceAll("/+$", "");
+        String withdrawalLink = baseUrl + request.getContextPath()
+                + "/careers/withdraw?token=" + URLEncoder.encode(withdrawalToken, "UTF-8");
         EmailService.sendApplicationConfirmationAsync(
                 email,
                 fullName,
@@ -405,7 +406,8 @@ public class PublicJobApplicationServlet extends HttpServlet {
                 departmentName,
                 trackingCode,
                 submittedAtStr,
-                originalFileName
+                originalFileName,
+                withdrawalLink
         );
 
         // ======================================================================

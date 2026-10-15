@@ -78,9 +78,11 @@
 | `full_name` | VARCHAR(255) | Họ tên ứng viên |
 | `email` | VARCHAR(255) | Email ứng viên |
 | `phone` | VARCHAR(50) | Số điện thoại |
-| `status` | VARCHAR(50) | Vòng tuyển dụng: APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED |
+| `status` | VARCHAR(50) | Vòng tuyển dụng: APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED, WITHDRAWN |
 | `cv_url` | TEXT | Đường dẫn file CV ứng viên |
 | `notes` | TEXT | Ghi chú đánh giá |
+
+Hồ sơ được ứng viên rút chuyển sang trạng thái `WITHDRAWN` và không còn thuộc pipeline đang hoạt động. Liên kết xác nhận được lưu trong `candidate_withdrawal_tokens` dưới dạng SHA-256, hết hạn sau 7 ngày và chỉ dùng một lần.
 
 ### 8. `salary_ranges` (Dải lương theo vị trí)
 | Cột | Kiểu | Mô tả |

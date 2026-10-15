@@ -4,6 +4,7 @@ import com.irms.dao.CandidateDAO;
 import com.irms.dao.SharedCatalogDAO;
 import com.irms.model.CVExtractionResult;
 import com.irms.model.Candidate;
+import com.irms.model.CandidateWithdrawal;
 import com.irms.model.SharedCatalogType;
 import com.irms.util.SecurityUtil;
 
@@ -216,6 +217,17 @@ public class CandidateService {
      * [KN-233]: Tiếp nhận và xử lý nộp hồ sơ ứng tuyển công khai
      */
     public Candidate applyPublicJob(Candidate candidate) {
+        return applyPublicJob(candidate, null);
+    }
+
+    public Candidate applyPublicJobWithWithdrawalToken(Candidate candidate, String withdrawalToken) {
+        if (withdrawalToken == null || !withdrawalToken.matches("[A-Za-z0-9_-]{43}")) {
+            throw new IllegalArgumentException("Token rút hồ sơ không hợp lệ.");
+        }
+        return applyPublicJob(candidate, SecurityUtil.sha256Hex(withdrawalToken));
+    }
+
+    private Candidate applyPublicJob(Candidate candidate, String withdrawalTokenHash) {
         if (candidate == null) {
             throw new IllegalArgumentException("Dữ liệu hồ sơ ứng tuyển không được để trống.");
         }
@@ -266,12 +278,29 @@ public class CandidateService {
         }
         candidate.setStatus("APPLIED");
 
-        boolean inserted = candidateDAO.insertApplication(candidate);
+        boolean inserted = withdrawalTokenHash == null
+                ? candidateDAO.insertApplication(candidate)
+                : candidateDAO.insertApplication(candidate, withdrawalTokenHash);
         if (!inserted) {
             throw new RuntimeException("Không thể lưu thông tin hồ sơ ứng tuyển vào hệ thống.");
         }
 
         return candidate;
+    }
+
+    public CandidateWithdrawal getCandidateForWithdrawal(String withdrawalToken) {
+        if (withdrawalToken == null || !withdrawalToken.matches("[A-Za-z0-9_-]{43}")) {
+            return null;
+        }
+        return candidateDAO.findByValidWithdrawalTokenHash(SecurityUtil.sha256Hex(withdrawalToken));
+    }
+
+    public CandidateWithdrawal withdrawCandidate(String withdrawalToken, String ipAddress, String userAgent) {
+        if (withdrawalToken == null || !withdrawalToken.matches("[A-Za-z0-9_-]{43}")) {
+            return null;
+        }
+        return candidateDAO.withdrawByTokenHash(
+                SecurityUtil.sha256Hex(withdrawalToken), ipAddress, userAgent);
     }
 
     /**

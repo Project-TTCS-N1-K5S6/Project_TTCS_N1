@@ -288,6 +288,17 @@ CREATE TABLE candidates (
 CREATE INDEX idx_cand_referrer ON candidates(referred_by_user_id);
 CREATE INDEX idx_cand_extract_status ON candidates(extraction_status);
 
+-- Token rút hồ sơ công khai, chỉ lưu SHA-256 và chỉ dùng một lần
+CREATE TABLE candidate_withdrawal_tokens (
+    id VARCHAR(36) PRIMARY KEY,
+    candidate_id VARCHAR(36) NOT NULL UNIQUE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cwt_candidate FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 14. Bảng Dải lương theo vị trí (salary_ranges)
 DROP TABLE IF EXISTS salary_ranges;
 CREATE TABLE salary_ranges (

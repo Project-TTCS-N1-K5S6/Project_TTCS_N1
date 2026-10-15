@@ -17,7 +17,8 @@ database/
 ├── seed.sql      <- DML: Dữ liệu mẫu ban đầu (30 quyền hạn, 7 vai trò, người dùng, dải lương)
 ├── migrations/
 │   ├── 20261007_shared_catalogs.sql <- Nâng cấp CSDL hiện có cho danh mục dùng chung
-│   └── 20261015_internal_employee_referrals.sql <- Lưu người giới thiệu cho hồ sơ nội bộ
+│   ├── 20261015_internal_employee_referrals.sql <- Lưu người giới thiệu cho hồ sơ nội bộ
+│   └── 20261015_candidate_withdrawal.sql <- Token xác nhận rút hồ sơ ứng viên
 └── README.md     <- Tài liệu hướng dẫn cài đặt & lược đồ dữ liệu
 ```
 
@@ -53,6 +54,7 @@ database/
 12. **`recruitment_requisitions`**: Yêu cầu tuyển dụng nhân sự (`id`, `code`, `title`, `department_id`, `recruiter_id`, `hiring_manager_id`, `work_location_id`, `work_mode_id`, `status`).
 13. **`candidates`**: Hồ sơ ứng viên & Pipeline (`id`, `requisition_id`, `application_source_id`, `referred_by_user_id`, `rejection_reason_id`, `full_name`, `email`, `phone`, `status`, `cv_url`, `notes`).
 14. **`salary_ranges`**: Dải lương ngân sách theo vị trí (`id`, `department_id`, `position_title`, `min_salary`, `max_salary`, `currency`).
+15. **`candidate_withdrawal_tokens`**: Hash token rút hồ sơ có hạn 7 ngày, chỉ dùng một lần (`candidate_id`, `token_hash`, `expires_at`, `used_at`).
 
 Giá trị danh mục đang được ứng viên hoặc yêu cầu tuyển dụng tham chiếu không thể bị xóa nhờ kiểm tra ứng dụng và khóa ngoại `ON DELETE RESTRICT`.
 
@@ -79,7 +81,7 @@ SOURCE database/schema.sql;
 SOURCE database/seed.sql;
 ```
 
-Với CSDL đã được khởi tạo trước đó, chạy các migration mới theo thứ tự thay vì chạy lại `schema.sql` (schema sẽ tạo lại bảng và làm mất dữ liệu hiện có). Tính năng giới thiệu nội bộ cần chạy `database/migrations/20261015_internal_employee_referrals.sql`.
+Với CSDL đã được khởi tạo trước đó, chạy các migration mới theo thứ tự thay vì chạy lại `schema.sql` (schema sẽ tạo lại bảng và làm mất dữ liệu hiện có). Chạy `database/migrations/20261015_candidate_withdrawal.sql` để bật token rút hồ sơ; migration giới thiệu nội bộ là `database/migrations/20261015_internal_employee_referrals.sql`.
 
 ---
 

@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.irms.config.AppConfig;
 import com.irms.dao.PasswordResetDAO;
+import com.irms.model.CandidateWithdrawal;
 import com.irms.model.EmailOutboxItem;
 import com.irms.util.EmailTemplateUtil;
 
@@ -133,6 +134,17 @@ public class EmailService {
                 }
             } catch (Exception ignored) {}
             return EmailTemplateUtil.buildApplicationConfirmationEmail(fullName, positionTitle, departmentName, trackingCode, submittedAt, cvFileName);
+        } else if ("CANDIDATE_WITHDRAWAL_RECRUITER_NOTIFICATION".equalsIgnoreCase(template)) {
+            JsonObject json = JsonParser.parseString(payloadJson).getAsJsonObject();
+            CandidateWithdrawal withdrawal = new CandidateWithdrawal();
+            withdrawal.setCandidateId(json.get("candidateId").getAsString());
+            withdrawal.setFullName(json.get("candidateName").getAsString());
+            withdrawal.setEmail(json.get("candidateEmail").getAsString());
+            withdrawal.setTrackingCode(json.get("trackingCode").getAsString());
+            withdrawal.setRequisitionTitle(json.get("positionTitle").getAsString());
+            withdrawal.setStatusBeforeWithdrawal(json.get("previousStatus").getAsString());
+            withdrawal.setRecruiterName(json.get("recruiterName").getAsString());
+            return EmailTemplateUtil.buildCandidateWithdrawalNotificationEmail(withdrawal);
         }
 
         // Mặc định nếu không trùng template
@@ -146,6 +158,14 @@ public class EmailService {
                                                         String positionTitle, String departmentName,
                                                         String trackingCode, String submittedAt,
                                                         String cvFileName) {
+        sendApplicationConfirmationAsync(toEmail, candidateName, positionTitle, departmentName,
+                trackingCode, submittedAt, cvFileName, null);
+    }
+
+    public static void sendApplicationConfirmationAsync(String toEmail, String candidateName,
+                                                        String positionTitle, String departmentName,
+                                                        String trackingCode, String submittedAt,
+                                                        String cvFileName, String withdrawalLink) {
         if (toEmail == null || toEmail.trim().isEmpty()) {
             return;
         }
@@ -154,7 +174,8 @@ public class EmailService {
             try {
                 String subject = "[IRMS] Xác nhận tiếp nhận hồ sơ ứng tuyển - Mã tra cứu: " + trackingCode;
                 String html = EmailTemplateUtil.buildApplicationConfirmationEmail(
-                        candidateName, positionTitle, departmentName, trackingCode, submittedAt, cvFileName
+                        candidateName, positionTitle, departmentName, trackingCode, submittedAt, cvFileName,
+                        withdrawalLink
                 );
                 sendHtmlEmail(toEmail.trim(), subject, html);
                 LOGGER.info("[EmailService] Đã kích hoạt gửi xác nhận ứng tuyển tới ứng viên: " + toEmail + " (" + trackingCode + ")");

@@ -36,7 +36,8 @@ function updateCandidateStatus(candidateId, newStatus, selectElement) {
                     'INTERVIEWING': 'badge bg-warning text-dark',
                     'OFFER': 'badge bg-purple',
                     'HIRED': 'badge bg-success',
-                    'REJECTED': 'badge bg-danger'
+                    'REJECTED': 'badge bg-danger',
+                    'WITHDRAWN': 'badge bg-secondary'
                 };
                 const labels = {
                     'APPLIED': 'Mới ứng tuyển',
@@ -44,7 +45,8 @@ function updateCandidateStatus(candidateId, newStatus, selectElement) {
                     'INTERVIEWING': 'Đang phỏng vấn',
                     'OFFER': 'Đã gửi Offer',
                     'HIRED': 'Đã trúng tuyển',
-                    'REJECTED': 'Đã từ chối'
+                    'REJECTED': 'Đã từ chối',
+                    'WITHDRAWN': 'Ứng viên rút hồ sơ'
                 };
                 badgeEl.className = badgeClasses[newStatus] || 'badge bg-secondary';
                 badgeEl.innerText = labels[newStatus] || newStatus;
