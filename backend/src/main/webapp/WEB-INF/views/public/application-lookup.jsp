@@ -784,7 +784,7 @@
             <div class="result-info-grid">
                 <div class="result-info-row">
                     <span class="result-info-label"><i class="bi bi-hash me-1"></i>Mã hồ sơ</span>
-                    <span class="result-info-value" style="font-family: monospace; font-size:0.8rem; color:#93c5fd;">${lookupResult.candidateId}</span>
+                    <span class="result-info-value" style="font-family: monospace; font-size:0.8rem; color:#93c5fd;">${lookupResult.displayCode}</span>
                 </div>
                 <div class="result-info-row">
                     <span class="result-info-label"><i class="bi bi-calendar3 me-1"></i>Ngày nộp</span>

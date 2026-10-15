@@ -3,6 +3,7 @@ package com.irms.dao;
 import com.irms.model.ApplicationLookupResult;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,26 +33,65 @@ public class ApplicationLookupDAO extends BaseDAO {
      * @return ApplicationLookupResult nếu tìm thấy; null nếu không khớp
      */
     public ApplicationLookupResult findByIdAndEmail(String candidateId, String email) {
-        // [KN-246]: Chỉ lấy các cột an toàn công khai; KHÔNG lấy notes, không JOIN bảng users (interviewer)
-        String sql =
-            "SELECT c.id, c.full_name, c.status, c.created_at, c.updated_at, " +
-            "       r.title AS position_title " +
-            "FROM   candidates c " +
-            "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
-            "WHERE  c.id = ? AND LOWER(c.email) = LOWER(?) ";
+        String cleanCode = candidateId != null ? candidateId.trim() : "";
+        String cleanEmail = email != null ? email.trim() : "";
+        if (cleanCode.isEmpty() || cleanEmail.isEmpty()) {
+            return null;
+        }
 
         Connection conn = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, candidateId != null ? candidateId.trim() : "");
-            ps.setString(2, email != null ? email.trim() : "");
+            boolean hasTrackingCode = false;
+            try {
+                DatabaseMetaData meta = conn.getMetaData();
+                try (ResultSet colRs = meta.getColumns(null, null, "candidates", "tracking_code")) {
+                    if (colRs.next()) {
+                        hasTrackingCode = true;
+                    } else {
+                        try (ResultSet colUpperRs = meta.getColumns(null, null, "CANDIDATES", "TRACKING_CODE")) {
+                            if (colUpperRs.next()) {
+                                hasTrackingCode = true;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            String sql;
+            if (hasTrackingCode) {
+                // [KN-245] [KN-247]: Hỗ trợ tra cứu bằng cả UUID (c.id) và Mã tra cứu thân thiện (c.tracking_code)
+                sql = "SELECT c.id, c.tracking_code, c.full_name, c.status, c.created_at, c.updated_at, " +
+                      "       r.title AS position_title " +
+                      "FROM   candidates c " +
+                      "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                      "WHERE  (c.id = ? OR c.tracking_code = ?) AND LOWER(c.email) = LOWER(?) ";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, cleanCode);
+                ps.setString(2, cleanCode);
+                ps.setString(3, cleanEmail);
+            } else {
+                sql = "SELECT c.id, c.full_name, c.status, c.created_at, c.updated_at, " +
+                      "       r.title AS position_title " +
+                      "FROM   candidates c " +
+                      "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                      "WHERE  c.id = ? AND LOWER(c.email) = LOWER(?) ";
+                ps = conn.prepareStatement(sql);
+                ps.setString(1, cleanCode);
+                ps.setString(2, cleanEmail);
+            }
+
             rs = ps.executeQuery();
             if (rs.next()) {
                 ApplicationLookupResult result = new ApplicationLookupResult();
                 result.setCandidateId(rs.getString("id"));
+                if (hasTrackingCode) {
+                    try {
+                        result.setTrackingCode(rs.getString("tracking_code"));
+                    } catch (SQLException ignored) {}
+                }
                 result.setFullName(rs.getString("full_name"));
                 result.setRawStatus(rs.getString("status"));
                 result.setPositionTitle(rs.getString("position_title"));

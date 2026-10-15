@@ -154,6 +154,8 @@ public class ApplicationLookupServlet extends HttpServlet {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("success", true);
         data.put("candidateId", result.getCandidateId());
+        data.put("trackingCode", result.getTrackingCode());
+        data.put("displayCode", result.getDisplayCode());
         data.put("fullName", result.getFullName());
         data.put("positionTitle", result.getPositionTitle());
         // Trạng thái tổng quát - KHÔNG trả rawStatus

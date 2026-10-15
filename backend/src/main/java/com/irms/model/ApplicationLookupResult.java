@@ -25,6 +25,7 @@ public class ApplicationLookupResult implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String candidateId;
+    private String trackingCode;
     private String fullName;
     private String rawStatus;        // Status nội bộ - chỉ dùng để map, không expose ra ngoài
     private String positionTitle;
@@ -37,6 +38,13 @@ public class ApplicationLookupResult implements Serializable {
 
     public String getCandidateId() { return candidateId; }
     public void setCandidateId(String candidateId) { this.candidateId = candidateId; }
+
+    public String getTrackingCode() { return trackingCode; }
+    public void setTrackingCode(String trackingCode) { this.trackingCode = trackingCode; }
+
+    public String getDisplayCode() {
+        return (trackingCode != null && !trackingCode.trim().isEmpty()) ? trackingCode : candidateId;
+    }
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }

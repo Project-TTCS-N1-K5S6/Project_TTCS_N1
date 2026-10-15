@@ -62,7 +62,8 @@ public class AuthFilter implements Filter {
         // - /about-us, /company/about: Trang giới thiệu công ty công khai
         // ----------------------------------------------------------------------
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
-            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about")) {
+            path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about") ||
+            path.startsWith("/application-lookup")) {
             chain.doFilter(request, response);
             return;
         }
