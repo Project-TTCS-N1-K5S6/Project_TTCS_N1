@@ -512,4 +512,24 @@ CREATE TABLE budget_subtasks (
     INDEX idx_bs_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 24. Bảng Ngân hàng câu hỏi phỏng vấn (questions)
+DROP TABLE IF EXISTS questions;
+CREATE TABLE questions (
+    id          VARCHAR(36)   PRIMARY KEY,
+    content     TEXT          NOT NULL COMMENT 'Nội dung câu hỏi phỏng vấn',
+    difficulty_level VARCHAR(10) NOT NULL DEFAULT 'MEDIUM'
+                              COMMENT 'Độ khó: EASY | MEDIUM | HARD',
+    good_answer_suggestion TEXT NULL COMMENT 'Gợi ý câu trả lời tốt dành cho người phỏng vấn',
+    criterion_id VARCHAR(36) NULL COMMENT 'Tiêu chí năng lực gắn liền',
+    job_title   VARCHAR(255) NULL COMMENT 'Chức danh vị trí áp dụng câu hỏi',
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_q_criterion FOREIGN KEY (criterion_id)
+        REFERENCES competency_criteria(id) ON DELETE SET NULL,
+    INDEX idx_q_criterion (criterion_id),
+    INDEX idx_q_job_title (job_title(100)),
+    INDEX idx_q_difficulty (difficulty_level)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Ngân hàng câu hỏi phỏng vấn theo tiêu chí năng lực';
+
 SET FOREIGN_KEY_CHECKS = 1;

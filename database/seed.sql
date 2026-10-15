@@ -366,4 +366,48 @@ INSERT INTO department_headcount_budgets (id, department_id, fiscal_year, target
 ('dhb-mkt-2026', 'dept-005', 2026, 6, 180000000.00, 'VND', 'Định biên Phòng Truyền thông & Marketing năm 2026', 'ACTIVE', 'usr-001'),
 ('dhb-bgd-2026', 'dept-001', 2026, 5, 300000000.00, 'VND', 'Định biên Ban Giám đốc năm 2026', 'ACTIVE', 'usr-001');
 
+-- 14. Khởi tạo dữ liệu Ngân hàng câu hỏi phỏng vấn
+DELETE FROM questions;
+INSERT INTO questions (id, content, difficulty_level, good_answer_suggestion, criterion_id, job_title) VALUES
+('q-001', 'Hãy giải thích sự khác nhau giữa Interface và Abstract Class trong Java, và khi nào nên dùng mỗi loại?',
+ 'HARD',
+ 'Interface định nghĩa contract thuần tuý (từ Java 8 có thể có default method). Abstract Class cho phép chia sẻ code và trạng thái chung. Dùng Interface khi muốn đa kế thừa kiểu; dùng Abstract Class khi có logic chung cần kế thừa.',
+ 'crit-001', 'Lập trình viên Java'),
+('q-002', 'Bạn xử lý NullPointerException như thế nào trong code Java của mình?',
+ 'MEDIUM',
+ 'Sử dụng Optional<T>, kiểm tra null trước khi truy cập, dùng Objects.requireNonNull(), hoặc dùng annotation @NonNull/@Nullable. Tránh trả về null, thay bằng Optional hoặc Collections rỗng.',
+ 'crit-001', 'Lập trình viên Java'),
+('q-003', 'Trình bày giải thuật sắp xếp nhanh (QuickSort) và phân tích độ phức tạp thời gian.',
+ 'HARD',
+ 'QuickSort chọn pivot, chia mảng thành 2 phần, đệ quy. Average O(n log n), worst case O(n²). Cải thiện bằng median-of-three pivot hoặc randomized pivot.',
+ 'crit-002', 'Lập trình viên Java'),
+('q-004', 'Cho danh sách số nguyên, hãy tìm cặp số có tổng bằng K trong O(n).',
+ 'MEDIUM',
+ 'Dùng HashSet: lặp qua từng phần tử x, kiểm tra xem (K-x) đã có trong set chưa; nếu có thì tìm thấy cặp. Độ phức tạp O(n) thời gian, O(n) không gian.',
+ 'crit-002', 'Lập trình viên Java'),
+('q-005', 'Kể về một lần bạn phải xử lý mâu thuẫn với thành viên trong nhóm. Bạn đã làm gì?',
+ 'MEDIUM',
+ 'Kỳ vọng ứng viên mô tả: chủ động tiếp cận riêng, lắng nghe quan điểm đối phương, tìm điểm chung, đề xuất giải pháp thỏa hiệp, và học hỏi từ tình huống đó.',
+ 'crit-003', 'Tất cả vị trí'),
+('q-006', 'Bạn ưu tiên như thế nào khi có nhiều deadline cùng lúc trong dự án nhóm?',
+ 'EASY',
+ 'Ứng viên nên đề cập: phân loại ưu tiên theo tác động (urgent/important matrix), trao đổi với team lead, chia nhỏ task, cập nhật tiến độ định kỳ, và nhờ hỗ trợ khi cần thiết.',
+ 'crit-003', 'Tất cả vị trí'),
+('q-007', 'Mô tả quy trình debug khi hệ thống production bị lỗi nghiêm trọng (outage).',
+ 'HARD',
+ 'Quy trình: 1) Xác nhận phạm vi ảnh hưởng, 2) Rollback nếu cần, 3) Thu thập log/metrics, 4) Tái hiện vấn đề, 5) Root cause analysis, 6) Fix + test + deploy, 7) Postmortem. Luôn ưu tiên khôi phục dịch vụ trước.',
+ 'crit-004', 'Lập trình viên Java'),
+('q-008', 'Hệ thống bạn phụ trách đột ngột chậm 10x. Bạn sẽ điều tra từ đâu?',
+ 'HARD',
+ 'Kiểm tra theo thứ tự: infrastructure (CPU, RAM, disk, network), database (slow query log, explain plan, lock wait), application (thread dump, GC log, profiler), external services (timeout, latency).',
+ 'crit-004', 'Lập trình viên Java'),
+('q-009', 'Làm thế nào bạn giải thích một vấn đề kỹ thuật phức tạp cho người không biết IT?',
+ 'EASY',
+ 'Dùng ngôn ngữ đơn giản, ví dụ thực tế từ cuộc sống, tránh jargon kỹ thuật. Hỏi lại để đảm bảo họ hiểu. Sử dụng hình ảnh/sơ đồ nếu cần.',
+ 'crit-005', 'Tất cả vị trí'),
+('q-010', 'Hãy trình bày kinh nghiệm quản lý nhóm của bạn. Làm thế nào để truyền động lực cho nhóm?',
+ 'MEDIUM',
+ 'Ứng viên cần thể hiện: đặt mục tiêu rõ ràng, giao việc phù hợp năng lực, công nhận thành tích, tạo môi trường thoải mái để đóng góp ý kiến, xử lý mâu thuẫn nhanh chóng.',
+ 'crit-006', 'Trưởng nhóm / Team Lead');
+
 SET FOREIGN_KEY_CHECKS = 1;

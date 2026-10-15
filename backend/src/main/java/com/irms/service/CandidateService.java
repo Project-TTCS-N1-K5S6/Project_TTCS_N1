@@ -281,4 +281,30 @@ public class CandidateService {
         }
         return candidateDAO.findByTrackingCode(trackingCode.trim());
     }
+
+    /**
+     * [KN-218]: Tìm hồ sơ ứng viên theo ID
+     */
+    public Candidate getCandidateById(String id) {
+        if (id == null || id.trim().isEmpty()) return null;
+        return candidateDAO.findById(id.trim());
+    }
+
+    /**
+     * [KN-218]: Lấy toàn bộ lịch sử ứng tuyển của cùng một người (theo email)
+     */
+    public List<Candidate> getApplicationHistory(String email) {
+        if (email == null || email.trim().isEmpty()) return new java.util.ArrayList<>();
+        return candidateDAO.findAllByEmail(email.trim().toLowerCase());
+    }
+
+    /**
+     * [KN-218]: Cập nhật ghi chú cho hồ sơ ứng viên
+     */
+    public boolean updateNotes(String candidateId, String notes) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu mã hồ sơ ứng viên.");
+        }
+        return candidateDAO.updateNotes(candidateId.trim(), notes);
+    }
 }

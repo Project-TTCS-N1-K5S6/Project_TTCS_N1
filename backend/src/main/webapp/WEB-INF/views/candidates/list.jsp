@@ -240,7 +240,13 @@
                                                 ${c.fullName != null && c.fullName.length() > 0 ? c.fullName.substring(0, 1) : 'U'}
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark">${c.fullName}</div>
+                                                <a href="${pageContext.request.contextPath}/candidates/profile?id=${c.id}"
+                                                   class="fw-bold text-dark text-decoration-none d-block"
+                                                   title="Xem hồ sơ hợp nhất của ${c.fullName}"
+                                                   style="transition: color .15s;"
+                                                   onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color=''">
+                                                    ${c.fullName}
+                                                </a>
                                                 <div class="text-muted text-xs">${c.email}</div>
                                             </div>
                                         </div>
