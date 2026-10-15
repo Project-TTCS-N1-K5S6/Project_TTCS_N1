@@ -190,9 +190,13 @@ public class PublicJobApplicationServlet extends HttpServlet {
             }
         }
 
+        if (posting == null && req != null) {
+            posting = jobPostingDAO.findByRequisitionId(req.getId());
+        }
+
         if (req == null && posting == null) {
             JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_NOT_FOUND,
-                    Map.of("success", false, "error", "Vị trí tuyển dụng không tồn tại hoặc đã ngừng nhận hồ sơ."));
+                    Map.of("success", false, "error", "Vị trí tuyển dụng không tồn tại hoặc đã bị gỡ bỏ."));
             return;
         }
 
@@ -208,10 +212,59 @@ public class PublicJobApplicationServlet extends HttpServlet {
                 ? posting.getDepartmentName()
                 : (req != null ? req.getDepartmentName() : "Toàn công ty");
 
-        // Kiểm tra xem bài đăng đã hết hạn chưa nếu có thông tin expired_at
-        if (posting != null && posting.isExpired()) {
+        // 4.1. Kiểm tra trạng thái phê duyệt
+        if (posting != null && !posting.isApproved()) {
+            JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_FORBIDDEN,
+                    Map.of("success", false, "error", "Vị trí tuyển dụng này chưa được phê duyệt để tiếp nhận hồ sơ."));
+            return;
+        }
+        if (req != null && !"APPROVED".equalsIgnoreCase(req.getStatus()) && !"OPEN".equalsIgnoreCase(req.getStatus())) {
+            JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_FORBIDDEN,
+                    Map.of("success", false, "error", "Yêu cầu tuyển dụng chưa ở trạng thái hợp lệ để tiếp nhận hồ sơ."));
+            return;
+        }
+
+        // 4.2. Kiểm tra trạng thái xuất bản & đóng tin tuyển dụng
+        if (posting != null) {
+            String pStatus = posting.getStatus() != null ? posting.getStatus().trim().toUpperCase() : "DRAFT";
+            if ("CLOSED".equals(pStatus)) {
+                JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                        Map.of("success", false, "error", "Vị trí tuyển dụng này đã đóng. Hệ thống đã ngừng tiếp nhận hồ sơ ứng tuyển mới."));
+                return;
+            }
+            if (!"PUBLISHED".equals(pStatus)) {
+                JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                        Map.of("success", false, "error", "Vị trí tuyển dụng hiện chưa xuất bản hoặc đã tạm dừng nhận hồ sơ."));
+                return;
+            }
+        }
+
+        // 4.3. Kiểm tra hạn nộp hồ sơ ứng tuyển
+        boolean isExpired = false;
+        String deadlineStr = "--";
+        if (posting != null) {
+            deadlineStr = posting.getFormattedDeadline();
+            if (posting.isExpired()) {
+                isExpired = true;
+            } else if (posting.getApplicationDeadline() != null) {
+                long deadlineEndMs = posting.getApplicationDeadline().getTime() + 86399000L;
+                if (deadlineEndMs < System.currentTimeMillis()) {
+                    isExpired = true;
+                }
+            }
+        }
+        if (!isExpired && req != null && req.getDeadline() != null) {
+            if ("--".equals(deadlineStr) || deadlineStr == null) {
+                deadlineStr = new SimpleDateFormat("dd/MM/yyyy").format(req.getDeadline());
+            }
+            long deadlineEndMs = req.getDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
+        if (isExpired) {
             JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
-                    Map.of("success", false, "error", "Vị trí tuyển dụng này đã hết hạn nhận hồ sơ ứng tuyển."));
+                    Map.of("success", false, "error", "Vị trí tuyển dụng này đã hết hạn nhận hồ sơ ứng tuyển (Hạn nộp: " + deadlineStr + "). Không thể tiếp nhận thêm hồ sơ mới."));
             return;
         }
 

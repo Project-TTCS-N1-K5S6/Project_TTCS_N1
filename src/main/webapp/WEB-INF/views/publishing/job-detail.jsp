@@ -3,8 +3,10 @@
   TRANG CHI TIẾT CÔNG VIỆC & NỘP HỒ SƠ CÔNG KHAI (publishing/job-detail.jsp)
   Chức năng:
   - Hiển thị đầy đủ bản mô tả công việc (JD), yêu cầu ứng viên, chế độ đãi ngộ, dải lương và hạn nộp hồ sơ.
-  - Tích hợp biểu mẫu nộp CV trực tuyến: Nhập họ tên, email, SĐT, thư giới thiệu và upload file CV (.pdf, .docx).
-  - Tích hợp widget xác thực chống bot/spam CAPTCHA và giới hạn tần suất gửi đơn (Rate Limiting).
+  - Có nút "Ứng tuyển ngay" nổi bật ở Header Banner và Thanh cố định trên điện thoại (Mobile Sticky Action Bar).
+  - Kiểm tra trạng thái tin: Nếu tin đã hết hạn hoặc đã đóng, hiển thị thông báo phù hợp thay vì biểu mẫu ứng tuyển.
+  - Tích hợp biểu mẫu nộp CV trực tuyến kéo thả (.pdf, .docx <= 10MB) khi tin còn hạn nộp.
+  - Tích hợp widget chống spam CAPTCHA và xử lý đầy đủ các trường hợp phản hồi lỗi từ Backend API.
   - Trả về mã tra cứu tiến độ xét duyệt (APP-YYYYMMDD-XXXX) cho ứng viên sau khi nộp thành công.
   ==============================================================================
 --%>
@@ -17,7 +19,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${job.requisition.positionTitle} - Tuyển dụng | IRMS Careers</title>
-    <meta name="description" content="Ứng tuyển vị trí ${job.requisition.positionTitle} tại IRMS. Nộp hồ sơ trực tuyến nhanh chóng kèm CV định dạng PDF hoặc DOCX.">
+    <meta name="description" content="Ứng tuyển vị trí ${job.requisition.positionTitle} tại IRMS. Mức lương ${job.formattedSalaryRange}, hạn nộp ${job.formattedDeadline}. Nộp hồ sơ trực tuyến nhanh chóng kèm CV định dạng PDF hoặc DOCX.">
 
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,6 +37,7 @@
             --primary-blue: #2563eb;
             --primary-blue-hover: #1d4ed8;
             --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
             --surface-bg: #f8fafc;
             --card-border: #e2e8f0;
             --text-heading: #0f172a;
@@ -54,7 +57,7 @@
         .header-banner {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
             color: white;
-            padding: 60px 0 45px;
+            padding: 55px 0 45px;
             position: relative;
             overflow: hidden;
         }
@@ -62,8 +65,28 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 85% 20%, rgba(255,255,255,0.08) 0%, transparent 60%);
+            background: radial-gradient(circle at 85% 20%, rgba(255,255,255,0.1) 0%, transparent 60%);
             pointer-events: none;
+        }
+
+        .pulse-btn {
+            animation: pulse-glow 2s infinite;
+            transition: all 0.25s ease;
+        }
+        .pulse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.45) !important;
+        }
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6);
+            }
+            70% {
+                box-shadow: 0 0 0 12px rgba(245, 158, 11, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
         }
 
         .apply-card {
@@ -183,6 +206,60 @@
             color: #166534;
             letter-spacing: 2px;
         }
+
+        /* Overview pill cards */
+        .info-pill {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Mobile Sticky Action Bar */
+        @media (max-width: 991.98px) {
+            body {
+                padding-bottom: 78px !important;
+            }
+            .mobile-sticky-action-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(255, 255, 255, 0.96);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-top: 1px solid #e2e8f0;
+                box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+                padding: 10px 16px;
+                z-index: 1040;
+                transition: transform 0.25s ease;
+            }
+        }
+        @media (min-width: 992px) {
+            .mobile-sticky-action-bar {
+                display: none !important;
+            }
+        }
+
+        /* Benefit Cards */
+        .benefit-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            height: 100%;
+        }
+        .benefit-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -198,7 +275,7 @@
             </a>
             <div class="d-flex align-items-center gap-3">
                 <a href="${pageContext.request.contextPath}/careers" class="btn btn-outline-light btn-sm px-3 rounded-pill" id="backToJobsBtn">
-                    <i class="bi bi-arrow-left me-1"></i> Tất cả vị trí tuyển dụng
+                    <i class="bi bi-arrow-left me-1"></i> Tất cả việc làm
                 </a>
             </div>
         </div>
@@ -207,22 +284,87 @@
     <!-- Header Banner -->
     <header class="header-banner" id="jobHeaderBanner">
         <div class="container">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <span class="badge bg-white text-primary px-3 py-1 font-monospace fw-bold" id="jobCodeBadge">
-                    ${job.requisition.code != null ? job.requisition.code : 'JOB'}
-                </span>
-                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-semibold">
-                    <i class="bi bi-broadcast me-1"></i>Đang xuất bản chính thức
-                </span>
-            </div>
-            <h1 class="display-6 fw-bold text-white mb-2" id="jobPositionTitle">${job.requisition.positionTitle}</h1>
-            <div class="text-white-50 fs-6 mb-3">${job.title}</div>
-            <div class="d-flex flex-wrap gap-4 text-white-50 small">
-                <span><i class="bi bi-building me-1 text-primary-subtle"></i>${job.requisition.departmentName != null ? job.requisition.departmentName : 'Toàn công ty'}</span>
-                <span><i class="bi bi-geo-alt me-1 text-primary-subtle"></i>${job.workLocation != null ? job.workLocation : 'Trụ sở chính'}</span>
-                <span><i class="bi bi-laptop me-1 text-primary-subtle"></i>${job.workType != null ? job.workType : 'Toàn thời gian'}</span>
-                <span><i class="bi bi-cash-stack me-1 text-primary-subtle"></i><strong class="text-white">${job.formattedSalaryRange}</strong></span>
-                <span><i class="bi bi-clock me-1 text-primary-subtle"></i>Hạn nộp: <fmt:formatDate value="${job.requisition.deadline}" pattern="dd/MM/yyyy" /></span>
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <!-- Badges -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2.5">
+                        <span class="badge bg-white text-primary px-3 py-1 font-monospace fw-bold" id="jobCodeBadge">
+                            ${job.requisition.code != null ? job.requisition.code : 'JOB'}
+                        </span>
+
+                        <c:choose>
+                            <c:when test="${!canApply && isExpired}">
+                                <span class="badge bg-danger text-white border border-danger px-3 py-1 fw-semibold">
+                                    <i class="bi bi-clock-history me-1"></i>Đã hết hạn nhận hồ sơ
+                                </span>
+                            </c:when>
+                            <c:when test="${!canApply && isClosed}">
+                                <span class="badge bg-secondary text-white border border-secondary px-3 py-1 fw-semibold">
+                                    <i class="bi bi-lock-fill me-1"></i>Đã đóng tuyển dụng
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 fw-semibold">
+                                    <i class="bi bi-broadcast me-1"></i>Đang mở nhận hồ sơ
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
+
+                        <c:if test="${job.requisition.headcount != null && job.requisition.headcount > 1}">
+                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2.5 py-1 fw-semibold">
+                                <i class="bi bi-people-fill me-1"></i>Tuyển ${job.requisition.headcount} chỉ tiêu
+                            </span>
+                        </c:if>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="display-6 fw-bold text-white mb-2" id="jobPositionTitle">${job.requisition.positionTitle}</h1>
+                    <div class="text-white-50 fs-6 mb-3">${job.title}</div>
+
+                    <!-- Meta Tags -->
+                    <div class="d-flex flex-wrap gap-2 text-white small">
+                        <div class="info-pill">
+                            <i class="bi bi-building text-info"></i>
+                            <span>${job.requisition.departmentName != null ? job.requisition.departmentName : 'Toàn công ty'}</span>
+                        </div>
+                        <div class="info-pill">
+                            <i class="bi bi-geo-alt text-warning"></i>
+                            <span>${job.workLocation != null ? job.workLocation : 'Trụ sở chính'}</span>
+                        </div>
+                        <div class="info-pill">
+                            <i class="bi bi-laptop text-primary-subtle"></i>
+                            <span>${job.workType != null ? job.workType : 'Toàn thời gian'}</span>
+                        </div>
+                        <div class="info-pill">
+                            <i class="bi bi-cash-stack text-success"></i>
+                            <strong class="text-white">${job.formattedSalaryRange}</strong>
+                        </div>
+                        <div class="info-pill">
+                            <i class="bi bi-calendar-event text-danger-subtle"></i>
+                            <span>Hạn nộp: <fmt:formatDate value="${job.requisition.deadline}" pattern="dd/MM/yyyy" /></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Call to action button on header (Desktop) -->
+                <div class="col-lg-4 text-lg-end text-start">
+                    <c:choose>
+                        <c:when test="${canApply}">
+                            <button type="button" class="btn btn-warning btn-lg px-4 py-3 fw-bold rounded-pill shadow-lg d-inline-flex align-items-center gap-2 pulse-btn" id="heroApplyBtn" onclick="scrollToApplySection()">
+                                <i class="bi bi-send-fill fs-5"></i>
+                                <span>Ứng tuyển ngay</span>
+                            </button>
+                            <div class="text-white-50 text-xs mt-2">
+                                <i class="bi bi-shield-check me-1"></i>Nộp hồ sơ trực tuyến trong 2 phút
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="${pageContext.request.contextPath}/careers" class="btn btn-outline-light btn-lg px-4 py-2.5 fw-semibold rounded-pill">
+                                <i class="bi bi-grid-fill me-1"></i> Khám phá việc làm khác
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
         </div>
     </header>
@@ -232,186 +374,368 @@
         <div class="row g-4">
             <!-- Left Column: Job Description & Details -->
             <div class="col-lg-7 col-xl-8">
+                <!-- Job Overview Summary Box -->
+                <div class="card border-0 shadow-sm p-4 mb-4 rounded-3 bg-white">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-info-circle-fill text-primary me-2"></i>Thông tin chung</span>
+                        <span class="badge bg-light text-muted fw-normal text-xs font-monospace">Chi tiết vị trí</span>
+                    </h5>
+                    <div class="row g-3 small">
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted mb-1"><i class="bi bi-cash-stack text-success me-1"></i> Mức thu nhập</div>
+                            <div class="fw-bold text-dark fs-6 text-primary">${job.formattedSalaryRange}</div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted mb-1"><i class="bi bi-clock-history text-danger me-1"></i> Hạn nộp hồ sơ</div>
+                            <div class="fw-bold text-dark">
+                                <fmt:formatDate value="${job.requisition.deadline}" pattern="dd/MM/yyyy" />
+                                <c:choose>
+                                    <c:when test="${isExpired}">
+                                        <span class="badge bg-danger-subtle text-danger ms-1">Đã hết hạn</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="badge bg-success-subtle text-success ms-1">Còn nhận đơn</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted mb-1"><i class="bi bi-people text-info me-1"></i> Số lượng tuyển</div>
+                            <div class="fw-bold text-dark">${job.requisition.headcount != null ? job.requisition.headcount : 1} người</div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted mb-1"><i class="bi bi-building text-primary me-1"></i> Phòng ban</div>
+                            <div class="fw-bold text-dark">${job.requisition.departmentName != null ? job.requisition.departmentName : 'Toàn công ty'}</div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted mb-1"><i class="bi bi-geo-alt text-warning me-1"></i> Địa điểm làm việc</div>
+                            <div class="fw-bold text-dark">${job.workLocation != null ? job.workLocation : 'Trụ sở chính'}</div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted mb-1"><i class="bi bi-briefcase text-secondary me-1"></i> Hình thức làm việc</div>
+                            <div class="fw-bold text-dark">${job.workType != null ? job.workType : 'Toàn thời gian'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Description (JD) -->
                 <div class="card border-0 shadow-sm p-4 mb-4 rounded-3 bg-white">
                     <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                        <i class="bi bi-briefcase text-primary me-2"></i>Mô tả công việc
+                        <i class="bi bi-file-text-fill text-primary me-2"></i>Mô tả công việc
                     </h5>
                     <div class="text-secondary mb-4" style="white-space: pre-line; line-height: 1.8;" id="jobDescContent">
-                        ${job.requisition.jobDescription}
+                        ${job.requisition.jobDescription != null && !job.requisition.jobDescription.trim().isEmpty() ? job.requisition.jobDescription : (job.jobDescription != null ? job.jobDescription : job.description)}
                     </div>
 
                     <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
                         <i class="bi bi-check2-circle text-primary me-2"></i>Yêu cầu ứng viên
                     </h5>
                     <div class="text-secondary mb-4" style="white-space: pre-line; line-height: 1.8;" id="jobReqContent">
-                        ${job.requisition.jobRequirements}
+                        ${job.requisition.jobRequirements != null && !job.requisition.jobRequirements.trim().isEmpty() ? job.requisition.jobRequirements : 'Ứng viên có kiến thức chuyên môn vững vàng, tinh thần trách nhiệm và cam kết gắn bó với tổ chức.'}
                     </div>
 
                     <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
-                        <i class="bi bi-gift text-primary me-2"></i>Chế độ &amp; Quyền lợi đãi ngộ
+                        <i class="bi bi-gift-fill text-primary me-2"></i>Chế độ &amp; Quyền lợi đãi ngộ
                     </h5>
-                    <ul class="text-secondary" style="line-height: 1.9;">
-                        <li>Mức thu nhập cạnh tranh theo năng lực (<strong class="text-primary">${job.formattedSalaryRange}</strong>) + Lương tháng 13, thưởng hiệu quả kinh doanh.</li>
-                        <li>Được tham gia các khóa đào tạo nâng cao chuyên môn và hoàn thiện Khung năng lực nghề nghiệp.</li>
-                        <li>Được hưởng đầy đủ quyền lợi BHXH, BHYT, BHTN theo Luật Lao động và chế độ bảo hiểm sức khỏe nâng cao.</li>
-                        <li>Môi trường làm việc cởi mở, khuyến khích sáng tạo và trao quyền phát triển cá nhân.</li>
-                    </ul>
+                    <div class="row g-3 mb-2">
+                        <div class="col-md-6">
+                            <div class="benefit-card">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="p-2.5 rounded-3 bg-success-subtle text-success fs-5 flex-shrink-0">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Thu nhập &amp; Thưởng cạnh tranh</h6>
+                                        <p class="text-muted small mb-0">Mức lương <strong class="text-primary">${job.formattedSalaryRange}</strong>, thưởng hiệu quả kinh doanh, lương tháng 13.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-card">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="p-2.5 rounded-3 bg-primary-subtle text-primary fs-5 flex-shrink-0">
+                                        <i class="bi bi-shield-heart-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Bảo hiểm &amp; Sức khỏe</h6>
+                                        <p class="text-muted small mb-0">Đóng đầy đủ BHXH, BHYT theo luật và gói bảo hiểm sức khỏe chăm sóc cao cấp hàng năm.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-card">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="p-2.5 rounded-3 bg-info-subtle text-info fs-5 flex-shrink-0">
+                                        <i class="bi bi-mortarboard-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Đào tạo &amp; Phát triển</h6>
+                                        <p class="text-muted small mb-0">Chương trình đào tạo chuyên sâu theo Khung năng lực, lộ trình thăng tiến rõ ràng.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="benefit-card">
+                                <div class="d-flex gap-3 align-items-start">
+                                    <div class="p-2.5 rounded-3 bg-warning-subtle text-warning fs-5 flex-shrink-0">
+                                        <i class="bi bi-cup-hot-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Môi trường &amp; Văn hóa</h6>
+                                        <p class="text-muted small mb-0">Không gian làm việc sáng tạo, thiết bị hiện đại, du lịch thường niên và teambuilding.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Column: KN-230 Application Form -->
-            <div class="col-lg-5 col-xl-4">
-                <div class="apply-card sticky-top" style="top: 85px;" id="applyCardContainer">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h5 class="fw-bold text-dark mb-0">Ứng tuyển vị trí này</h5>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 text-xs">
-                            Trực tuyến
-                        </span>
-                    </div>
-                    <p class="text-muted small mb-3">
-                        Gửi hồ sơ và CV để hội đồng tuyển dụng liên hệ phỏng vấn.
-                    </p>
-
-                    <!-- Alert Box for Error / Warning -->
-                    <div class="alert alert-danger alert-dismissible fade show small d-none" id="applyErrorAlert" role="alert">
-                        <div class="d-flex gap-2">
-                            <i class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0"></i>
-                            <span id="applyErrorMessage">Có lỗi xảy ra, vui lòng kiểm tra lại thông tin.</span>
-                        </div>
-                    </div>
-
-                    <!-- Application Form -->
-                    <form id="publicApplyForm" novalidate>
-                        <input type="hidden" name="requisitionId" value="${job.requisitionId}">
-                        <input type="hidden" name="jobId" value="${job.id}">
-                        <input type="hidden" name="captchaToken" id="captchaTokenInput" value="">
-
-                        <!-- Full Name -->
-                        <div class="mb-3">
-                            <label for="fullNameInput" class="form-label">
-                                Họ và tên <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="fullNameInput" name="fullName" 
-                                   required placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name">
-                            <div class="invalid-feedback" id="fullNameError">Vui lòng nhập họ và tên của bạn.</div>
-                        </div>
-
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label for="emailInput" class="form-label">
-                                Email liên hệ <span class="text-danger">*</span>
-                            </label>
-                            <input type="email" class="form-control" id="emailInput" name="email" 
-                                   required placeholder="ungvien@example.com" autocomplete="email">
-                            <div class="invalid-feedback" id="emailError">Vui lòng nhập email hợp lệ để nhận mã tra cứu.</div>
-                        </div>
-
-                        <!-- Phone -->
-                        <div class="mb-3">
-                            <label for="phoneInput" class="form-label">
-                                Số điện thoại di động <span class="text-danger">*</span>
-                            </label>
-                            <input type="tel" class="form-control" id="phoneInput" name="phone" 
-                                   required placeholder="0901234567" autocomplete="tel">
-                            <div class="invalid-feedback" id="phoneError">Số điện thoại di động Việt Nam gồm 10 chữ số (bắt đầu bằng 03, 05, 07, 08, 09).</div>
-                        </div>
-
-                        <!-- Application Source -->
-                        <div class="mb-3">
-                            <label for="sourceSelect" class="form-label">
-                                Nguồn biết tin tuyển dụng
-                            </label>
-                            <select class="form-select" id="sourceSelect" name="applicationSourceId">
-                                <option value="cat-src-career-site">Trang tuyển dụng công ty (Website)</option>
-                                <option value="cat-src-linkedin">LinkedIn</option>
-                                <option value="cat-src-job-board">Trang việc làm / Mạng xã hội</option>
-                                <option value="cat-src-referral">Nhân viên / Bạn bè giới thiệu</option>
-                                <c:forEach var="src" items="${applicationSources}">
-                                    <option value="${src.id}">${src.value}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-
-                        <!-- Cover Letter -->
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label for="coverLetterInput" class="form-label mb-0">Thư giới thiệu (Cover letter)</label>
-                                <span class="text-muted text-xs" id="letterCharCount">0/1000</span>
+            <!-- Right Column: Application Form OR Expired Notice -->
+            <div class="col-lg-5 col-xl-4" id="applySectionCol">
+                <c:choose>
+                    <%-- TRƯỜNG HỢP 1: TIN ĐÃ HẾT HẠN HOẶC ĐÃ ĐÓNG TUYỂN DỤNG --%>
+                    <c:when test="${!canApply}">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 text-center sticky-top" style="top: 85px;" id="expiredNoticeCard">
+                            <div class="mb-3 mx-auto d-inline-flex align-items-center justify-content-center rounded-circle ${isExpired ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'}" style="width: 80px; height: 80px;">
+                                <i class="bi ${isExpired ? 'bi-clock-history' : 'bi-lock-fill'}" style="font-size: 2.8rem;"></i>
                             </div>
-                            <textarea class="form-control" id="coverLetterInput" name="coverLetter" rows="3" 
-                                      maxlength="1000" placeholder="Tóm tắt ngắn gọn lý do bạn phù hợp với vị trí này..."></textarea>
-                        </div>
 
-                        <!-- CV File Upload (KN-230, KN-232) -->
-                        <div class="mb-3">
-                            <label class="form-label d-flex justify-content-between align-items-center">
-                                <span>Tệp CV đính kèm <span class="text-danger">*</span></span>
-                                <span class="text-muted text-xs font-monospace">PDF / DOCX &le; 10MB</span>
-                            </label>
+                            <h4 class="fw-extrabold text-dark mb-2">
+                                <c:choose>
+                                    <c:when test="${isExpired}">Hết hạn nhận hồ sơ</c:when>
+                                    <c:otherwise>Vị trí đã đóng tuyển dụng</c:otherwise>
+                                </c:choose>
+                            </h4>
 
-                            <div class="cv-dropzone" id="cvDropzone">
-                                <input type="file" id="cvFileInput" name="cvFile" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
-                                <div id="dropzonePrompt">
-                                    <i class="bi bi-cloud-arrow-up-fill text-primary fs-3 d-block mb-1"></i>
-                                    <span class="small fw-semibold text-dark d-block">Kéo &amp; thả tệp CV hoặc bấm để chọn</span>
-                                    <span class="text-muted text-xs">Chỉ chấp nhận tệp .pdf hoặc .docx, tối đa 10MB</span>
+                            <div class="badge ${isExpired ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle'} px-3 py-1.5 rounded-pill mb-3 fw-semibold">
+                                <i class="bi bi-exclamation-circle me-1"></i>
+                                <c:choose>
+                                    <c:when test="${isExpired}">Đã kết thúc: <c:out value="${job.formattedDeadline}" /></c:when>
+                                    <c:otherwise>Đã ngừng tiếp nhận đơn mới</c:otherwise>
+                                </c:choose>
+                            </div>
+
+                            <p class="text-secondary small mb-4 px-1" style="line-height: 1.7;">
+                                <c:choose>
+                                    <c:when test="${isExpired}">
+                                        Rất tiếc, thời hạn nhận hồ sơ ứng tuyển cho vị trí <strong><c:out value="${job.requisition.positionTitle}"/></strong> đã kết thúc vào ngày <strong><c:out value="${job.formattedDeadline}"/></strong>.
+                                        Hệ thống hiện tại đã ngừng tiếp nhận thêm đơn ứng tuyển cho đợt tuyển này.
+                                    </c:when>
+                                    <c:otherwise>
+                                        Vị trí tuyển dụng <strong><c:out value="${job.requisition.positionTitle}"/></strong> hiện đã đóng tiếp nhận hồ sơ. Cảm ơn bạn đã quan tâm đến cơ hội nghề nghiệp tại IRMS.
+                                    </c:otherwise>
+                                </c:choose>
+                            </p>
+
+                            <div class="p-3 bg-light rounded-3 text-start mb-4 border border-dashed">
+                                <div class="small fw-semibold text-dark mb-1">
+                                    <i class="bi bi-lightbulb-fill text-warning me-1"></i> Gợi ý cho ứng viên
+                                </div>
+                                <div class="text-muted text-xs">
+                                    Đừng bỏ lỡ các cơ hội việc làm hấp dẫn khác! Bạn có thể khám phá danh sách các vị trí đang mở tuyển dụng để tìm cơ hội phù hợp.
                                 </div>
                             </div>
 
-                            <!-- Selected File Badge -->
-                            <div class="file-selected-box mt-2" id="fileSelectedBox">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2 overflow-hidden">
-                                        <i class="bi bi-file-earmark-pdf-fill text-danger fs-4" id="fileTypeIcon"></i>
-                                        <div class="text-truncate">
-                                            <div class="small fw-bold text-dark text-truncate" id="selectedFileName">resume.pdf</div>
-                                            <div class="text-xs text-muted" id="selectedFileSize">1.2 MB</div>
+                            <div class="d-grid gap-2">
+                                <a href="${pageContext.request.contextPath}/careers" class="btn btn-primary py-2.5 fw-bold rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2" id="expiredExploreBtn">
+                                    <i class="bi bi-grid-fill"></i> Khám phá các vị trí đang tuyển
+                                </a>
+                                <a href="${pageContext.request.contextPath}/careers" class="btn btn-outline-secondary btn-sm py-2 rounded-pill">
+                                    <i class="bi bi-arrow-left me-1"></i> Quay lại trang chủ tuyển dụng
+                                </a>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top text-xs text-muted">
+                                <span><i class="bi bi-eye me-1"></i> Lượt xem: <strong>${job.viewsCount + 1}</strong></span>
+                            </div>
+                        </div>
+                    </c:when>
+
+                    <%-- TRƯỜNG HỢP 2: TIN CÒN HẠN & ĐANG TUYỂN (HIỂN THỊ BIỂU MẪU ỨNG TUYỂN) --%>
+                    <c:otherwise>
+                        <div class="apply-card sticky-top" style="top: 85px;" id="applyCardContainer">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                    <i class="bi bi-send-fill text-primary"></i> Ứng tuyển vị trí này
+                                </h5>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 text-xs">
+                                    Đang mở nhận đơn
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-3">
+                                Gửi hồ sơ và tệp CV để hội đồng tuyển dụng liên hệ phỏng vấn.
+                            </p>
+
+                            <!-- Alert Box for Error / Warning -->
+                            <div class="alert alert-danger alert-dismissible fade show small d-none" id="applyErrorAlert" role="alert">
+                                <div class="d-flex gap-2">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0"></i>
+                                    <span id="applyErrorMessage">Có lỗi xảy ra, vui lòng kiểm tra lại thông tin.</span>
+                                </div>
+                            </div>
+
+                            <!-- Application Form -->
+                            <form id="publicApplyForm" novalidate>
+                                <input type="hidden" name="requisitionId" value="${job.requisitionId}">
+                                <input type="hidden" name="jobId" value="${job.id}">
+                                <input type="hidden" name="captchaToken" id="captchaTokenInput" value="">
+
+                                <!-- Full Name -->
+                                <div class="mb-3">
+                                    <label for="fullNameInput" class="form-label">
+                                        Họ và tên ứng viên <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="fullNameInput" name="fullName" 
+                                           required placeholder="Ví dụ: Nguyễn Văn A" autocomplete="name">
+                                    <div class="invalid-feedback" id="fullNameError">Vui lòng nhập họ và tên của bạn.</div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="mb-3">
+                                    <label for="emailInput" class="form-label">
+                                        Email liên hệ <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control" id="emailInput" name="email" 
+                                           required placeholder="ungvien@example.com" autocomplete="email">
+                                    <div class="invalid-feedback" id="emailError">Vui lòng nhập email hợp lệ để nhận mã tra cứu hồ sơ.</div>
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="mb-3">
+                                    <label for="phoneInput" class="form-label">
+                                        Số điện thoại di động <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="tel" class="form-control" id="phoneInput" name="phone" 
+                                           required placeholder="0901234567" autocomplete="tel">
+                                    <div class="invalid-feedback" id="phoneError">Vui lòng nhập số di động 10 chữ số (bắt đầu bằng 03, 05, 07, 08, 09).</div>
+                                </div>
+
+                                <!-- Application Source -->
+                                <div class="mb-3">
+                                    <label for="sourceSelect" class="form-label">
+                                        Nguồn biết tin tuyển dụng
+                                    </label>
+                                    <select class="form-select" id="sourceSelect" name="applicationSourceId">
+                                        <option value="cat-src-career-site">Trang tuyển dụng công ty (Website)</option>
+                                        <option value="cat-src-linkedin">LinkedIn</option>
+                                        <option value="cat-src-job-board">Trang việc làm / Mạng xã hội</option>
+                                        <option value="cat-src-referral">Nhân viên / Bạn bè giới thiệu</option>
+                                        <c:forEach var="src" items="${applicationSources}">
+                                            <option value="${src.id}">${src.value}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+
+                                <!-- Cover Letter -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="coverLetterInput" class="form-label mb-0">Thư giới thiệu (Cover letter)</label>
+                                        <span class="text-muted text-xs" id="letterCharCount">0/1000</span>
+                                    </div>
+                                    <textarea class="form-control" id="coverLetterInput" name="coverLetter" rows="3" 
+                                              maxlength="1000" placeholder="Tóm tắt ngắn gọn lý do bạn phù hợp với vị trí này..."></textarea>
+                                </div>
+
+                                <!-- CV File Upload (KN-230, KN-232) -->
+                                <div class="mb-3">
+                                    <label class="form-label d-flex justify-content-between align-items-center">
+                                        <span>Tệp CV đính kèm <span class="text-danger">*</span></span>
+                                        <span class="text-muted text-xs font-monospace">PDF / DOCX &le; 10MB</span>
+                                    </label>
+
+                                    <div class="cv-dropzone" id="cvDropzone">
+                                        <input type="file" id="cvFileInput" name="cvFile" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+                                        <div id="dropzonePrompt">
+                                            <i class="bi bi-cloud-arrow-up-fill text-primary fs-3 d-block mb-1"></i>
+                                            <span class="small fw-semibold text-dark d-block">Kéo &amp; thả tệp CV hoặc bấm để chọn</span>
+                                            <span class="text-muted text-xs">Chỉ chấp nhận tệp .pdf hoặc .docx, tối đa 10MB</span>
                                         </div>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" id="removeFileBtn" title="Chọn lại tệp">
-                                        <i class="bi bi-trash3-fill"></i>
-                                    </button>
+
+                                    <!-- Selected File Badge -->
+                                    <div class="file-selected-box mt-2" id="fileSelectedBox">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-4" id="fileTypeIcon"></i>
+                                                <div class="text-truncate">
+                                                    <div class="small fw-bold text-dark text-truncate" id="selectedFileName">resume.pdf</div>
+                                                    <div class="text-xs text-muted" id="selectedFileSize">1.2 MB</div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" id="removeFileBtn" title="Chọn lại tệp">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="invalid-feedback d-block text-xs mt-1 d-none" id="fileErrorText">Vui lòng chọn tệp CV hợp lệ (.pdf hoặc .docx, tối đa 10MB).</div>
+                                </div>
+
+                                <!-- Anti-spam CAPTCHA Widget (KN-236) -->
+                                <div class="mb-4">
+                                    <div class="captcha-widget-card" id="captchaCard">
+                                        <div class="captcha-checkbox-wrap" id="captchaCheckboxWrap" onclick="toggleCaptcha()">
+                                            <div class="captcha-custom-box" id="captchaBox">
+                                                <i class="bi bi-check-lg d-none" id="captchaCheckIcon"></i>
+                                            </div>
+                                            <span class="small fw-medium text-dark" id="captchaLabel">Tôi không phải là người máy</span>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="d-flex align-items-center gap-1 justify-content-end text-primary" style="font-size: 0.75rem; font-weight: 700;">
+                                                <i class="bi bi-shield-lock-fill"></i> IRMS Shield
+                                            </div>
+                                            <span class="text-muted" style="font-size: 0.65rem;">Anti-Spam Bot Protection</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-danger text-xs mt-1 d-none" id="captchaErrorText">Vui lòng xác minh ô chống spam trước khi nộp hồ sơ.</div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2" id="submitApplyBtn">
+                                    <span class="spinner-border spinner-border-sm d-none" id="submitSpinner" role="status"></span>
+                                    <span id="submitBtnText"><i class="bi bi-send-fill me-1"></i> Nộp hồ sơ ứng tuyển</span>
+                                </button>
+                            </form>
+
+                            <div class="mt-4 pt-3 border-top text-xs text-muted">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="bi bi-eye me-1"></i> Lượt xem: <strong>${job.viewsCount + 1}</strong></span>
+                                    <span><i class="bi bi-shield-check me-1 text-success"></i> Bảo mật dữ liệu ứng viên</span>
                                 </div>
                             </div>
-                            <div class="invalid-feedback d-block text-xs mt-1 d-none" id="fileErrorText">Vui lòng chọn tệp CV hợp lệ (.pdf hoặc .docx, tối đa 10MB).</div>
                         </div>
-
-                        <!-- Anti-spam CAPTCHA Widget (KN-236) -->
-                        <div class="mb-4">
-                            <div class="captcha-widget-card" id="captchaCard">
-                                <div class="captcha-checkbox-wrap" id="captchaCheckboxWrap" onclick="toggleCaptcha()">
-                                    <div class="captcha-custom-box" id="captchaBox">
-                                        <i class="bi bi-check-lg d-none" id="captchaCheckIcon"></i>
-                                    </div>
-                                    <span class="small fw-medium text-dark" id="captchaLabel">Tôi không phải là người máy</span>
-                                </div>
-                                <div class="text-end">
-                                    <div class="d-flex align-items-center gap-1 justify-content-end text-primary" style="font-size: 0.75rem; font-weight: 700;">
-                                        <i class="bi bi-shield-lock-fill"></i> IRMS Shield
-                                    </div>
-                                    <span class="text-muted" style="font-size: 0.65rem;">Anti-Spam Bot Protection</span>
-                                </div>
-                            </div>
-                            <div class="text-danger text-xs mt-1 d-none" id="captchaErrorText">Vui lòng xác minh ô chống spam trước khi nộp hồ sơ.</div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" id="submitApplyBtn">
-                            <span class="spinner-border spinner-border-sm d-none" id="submitSpinner" role="status"></span>
-                            <span id="submitBtnText"><i class="bi bi-send-fill me-1"></i> Nộp hồ sơ ứng tuyển</span>
-                        </button>
-                    </form>
-
-                    <div class="mt-4 pt-3 border-top text-xs text-muted">
-                        <div class="d-flex justify-content-between">
-                            <span><i class="bi bi-eye me-1"></i> Lượt xem: <strong>${job.viewsCount + 1}</strong></span>
-                            <span><i class="bi bi-shield-check me-1 text-success"></i> Bảo mật dữ liệu</span>
-                        </div>
-                    </div>
-                </div>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </main>
+
+    <!-- Mobile Sticky Action Bar (Optimized for Phones) -->
+    <div class="mobile-sticky-action-bar d-lg-none" id="mobileStickyBar">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="text-truncate flex-grow-1">
+                <div class="fw-bold text-dark text-truncate small" style="max-width: 180px;">${job.requisition.positionTitle}</div>
+                <div class="text-success text-xs fw-semibold">${job.formattedSalaryRange}</div>
+            </div>
+            <div>
+                <c:choose>
+                    <c:when test="${canApply}">
+                        <button type="button" class="btn btn-warning fw-bold px-3 py-2 rounded-pill shadow-sm d-flex align-items-center gap-1.5" onclick="scrollToApplySection()">
+                            <i class="bi bi-send-fill"></i> Ứng tuyển ngay
+                        </button>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="${pageContext.request.contextPath}/careers" class="btn btn-outline-primary btn-sm fw-bold px-3 py-2 rounded-pill shadow-sm d-flex align-items-center gap-1">
+                            <i class="bi bi-grid-fill"></i> Xem việc khác
+                        </a>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+    </div>
 
     <!-- Success Modal with Tracking Code (KN-230, KN-233) -->
     <div class="modal fade" id="applySuccessModal" tabindex="-1" aria-labelledby="applySuccessModalLabel" aria-hidden="true" data-bs-backdrop="static">
@@ -487,7 +811,25 @@
     <script>
         (function() {
             const contextPath = '${pageContext.request.contextPath}';
+
+            // Scroll to Apply section smoothly
+            window.scrollToApplySection = function() {
+                const target = document.getElementById('applyCardContainer') || document.getElementById('expiredNoticeCard');
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const nameInput = document.getElementById('fullNameInput');
+                    if (nameInput) {
+                        setTimeout(() => nameInput.focus(), 400);
+                    }
+                }
+            };
+
             const form = document.getElementById('publicApplyForm');
+            if (!form) {
+                // If form does not exist (e.g. expired or closed), no apply handlers needed
+                return;
+            }
+
             const fullNameInput = document.getElementById('fullNameInput');
             const emailInput = document.getElementById('emailInput');
             const phoneInput = document.getElementById('phoneInput');
@@ -523,34 +865,40 @@
             }
 
             // Drag and drop handlers
-            ['dragenter', 'dragover'].forEach(eventName => {
-                cvDropzone.addEventListener(eventName, e => {
-                    e.preventDefault();
-                    cvDropzone.classList.add('dragover');
+            if (cvDropzone) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    cvDropzone.addEventListener(eventName, e => {
+                        e.preventDefault();
+                        cvDropzone.classList.add('dragover');
+                    });
                 });
-            });
-            ['dragleave', 'drop'].forEach(eventName => {
-                cvDropzone.addEventListener(eventName, e => {
-                    e.preventDefault();
-                    cvDropzone.classList.remove('dragover');
+                ['dragleave', 'drop'].forEach(eventName => {
+                    cvDropzone.addEventListener(eventName, e => {
+                        e.preventDefault();
+                        cvDropzone.classList.remove('dragover');
+                    });
                 });
-            });
-            cvDropzone.addEventListener('drop', e => {
-                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    handleFileSelection(e.dataTransfer.files[0]);
-                }
-            });
+                cvDropzone.addEventListener('drop', e => {
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        handleFileSelection(e.dataTransfer.files[0]);
+                    }
+                });
+            }
 
-            cvFileInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    handleFileSelection(this.files[0]);
-                }
-            });
+            if (cvFileInput) {
+                cvFileInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        handleFileSelection(this.files[0]);
+                    }
+                });
+            }
 
-            removeFileBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                clearFileSelection();
-            });
+            if (removeFileBtn) {
+                removeFileBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    clearFileSelection();
+                });
+            }
 
             function formatBytes(bytes) {
                 if (bytes < 1024) return bytes + ' B';
@@ -596,17 +944,19 @@
 
             function clearFileSelection() {
                 selectedFile = null;
-                cvFileInput.value = '';
-                cvDropzone.style.display = 'block';
-                fileSelectedBox.style.display = 'none';
+                if (cvFileInput) cvFileInput.value = '';
+                if (cvDropzone) cvDropzone.style.display = 'block';
+                if (fileSelectedBox) fileSelectedBox.style.display = 'none';
             }
 
             function showFileError(msg) {
-                fileErrorText.textContent = msg;
-                fileErrorText.classList.remove('d-none');
+                if (fileErrorText) {
+                    fileErrorText.textContent = msg;
+                    fileErrorText.classList.remove('d-none');
+                }
             }
             function hideFileError() {
-                fileErrorText.classList.add('d-none');
+                if (fileErrorText) fileErrorText.classList.add('d-none');
             }
 
             // Anti-spam widget verification logic (KN-236)
@@ -622,13 +972,13 @@
                     captchaCheckIcon.classList.remove('d-none');
                     captchaLabel.textContent = 'Đã xác minh bảo mật thành công';
                     isCaptchaVerified = true;
-                    captchaErrorText.classList.add('d-none');
+                    if (captchaErrorText) captchaErrorText.classList.add('d-none');
 
                     // Sinh token xác thực với timestamp
                     const timestamp = Date.now();
                     const nonce = Math.random().toString(36).substring(2, 10);
                     const token = 'IRMS-CAPTCHA-' + timestamp + '-' + nonce;
-                    captchaTokenInput.value = token;
+                    if (captchaTokenInput) captchaTokenInput.value = token;
                 }, 600);
             };
 
@@ -676,10 +1026,10 @@
 
                 // Validate CAPTCHA
                 if (!isCaptchaVerified || !captchaTokenInput.value) {
-                    captchaErrorText.classList.remove('d-none');
+                    if (captchaErrorText) captchaErrorText.classList.remove('d-none');
                     isValid = false;
                 } else {
-                    captchaErrorText.classList.add('d-none');
+                    if (captchaErrorText) captchaErrorText.classList.add('d-none');
                 }
 
                 if (!isValid) return;
@@ -728,16 +1078,23 @@
                         captchaLabel.textContent = 'Tôi không phải là người máy';
                         captchaTokenInput.value = '';
                     } else {
-                        // Lỗi (Nộp trùng 409, Vượt tần suất 429, Sai file 400, v.v.)
+                        // Lỗi (Hết hạn / Đóng tuyển dụng / Nộp trùng 409 / Vượt tần suất 429 / Sai file 400, v.v.)
                         const errorMsg = data.error || 'Có lỗi xảy ra khi nộp hồ sơ. Vui lòng kiểm tra lại.';
                         showFormError(errorMsg);
+
+                        // Nếu tin đã hết hạn hoặc đã đóng tuyển dụng, tự động tải lại để hiển thị màn hình thông báo hết hạn
+                        if (errorMsg.includes('hết hạn') || errorMsg.includes('đã đóng')) {
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2500);
+                        }
                     }
                 })
                 .catch(err => {
                     submitBtn.disabled = false;
                     submitSpinner.classList.add('d-none');
                     submitBtnText.innerHTML = '<i class="bi bi-send-fill me-1"></i> Nộp hồ sơ ứng tuyển';
-                    showFormError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền.');
+                    showFormError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền kết nối mạng.');
                 });
             });
 

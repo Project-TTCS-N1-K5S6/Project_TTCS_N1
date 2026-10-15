@@ -724,7 +724,7 @@
                                     </span>
                                 </div>
                                 <h3 class="job-title" title="${job.title}">
-                                    <a href="#" class="text-decoration-none text-dark">${job.title}</a>
+                                    <a href="job-detail.html?id=${job.id}" class="text-decoration-none text-dark">${job.title}</a>
                                 </h3>
                                 <div class="text-secondary small fw-medium mb-3">
                                     <i class="bi bi-building me-1 text-primary"></i> 
@@ -751,9 +751,14 @@
                                             <i class="bi bi-calendar3 me-1 text-secondary"></i> ${job.formattedDeadline}
                                         </span>
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary btn-sm px-3 rounded-pill fw-semibold" onclick="openQuickApply('${job.id}', '${job.title.replace(/'/g, "\\'")}', '${job.departmentName.replace(/'/g, "\\'")}')">
-                                        Ứng tuyển <i class="bi bi-arrow-right ms-1"></i>
-                                    </button>
+                                    <div class="d-flex gap-1.5">
+                                        <a href="job-detail.html?id=${job.id}" class="btn btn-outline-secondary btn-sm px-2.5 rounded-pill fw-semibold">
+                                            Chi tiết
+                                        </a>
+                                        <button type="button" class="btn btn-primary btn-sm px-3 rounded-pill fw-semibold" onclick="openQuickApply('${job.id}', '${job.title.replace(/'/g, "\\'")}', '${job.departmentName.replace(/'/g, "\\'")}')">
+                                            Ứng tuyển <i class="bi bi-arrow-right ms-1"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </article>
                         </div>
