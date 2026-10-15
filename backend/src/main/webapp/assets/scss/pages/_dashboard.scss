@@ -1,0 +1,11 @@
+// ============================================================
+// SASS PAGES - Dashboard
+// File: frontend/assets/scss/pages/_dashboard.scss
+// ============================================================
+
+.dashboard-header {
+  @include flex-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}

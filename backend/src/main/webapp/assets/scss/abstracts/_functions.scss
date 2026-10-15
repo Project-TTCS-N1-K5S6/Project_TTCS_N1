@@ -1,0 +1,8 @@
+// ============================================================
+// SASS ABSTRACTS - Functions
+// File: frontend/assets/scss/abstracts/_functions.scss
+// ============================================================
+
+@function rem($pixels, $context: 16) {
+  @return ($pixels / $context) * 1rem;
+}

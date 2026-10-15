@@ -1,0 +1,113 @@
+// ============================================================
+// SASS LAYOUTS - Sidebar
+// File: frontend/assets/scss/layouts/_sidebar.scss
+// ============================================================
+
+.app-sidebar {
+  width: $sidebar-width;
+  background-color: $sidebar-bg;
+  color: $sidebar-text;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
+  @include transition(transform, $transition-speed, ease-in-out);
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  .sidebar-header {
+    height: $navbar-height;
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    .brand-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+
+      .logo-icon {
+        background: linear-gradient(135deg, $primary, $info);
+        color: #ffffff;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        @include flex-center;
+        font-size: 1rem;
+      }
+    }
+  }
+
+  .sidebar-menu {
+    padding: 1rem 0.75rem;
+    flex: 1;
+
+    .menu-header {
+      font-size: 0.725rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: $text-light;
+      padding: 0.75rem 0.75rem 0.35rem 0.75rem;
+    }
+
+    .nav-item {
+      margin-bottom: 0.25rem;
+      list-style: none;
+
+      .nav-link {
+        color: $sidebar-text;
+        padding: 0.65rem 0.85rem;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        @include transition(all, 0.2s, ease);
+
+        i {
+          font-size: 1.1rem;
+          width: 20px;
+          text-align: center;
+          color: $text-light;
+        }
+
+        &:hover {
+          background-color: $sidebar-hover;
+          color: #ffffff;
+          i { color: #ffffff; }
+        }
+
+        &.active {
+          background-color: $sidebar-active;
+          color: #ffffff;
+          font-weight: 600;
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+          i { color: #ffffff; }
+        }
+      }
+    }
+  }
+
+  .sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}

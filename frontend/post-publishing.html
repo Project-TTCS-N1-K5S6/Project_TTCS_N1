@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Xuất bản bài đăng - KN-120 | IRMS</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SASS Compiled Stylesheet -->
+    <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+</head>
+<body>
+<div id="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="brand-logo">
+                <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+                <span>IRMS PLATFORM</span>
+            </a>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-header">TỔNG QUAN</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Bảng điều khiển</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="recruitment-requests.html">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="post-publishing.html">
+                        <i class="bi bi-broadcast-pin"></i>
+                        <span>Xuất bản bài đăng (KN-120)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="salary.html">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Khai báo dải lương</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <header class="app-navbar d-flex justify-content-between align-items-center px-4 py-2 border-bottom bg-white">
+            <div class="fw-bold text-dark">HỆ THỐNG QUẢN TRỊ TUYỂN DỤNG NỘI BỘ (IRMS)</div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">K5S6_N1</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Admin</span>
+            </div>
+        </header>
+
+        <div class="container-fluid py-4 px-lg-4">
+            <!-- Breadcrumbs chuẩn theo ảnh vé KN-120 -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb mb-1 text-xs">
+                    <li class="breadcrumb-item text-muted">Không gian</li>
+                    <li class="breadcrumb-item text-muted"><i class="bi bi-cloud me-1"></i>K5S6_N1</li>
+                    <li class="breadcrumb-item text-muted"><i class="bi bi-lightning me-1 text-warning"></i>KN-110</li>
+                    <li class="breadcrumb-item active text-primary fw-bold" aria-current="page"><i class="bi bi-check-square me-1"></i>KN-120</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div>
+                    <h2 class="h3 fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-broadcast text-primary"></i> Quản lý Xuất bản bài đăng
+                    </h2>
+                    <p class="text-secondary small mb-0">
+                        Kiểm soát xuất bản tin tuyển dụng công khai &bull; Xem trước giao diện thực tế &bull; Ghi lại phiên bản và thời điểm xuất bản
+                    </p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-warning btn-sm px-3 shadow-sm text-dark fw-semibold" onclick="alert('Mở giao diện tạo nhanh bài đăng tuyển dụng (KN-204)')">
+                        <i class="bi bi-lightning-charge-fill me-1"></i> Tạo nhanh bài đăng (KN-204)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quy tắc nghiệp vụ KN-120 -->
+            <div class="card border-0 bg-primary-subtle text-primary-emphasis mb-4 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="bg-primary text-white rounded p-2 d-flex align-items-center justify-content-center">
+                            <i class="bi bi-shield-check fs-5"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold fs-6 mb-1">Quy định xuất bản theo tiêu chuẩn vé KN-120:</div>
+                            <ul class="mb-0 ps-3 small">
+                                <li><strong>Tin phải duyệt trước khi show công khai:</strong> Chỉ các tin ở trạng thái <em>Đã duyệt (APPROVED / OPEN)</em> mới được xuất bản. Tin nháp hoặc chờ duyệt sẽ bị chặn.</li>
+                                <li><strong>Xem trước đúng như giao diện khai báo trước khi xuất bản:</strong> Cho phép kiểm tra đối chiếu chi tiết từng trường dữ liệu trước khi bấm nút xuất bản.</li>
+                                <li><strong>Ghi lại bản xuất và thời điểm:</strong> Tự động ghi lại Bản xuất #1, #2..., thời điểm chính xác (Timestamp), người xuất bản và lưu snapshot đối chiếu.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách bài đăng & bảng điều khiển -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fs-6 fw-bold text-dark">
+                        <i class="bi bi-list-task me-1 text-primary"></i> Danh sách Bài đăng tuyển dụng &amp; Quản lý Bản xuất
+                    </h5>
+                    <span class="badge bg-light text-secondary border font-monospace">Hệ thống sẵn sàng</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 12%;">Mã tin</th>
+                                    <th style="width: 22%;">Vị trí / Tiêu đề bài đăng</th>
+                                    <th style="width: 15%;">Phòng ban &amp; SL</th>
+                                    <th class="text-center" style="width: 14%;">Điều kiện duyệt</th>
+                                    <th class="text-center" style="width: 12%;">Trạng thái</th>
+                                    <th style="width: 13%;">Bản xuất &amp; Thời điểm</th>
+                                    <th class="text-end pe-3" style="width: 12%;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dòng 1: Tin đã duyệt và đã xuất bản -->
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-light text-dark border font-monospace px-1.5 py-1">REQ-2026-001</span>
+                                        <div class="text-muted text-xs mt-1">10/10/2026</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">Senior Java Backend Engineer</div>
+                                        <div class="text-muted small">Tuyển dụng Kỹ sư Java cấp cao phát triển hệ thống lõi</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-secondary small"><i class="bi bi-building me-1"></i>Khối Công nghệ Thông tin</div>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-xs mt-0.5">3 chỉ tiêu</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Đã duyệt (Đủ điều kiện)
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success text-white px-2 py-1"><i class="bi bi-broadcast me-1"></i>Đang xuất bản</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark font-monospace text-xs"><i class="bi bi-layers-fill text-primary me-1"></i>Bản xuất #2</div>
+                                        <div class="text-muted text-xs"><i class="bi bi-clock me-1"></i>12/10/2026 14:30:25</div>
+                                        <div class="text-muted text-xs">Bởi: <strong>Admin HR</strong></div>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" onclick="previewMock(1)" title="Xem trước đúng như khai báo trước khi xuất bản">
+                                                <i class="bi bi-eye"></i> Xem trước
+                                            </button>
+                                            <button type="button" class="btn btn-success" onclick="publishMock(1)" title="Cập nhật bản xuất">
+                                                <i class="bi bi-upload"></i> Xuất bản
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Dòng 2: Tin đang chờ duyệt - TIÊU CHÍ 1: Tin phải duyệt trước khi show công khai -->
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-light text-dark border font-monospace px-1.5 py-1">REQ-2026-002</span>
+                                        <div class="text-muted text-xs mt-1">11/10/2026</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">Chuyên viên Nhân sự Tuyển dụng</div>
+                                        <div class="text-muted small">Phụ trách tiếp nhận ứng viên và điều phối phỏng vấn</div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-secondary small"><i class="bi bi-building me-1"></i>Phòng Nhân sự</div>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-xs mt-0.5">1 chỉ tiêu</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                            <i class="bi bi-clock-fill me-1"></i>Chờ phê duyệt
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">Chưa xuất bản</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted text-xs italic">Chưa có bản xuất</span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" onclick="previewMock(2)" title="Xem trước">
+                                                <i class="bi bi-eye"></i> Xem trước
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="alertNotApprovedMock()" title="Chưa đủ điều kiện: Tin phải duyệt trước khi show công khai">
+                                                <i class="bi bi-lock-fill"></i> Xuất bản
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal Xem trước Demo -->
+<div class="modal fade" id="demoPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light border-bottom py-3">
+                <h5 class="modal-title fw-bold text-dark mb-0"><i class="bi bi-eye-fill text-primary me-2"></i> Xem trước bài đăng (KN-120)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info border-0 mb-3 small">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    <strong>Tiêu chí 2:</strong> Xem trước chuẩn xác từng tham số khai báo trước khi bấm xuất bản chính thức.
+                </div>
+                <div class="card border p-3 mb-3 bg-light-subtle">
+                    <div class="row g-2">
+                        <div class="col-md-3"><strong>Mã yêu cầu:</strong> REQ-2026-001</div>
+                        <div class="col-md-5"><strong>Chức danh:</strong> Senior Java Backend Engineer</div>
+                        <div class="col-md-4"><strong>Phòng ban:</strong> Khối Công nghệ Thông tin</div>
+                        <div class="col-md-3"><strong>Số lượng:</strong> 3 nhân sự</div>
+                        <div class="col-md-5"><strong>Mức lương:</strong> 25.000.000 - 35.000.000 VND</div>
+                        <div class="col-md-4"><strong>Hạn nộp:</strong> 30/11/2026</div>
+                    </div>
+                </div>
+                <h6 class="fw-bold">Mô tả công việc:</h6>
+                <p class="text-secondary small">Thiết kế và phát triển kiến trúc dịch vụ tuyển dụng nội bộ IRMS bằng Java Servlet, JDBC và MySQL. Tối ưu hóa truy vấn cơ sở dữ liệu và đảm bảo tính bảo mật RBAC.</p>
+                <h6 class="fw-bold">Yêu cầu ứng viên:</h6>
+                <p class="text-secondary small">Có từ 3 năm kinh nghiệm lập trình Java, thành thạo mô hình MVC, Servlet, JSP, MySQL, Git workflow. Có khả năng làm việc nhóm tốt.</p>
+            </div>
+            <div class="modal-footer py-2 bg-light">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function previewMock(id) {
+    new bootstrap.Modal(document.getElementById('demoPreviewModal')).show();
+}
+function alertNotApprovedMock() {
+    alert('TIÊU CHÍ BẮT BUỘC (KN-120):\nTin phải duyệt trước khi show công khai!\n\nTin REQ-2026-002 hiện đang ở trạng thái: Chờ phê duyệt.\nVui lòng gửi phê duyệt hoặc duyệt tin trước khi xuất bản.');
+}
+function publishMock(id) {
+    alert('Hệ thống sẽ ghi nhận Bản xuất #3 vào thời điểm hiện tại và cập nhật lên Cổng tuyển dụng công khai.');
+}
+</script>
+</body>
+</html>

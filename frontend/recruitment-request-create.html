@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Yêu cầu tuyển dụng - IRMS Platform</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SASS Compiled Stylesheet -->
+    <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+</head>
+<body>
+<div id="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="brand-logo">
+                <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+                <span>IRMS PLATFORM</span>
+            </a>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-header">TỔNG QUAN</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Bảng điều khiển</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="recruitment-requests.html">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="candidates.html">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Hồ sơ &amp; Pipeline</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="salary.html">
+                        <i class="bi bi-cash-stack"></i>
+                        <span>Dải lương ngân sách</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="users.html">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Tài khoản người dùng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="departments.html">
+                        <i class="bi bi-building-fill"></i>
+                        <span>Cơ cấu phòng ban</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="permissions.html">
+                        <i class="bi bi-diagram-3-fill"></i>
+                        <span>Ma trận phân quyền</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button"><i class="bi bi-list"></i></button>
+                <div class="page-breadcrumb">
+                    <span class="text-muted fs-6"><i class="bi bi-house-door me-1"></i> IRMS</span>
+                    <span class="text-muted mx-2">/</span>
+                    <a href="recruitment-requests.html" class="text-muted text-decoration-none fs-6">Yêu cầu tuyển dụng</a>
+                    <span class="text-muted mx-2">/</span>
+                    <span class="fw-semibold text-dark fs-6">Tạo mới</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                        <div class="user-avatar">A</div>
+                        <div class="d-none d-md-block text-start lh-1">
+                            <div class="fw-semibold text-dark fs-6">Nguyễn Quản Trị</div>
+                            <small class="text-muted">Quản trị hệ thống</small>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
+                        <li><a class="dropdown-item py-2 text-danger" href="index.html"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <a href="recruitment-requests.html" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Quay lại danh sách">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                        <h4 class="fw-bold mb-0">
+                            <i class="bi bi-file-earmark-plus-fill text-primary me-2"></i>Tạo mới Yêu cầu tuyển dụng
+                        </h4>
+                    </div>
+                    <p class="text-muted small mb-0 ms-4 ps-2">
+                        Khai báo chức danh, định biên, dải lương đề xuất, ngày cần người và soạn bản mô tả công việc.
+                    </p>
+                </div>
+                <div>
+                    <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 fs-6">
+                        Trạng thái: Bản nháp mới
+                    </span>
+                </div>
+            </div>
+
+            <form id="createRequisitionForm" novalidate>
+                <div class="row g-4">
+                    <!-- Cột trái: Thông tin vị trí & Ngân sách lương -->
+                    <div class="col-12 col-lg-7">
+                        <!-- Khối 1: Khai báo Vị trí & Định biên -->
+                        <div class="card shadow-sm border mb-4">
+                            <div class="card-header bg-white py-3 border-bottom">
+                                <h6 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-card-checklist text-primary me-2"></i>1. Thông tin Vị trí &amp; Định biên
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <!-- Mã yêu cầu -->
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted small fw-semibold">Mã yêu cầu</label>
+                                        <input type="text" id="reqCode" class="form-control form-control-sm bg-light font-monospace fw-bold" value="REQ-2026-005" readonly>
+                                    </div>
+
+                                    <!-- Tiêu đề phiếu -->
+                                    <div class="col-md-8">
+                                        <label class="form-label text-muted small fw-semibold">Tiêu đề phiếu yêu cầu</label>
+                                        <input type="text" id="reqTitle" class="form-control form-control-sm" placeholder="VD: Tuyển dụng Kỹ sư Java Backend Senior">
+                                    </div>
+
+                                    <!-- Chức danh cần tuyển -->
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Chức danh cần tuyển <span class="text-danger">*</span>
+                                        </label>
+                                        <select id="positionSelect" class="form-select form-select-sm" required onchange="onPositionChange()">
+                                            <option value="">-- Chọn chức danh từ danh mục --</option>
+                                            <option value="Kỹ sư Java Backend (Senior)" data-dept="Khối Công nghệ Thông tin" data-min="25000000" data-max="45000000">Kỹ sư Java Backend (Senior) &bull; Chuẩn: 25 - 45M</option>
+                                            <option value="Kỹ sư Java Backend (Junior)" data-dept="Khối Công nghệ Thông tin" data-min="12000000" data-max="18000000">Kỹ sư Java Backend (Junior) &bull; Chuẩn: 12 - 18M</option>
+                                            <option value="Chuyên viên Tuyển dụng (Recruiter)" data-dept="Ban Nhân sự & Tuyển dụng" data-min="10000000" data-max="18000000">Chuyên viên Tuyển dụng (Recruiter) &bull; Chuẩn: 10 - 18M</option>
+                                            <option value="Trưởng phòng Nhân sự (HR Manager)" data-dept="Ban Nhân sự & Tuyển dụng" data-min="30000000" data-max="50000000">Trưởng phòng Nhân sự (HR Manager) &bull; Chuẩn: 30 - 50M</option>
+                                            <option value="Trưởng nhóm Kinh doanh B2B" data-dept="Khối Kinh doanh & Thị trường" data-min="20000000" data-max="35000000">Trưởng nhóm Kinh doanh B2B &bull; Chuẩn: 20 - 35M</option>
+                                            <option value="Chuyên viên Marketing số" data-dept="Phòng Truyền thông & Marketing" data-min="12000000" data-max="20000000">Chuyên viên Marketing số &bull; Chuẩn: 12 - 20M</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Phòng ban -->
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Phòng ban phụ trách <span class="text-danger">*</span>
+                                        </label>
+                                        <select id="departmentSelect" class="form-select form-select-sm" required>
+                                            <option value="">-- Chọn phòng ban --</option>
+                                            <option value="Khối Công nghệ Thông tin">Khối Công nghệ Thông tin</option>
+                                            <option value="Ban Nhân sự & Tuyển dụng">Ban Nhân sự & Tuyển dụng</option>
+                                            <option value="Khối Kinh doanh & Thị trường">Khối Kinh doanh & Thị trường</option>
+                                            <option value="Phòng Truyền thông & Marketing">Phòng Truyền thông & Marketing</option>
+                                            <option value="Ban Giám đốc">Ban Giám đốc</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Số lượng tuyển -->
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Số lượng tuyển <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" id="headcountInput" class="form-control text-center fw-bold" min="1" max="100" value="1" required>
+                                            <span class="input-group-text">Nhân sự</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lý do tuyển dụng -->
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Lý do tuyển <span class="text-danger">*</span>
+                                        </label>
+                                        <select id="reasonSelect" class="form-select form-select-sm" required>
+                                            <option value="NEW_HEADCOUNT">Tăng mới (Mở rộng quy mô)</option>
+                                            <option value="REPLACEMENT">Thay thế (Nhân sự nghỉ việc)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Ngày cần người -->
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Ngày cần người <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" id="deadlineInput" class="form-control form-control-sm" required>
+                                        <div class="form-text text-xs text-danger">
+                                            <i class="bi bi-info-circle me-1"></i>Không được ở quá khứ
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Khối 2: Dải lương đề xuất & Kiểm soát dải chuẩn -->
+                        <div class="card shadow-sm border mb-4">
+                            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-cash-stack text-success me-2"></i>2. Dải lương đề xuất &amp; Ngân sách
+                                </h6>
+                                <span class="badge bg-light text-secondary border" id="benchmarkBadge">
+                                    Chưa xác định dải chuẩn
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <!-- Khung hiển thị dải chuẩn của chức danh -->
+                                <div class="p-3 mb-3 rounded border bg-light" id="standardRangeBox">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Dải lương chuẩn của chức danh:</small>
+                                            <div class="fw-bold fs-6 text-dark" id="standardRangeDisplay">
+                                                (Vui lòng chọn chức danh ở trên để nạp khung chuẩn)
+                                            </div>
+                                        </div>
+                                        <i class="bi bi-shield-check text-success fs-3 opacity-75"></i>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <!-- Lương tối thiểu đề xuất -->
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Lương tối thiểu đề xuất (VNĐ) <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" id="minSalaryInput" class="form-control fw-bold" step="500000" placeholder="VD: 25000000" oninput="checkSalaryBenchmark()" required>
+                                            <span class="input-group-text">VND</span>
+                                        </div>
+                                        <div class="text-xs text-muted mt-1" id="minSalaryFormatted"></div>
+                                    </div>
+
+                                    <!-- Lương tối đa đề xuất -->
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-dark">
+                                            Lương tối đa đề xuất (VNĐ) <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" id="maxSalaryInput" class="form-control fw-bold" step="500000" placeholder="VD: 45000000" oninput="checkSalaryBenchmark()" required>
+                                            <span class="input-group-text">VND</span>
+                                        </div>
+                                        <div class="text-xs text-muted mt-1" id="maxSalaryFormatted"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Alert Box cảnh báo vượt ngoài dải chuẩn -->
+                                <div class="alert alert-warning border border-warning shadow-sm mt-3 mb-3 d-flex align-items-start gap-2" id="salaryWarningBox" style="display: none;">
+                                    <i class="bi bi-exclamation-triangle-fill fs-5 text-warning flex-shrink-0 mt-1"></i>
+                                    <div>
+                                        <strong class="d-block text-warning-emphasis">Cảnh báo: Dải lương đề xuất nằm ngoài dải chuẩn!</strong>
+                                        <span class="small" id="salaryWarningText">
+                                            Mức lương đề xuất không nằm trong khung chuẩn của chức danh. Theo quy định tuyển dụng, bạn <b>bắt buộc phải nhập văn bản giải trình lý do</b> bên dưới.
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Trường giải trình ngân sách -->
+                                <div class="mt-3" id="explanationGroup">
+                                    <label class="form-label small fw-bold text-dark d-flex justify-content-between align-items-center">
+                                        <span>
+                                            Giải trình lý do ngoài dải chuẩn 
+                                            <span class="text-danger" id="explanationRequiredStar" style="display:none;">* (Bắt buộc)</span>
+                                        </span>
+                                        <span class="badge bg-secondary-subtle text-secondary" id="explanationStatusBadge">Tùy chọn</span>
+                                    </label>
+                                    <textarea id="salaryExplanationInput" class="form-control" rows="3" placeholder="Nêu rõ lý do cần tuyển mức lương ngoài chuẩn (VD: Yêu cầu chuyên gia công nghệ hiếm, kinh nghiệm đặc thù, dự án trọng điểm cấp bách...)"></textarea>
+                                    <div class="form-text text-xs">
+                                        Bắt buộc điền nếu mức lương đề xuất thấp hơn mức sàn hoặc cao hơn mức trần của dải lương chuẩn.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cột phải: Soạn JD & Tiêu chuẩn ứng viên -->
+                    <div class="col-12 col-lg-5">
+                        <!-- Khối 3: Soạn mô tả công việc (JD) -->
+                        <div class="card shadow-sm border mb-4">
+                            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-file-text text-primary me-2"></i>3. Bản mô tả công việc (JD) <span class="text-danger">*</span>
+                                </h6>
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 text-xs" onclick="insertJdTemplate()">
+                                    <i class="bi bi-magic me-1"></i>Mẫu gợi ý
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <textarea id="jobDescriptionInput" class="form-control" rows="7" placeholder="- Trách nhiệm công việc, nhiệm vụ chính...&#10;- Phối hợp cùng các phòng ban...&#10;- Báo cáo tiến độ cho Trưởng bộ phận..."></textarea>
+                                <div class="form-text text-xs">Mô tả rõ ràng trách nhiệm công việc, nhiệm vụ chính và mục tiêu cần đạt.</div>
+                            </div>
+                        </div>
+
+                        <!-- Khối 4: Soạn yêu cầu ứng viên -->
+                        <div class="card shadow-sm border mb-4">
+                            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-person-check text-success me-2"></i>4. Yêu cầu ứng viên <span class="text-danger">*</span>
+                                </h6>
+                                <button type="button" class="btn btn-xs btn-outline-success py-0 px-2 text-xs" onclick="insertReqTemplate()">
+                                    <i class="bi bi-magic me-1"></i>Mẫu gợi ý
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <textarea id="jobRequirementsInput" class="form-control" rows="7" placeholder="- Tối thiểu số năm kinh nghiệm...&#10;- Kỹ năng chuyên môn, công nghệ thành thạo...&#10;- Ngoại ngữ, bằng cấp, phẩm chất..."></textarea>
+                                <div class="form-text text-xs">Liệt kê kinh nghiệm, bằng cấp, kỹ năng chuyên môn và phẩm chất cần thiết.</div>
+                            </div>
+                        </div>
+
+                        <!-- Khối 5: Thao tác nộp / Lưu nháp -->
+                        <div class="card shadow-sm border bg-light">
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold text-dark mb-2">Thao tác xử lý yêu cầu</h6>
+                                <p class="text-muted small mb-3">
+                                    Bạn có thể <b>Lưu bản nháp</b> để tiếp tục hoàn thiện sau, hoặc <b>Gửi duyệt</b> để chuyển tiếp yêu cầu đến cấp quản lý.
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-primary shadow-sm fw-semibold py-2" onclick="handleSave(false)">
+                                        <i class="bi bi-send-check-fill me-1"></i> Gửi phê duyệt yêu cầu
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary py-2" onclick="handleSave(true)">
+                                        <i class="bi bi-save me-1"></i> Lưu bản nháp (Draft)
+                                    </button>
+                                    <a href="recruitment-requests.html" class="btn btn-link text-muted btn-sm text-decoration-none">
+                                        Hủy bỏ và quay lại danh sách
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Thiết lập ngày hôm nay làm min date
+var today = new Date().toISOString().split('T')[0];
+document.getElementById('deadlineInput').min = today;
+
+function formatCurrencyVN(val) {
+    if (!val || isNaN(val)) return "";
+    return new Intl.NumberFormat('vi-VN').format(val) + ' VND';
+}
+
+function onPositionChange() {
+    var sel = document.getElementById('positionSelect');
+    var opt = sel.options[sel.selectedIndex];
+    if (opt && opt.value) {
+        var dept = opt.getAttribute('data-dept');
+        var min = opt.getAttribute('data-min');
+        var max = opt.getAttribute('data-max');
+
+        if (dept) document.getElementById('departmentSelect').value = dept;
+        if (!document.getElementById('reqTitle').value) {
+            document.getElementById('reqTitle').value = 'Tuyển dụng ' + opt.value;
+        }
+        if (min && !document.getElementById('minSalaryInput').value) {
+            document.getElementById('minSalaryInput').value = min;
+        }
+        if (max && !document.getElementById('maxSalaryInput').value) {
+            document.getElementById('maxSalaryInput').value = max;
+        }
+    }
+    checkSalaryBenchmark();
+}
+
+function getSelectedBenchmark() {
+    var sel = document.getElementById('positionSelect');
+    var opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) return null;
+    return {
+        positionTitle: opt.value,
+        minSalary: parseFloat(opt.getAttribute('data-min')) || 0,
+        maxSalary: parseFloat(opt.getAttribute('data-max')) || 0
+    };
+}
+
+function checkSalaryBenchmark() {
+    var benchmark = getSelectedBenchmark();
+    var minVal = parseFloat(document.getElementById('minSalaryInput').value) || 0;
+    var maxVal = parseFloat(document.getElementById('maxSalaryInput').value) || 0;
+
+    document.getElementById('minSalaryFormatted').textContent = minVal > 0 ? formatCurrencyVN(minVal) : '';
+    document.getElementById('maxSalaryFormatted').textContent = maxVal > 0 ? formatCurrencyVN(maxVal) : '';
+
+    var badge = document.getElementById('benchmarkBadge');
+    var display = document.getElementById('standardRangeDisplay');
+    var warningBox = document.getElementById('salaryWarningBox');
+    var warningText = document.getElementById('salaryWarningText');
+    var expStar = document.getElementById('explanationRequiredStar');
+    var expBadge = document.getElementById('explanationStatusBadge');
+    var expInput = document.getElementById('salaryExplanationInput');
+
+    if (benchmark && benchmark.minSalary > 0) {
+        var formatted = formatCurrencyVN(benchmark.minSalary) + ' - ' + formatCurrencyVN(benchmark.maxSalary);
+        badge.className = 'badge bg-success-subtle text-success border border-success-subtle';
+        badge.textContent = 'Dải chuẩn: ' + formatted;
+        display.innerHTML = '<span class="text-success fw-bold">' + formatted + '</span> <span class="badge bg-secondary-subtle text-secondary ms-2">Chính sách ban hành</span>';
+
+        var outOfRange = false;
+        var reasons = [];
+        if (minVal > 0 && minVal < benchmark.minSalary) {
+            outOfRange = true;
+            reasons.push('Lương tối thiểu (' + formatCurrencyVN(minVal) + ') thấp hơn sàn chuẩn (' + formatCurrencyVN(benchmark.minSalary) + ')');
+        }
+        if (maxVal > 0 && maxVal > benchmark.maxSalary) {
+            outOfRange = true;
+            reasons.push('Lương tối đa (' + formatCurrencyVN(maxVal) + ') vượt mức trần chuẩn (' + formatCurrencyVN(benchmark.maxSalary) + ')');
+        }
+
+        if (outOfRange) {
+            warningBox.style.display = 'flex';
+            warningText.innerHTML = 'Dải lương đề xuất nằm ngoài khung chuẩn (' + formatted + '): <b>' + reasons.join('; ') + '</b>.<br>Bạn <b>bắt buộc phải nhập giải trình ngân sách</b> bên dưới.';
+            expStar.style.display = 'inline';
+            expBadge.className = 'badge bg-danger text-white';
+            expBadge.textContent = 'Bắt buộc nhập giải trình';
+            expInput.classList.add('border-warning');
+        } else {
+            warningBox.style.display = 'none';
+            expStar.style.display = 'none';
+            expBadge.className = 'badge bg-secondary-subtle text-secondary';
+            expBadge.textContent = 'Trong dải chuẩn (Tùy chọn)';
+            expInput.classList.remove('border-warning');
+        }
+    } else {
+        badge.className = 'badge bg-light text-secondary border';
+        badge.textContent = 'Chưa xác định dải chuẩn';
+        display.innerHTML = '<span class="text-muted">(Vui lòng chọn chức danh ở trên để nạp khung chuẩn)</span>';
+        warningBox.style.display = 'none';
+        expStar.style.display = 'none';
+        expBadge.className = 'badge bg-secondary-subtle text-secondary';
+        expBadge.textContent = 'Tùy chọn';
+        expInput.classList.remove('border-warning');
+    }
+}
+
+// Kiểm tra ngày cần người không được ở quá khứ
+document.getElementById('deadlineInput').addEventListener('change', function() {
+    var sel = this.value;
+    if (sel && sel < today) {
+        alert('Cảnh báo: Ngày cần người không được ở quá khứ! Vui lòng chọn ngày từ hôm nay trở đi.');
+        this.value = today;
+    }
+});
+
+function handleSave(isDraft) {
+    var pos = document.getElementById('positionSelect').value;
+    if (!pos) {
+        alert('Vui lòng chọn chức danh cần tuyển!');
+        document.getElementById('positionSelect').focus();
+        return;
+    }
+
+    var deadlineVal = document.getElementById('deadlineInput').value;
+    if (deadlineVal && deadlineVal < today) {
+        alert('Lỗi: Ngày cần người không được ở quá khứ! Vui lòng chọn từ ngày hôm nay trở đi.');
+        document.getElementById('deadlineInput').focus();
+        return;
+    }
+
+    var minVal = parseFloat(document.getElementById('minSalaryInput').value) || 0;
+    var maxVal = parseFloat(document.getElementById('maxSalaryInput').value) || 0;
+    if (minVal > 0 && maxVal > 0 && minVal > maxVal) {
+        alert('Lỗi: Lương tối thiểu đề xuất không được lớn hơn lương tối đa!');
+        document.getElementById('minSalaryInput').focus();
+        return;
+    }
+
+    // Nếu Gửi duyệt (không phải lưu nháp)
+    if (!isDraft) {
+        var dept = document.getElementById('departmentSelect').value;
+        if (!dept) {
+            alert('Vui lòng chọn phòng ban phụ trách!');
+            document.getElementById('departmentSelect').focus();
+            return;
+        }
+
+        if (!deadlineVal) {
+            alert('Vui lòng chọn ngày cần người!');
+            document.getElementById('deadlineInput').focus();
+            return;
+        }
+
+        var jd = document.getElementById('jobDescriptionInput').value.trim();
+        if (!jd) {
+            alert('Vui lòng soạn bản mô tả công việc (Job Description)!');
+            document.getElementById('jobDescriptionInput').focus();
+            return;
+        }
+
+        var req = document.getElementById('jobRequirementsInput').value.trim();
+        if (!req) {
+            alert('Vui lòng soạn yêu cầu ứng viên (Candidate Requirements)!');
+            document.getElementById('jobRequirementsInput').focus();
+            return;
+        }
+
+        // BẮT BUỘC: Dải lương nằm ngoài dải chuẩn thì phải nhập giải trình
+        var benchmark = getSelectedBenchmark();
+        if (benchmark && benchmark.minSalary > 0) {
+            var outOfRange = false;
+            if (minVal > 0 && minVal < benchmark.minSalary) outOfRange = true;
+            if (maxVal > 0 && maxVal > benchmark.maxSalary) outOfRange = true;
+
+            if (outOfRange) {
+                var expText = document.getElementById('salaryExplanationInput').value.trim();
+                if (!expText) {
+                    alert('YÊU CẦU BẮT BUỘC:\nDải lương đề xuất nằm ngoài khung chuẩn của chức danh (' + formatCurrencyVN(benchmark.minSalary) + ' - ' + formatCurrencyVN(benchmark.maxSalary) + ').\nBạn bắt buộc phải nhập nội dung giải trình ngân sách!');
+                    document.getElementById('salaryExplanationInput').focus();
+                    return;
+                }
+            }
+        }
+    }
+
+    // Lưu vào LocalStorage
+    var stored = JSON.parse(localStorage.getItem('irms_requisitions') || '[]');
+    var code = 'REQ-2026-' + String(stored.length + 1).padStart(3, '0');
+    var newItem = {
+        id: 'req-' + Date.now(),
+        code: code,
+        title: document.getElementById('reqTitle').value || ('Tuyển dụng ' + pos),
+        positionTitle: pos,
+        departmentName: document.getElementById('departmentSelect').value || 'Chưa gán',
+        headcount: parseInt(document.getElementById('headcountInput').value) || 1,
+        recruitmentReason: document.getElementById('reasonSelect').value,
+        minSalary: minVal,
+        maxSalary: maxVal,
+        deadline: deadlineVal,
+        salaryExplanation: document.getElementById('salaryExplanationInput').value.trim(),
+        status: isDraft ? 'DRAFT' : 'PENDING_APPROVAL',
+        jobDescription: document.getElementById('jobDescriptionInput').value.trim(),
+        jobRequirements: document.getElementById('jobRequirementsInput').value.trim()
+    };
+
+    stored.unshift(newItem);
+    localStorage.setItem('irms_requisitions', JSON.stringify(stored));
+
+    var msg = isDraft ? 'Đã lưu bản nháp yêu cầu tuyển dụng (' + code + ') thành công!' : 'Đã gửi duyệt yêu cầu tuyển dụng (' + code + ') thành công!';
+    sessionStorage.setItem('irms_toast', msg);
+    window.location.href = 'recruitment-requests.html';
+}
+
+function insertJdTemplate() {
+    var pos = document.getElementById('positionSelect').value || 'nhân sự';
+    document.getElementById('jobDescriptionInput').value = 
+        "- Chịu trách nhiệm thực hiện các nhiệm vụ chuyên môn liên quan đến vị trí " + pos + ".\n" +
+        "- Phối hợp cùng các thành viên trong bộ phận để triển khai kế hoạch công việc theo quý/tháng.\n" +
+        "- Tham gia đánh giá, tối ưu quy trình và báo cáo tiến độ trực tiếp cho Quản lý bộ phận.\n" +
+        "- Thực hiện các nhiệm vụ chuyên trách khác theo yêu cầu của cấp trên.";
+}
+
+function insertReqTemplate() {
+    var pos = document.getElementById('positionSelect').value || 'vị trí';
+    document.getElementById('jobRequirementsInput').value = 
+        "- Tốt nghiệp Đại học/Cao đẳng chuyên ngành liên quan đến " + pos + ".\n" +
+        "- Tối thiểu từ 2 - 3 năm kinh nghiệm làm việc thực tế ở vị trí tương đương.\n" +
+        "- Kỹ năng giao tiếp, làm việc nhóm và chủ động giải quyết vấn đề hiệu quả.\n" +
+        "- Tinh thần trách nhiệm cao, chịu được áp lực tiến độ công việc.";
+}
+</script>
+</body>
+</html>
