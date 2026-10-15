@@ -2,9 +2,11 @@ package com.irms.controller;
 
 import com.irms.dao.JobPostingDAO;
 import com.irms.dao.RecruitmentRequestDAO;
+import com.irms.model.CVExtractionResult;
 import com.irms.model.Candidate;
 import com.irms.model.JobPosting;
 import com.irms.model.RecruitmentRequest;
+import com.irms.service.CVDataExtractionService;
 import com.irms.service.CVFileStorageService;
 import com.irms.service.CandidateService;
 import com.irms.service.EmailService;
@@ -21,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -39,6 +42,7 @@ import java.util.logging.Logger;
  * - KN-234: Chống spam và giới hạn tần suất nộp theo IP trong vòng 1 giờ
  * - KN-235: Gửi email xác nhận kèm mã tra cứu bất đồng bộ (Non-blocking)
  * - KN-236: Kiểm tra token xác thực người dùng / CAPTCHA chống spam
+ * - KN-213: Trích xuất thông tin tự động từ CV dạng PDF (Họ tên, Email, SĐT), không tự ghi đè, fail-safe
  * ==============================================================================
  */
 @WebServlet(name = "PublicJobApplicationServlet", urlPatterns = {
@@ -57,6 +61,7 @@ public class PublicJobApplicationServlet extends HttpServlet {
 
     private final CandidateService candidateService = new CandidateService();
     private final CVFileStorageService cvStorageService = new CVFileStorageService();
+    private final CVDataExtractionService cvExtractionService = new CVDataExtractionService();
     private final JobPostingDAO jobPostingDAO = new JobPostingDAO();
     private final RecruitmentRequestDAO requisitionDAO = new RecruitmentRequestDAO();
 
@@ -289,6 +294,35 @@ public class PublicJobApplicationServlet extends HttpServlet {
         candidate.setCvUrl(cvUrl);
         candidate.setTrackingCode(trackingCode);
         candidate.setIpAddress(clientIp);
+
+        // ======================================================================
+        // 8.1. [KN-213]: TRÍCH XUẤT THÔNG TIN TỰ ĐỘNG TỪ CV DẠNG PDF
+        // - Trích xuất Họ tên, Email, Số điện thoại từ CV PDF
+        // - Kết quả bóc tách lưu độc lập, KHÔNG tự ghi đè thông tin nộp của ứng viên
+        // - Bóc tách thất bại KHÔNG làm hỏng việc nộp hồ sơ (Fail-safe, non-blocking)
+        // ======================================================================
+        if (cvUrl != null && cvUrl.toLowerCase().endsWith(".pdf")) {
+            try {
+                File storedCvFile = new File(uploadRoot, cvUrl.substring(1).replace("/", File.separator));
+                if (storedCvFile.exists()) {
+                    CVExtractionResult extractionResult = cvExtractionService.extract(storedCvFile);
+                    candidate.setExtractedName(extractionResult.getExtractedName());
+                    candidate.setExtractedEmail(extractionResult.getExtractedEmail());
+                    candidate.setExtractedPhone(extractionResult.getExtractedPhone());
+                    candidate.setExtractionStatus(extractionResult.getStatus());
+                    candidate.setCvExtractedAt(new Timestamp(System.currentTimeMillis()));
+                    LOGGER.info("[KN-213] Bóc tách CV hoàn tất: " + trackingCode
+                            + " | Status: " + extractionResult.getStatus()
+                            + " | Name: " + extractionResult.getExtractedName()
+                            + " | Email: " + extractionResult.getExtractedEmail()
+                            + " | Phone: " + extractionResult.getExtractedPhone());
+                }
+            } catch (Throwable t) {
+                // [KN-213]: Bóc tách thất bại không làm hỏng việc nộp hồ sơ
+                LOGGER.log(Level.WARNING, "[KN-213] Bóc tách tự động thất bại, tiếp tục tiếp nhận hồ sơ bình thường: " + t.getMessage(), t);
+                candidate.setExtractionStatus("FAILED");
+            }
+        }
 
         try {
             candidate = candidateService.applyPublicJob(candidate);

@@ -224,11 +224,11 @@
                             <tr>
                                 <th class="ps-3">Họ và tên</th>
                                 <th>Phòng ban</th>
-                                <th>Vị trí ứng tuyển</th>
+                                <th>Vị trí ứng tuyển &amp; CV</th>
                                 <th>Nguồn / Người giới thiệu</th>
                                 <th>Thời gian</th>
                                 <th>Trạng thái</th>
-                                <th class="text-end pe-4" style="min-width: 180px;">Thao tác &amp; Chuyển vòng</th>
+                                <th class="text-end pe-4" style="min-width: 220px;">Thao tác &amp; Chuyển vòng</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -251,9 +251,33 @@
                                     <td>
                                         <span class="text-secondary">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn vị trí'}</span>
                                         <c:if test="${not empty c.cvUrl}">
-                                            <a href="${c.cvUrl}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
-                                                <i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm
-                                            </a>
+                                            <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                                <a href="${c.cvUrl}" target="_blank" class="text-primary text-xs text-decoration-none fw-semibold">
+                                                    <i class="bi bi-file-earmark-pdf"></i> Xem CV
+                                                </a>
+                                                <c:choose>
+                                                    <c:when test="${c.extractionStatus == 'CONFIRMED'}">
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.68rem;" title="Recruiter đã đối chiếu & cập nhật thông tin vào hồ sơ">
+                                                            <i class="bi bi-check-circle-fill me-1"></i>Đã đối chiếu
+                                                        </span>
+                                                    </c:when>
+                                                    <c:when test="${c.extractionStatus == 'SUCCESS'}">
+                                                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.68rem;" title="Hệ thống đã tự động bóc tách từ PDF">
+                                                            <i class="bi bi-magic me-1"></i>Đã bóc tách CV
+                                                        </span>
+                                                    </c:when>
+                                                    <c:when test="${c.extractionStatus == 'PARTIAL'}">
+                                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.68rem;" title="Bóc tách được một phần thông tin">
+                                                            <i class="bi bi-exclamation-circle me-1"></i>Bóc tách 1 phần
+                                                        </span>
+                                                    </c:when>
+                                                    <c:when test="${c.extractionStatus == 'FAILED'}">
+                                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.68rem;" title="Không thể bóc tách ký tự từ PDF này">
+                                                            <i class="bi bi-x-circle me-1"></i>Lỗi bóc tách
+                                                        </span>
+                                                    </c:when>
+                                                </c:choose>
+                                            </div>
                                         </c:if>
                                     </td>
                                     <td>
@@ -274,6 +298,26 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-inline-flex align-items-center gap-2">
+                                            <c:if test="${not empty c.cvUrl}">
+                                                <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-1 px-2"
+                                                        style="font-size: 0.75rem; border-radius: 6px; white-space: nowrap;"
+                                                        data-bs-toggle="modal" data-bs-target="#reviewCVExtractionModal"
+                                                        data-id="${c.id}"
+                                                        data-fullname="<c:out value='${c.fullName}' />"
+                                                        data-email="<c:out value='${c.email}' />"
+                                                        data-phone="<c:out value='${c.phone}' />"
+                                                        data-cvurl="<c:out value='${c.cvUrl}' />"
+                                                        data-extracted-name="<c:out value='${c.extractedName}' />"
+                                                        data-extracted-email="<c:out value='${c.extractedEmail}' />"
+                                                        data-extracted-phone="<c:out value='${c.extractedPhone}' />"
+                                                        data-status="<c:out value='${c.extractionStatus}' />"
+                                                        data-status-label="<c:out value='${c.getExtractionStatusLabel()}' />"
+                                                        data-badge-class="<c:out value='${c.getExtractionStatusBadgeClass()}' />"
+                                                        onclick="populateExtractionModal(this)"
+                                                        title="Đối chiếu thông tin trích xuất từ CV">
+                                                    <i class="bi bi-file-earmark-diff"></i> Đối chiếu CV
+                                                </button>
+                                            </c:if>
                                             <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST"
                                                   class="candidate-status-form d-inline-flex flex-column gap-1 align-items-end"
                                                   data-current-status="${c.status}" data-current-reason="${c.rejectionReasonId}">
@@ -425,7 +469,186 @@
         </div>
     </div>
 
+    <!-- Modal Đối Chiếu & Xác Nhận Thông Tin Bóc Tách từ CV (KN-213) -->
+    <div class="modal fade" id="reviewCVExtractionModal" tabindex="-1" aria-labelledby="reviewCVExtractionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-light border-bottom py-3 px-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-magic text-primary fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0" id="reviewCVExtractionModalLabel">
+                                Đối chiếu &amp; Xác nhận thông tin bóc tách từ CV
+                            </h5>
+                            <small class="text-muted">Tính năng tự động bóc tách thông tin từ CV PDF &bull; User Story KN-213</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Banner hướng dẫn & Quy tắc nghiệp vụ KN-213 -->
+                    <div class="alert alert-primary d-flex align-items-start gap-3 border border-primary-subtle rounded-3 py-2 px-3 mb-4" role="alert" style="background-color: #f0f7ff;">
+                        <i class="bi bi-info-circle-fill text-primary fs-5 mt-1"></i>
+                        <div class="small">
+                            <strong>Nguyên tắc bảo vệ dữ liệu (KN-213):</strong> Kết quả bóc tách tự động chỉ mang tính chất hỗ trợ và <strong>không tự ý ghi đè</strong> thông tin ứng viên đã nộp. Recruiter có thể đối chiếu, trực tiếp chỉnh sửa các trường trước khi xác nhận lưu vào hồ sơ chính thức. Bóc tách thất bại không ảnh hưởng đến hồ sơ nộp.
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Cột 1: Thông tin ứng viên nộp ban đầu (Readonly) -->
+                        <div class="col-12 col-lg-5">
+                            <div class="card h-100 border shadow-none" style="background-color: #f8fafc; border-color: #e2e8f0 !important; border-radius: 10px;">
+                                <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
+                                    <span class="fw-bold text-secondary small text-uppercase">
+                                        <i class="bi bi-person-fill me-1"></i> 1. Thông tin ban đầu (Gốc)
+                                    </span>
+                                    <span class="badge bg-secondary-subtle text-secondary border">Tham chiếu</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small fw-semibold mb-1">Họ và tên ứng viên nộp</label>
+                                        <input type="text" id="origFullName" class="form-control form-control-sm bg-white" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small fw-semibold mb-1">Email liên hệ nộp</label>
+                                        <input type="text" id="origEmail" class="form-control form-control-sm bg-white" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small fw-semibold mb-1">Số điện thoại nộp</label>
+                                        <input type="text" id="origPhone" class="form-control form-control-sm bg-white" readonly>
+                                    </div>
+                                    <div class="pt-2 border-top">
+                                        <label class="form-label text-muted small fw-semibold mb-1">Tệp CV ứng tuyển</label>
+                                        <a id="origCvLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1">
+                                            <i class="bi bi-file-earmark-pdf text-danger"></i> Mở xem tệp PDF gốc trong tab mới
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cột 2: Thông tin bóc tách từ CV & Cho phép Recruiter sửa/xác nhận -->
+                        <div class="col-12 col-lg-7">
+                            <div class="card h-100 border shadow-none" style="background-color: #f0fdf4; border-color: #86efac !important; border-radius: 10px;">
+                                <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
+                                    <span class="fw-bold text-success small text-uppercase">
+                                        <i class="bi bi-magic me-1"></i> 2. Thông tin bóc tách từ CV (Có thể sửa)
+                                    </span>
+                                    <span id="modalExtractionBadge" class="badge bg-info-subtle text-info border">Đang tải...</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <form id="confirmExtractionForm" action="${pageContext.request.contextPath}/candidates/confirm-extraction" method="POST">
+                                        <input type="hidden" name="candidateId" id="modalCandidateId">
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-dark small fw-bold mb-1">
+                                                Họ và tên trích xuất <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white"><i class="bi bi-person text-success"></i></span>
+                                                <input type="text" class="form-control" name="confirmedName" id="confirmedName" required placeholder="Họ và tên ứng viên từ CV">
+                                            </div>
+                                            <div class="form-text text-xs text-muted">Recruiter có thể hiệu chỉnh lại dấu tiếng Việt hoặc cách viết hoa.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-dark small fw-bold mb-1">
+                                                Email trích xuất <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white"><i class="bi bi-envelope text-success"></i></span>
+                                                <input type="email" class="form-control" name="confirmedEmail" id="confirmedEmail" required placeholder="email@domain.com">
+                                            </div>
+                                            <div class="form-text text-xs text-muted">Hệ thống trích xuất theo định dạng email chuẩn từ nội dung văn bản PDF.</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-dark small fw-bold mb-1">
+                                                Số điện thoại trích xuất <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white"><i class="bi bi-telephone text-success"></i></span>
+                                                <input type="tel" class="form-control" name="confirmedPhone" id="confirmedPhone" required placeholder="0912345678">
+                                            </div>
+                                            <div class="form-text text-xs text-muted">Định dạng số di động Việt Nam chuẩn (đầu 03, 05, 07, 08, 09 hoặc +84).</div>
+                                        </div>
+
+                                        <div class="alert alert-light border small text-muted py-2 px-3 mb-0" style="background: #ffffff; border-radius: 8px;">
+                                            <i class="bi bi-shield-check text-success me-1"></i>
+                                            Nhấn <strong>"Xác nhận & Cập nhật"</strong> sẽ lưu thông tin đã duyệt ở cột này vào hồ sơ ứng viên và chuyển trạng thái thành <code>Đã đối chiếu</code>.
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between">
+                    <div>
+                        <!-- Nút Bóc tách lại CV -->
+                        <form id="reExtractForm" action="${pageContext.request.contextPath}/candidates/re-extract" method="POST" class="d-inline">
+                            <input type="hidden" name="candidateId" id="reExtractCandidateId">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('Bạn có muốn hệ thống quét và bóc tách lại nội dung từ tệp CV này?');">
+                                <i class="bi bi-arrow-repeat me-1"></i> Bóc tách lại CV
+                            </button>
+                        </form>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">
+                            Đóng (Giữ nguyên)
+                        </button>
+                        <button type="submit" form="confirmExtractionForm" class="btn btn-sm btn-primary px-3">
+                            <i class="bi bi-check-circle-fill me-1"></i> Xác nhận &amp; Cập nhật vào hồ sơ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
+function populateExtractionModal(button) {
+    var id = button.getAttribute('data-id') || '';
+    var fullName = button.getAttribute('data-fullname') || '';
+    var email = button.getAttribute('data-email') || '';
+    var phone = button.getAttribute('data-phone') || '';
+    var cvUrl = button.getAttribute('data-cvurl') || '';
+    var extractedName = button.getAttribute('data-extracted-name') || '';
+    var extractedEmail = button.getAttribute('data-extracted-email') || '';
+    var extractedPhone = button.getAttribute('data-extracted-phone') || '';
+    var status = button.getAttribute('data-status') || '';
+    var statusLabel = button.getAttribute('data-status-label') || 'Chưa bóc tách';
+    var badgeClass = button.getAttribute('data-badge-class') || 'bg-secondary';
+
+    document.getElementById('modalCandidateId').value = id;
+    document.getElementById('reExtractCandidateId').value = id;
+
+    // Gốc
+    document.getElementById('origFullName').value = fullName;
+    document.getElementById('origEmail').value = email;
+    document.getElementById('origPhone').value = phone;
+
+    var cvLink = document.getElementById('origCvLink');
+    if (cvUrl) {
+        cvLink.href = cvUrl;
+        cvLink.classList.remove('disabled');
+    } else {
+        cvLink.href = '#';
+        cvLink.classList.add('disabled');
+    }
+
+    // Giá trị bóc tách hiển thị ở form để recruiter xác nhận / sửa
+    document.getElementById('confirmedName').value = extractedName ? extractedName : fullName;
+    document.getElementById('confirmedEmail').value = extractedEmail ? extractedEmail : email;
+    document.getElementById('confirmedPhone').value = extractedPhone ? extractedPhone : phone;
+
+    var badgeElem = document.getElementById('modalExtractionBadge');
+    badgeElem.className = 'badge ' + badgeClass;
+    badgeElem.textContent = statusLabel;
+}
+</script>
 function toggleCandidateStatusForm(control) {
     var form = control.closest('.candidate-status-form');
     var status = form.querySelector('[name="status"]');

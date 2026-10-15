@@ -269,6 +269,11 @@ CREATE TABLE candidates (
     status VARCHAR(50) NOT NULL DEFAULT 'APPLIED', -- 'APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'HIRED', 'REJECTED'
     tracking_code VARCHAR(50) NULL UNIQUE,
     cv_url TEXT,
+    extracted_name VARCHAR(255) NULL,
+    extracted_email VARCHAR(255) NULL,
+    extracted_phone VARCHAR(50) NULL,
+    extraction_status VARCHAR(50) DEFAULT 'NONE', -- 'SUCCESS', 'PARTIAL', 'FAILED', 'CONFIRMED', 'NONE'
+    cv_extracted_at TIMESTAMP NULL,
     notes TEXT,
     cover_letter MEDIUMTEXT NULL,
     ip_address VARCHAR(45) NULL,
@@ -281,6 +286,7 @@ CREATE TABLE candidates (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_cand_referrer ON candidates(referred_by_user_id);
+CREATE INDEX idx_cand_extract_status ON candidates(extraction_status);
 
 -- 14. Bảng Dải lương theo vị trí (salary_ranges)
 DROP TABLE IF EXISTS salary_ranges;
