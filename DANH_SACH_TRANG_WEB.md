@@ -33,11 +33,12 @@ Những trang này dành cho ứng viên vãng lai, người tìm việc và kh�
 
 ### 📄 Xem trước giao diện tĩnh (Frontend Standalone Preview)
 Nếu chưa khởi động server Tomcat, bạn có thể mở trực tiếp file giao diện HTML độc lập bằng trình duyệt:
-- Đường dẫn file: `frontend/careers.html`
-- Trình duyệt: Nhấp đúp chuột vào file hoặc dán vào trình duyệt: `file:///e:/ttcs_n1/frontend/careers.html`
+- Danh sách việc làm: `file:///e:/ttcs_n1/frontend/careers.html`
+- Chi tiết việc làm: `file:///e:/ttcs_n1/frontend/job-detail.html`
 
 ### 🔌 Danh sách Public API (REST Endpoints)
 - **`GET /api/v1/public/jobs`**: Lấy danh sách việc làm dạng JSON (hỗ trợ các query params: `keyword`, `department`, `location`, `workType`, `page`, `pageSize`).
+- **`GET /api/v1/public/jobs/detail?id={id}`**: Lấy chi tiết tin tuyển dụng công khai kèm trạng thái còn hạn/hết hạn dạng JSON (KN-227).
 - **`POST /api/v1/public/jobs/apply`**: Nộp hồ sơ ứng tuyển dạng `multipart/form-data` (họ tên, email, sđt, cv file, token chống spam...).
 - **`GET /api/v1/public/jobs/apply?trackingCode=APP-YYYYMMDD-XXXX`**: Tra cứu trạng thái hồ sơ đã nộp bằng mã tracking.
 
