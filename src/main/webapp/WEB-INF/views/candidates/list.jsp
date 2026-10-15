@@ -240,7 +240,13 @@
                                                 ${c.fullName != null && c.fullName.length() > 0 ? c.fullName.substring(0, 1) : 'U'}
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark">${c.fullName}</div>
+                                                <a href="${pageContext.request.contextPath}/candidates/profile?id=${c.id}"
+                                                   class="fw-bold text-dark text-decoration-none d-block"
+                                                   title="Xem hồ sơ hợp nhất của ${c.fullName}"
+                                                   style="transition: color .15s;"
+                                                   onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color=''">
+                                                    ${c.fullName}
+                                                </a>
                                                 <div class="text-muted text-xs">${c.email}</div>
                                             </div>
                                         </div>
@@ -251,7 +257,7 @@
                                     <td>
                                         <span class="text-secondary">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn vị trí'}</span>
                                         <c:if test="${not empty c.cvUrl}">
-                                            <a href="${c.cvUrl}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
+                                            <a href="${pageContext.request.contextPath}/candidates/cv-preview?id=${c.id}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
                                                 <i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm
                                             </a>
                                         </c:if>

@@ -281,4 +281,85 @@ public class CandidateService {
         }
         return candidateDAO.findByTrackingCode(trackingCode.trim());
     }
+
+    /**
+     * [KN-218]: Tìm hồ sơ ứng viên theo ID
+     */
+    public Candidate getCandidateById(String id) {
+        if (id == null || id.trim().isEmpty()) return null;
+        return candidateDAO.findById(id.trim());
+    }
+
+    /**
+     * [KN-218]: Lấy toàn bộ lịch sử ứng tuyển của cùng một người (theo email)
+     */
+    public List<Candidate> getApplicationHistory(String email) {
+        if (email == null || email.trim().isEmpty()) return new java.util.ArrayList<>();
+        return candidateDAO.findAllByEmail(email.trim().toLowerCase());
+    }
+
+    /**
+     * [KN-218]: Cập nhật ghi chú cho hồ sơ ứng viên
+     */
+    public boolean updateNotes(String candidateId, String notes) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu mã hồ sơ ứng viên.");
+        }
+        return candidateDAO.updateNotes(candidateId.trim(), notes);
+    }
+
+    /**
+     * [KN-274]: Cập nhật nhãn phân loại (tags) cho hồ sơ ứng viên
+     */
+    public boolean updateTags(String candidateId, String tags) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu mã hồ sơ ứng viên.");
+        }
+        return candidateDAO.updateTags(candidateId.trim(), tags);
+    }
+
+    /**
+     * [KN-269]: Kiểm tra quyền truy cập hồ sơ ứng viên:
+     * - ADMIN và HR_MANAGER được xem tất cả.
+     * - RECRUITER: Phải là recruiter chính hoặc recruiter hỗ trợ của vị trí đó.
+     * - HIRING_MANAGER: Phải là hiring manager của yêu cầu tuyển dụng đó.
+     */
+    public boolean canAccessCandidateProfile(com.irms.model.User user, Candidate candidate) {
+        if (user == null || candidate == null) return false;
+        if (user.hasRole("ADMIN") || user.hasRole("HR_MANAGER")) return true;
+
+        String requisitionId = candidate.getRequisitionId();
+        if (requisitionId == null || requisitionId.trim().isEmpty()) {
+            return false;
+        }
+
+        if (user.hasRole("RECRUITER")) {
+            com.irms.dao.RecruiterAssignmentDAO assignmentDAO = new com.irms.dao.RecruiterAssignmentDAO();
+            if (assignmentDAO.isRecruiterAssigned(requisitionId, user.getId())) {
+                return true;
+            }
+        }
+
+        if (user.hasRole("HIRING_MANAGER")) {
+            return isHiringManagerOfRequisition(requisitionId, user.getId());
+        }
+
+        return false;
+    }
+
+    private boolean isHiringManagerOfRequisition(String requisitionId, String userId) {
+        if (requisitionId == null || userId == null) return false;
+        try (java.sql.Connection conn = com.irms.config.DBConnection.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(
+                     "SELECT 1 FROM recruitment_requisitions WHERE id = ? AND (hiring_manager_id = ? OR created_by = ?) LIMIT 1")) {
+            ps.setString(1, requisitionId);
+            ps.setString(2, userId);
+            ps.setString(3, userId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

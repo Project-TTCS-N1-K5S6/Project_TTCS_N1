@@ -313,7 +313,7 @@
                     </div>
                 </div>
                 <c:if test="${not empty candidate.cvUrl}">
-                    <a href="${candidate.cvUrl}" target="_blank" class="btn btn-sm btn-light text-dark fw-semibold rounded-pill px-4"
+                    <a href="${pageContext.request.contextPath}/candidates/cv-preview?id=${candidate.id}&download=true" class="btn btn-sm btn-light text-dark fw-semibold rounded-pill px-4"
                        style="white-space:nowrap; align-self:flex-start;">
                         <i class="bi bi-download me-1"></i> Tải CV
                     </a>
@@ -467,34 +467,26 @@
                     <div class="info-card-body p-0" style="overflow:hidden; border-radius:0 0 14px 14px;">
                         <c:choose>
                             <c:when test="${not empty candidate.cvUrl}">
-                                <%-- PDF inline preview --%>
-                                <c:choose>
-                                    <c:when test="${candidate.cvUrl.toLowerCase().endsWith('.pdf')}">
-                                        <iframe src="${candidate.cvUrl}"
-                                                class="cv-preview-frame"
-                                                title="CV - ${candidate.fullName}"
-                                                loading="lazy">
-                                        </iframe>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <%-- Với .docx, dùng Google Docs Viewer --%>
-                                        <iframe src="https://docs.google.com/viewer?url=${candidate.cvUrl}&embedded=true"
-                                                class="cv-preview-frame"
-                                                title="CV - ${candidate.fullName}"
-                                                loading="lazy">
-                                        </iframe>
-                                    </c:otherwise>
-                                </c:choose>
+                                <%-- [KN-275]: Stream xem trước CV bảo mật qua API máy chủ --%>
+                                <iframe src="${pageContext.request.contextPath}/candidates/cv-preview?id=${candidate.id}"
+                                        class="cv-preview-frame"
+                                        title="CV - ${candidate.fullName}"
+                                        loading="lazy">
+                                </iframe>
                                 <div class="px-3 py-2 border-top bg-light d-flex align-items-center justify-content-between gap-2"
                                      style="font-size:.8rem;">
-                                    <span class="text-muted"><i class="bi bi-link-45deg me-1"></i>
-                                        <a href="${candidate.cvUrl}" target="_blank" class="text-decoration-none text-primary">
-                                            Mở trong tab mới
-                                        </a>
+                                    <span class="text-muted"><i class="bi bi-shield-check text-success me-1"></i>
+                                        Luồng xem trước CV an toàn (đã xác thực quyền)
                                     </span>
-                                    <a href="${candidate.cvUrl}" download class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1" style="font-size:.75rem;">
-                                        <i class="bi bi-download me-1"></i>Tải về
-                                    </a>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="${pageContext.request.contextPath}/candidates/cv-preview?id=${candidate.id}" target="_blank" class="text-decoration-none text-primary">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> Mở tab mới
+                                        </a>
+                                        <span class="text-muted">|</span>
+                                        <a href="${pageContext.request.contextPath}/candidates/cv-preview?id=${candidate.id}&download=true" class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1" style="font-size:.75rem;">
+                                            <i class="bi bi-download me-1"></i>Tải về
+                                        </a>
+                                    </div>
                                 </div>
                             </c:when>
                             <c:otherwise>
@@ -708,52 +700,79 @@
                     </div>
                 </div>
 
-                <%-- 5. NHÃN / LABELS --%>
+                <%-- 5. NHÃN / LABELS (KN-274) --%>
                 <div class="info-card">
-                    <div class="info-card-header">
-                        <div class="card-icon" style="background:rgba(139,92,246,0.1); color:#7c3aed;">
-                            <i class="bi bi-tags-fill"></i>
+                    <div class="info-card-header d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="card-icon" style="background:rgba(139,92,246,0.1); color:#7c3aed;">
+                                <i class="bi bi-tags-fill"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark fs-6">Nhãn phân loại</div>
+                                <small class="text-muted">Gắn nhãn và tùy biến phân nhóm ứng viên</small>
+                            </div>
                         </div>
-                        <div>
-                            <div class="fw-bold text-dark fs-6">Nhãn phân loại</div>
-                            <small class="text-muted">Gắn nhãn để phân nhóm ứng viên</small>
-                        </div>
+                        <c:if test="${canEdit}">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                    data-bs-toggle="modal" data-bs-target="#editTagsModal" id="btn-open-edit-tags">
+                                <i class="bi bi-pencil me-1"></i> Sửa nhãn
+                            </button>
+                        </c:if>
                     </div>
                     <div class="info-card-body">
-                        <div class="d-flex flex-wrap gap-2 mb-3">
-                            <%-- Nhãn tự động theo trạng thái --%>
-                            <c:if test="${candidate.status == 'HIRED' || candidate.status == 'OFFER'}">
-                                <span class="badge rounded-pill" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:.75rem; font-weight:600; padding:5px 12px;">
-                                    <i class="bi bi-star-fill me-1"></i>Tiềm năng cao
-                                </span>
-                            </c:if>
-                            <c:if test="${applicationHistory.size() > 1}">
-                                <span class="badge rounded-pill" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:.75rem; font-weight:600; padding:5px 12px;">
-                                    <i class="bi bi-repeat me-1"></i>Ứng tuyển nhiều lần
-                                </span>
-                            </c:if>
-                            <c:if test="${not empty candidate.referredByUserId}">
-                                <span class="badge rounded-pill" style="background:#fdf4ff; color:#9333ea; border:1px solid #e9d5ff; font-size:.75rem; font-weight:600; padding:5px 12px;">
-                                    <i class="bi bi-person-heart me-1"></i>Được giới thiệu
-                                </span>
-                            </c:if>
-                            <c:if test="${not empty candidate.cvUrl}">
-                                <span class="badge rounded-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-size:.75rem; font-weight:600; padding:5px 12px;">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>Có CV đính kèm
-                                </span>
-                            </c:if>
-                            <c:if test="${candidate.status == 'INTERVIEWING'}">
-                                <span class="badge rounded-pill" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:.75rem; font-weight:600; padding:5px 12px;">
-                                    <i class="bi bi-camera-video me-1"></i>Đang phỏng vấn
-                                </span>
-                            </c:if>
-                            <c:if test="${empty candidate.cvUrl && empty candidate.referredByUserId && applicationHistory.size() <= 1 && candidate.status != 'HIRED' && candidate.status != 'OFFER' && candidate.status != 'INTERVIEWING'}">
-                                <span class="text-muted small fst-italic">Chưa có nhãn tự động</span>
-                            </c:if>
+                        <%-- Nhãn tùy biến do Recruiter gắn --%>
+                        <div class="mb-3">
+                            <div class="text-muted small fw-semibold mb-2">Nhãn tùy biến:</div>
+                            <div class="d-flex flex-wrap gap-2" id="customTagsContainer">
+                                <c:choose>
+                                    <c:when test="${not empty candidate.tags}">
+                                        <c:forEach var="tag" items="${candidate.getTagList()}">
+                                            <span class="badge rounded-pill bg-light text-dark border px-3 py-2 fw-semibold"
+                                                  style="font-size:.78rem; display:inline-flex; align-items:center; gap:6px;">
+                                                <i class="bi bi-tag-fill text-primary" style="font-size:.7rem;"></i>
+                                                <c:out value="${tag}" />
+                                            </span>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="text-muted small fst-italic">Chưa có nhãn tùy biến nào được gắn.</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
                         </div>
-                        <div class="text-muted" style="font-size:.78rem;">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Nhãn được gắn tự động theo trạng thái và thông tin hồ sơ.
+
+                        <hr class="my-3 opacity-25">
+
+                        <%-- Nhãn tự động theo hồ sơ --%>
+                        <div>
+                            <div class="text-muted small fw-semibold mb-2">Nhãn hệ thống:</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <c:if test="${candidate.status == 'HIRED' || candidate.status == 'OFFER'}">
+                                    <span class="badge rounded-pill" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:.75rem; font-weight:600; padding:5px 12px;">
+                                        <i class="bi bi-star-fill me-1"></i>Tiềm năng cao
+                                    </span>
+                                </c:if>
+                                <c:if test="${applicationHistory.size() > 1}">
+                                    <span class="badge rounded-pill" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:.75rem; font-weight:600; padding:5px 12px;">
+                                        <i class="bi bi-repeat me-1"></i>Ứng tuyển nhiều lần (${applicationHistory.size()})
+                                    </span>
+                                </c:if>
+                                <c:if test="${not empty candidate.referredByUserId}">
+                                    <span class="badge rounded-pill" style="background:#fdf4ff; color:#9333ea; border:1px solid #e9d5ff; font-size:.75rem; font-weight:600; padding:5px 12px;">
+                                        <i class="bi bi-person-heart me-1"></i>Được giới thiệu nội bộ
+                                    </span>
+                                </c:if>
+                                <c:if test="${not empty candidate.cvUrl}">
+                                    <span class="badge rounded-pill" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-size:.75rem; font-weight:600; padding:5px 12px;">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>Có tệp CV
+                                    </span>
+                                </c:if>
+                                <c:if test="${candidate.status == 'INTERVIEWING'}">
+                                    <span class="badge rounded-pill" style="background:#fffbeb; color:#d97706; border:1px solid #fde68a; font-size:.75rem; font-weight:600; padding:5px 12px;">
+                                        <i class="bi bi-camera-video me-1"></i>Đang phỏng vấn
+                                    </span>
+                                </c:if>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -824,6 +843,75 @@ document.getElementById('rejectForm').addEventListener('submit', function(e) {
 });
 document.getElementById('rejectionReasonId').addEventListener('change', function() {
     this.classList.remove('is-invalid');
+});
+</script>
+
+<%-- ========== MODAL CHỈNH SỬA NHÃN (KN-274) ========== --%>
+<div class="modal fade" id="editTagsModal" tabindex="-1" aria-labelledby="editTagsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+            <form action="${pageContext.request.contextPath}/candidates/profile" method="POST" id="tagsForm">
+                <input type="hidden" name="action" value="update-tags">
+                <input type="hidden" name="candidateId" value="${candidate.id}">
+                <div class="modal-header border-0" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); padding:1.25rem 1.5rem;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:40px;height:40px;border-radius:10px;background:#ddd6fe;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-tags-fill text-purple fs-5" style="color:#7c3aed;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="editTagsModalLabel">Chỉnh sửa nhãn phân loại</h5>
+                            <small class="text-muted">${candidate.fullName}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Nhãn phân loại (cách nhau bởi dấu phẩy)</label>
+                        <input type="text" class="form-control" name="tags" id="candidateTagsInput"
+                               value="<c:out value="${candidate.tags}" />"
+                               placeholder="VD: Java, Spring Boot, Senior, Tiềm năng cao">
+                        <div class="form-text text-muted">Nhập các nhãn cách nhau bằng dấu phẩy để phân nhóm ứng viên.</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted fw-semibold d-block mb-1">Gợi ý nhãn nhanh:</small>
+                        <div class="d-flex flex-wrap gap-1">
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Java">Java</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Frontend">Frontend</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Senior">Senior</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Junior">Junior</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Tiềm năng">Tiềm năng</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Pass vòng 1">Pass vòng 1</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0 px-2 tag-suggestion" data-tag="Yêu cầu lương cao">Yêu cầu lương cao</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="confirmTagsBtn">
+                        <i class="bi bi-check2 me-1"></i> Lưu nhãn
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.tag-suggestion').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var input = document.getElementById('candidateTagsInput');
+        var tag = this.getAttribute('data-tag');
+        var current = input.value.trim();
+        if (!current) {
+            input.value = tag;
+        } else {
+            var parts = current.split(',').map(function(s){ return s.trim(); });
+            if (parts.indexOf(tag) === -1) {
+                input.value = current + ', ' + tag;
+            }
+        }
+    });
 });
 </script>
 </c:if>

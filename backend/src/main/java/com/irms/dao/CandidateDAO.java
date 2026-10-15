@@ -204,6 +204,7 @@ public class CandidateDAO extends BaseDAO {
                 c.setStatus(rs.getString("status"));
                 c.setCvUrl(rs.getString("cv_url"));
                 c.setNotes(rs.getString("notes"));
+                try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
                 try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
                 try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
                 try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
@@ -263,6 +264,7 @@ public class CandidateDAO extends BaseDAO {
                 c.setStatus(rs.getString("status"));
                 c.setCvUrl(rs.getString("cv_url"));
                 c.setNotes(rs.getString("notes"));
+                try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
                 try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
                 try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
                 try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
@@ -293,6 +295,27 @@ public class CandidateDAO extends BaseDAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi cập nhật ghi chú ứng viên: " + candidateId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    /**
+     * [KN-274]: Cập nhật nhãn phân loại (tags) cho hồ sơ ứng viên
+     */
+    public boolean updateTags(String candidateId, String tags) {
+        String sql = "UPDATE candidates SET tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, tags);
+            ps.setString(2, candidateId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật nhãn ứng viên: " + candidateId, e);
             return false;
         } finally {
             close(conn, ps);
@@ -637,6 +660,7 @@ public class CandidateDAO extends BaseDAO {
             addColumnIfNotExists(meta, stmt, "candidates", "cover_letter", "MEDIUMTEXT NULL");
             addColumnIfNotExists(meta, stmt, "candidates", "ip_address", "VARCHAR(45) NULL");
             addColumnIfNotExists(meta, stmt, "candidates", "referred_by_user_id", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "candidates", "tags", "VARCHAR(500) NULL");
         } catch (Exception e) {
             logger.log(Level.WARNING, "Không thể kiểm tra/cập nhật cột cho candidates: " + e.getMessage());
         } finally {

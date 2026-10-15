@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -15,6 +16,41 @@ import java.util.logging.Level;
  * Thực hiện tìm kiếm, thêm mới, cập nhật, xóa câu hỏi và liên kết tiêu chí năng lực
  */
 public class QuestionDAO extends BaseDAO {
+
+    public QuestionDAO() {
+        ensureSchema();
+    }
+
+    /**
+     * Tự động tạo bảng questions nếu chưa tồn tại trong database.
+     * Đảm bảo tương thích ngược với các DB cũ chưa chạy migration.
+     */
+    private void ensureSchema() {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+            stmt.executeUpdate(
+                "CREATE TABLE IF NOT EXISTS questions (" +
+                "  id VARCHAR(36) PRIMARY KEY," +
+                "  content TEXT NOT NULL," +
+                "  difficulty_level VARCHAR(10) NOT NULL DEFAULT 'MEDIUM'," +
+                "  good_answer_suggestion TEXT NULL," +
+                "  criterion_id VARCHAR(36) NULL," +
+                "  job_title VARCHAR(255) NULL," +
+                "  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
+                "  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
+                "  INDEX idx_q_criterion (criterion_id)," +
+                "  INDEX idx_q_difficulty (difficulty_level)" +
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+            );
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Không thể tạo/kiểm tra bảng questions: " + e.getMessage());
+        } finally {
+            closeStatement(conn, stmt);
+        }
+    }
 
     /**
      * Chức năng: Tìm kiếm danh sách câu hỏi phỏng vấn theo chức danh công việc và tiêu chí năng lực

@@ -257,7 +257,7 @@
                                     <td>
                                         <span class="text-secondary">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn vị trí'}</span>
                                         <c:if test="${not empty c.cvUrl}">
-                                            <a href="${c.cvUrl}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
+                                            <a href="${pageContext.request.contextPath}/candidates/cv-preview?id=${c.id}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
                                                 <i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm
                                             </a>
                                         </c:if>
