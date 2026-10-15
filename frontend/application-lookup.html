@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu trạng thái hồ sơ - IRMS Platform</title>
+    <meta name="description" content="Nhập mã tra cứu và email để xem trạng thái hồ sơ ứng tuyển của bạn.">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        /* ================================================================
+           [KN-244] [KN-248] [KN-249]: Trang tra cứu trạng thái hồ sơ
+           Frontend demo (HTML tĩnh - kết nối API backend)
+           ================================================================ */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1a2e5a 70%, #0f172a 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 85% 80%, rgba(99, 102, 241, 0.10) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* --- Topbar --- */
+        .lookup-topbar {
+            position: relative;
+            z-index: 10;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .lookup-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #2563eb, #6366f1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            color: #f1f5f9;
+        }
+
+        .back-link {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: #93c5fd; }
+
+        /* --- Main --- */
+        .lookup-main {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+        }
+
+        /* --- Card --- */
+        .lookup-card {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 560px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 80px rgba(37,99,235,0.08);
+            animation: cardFadeIn 0.5s ease forwards;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Sections (views) --- */
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* --- Form view header --- */
+        .card-icon-wrap {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(99,102,241,0.2));
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: #60a5fa;
+            margin: 0 auto 1.1rem;
+        }
+
+        .card-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #f1f5f9;
+            margin: 0 0 0.4rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.5);
+            margin: 0 0 2rem;
+            line-height: 1.6;
+        }
+
+        /* --- Form fields --- */
+        .form-group { margin-bottom: 1.25rem; }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrap { position: relative; }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-input::placeholder { color: rgba(255,255,255,0.28); }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(255,255,255,0.09);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .form-input.is-invalid {
+            border-color: #f87171;
+            box-shadow: 0 0 0 3px rgba(248,113,113,0.15);
+        }
+
+        .field-error {
+            display: none;
+            font-size: 0.8rem;
+            color: #f87171;
+            margin-top: 0.35rem;
+        }
+
+        .field-error.show { display: block; }
+
+        /* --- Buttons --- */
+        .btn-primary-lookup {
+            width: 100%;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.85rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary-lookup:hover:not(:disabled) {
+            background: linear-gradient(135deg, #1d4ed8, #4338ca);
+            box-shadow: 0 8px 25px rgba(37,99,235,0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary-lookup:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .btn-secondary-lookup {
+            width: 100%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.65);
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            margin-top: 0.75rem;
+        }
+
+        .btn-secondary-lookup:hover {
+            background: rgba(255,255,255,0.1);
+            color: #f1f5f9;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- Info box --- */
+        .info-box {
+            background: rgba(37,99,235,0.08);
+            border: 1px solid rgba(37,99,235,0.2);
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .info-box i { color: #60a5fa; font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+        .info-box p { margin: 0; font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+        /* ================================================================
+           [KN-248]: Kết quả tra cứu
+           ================================================================ */
+
+        .result-header { text-align: center; margin-bottom: 1.75rem; }
+
+        .candidate-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e40af, #4f46e5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 auto 0.9rem;
+            border: 3px solid rgba(99,102,241,0.4);
+        }
+
+        .result-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin: 0 0 0.4rem;
+        }
+
+        .position-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.55);
+        }
+
+        /* Badge trạng thái */
+        .status-badge-wrap { text-align: center; margin-bottom: 1.25rem; }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .badge-received  { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #34d399; }
+        .badge-reviewing { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3);  color: #fbbf24; }
+        .badge-interview { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.35); color: #c4b5fd; }
+        .badge-done      { background: rgba(100,116,139,0.15); border: 1px solid rgba(100,116,139,0.25); color: #94a3b8; }
+
+        /* Timeline */
+        .timeline { display: flex; align-items: flex-start; margin: 1.75rem 0; }
+
+        .tl-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Connector */
+        .tl-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            z-index: 0;
+        }
+
+        .tl-step.done:not(:last-child)::after  { background: linear-gradient(90deg, #3b82f6, rgba(99,102,241,0.4)); }
+
+        .tl-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .tl-step.done .tl-circle {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            border-color: #6366f1;
+            color: #fff;
+            box-shadow: 0 0 14px rgba(99,102,241,0.4);
+        }
+
+        .tl-step.active .tl-circle {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            border-color: #38bdf8;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(14,165,233,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(14,165,233,0.5); }
+            50%       { box-shadow: 0 0 32px rgba(14,165,233,0.85), 0 0 50px rgba(99,102,241,0.3); }
+        }
+
+        .tl-label {
+            font-size: 0.69rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+            margin-top: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .tl-step.done .tl-label  { color: #93c5fd; }
+        .tl-step.active .tl-label { color: #38bdf8; font-weight: 700; }
+
+        /* Info grid */
+        .info-grid {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 1rem;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+        .info-row-label { font-size: 0.8rem; color: rgba(255,255,255,0.4); font-weight: 500; flex-shrink: 0; }
+        .info-row-value { font-size: 0.85rem; color: #e2e8f0; font-weight: 500; text-align: right; }
+
+        .code-mono { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.78rem; color: #93c5fd; }
+
+        /* End banner */
+        .end-banner {
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .end-banner.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+        .end-banner.ended   { background: rgba(100,116,139,0.08); border: 1px solid rgba(100,116,139,0.2); }
+        .end-banner i { font-size: 1.1rem; flex-shrink: 0; }
+        .end-banner.success i { color: #34d399; }
+        .end-banner.ended   i { color: #94a3b8; }
+        .end-banner p { margin: 0; font-size: 0.83rem; line-height: 1.6; }
+        .end-banner.success p { color: rgba(255,255,255,0.65); }
+        .end-banner.ended   p { color: rgba(255,255,255,0.45); }
+
+        /* ================================================================
+           [KN-249]: Error views
+           ================================================================ */
+        .error-center { text-align: center; }
+
+        .err-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.25rem;
+        }
+
+        .err-icon.not-found { background: rgba(248,113,113,0.1); border: 2px solid rgba(248,113,113,0.2); color: #f87171; }
+        .err-icon.missing   { background: rgba(245,158,11,0.1);  border: 2px solid rgba(245,158,11,0.2);  color: #fbbf24; }
+
+        .err-title { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin: 0 0 0.5rem; }
+        .err-desc  { font-size: 0.875rem; color: rgba(255,255,255,0.45); line-height: 1.65; margin: 0 0 1.75rem; }
+
+        /* Footer */
+        .lookup-footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 1.25rem;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.22);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @media (max-width: 480px) {
+            .lookup-card { padding: 1.75rem 1.25rem; }
+            .lookup-topbar { padding: 0.85rem 1rem; }
+            .tl-label { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<nav class="lookup-topbar">
+    <a href="index.html" class="lookup-brand">
+        <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
+        <span class="brand-name">IRMS PLATFORM</span>
+    </a>
+    <a href="index.html" class="back-link">
+        <i class="bi bi-box-arrow-in-right"></i> Đăng nhập hệ thống
+    </a>
+</nav>
+
+<!-- Main -->
+<main class="lookup-main">
+    <div class="lookup-card" id="lookupCard">
+
+        <!-- ================================================================
+             [KN-244]: VIEW FORM - Nhập mã tra cứu + email
+             ================================================================ -->
+        <div class="view active" id="viewForm">
+            <div style="text-align:center; margin-bottom:2rem;">
+                <div class="card-icon-wrap">
+                    <i class="bi bi-search-heart-fill"></i>
+                </div>
+                <h1 class="card-title">Tra cứu trạng thái hồ sơ</h1>
+                <p class="card-subtitle">Nhập mã tra cứu và email để xem tiến trình xét duyệt hồ sơ của bạn.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="candidateId">
+                    <i class="bi bi-qr-code me-1"></i> Mã tra cứu hồ sơ <span style="color:#f87171">*</span>
+                </label>
+                <div class="input-wrap">
+                    <i class="input-icon bi bi-hash"></i>
+                    <input type="text"
+                           id="candidateId"
+                           class="form-input"
+                           placeholder="Nhập mã tra cứu (UUID từ email xác nhận)"
+                           autocomplete="off"
+                           spellcheck="false">
+                </div>
+                <div class="field-error" id="errCode">
+                    <i class="bi bi-exclamation-circle me-1"></i>Vui lòng nhập mã tra cứu.
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="lookupEmail">
+                    <i class="bi bi-envelope me-1"></i> Email đã đăng ký <span style="color:#f87171">*</span>
+                </label>
+                <div class="input-wrap">
+                    <i class="input-icon bi bi-envelope-fill"></i>
+                    <input type="email"
+                           id="lookupEmail"
+                           class="form-input"
+                           placeholder="email@example.com"
+                           autocomplete="email">
+                </div>
+                <div class="field-error" id="errEmail">
+                    <i class="bi bi-exclamation-circle me-1"></i>Vui lòng nhập địa chỉ email hợp lệ.
+                </div>
+            </div>
+
+            <button class="btn-primary-lookup" id="btnLookup" onclick="handleLookup()">
+                <div class="spinner" id="spinner"></div>
+                <i class="bi bi-search" id="btnIcon"></i>
+                <span id="btnText">Tra cứu ngay</span>
+            </button>
+
+            <div class="info-box">
+                <i class="bi bi-shield-check"></i>
+                <p>Mã tra cứu được gửi qua email xác nhận sau khi bạn nộp hồ sơ. Chúng tôi chỉ hiển thị trạng thái tổng quát và không tiết lộ bất kỳ thông tin nội bộ nào.</p>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             [KN-248]: VIEW RESULT - Hiển thị kết quả tra cứu
+             ================================================================ -->
+        <div class="view" id="viewResult">
+
+            <div class="result-header">
+                <div class="candidate-avatar" id="resAvatar">?</div>
+                <p class="result-name" id="resName">Nguyễn Văn A</p>
+                <span class="position-tag" id="resPosition">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <span id="resPositionText">Đang tải...</span>
+                </span>
+            </div>
+
+            <!-- [KN-243]: Badge trạng thái tổng quát -->
+            <div class="status-badge-wrap">
+                <div class="status-badge" id="resBadge">
+                    <i class="bi bi-hourglass-split" id="resBadgeIcon"></i>
+                    <span id="resBadgeText">Đang xem xét</span>
+                </div>
+            </div>
+
+            <!-- [KN-243]: Timeline 4 bước tổng quát -->
+            <div class="timeline" id="resTimeline">
+                <div class="tl-step" id="step1" data-step="1">
+                    <div class="tl-circle"><i class="bi bi-inbox-fill"></i></div>
+                    <span class="tl-label">Đã nhận</span>
+                </div>
+                <div class="tl-step" id="step2" data-step="2">
+                    <div class="tl-circle"><i class="bi bi-eye-fill"></i></div>
+                    <span class="tl-label">Đang xem xét</span>
+                </div>
+                <div class="tl-step" id="step3" data-step="3">
+                    <div class="tl-circle"><i class="bi bi-calendar-check-fill"></i></div>
+                    <span class="tl-label">Mời phỏng vấn</span>
+                </div>
+                <div class="tl-step" id="step4" data-step="4">
+                    <div class="tl-circle"><i class="bi bi-flag-fill"></i></div>
+                    <span class="tl-label">Kết thúc</span>
+                </div>
+            </div>
+
+            <!-- Thông tin hồ sơ (không có thông tin nội bộ) -->
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-row-label"><i class="bi bi-hash me-1"></i>Mã hồ sơ</span>
+                    <span class="info-row-value code-mono" id="resCode">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label"><i class="bi bi-calendar3 me-1"></i>Ngày nộp</span>
+                    <span class="info-row-value" id="resSubmitted">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label"><i class="bi bi-clock-history me-1"></i>Cập nhật lần cuối</span>
+                    <span class="info-row-value" id="resUpdated">-</span>
+                </div>
+            </div>
+
+            <!-- Banner kết thúc -->
+            <div class="end-banner success" id="bannerSuccess" style="display:none;">
+                <i class="bi bi-stars"></i>
+                <p>Chúc mừng! Hồ sơ của bạn đã hoàn thành quy trình tuyển dụng thành công. Vui lòng kiểm tra email để nhận thông tin chi tiết.</p>
+            </div>
+
+            <div class="end-banner ended" id="bannerEnded" style="display:none;">
+                <i class="bi bi-info-circle-fill"></i>
+                <p>Quy trình xét duyệt hồ sơ của bạn đã kết thúc. Nếu có thắc mắc, vui lòng liên hệ phòng nhân sự qua email đã đăng ký.</p>
+            </div>
+
+            <button class="btn-secondary-lookup" onclick="showView('viewForm')">
+                <i class="bi bi-arrow-left"></i> Tra cứu hồ sơ khác
+            </button>
+        </div>
+
+        <!-- ================================================================
+             [KN-249]: VIEW NOT_FOUND - Không tìm thấy hồ sơ
+             ================================================================ -->
+        <div class="view" id="viewNotFound">
+            <div class="error-center">
+                <div class="err-icon not-found">
+                    <i class="bi bi-file-earmark-x"></i>
+                </div>
+                <p class="err-title">Không tìm thấy hồ sơ</p>
+                <p class="err-desc">
+                    Không tìm thấy hồ sơ khớp với mã tra cứu và email bạn cung cấp.<br>
+                    Vui lòng kiểm tra lại thông tin hoặc liên hệ phòng nhân sự nếu cần hỗ trợ.
+                </p>
+                <button class="btn-primary-lookup" onclick="showView('viewForm')" style="max-width:260px; margin:0 auto; justify-content:center; text-decoration:none;">
+                    <i class="bi bi-arrow-left"></i> Thử lại
+                </button>
+            </div>
+        </div>
+
+        <!-- ================================================================
+             [KN-249]: VIEW MISSING_FIELDS - Thiếu thông tin
+             ================================================================ -->
+        <div class="view" id="viewMissing">
+            <div class="error-center">
+                <div class="err-icon missing">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <p class="err-title">Thông tin chưa đầy đủ</p>
+                <p class="err-desc">
+                    Vui lòng nhập đầy đủ <strong style="color:#fbbf24;">mã tra cứu</strong> và <strong style="color:#fbbf24;">email</strong> để tìm kiếm hồ sơ.
+                </p>
+                <button class="btn-primary-lookup" onclick="showView('viewForm')" style="max-width:260px; margin:0 auto; justify-content:center;">
+                    <i class="bi bi-arrow-left"></i> Quay lại nhập thông tin
+                </button>
+            </div>
+        </div>
+
+    </div><!-- /.lookup-card -->
+</main>
+
+<!-- Footer -->
+<footer class="lookup-footer">
+    &copy; 2026 IRMS Platform &bull; Thông tin tra cứu được bảo mật theo chính sách nội bộ
+</footer>
+
+<script>
+    // ================================================================
+    // [KN-244] [KN-247] [KN-248] [KN-249]: Frontend JS tra cứu hồ sơ
+    // ================================================================
+
+    // Cấu hình API endpoint backend
+    const API_URL = '/irms/application-lookup/api';
+
+    // Dữ liệu demo (dùng khi backend chưa sẵn sàng)
+    const DEMO_DATA = {
+        'demo-received':  { candidateId: 'demo-received',  fullName: 'Nguyễn Văn An',    positionTitle: 'Kỹ sư Java Backend Senior',  publicStatus: 'DA_NHAN',       publicStatusLabel: 'Đã nhận',       publicStatusStep: 1, isSuccessfulEnd: false, submittedAt: '2026-10-01 08:30:00', lastUpdatedAt: '2026-10-02 14:00:00' },
+        'demo-reviewing': { candidateId: 'demo-reviewing', fullName: 'Trần Thị Bình',     positionTitle: 'Chuyên viên Nhân sự',        publicStatus: 'DANG_XEM_XET',  publicStatusLabel: 'Đang xem xét',  publicStatusStep: 2, isSuccessfulEnd: false, submittedAt: '2026-09-28 10:00:00', lastUpdatedAt: '2026-10-10 09:20:00' },
+        'demo-interview': { candidateId: 'demo-interview', fullName: 'Lê Minh Cường',     positionTitle: 'Trưởng nhóm Frontend React', publicStatus: 'MOI_PHONG_VAN', publicStatusLabel: 'Mời phỏng vấn', publicStatusStep: 3, isSuccessfulEnd: false, submittedAt: '2026-09-20 09:15:00', lastUpdatedAt: '2026-10-12 11:45:00' },
+        'demo-success':   { candidateId: 'demo-success',   fullName: 'Phạm Thu Hà',       positionTitle: 'Kỹ sư DevOps',              publicStatus: 'KET_THUC',      publicStatusLabel: 'Kết thúc',       publicStatusStep: 4, isSuccessfulEnd: true,  submittedAt: '2026-09-15 14:30:00', lastUpdatedAt: '2026-10-14 16:00:00' },
+        'demo-ended':     { candidateId: 'demo-ended',     fullName: 'Hoàng Văn Đức',     positionTitle: 'Kỹ sư Java Backend Senior',  publicStatus: 'KET_THUC',      publicStatusLabel: 'Kết thúc',       publicStatusStep: 4, isSuccessfulEnd: false, submittedAt: '2026-09-10 13:00:00', lastUpdatedAt: '2026-10-13 10:30:00' },
+    };
+
+    /**
+     * [KN-247]: Gọi API tra cứu hồ sơ
+     */
+    async function handleLookup() {
+        const candidateId = document.getElementById('candidateId').value.trim();
+        const email       = document.getElementById('lookupEmail').value.trim();
+
+        // [KN-249]: Validate client-side
+        let valid = true;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        setFieldError('candidateId', 'errCode', !candidateId);
+        setFieldError('lookupEmail', 'errEmail', !email || !emailRegex.test(email));
+
+        if (!candidateId) valid = false;
+        if (!email || !emailRegex.test(email)) valid = false;
+        if (!valid) return;
+
+        setLoading(true);
+
+        try {
+            // Kiểm tra demo data trước
+            if (DEMO_DATA[candidateId]) {
+                await new Promise(r => setTimeout(r, 800)); // Simulate delay
+                const demoResult = DEMO_DATA[candidateId];
+                if (demoResult.email && demoResult.email.toLowerCase() !== email.toLowerCase()) {
+                    showView('viewNotFound');
+                    return;
+                }
+                renderResult(demoResult);
+                showView('viewResult');
+                return;
+            }
+
+            // [KN-247]: Gọi API backend
+            const resp = await fetch(`${API_URL}?id=${encodeURIComponent(candidateId)}&email=${encodeURIComponent(email)}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            const data = await resp.json();
+
+            if (!resp.ok || !data.success) {
+                // [KN-249]: Không tìm thấy hoặc lỗi
+                showView('viewNotFound');
+                return;
+            }
+
+            // [KN-248]: Hiển thị kết quả
+            renderResult(data);
+            showView('viewResult');
+
+        } catch (err) {
+            console.warn('[KN-247] API không khả dụng, thử demo data:', err);
+            // Fallback: thử demo data
+            const lowerCode = candidateId.toLowerCase();
+            const demoKey   = Object.keys(DEMO_DATA).find(k => lowerCode.includes(k) || k.includes(lowerCode));
+            if (demoKey) {
+                await new Promise(r => setTimeout(r, 600));
+                renderResult(DEMO_DATA[demoKey]);
+                showView('viewResult');
+            } else {
+                showView('viewNotFound');
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    /**
+     * [KN-248]: Render kết quả vào DOM
+     * [KN-246]: Chỉ hiển thị thông tin tổng quát từ API - KHÔNG hiển thị rawStatus hay thông tin nội bộ
+     */
+    function renderResult(data) {
+        // Thông tin cơ bản
+        const name = data.fullName || 'Ứng viên';
+        document.getElementById('resAvatar').textContent   = name.trim().charAt(0).toUpperCase();
+        document.getElementById('resName').textContent     = name;
+        document.getElementById('resPositionText').textContent = data.positionTitle || 'Đang cập nhật';
+        document.getElementById('resCode').textContent    = (data.candidateId || '').substring(0, 18) + '...';
+
+        // Thời gian
+        document.getElementById('resSubmitted').textContent = formatDateTime(data.submittedAt);
+        document.getElementById('resUpdated').textContent   = formatDateTime(data.lastUpdatedAt);
+
+        // [KN-243]: Trạng thái tổng quát - badge
+        const statusConfig = getStatusConfig(data.publicStatus);
+        const badge = document.getElementById('resBadge');
+        badge.className = 'status-badge ' + statusConfig.badgeClass;
+        document.getElementById('resBadgeIcon').className = 'bi ' + statusConfig.icon;
+        document.getElementById('resBadgeText').textContent = data.publicStatusLabel || statusConfig.label;
+
+        // [KN-243]: Timeline
+        const step = data.publicStatusStep || 1;
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById('step' + i);
+            el.classList.remove('done', 'active');
+            if (i < step)       el.classList.add('done');
+            else if (i === step) el.classList.add('active');
+
+            // Update icon cho bước done
+            const circle = el.querySelector('.tl-circle');
+            if (i < step) {
+                circle.innerHTML = '<i class="bi bi-check-lg"></i>';
+            }
+        }
+
+        // Banner kết thúc
+        const bannerS = document.getElementById('bannerSuccess');
+        const bannerE = document.getElementById('bannerEnded');
+        bannerS.style.display = 'none';
+        bannerE.style.display = 'none';
+
+        if (data.publicStatus === 'KET_THUC') {
+            if (data.isSuccessfulEnd) {
+                bannerS.style.display = 'flex';
+            } else {
+                bannerE.style.display = 'flex';
+            }
+        }
+    }
+
+    /** [KN-243]: Map publicStatus sang config hiển thị */
+    function getStatusConfig(publicStatus) {
+        const map = {
+            'DA_NHAN':       { badgeClass: 'badge-received',  icon: 'bi-inbox-fill',            label: 'Đã nhận' },
+            'DANG_XEM_XET':  { badgeClass: 'badge-reviewing', icon: 'bi-eye-fill',               label: 'Đang xem xét' },
+            'MOI_PHONG_VAN': { badgeClass: 'badge-interview', icon: 'bi-calendar-check-fill',   label: 'Mời phỏng vấn' },
+            'KET_THUC':      { badgeClass: 'badge-done',      icon: 'bi-flag-fill',              label: 'Kết thúc' },
+        };
+        return map[publicStatus] || map['DANG_XEM_XET'];
+    }
+
+    /** Format datetime từ string */
+    function formatDateTime(dtStr) {
+        if (!dtStr) return '-';
+        try {
+            const d = new Date(dtStr.replace(' ', 'T'));
+            return d.toLocaleString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+        } catch (e) { return dtStr; }
+    }
+
+    /** Chuyển đổi giữa các view */
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        const target = document.getElementById(viewId);
+        if (target) {
+            target.classList.add('active');
+            // Scroll card to top
+            const card = document.getElementById('lookupCard');
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    /** Loading state */
+    function setLoading(loading) {
+        const btn     = document.getElementById('btnLookup');
+        const spinner = document.getElementById('spinner');
+        const icon    = document.getElementById('btnIcon');
+        const text    = document.getElementById('btnText');
+
+        btn.disabled = loading;
+        spinner.style.display = loading ? 'block' : 'none';
+        icon.style.display    = loading ? 'none' : 'inline';
+        text.textContent      = loading ? 'Đang tra cứu...' : 'Tra cứu ngay';
+    }
+
+    /** Validate và hiển thị lỗi field */
+    function setFieldError(inputId, errId, hasError) {
+        const input = document.getElementById(inputId);
+        const err   = document.getElementById(errId);
+        if (!input || !err) return;
+        if (hasError) {
+            input.classList.add('is-invalid');
+            err.classList.add('show');
+        } else {
+            input.classList.remove('is-invalid');
+            err.classList.remove('show');
+        }
+    }
+
+    // [KN-249]: Clear error khi người dùng nhập lại
+    document.addEventListener('DOMContentLoaded', function () {
+        ['candidateId', 'lookupEmail'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('input', function () {
+                const errId = id === 'candidateId' ? 'errCode' : 'errEmail';
+                el.classList.remove('is-invalid');
+                const errEl = document.getElementById(errId);
+                if (errEl) errEl.classList.remove('show');
+            });
+            // [KN-244]: Enter key submit
+            el.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') handleLookup();
+            });
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

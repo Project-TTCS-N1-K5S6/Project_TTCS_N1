@@ -64,7 +64,8 @@ public class AuthFilter implements Filter {
         if (path.startsWith("/auth/login") || path.startsWith("/auth/forgot-password") ||
             path.startsWith("/auth/reset-password") || path.startsWith("/about-us") || path.startsWith("/company/about") ||
             path.startsWith("/careers") || path.startsWith("/jobs") ||
-            path.startsWith("/api/v1/public/") || path.startsWith("/api/public/")) {
+            path.startsWith("/api/v1/public/") || path.startsWith("/api/public/") ||
+            path.startsWith("/application-lookup")) {
             chain.doFilter(request, response);
             return;
         }

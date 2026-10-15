@@ -201,6 +201,20 @@
                 </a>
             </li>
         </ul>
+
+        <%-- [KN-214]: Tra cứu hồ sơ (Public) - mọi user nội bộ có thể dùng để hướng dẫn ứng viên --%>
+        <div class="menu-header">CÔNG CỤ CÔNG KHAI</div>
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item">
+                <a class="nav-link ${activeMenu == 'application-lookup' ? 'active' : ''}"
+                   href="${pageContext.request.contextPath}/application-lookup"
+                   target="_blank" title="Mở trang tra cứu hồ sơ công khai">
+                    <i class="bi bi-search-heart-fill"></i>
+                    <span>Tra cứu hồ sơ</span>
+                    <span class="badge bg-primary-subtle text-primary ms-auto" style="font-size: 10px;">Public</span>
+                </a>
+            </li>
+        </ul>
     </div>
 
     <div class="sidebar-footer">
