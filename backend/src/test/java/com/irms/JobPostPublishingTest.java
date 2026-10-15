@@ -220,4 +220,14 @@ public class JobPostPublishingTest {
         assertFalse("JobPosting đã gỡ không được coi là đang xuất bản!", jp.isPublished());
         assertEquals("Đã gỡ bài", jp.getStatusLabel());
     }
+
+    @Test
+    public void testExpiredPublishedPostingIsNotPubliclyEligible() {
+        JobPosting posting = new JobPosting();
+        posting.setStatus("PUBLISHED");
+        posting.setApplicationDeadline(Date.valueOf(LocalDate.now().minusDays(1)));
+
+        assertFalse("Tin đã quá hạn phải bị ẩn khỏi danh sách công khai.",
+                publishingService.isPubliclyEligible(posting));
+    }
 }

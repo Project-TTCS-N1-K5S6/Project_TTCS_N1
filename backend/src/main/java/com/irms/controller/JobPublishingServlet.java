@@ -472,9 +472,9 @@ public class JobPublishingServlet extends HttpServlet {
         }
 
         JobPosting posting = publishingService.getPostingByRequisitionId(id);
-        // BẮT BUỘC KIỂM TRA: Chỉ hiển thị nếu ĐÃ DUYỆT và ĐANG XUẤT BẢN
-        if (posting == null || !posting.isApproved() || !posting.isPublished()) {
-            request.setAttribute("errorMessage", "Tin tuyển dụng này chưa được phê duyệt hoặc chưa xuất bản công khai!");
+        // BẮT BUỘC KIỂM TRA: Chỉ hiển thị nếu ĐÃ DUYỆT, ĐANG XUẤT BẢN và CÒN HẠN nhận hồ sơ
+        if (posting == null || !posting.isApproved() || !posting.isPublished() || posting.isExpired()) {
+            request.setAttribute("errorMessage", "Tin tuyển dụng này không còn hiển thị công khai (đã gỡ, hết hạn hoặc chưa được phê duyệt)!");
             request.getRequestDispatcher("/WEB-INF/views/errors/404.jsp").forward(request, response);
             return;
         }

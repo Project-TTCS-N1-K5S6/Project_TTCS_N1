@@ -9,6 +9,7 @@
 - **Kiến trúc:** Mô hình MVC (Model - View - Controller) kinh điển trong Java Enterprise Web.
 - **Bảo mật:** Phân quyền theo vai trò (RBAC) trên 10 phân hệ nghiệp vụ, mã hóa mật khẩu một chiều bằng thuật toán BCrypt, tự động khóa tài khoản sau 5 lần đăng nhập thất bại trong 15 phút, chống lộ diện người dùng (User Enumeration Protection), và kiểm toán toàn diện (Audit Logging).
 - **Giao diện:** Thiết kế hiện đại, chuyên nghiệp với **Bootstrap 5.3**, phối hợp hệ thống biến **SASS (SCSS)**, hỗ trợ linh hoạt từ màn hình máy tính tới thiết bị di động (Responsive Layout & Mobile Drawer).
+- **Tin tuyển dụng:** Có thể gỡ bài đăng thủ công; tin hết hạn nhận hồ sơ được tự động gỡ khỏi danh sách công khai bằng tác vụ chạy hằng ngày.
 
 ---
 

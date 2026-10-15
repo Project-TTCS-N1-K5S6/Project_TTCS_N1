@@ -565,7 +565,7 @@ public class JobPostingDAO extends BaseDAO {
             conn.setAutoCommit(false);
 
             String sqlPost = "UPDATE job_postings SET status = 'UNPUBLISHED', unpublished_at = CURRENT_TIMESTAMP, " +
-                    "unpublished_by = ?, updated_at = CURRENT_TIMESTAMP WHERE requisition_id = ?";
+                    "unpublished_by = ?, updated_at = CURRENT_TIMESTAMP WHERE requisition_id = ? AND status = 'PUBLISHED'";
             psPost = conn.prepareStatement(sqlPost);
             psPost.setString(1, actorId);
             psPost.setString(2, requisitionId);
@@ -884,6 +884,56 @@ public class JobPostingDAO extends BaseDAO {
         } catch (SQLException ignored) {
         } finally {
             close(conn, ps);
+        }
+    }
+
+    /**
+     * Automatically unpublish public job posts after their application deadline.
+     * The current publication history is updated in the same transaction.
+     */
+    public int unpublishExpiredPosts() throws SQLException {
+        String expiredPostingIds = "SELECT expired_posts.id FROM (" +
+                "SELECT jp.id FROM job_postings jp " +
+                "LEFT JOIN recruitment_requisitions r ON jp.requisition_id = r.id " +
+                "WHERE jp.status = 'PUBLISHED' AND (" +
+                "(jp.expired_at IS NOT NULL AND jp.expired_at < CURRENT_TIMESTAMP) OR " +
+                "(jp.expired_at IS NULL AND COALESCE(jp.application_deadline, r.deadline) < CURRENT_DATE)" +
+                ")" +
+                ") expired_posts";
+        String sqlPublications = "UPDATE job_post_publications SET status = 'UNPUBLISHED', " +
+                "unpublished_at = CURRENT_TIMESTAMP, unpublished_by = NULL " +
+                "WHERE status = 'PUBLISHED' AND job_posting_id IN (" + expiredPostingIds + ")";
+        String sqlPostings = "UPDATE job_postings SET status = 'UNPUBLISHED', " +
+                "unpublished_at = CURRENT_TIMESTAMP, unpublished_by = NULL, updated_at = CURRENT_TIMESTAMP " +
+                "WHERE status = 'PUBLISHED' AND id IN (" + expiredPostingIds + ")";
+
+        Connection conn = null;
+        PreparedStatement psPublications = null;
+        PreparedStatement psPostings = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            psPublications = conn.prepareStatement(sqlPublications);
+            psPublications.executeUpdate();
+
+            psPostings = conn.prepareStatement(sqlPostings);
+            int unpublishedCount = psPostings.executeUpdate();
+
+            conn.commit();
+            return unpublishedCount;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+            }
+            logger.log(Level.SEVERE, "Lỗi tự động gỡ các tin tuyển dụng đã quá hạn", e);
+            throw e;
+        } finally {
+            closeQuietly(psPublications);
+            closeQuietly(psPostings);
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
         }
     }
 
