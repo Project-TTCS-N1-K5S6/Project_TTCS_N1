@@ -471,21 +471,49 @@ public class JobPublishingServlet extends HttpServlet {
             return;
         }
 
-        JobPosting posting = publishingService.getPostingByRequisitionId(id);
-        // BẮT BUỘC KIỂM TRA: Chỉ hiển thị nếu ĐÃ DUYỆT và ĐANG XUẤT BẢN
-        if (posting == null || !posting.isApproved() || !posting.isPublished()) {
-            request.setAttribute("errorMessage", "Tin tuyển dụng này chưa được phê duyệt hoặc chưa xuất bản công khai!");
+        JobPosting posting = publishingService.getPostingByRequisitionId(id.trim());
+        if (posting == null) {
+            posting = new com.irms.dao.JobPostingDAO().findById(id.trim());
+        }
+
+        // BẮT BUỘC KIỂM TRA: Chỉ hiển thị nếu tồn tại và ĐÃ ĐƯỢC DUYỆT
+        if (posting == null || !posting.isApproved()) {
+            request.setAttribute("errorMessage", "Tin tuyển dụng này không tồn tại hoặc chưa được phê duyệt xuất bản công khai!");
             request.getRequestDispatcher("/WEB-INF/views/errors/404.jsp").forward(request, response);
             return;
         }
 
+        // Kiểm tra trạng thái xuất bản, hạn nộp và trạng thái đóng tin
+        boolean isExpired = posting.isExpired();
+        if (!isExpired && posting.getApplicationDeadline() != null) {
+            long deadlineEndMs = posting.getApplicationDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
+        if (!isExpired && posting.getRequisition() != null && posting.getRequisition().getDeadline() != null) {
+            long deadlineEndMs = posting.getRequisition().getDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
+
+        boolean isClosed = "CLOSED".equalsIgnoreCase(posting.getStatus()) || "UNPUBLISHED".equalsIgnoreCase(posting.getStatus());
+        boolean isPublished = posting.isPublished();
+        boolean canApply = isPublished && !isExpired && !isClosed;
+
         // Tăng view count
-        new com.irms.dao.JobPostingDAO().incrementViews(posting.getId());
+        if (posting.getId() != null) {
+            new com.irms.dao.JobPostingDAO().incrementViews(posting.getId());
+        }
 
         List<SharedCatalogItem> applicationSources = sharedCatalogDAO.findAll(SharedCatalogType.APPLICATION_SOURCE);
         request.setAttribute("applicationSources", applicationSources);
 
         request.setAttribute("job", posting);
+        request.setAttribute("isExpired", isExpired);
+        request.setAttribute("isClosed", isClosed);
+        request.setAttribute("canApply", canApply);
         request.getRequestDispatcher("/WEB-INF/views/publishing/job-detail.jsp").forward(request, response);
     }
 

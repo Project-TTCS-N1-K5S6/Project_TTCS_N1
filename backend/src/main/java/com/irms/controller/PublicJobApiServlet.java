@@ -29,7 +29,9 @@ import java.util.*;
         "/api/v1/public/jobs",
         "/api/public/jobs",
         "/api/v1/public/jobs/filters",
-        "/api/public/jobs/filters"
+        "/api/public/jobs/filters",
+        "/api/v1/public/jobs/detail",
+        "/api/public/jobs/detail"
 })
 public class PublicJobApiServlet extends HttpServlet {
 
@@ -48,7 +50,13 @@ public class PublicJobApiServlet extends HttpServlet {
             return;
         }
 
-        // 2. Endpoint lấy danh sách việc làm công khai kèm tìm kiếm, lọc, phân trang, sắp xếp
+        // 2. Endpoint lấy chi tiết 1 tin tuyển dụng công khai kèm trạng thái còn hạn/hết hạn
+        if (path.endsWith("/detail")) {
+            handleGetJobDetail(request, response);
+            return;
+        }
+
+        // 3. Endpoint lấy danh sách việc làm công khai kèm tìm kiếm, lọc, phân trang, sắp xếp
         handleGetPublicJobs(request, response);
     }
 
@@ -233,5 +241,82 @@ public class PublicJobApiServlet extends HttpServlet {
         responseData.put("workTypes", workTypes);
 
         JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_OK, responseData);
+    }
+
+    private void handleGetJobDetail(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String id = request.getParameter("id");
+        if (id == null || id.trim().isEmpty()) {
+            id = request.getParameter("jobId");
+        }
+        if (id == null || id.trim().isEmpty()) {
+            id = request.getParameter("requisitionId");
+        }
+
+        if (id == null || id.trim().isEmpty()) {
+            JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_BAD_REQUEST,
+                    Map.of("success", false, "error", "Vui lòng cung cấp mã định danh vị trí tuyển dụng (id)."));
+            return;
+        }
+
+        JobPosting jp = publishingService.getPostingByRequisitionId(id.trim());
+        if (jp == null) {
+            jp = new com.irms.dao.JobPostingDAO().findById(id.trim());
+        }
+
+        if (jp == null || !jp.isApproved()) {
+            JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_NOT_FOUND,
+                    Map.of("success", false, "error", "Không tìm thấy vị trí tuyển dụng này hoặc tin chưa được phê duyệt."));
+            return;
+        }
+
+        boolean isExpired = jp.isExpired();
+        if (!isExpired && jp.getApplicationDeadline() != null) {
+            long deadlineEndMs = jp.getApplicationDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
+        if (!isExpired && jp.getRequisition() != null && jp.getRequisition().getDeadline() != null) {
+            long deadlineEndMs = jp.getRequisition().getDeadline().getTime() + 86399000L;
+            if (deadlineEndMs < System.currentTimeMillis()) {
+                isExpired = true;
+            }
+        }
+
+        boolean isClosed = "CLOSED".equalsIgnoreCase(jp.getStatus()) || "UNPUBLISHED".equalsIgnoreCase(jp.getStatus());
+        boolean isPublished = jp.isPublished();
+        boolean canApply = isPublished && !isExpired && !isClosed;
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("id", jp.getId());
+        data.put("requisitionId", jp.getRequisitionId());
+        data.put("code", jp.getRequisitionCode());
+        data.put("title", jp.getTitle());
+        data.put("positionTitle", jp.getPositionTitle());
+        data.put("departmentName", jp.getDepartmentName() != null ? jp.getDepartmentName() : "Toàn công ty");
+        data.put("workLocation", jp.getWorkLocation() != null ? jp.getWorkLocation() : "Trụ sở chính");
+        data.put("workType", jp.getWorkType() != null ? jp.getWorkType() : "Toàn thời gian");
+        data.put("headcount", jp.getRequisition() != null ? jp.getRequisition().getHeadcount() : 1);
+        data.put("jobDescription", jp.getRequisition() != null ? jp.getRequisition().getJobDescription() : jp.getJobDescription());
+        data.put("jobRequirements", jp.getRequisition() != null ? jp.getRequisition().getJobRequirements() : "");
+        data.put("formattedSalary", jp.getFormattedSalaryRange());
+        data.put("salaryVisible", jp.isSalaryVisible());
+        data.put("minSalary", jp.getMinSalary());
+        data.put("maxSalary", jp.getMaxSalary());
+        data.put("currency", jp.getCurrency());
+        data.put("formattedDeadline", jp.getFormattedDeadline());
+        data.put("expiredAt", jp.getExpiredAt());
+        data.put("viewsCount", jp.getViewsCount());
+        data.put("status", jp.getStatus());
+        data.put("isPublished", isPublished);
+        data.put("isExpired", isExpired);
+        data.put("isClosed", isClosed);
+        data.put("canApply", canApply);
+
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("success", true);
+        res.put("data", data);
+        JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_OK, res);
     }
 }
