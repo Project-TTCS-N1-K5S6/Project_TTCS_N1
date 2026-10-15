@@ -36,11 +36,13 @@ Nếu chưa khởi động server Tomcat, bạn có thể mở trực tiếp fil
 - Danh sách việc làm: `file:///e:/ttcs_n1/frontend/careers.html`
 - Chi tiết việc làm: `file:///e:/ttcs_n1/frontend/job-detail.html`
 
-### 🔌 Danh sách Public API (REST Endpoints)
+### 🔌 Danh sách Public & Internal API tiêu biểu
 - **`GET /api/v1/public/jobs`**: Lấy danh sách việc làm dạng JSON (hỗ trợ các query params: `keyword`, `department`, `location`, `workType`, `page`, `pageSize`).
 - **`GET /api/v1/public/jobs/detail?id={id}`**: Lấy chi tiết tin tuyển dụng công khai kèm trạng thái còn hạn/hết hạn dạng JSON (KN-227).
 - **`POST /api/v1/public/jobs/apply`**: Nộp hồ sơ ứng tuyển dạng `multipart/form-data` (họ tên, email, sđt, cv file, token chống spam...).
 - **`GET /api/v1/public/jobs/apply?trackingCode=APP-YYYYMMDD-XXXX`**: Tra cứu trạng thái hồ sơ đã nộp bằng mã tracking.
+- **`GET /api/candidates/profile?id={id}`**: API lấy dữ liệu hồ sơ ứng viên hợp nhất (thông tin cá nhân, nhãn, ghi chú, lịch sử ứng tuyển) có kiểm tra phân quyền RBAC.
+- **`GET /candidates/cv-preview?id={id}`**: API stream xem trước CV an toàn (bảo vệ inline preview, chống path traversal, kiểm tra quyền truy cập).
 
 ---
 
@@ -61,6 +63,7 @@ Nếu chưa khởi động server Tomcat, bạn có thể mở trực tiếp fil
 | **Trung tâm Phê duyệt Tuyển dụng** | [`http://localhost:8088/recruitment-requests/approvals`](http://localhost:8088/recruitment-requests/approvals) | APPROVER, HR_MANAGER, ADMIN |
 | **Quản lý Xuất bản Tin tuyển dụng** | [`http://localhost:8088/post-publishing`](http://localhost:8088/post-publishing) | ADMIN, HR_MANAGER, RECRUITER |
 | **Quản lý Hồ sơ ứng viên** | [`http://localhost:8088/candidates`](http://localhost:8088/candidates) | RECRUITER, HR_MANAGER, ADMIN, INTERVIEWER |
+| **Hồ sơ ứng viên hợp nhất** | `http://localhost:8088/candidates/profile?id={candidateId}` | ADMIN, HR_MANAGER, RECRUITER phụ trách, HIRING_MANAGER của vị trí |
 | **Định biên & Ngân sách Nhân sự** | [`http://localhost:8088/headcount-budgets`](http://localhost:8088/headcount-budgets) | ADMIN, HR_MANAGER, HIRING_MANAGER |
 | **Quản lý Khung năng lực** | [`http://localhost:8088/competency-frameworks`](http://localhost:8088/competency-frameworks) | ADMIN, HR_MANAGER |
 | **Quản lý Dải lương tuyển dụng** | [`http://localhost:8088/salary-ranges`](http://localhost:8088/salary-ranges) | ADMIN, HR_MANAGER *(Bảo mật riêng)* |

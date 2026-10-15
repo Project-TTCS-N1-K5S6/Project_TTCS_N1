@@ -146,6 +146,165 @@ public class CandidateDAO extends BaseDAO {
         return 0;
     }
 
+    /**
+     * [KN-218]: Tìm kiếm một hồ sơ ứng viên theo ID
+     */
+    public Candidate findById(String id) {
+        if (id == null || id.trim().isEmpty()) return null;
+        String sql = "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                     "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                     "referrer.full_name AS referred_by_user_name FROM candidates c " +
+                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                     "LEFT JOIN departments d ON r.department_id = d.id " +
+                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                     "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id " +
+                     "WHERE c.id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, id.trim());
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Candidate c = new Candidate();
+                c.setId(rs.getString("id"));
+                c.setRequisitionId(rs.getString("requisition_id"));
+                c.setRequisitionTitle(rs.getString("requisition_title"));
+                c.setDepartmentId(rs.getString("department_id"));
+                c.setDepartmentName(rs.getString("department_name"));
+                c.setApplicationSourceId(rs.getString("application_source_id"));
+                c.setApplicationSourceName(rs.getString("application_source_name"));
+                c.setReferredByUserId(rs.getString("referred_by_user_id"));
+                c.setReferredByUserName(rs.getString("referred_by_user_name"));
+                c.setRejectionReasonId(rs.getString("rejection_reason_id"));
+                c.setRejectionReasonName(rs.getString("rejection_reason_name"));
+                c.setFullName(rs.getString("full_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPhone(rs.getString("phone"));
+                c.setStatus(rs.getString("status"));
+                c.setCvUrl(rs.getString("cv_url"));
+                c.setNotes(rs.getString("notes"));
+                try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
+                try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
+                try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
+                try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
+                c.setCreatedAt(rs.getTimestamp("created_at"));
+                c.setUpdatedAt(rs.getTimestamp("updated_at"));
+                return c;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi tìm kiếm ứng viên theo id: " + id, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return null;
+    }
+
+    /**
+     * [KN-218]: Lấy toàn bộ lịch sử ứng tuyển của cùng một người (theo email), sắp xếp mới nhất trước.
+     * Phục vụ trang Hồ sơ Ứng viên Hợp nhất - hiển thị tất cả các lần ứng tuyển.
+     */
+    public List<Candidate> findAllByEmail(String email) {
+        List<Candidate> list = new ArrayList<>();
+        if (email == null || email.trim().isEmpty()) return list;
+        String sql = "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                     "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                     "referrer.full_name AS referred_by_user_name FROM candidates c " +
+                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                     "LEFT JOIN departments d ON r.department_id = d.id " +
+                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                     "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id " +
+                     "WHERE LOWER(TRIM(c.email)) = LOWER(TRIM(?)) " +
+                     "ORDER BY c.created_at DESC";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email.trim());
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Candidate c = new Candidate();
+                c.setId(rs.getString("id"));
+                c.setRequisitionId(rs.getString("requisition_id"));
+                c.setRequisitionTitle(rs.getString("requisition_title"));
+                c.setDepartmentId(rs.getString("department_id"));
+                c.setDepartmentName(rs.getString("department_name"));
+                c.setApplicationSourceId(rs.getString("application_source_id"));
+                c.setApplicationSourceName(rs.getString("application_source_name"));
+                c.setReferredByUserId(rs.getString("referred_by_user_id"));
+                c.setReferredByUserName(rs.getString("referred_by_user_name"));
+                c.setRejectionReasonId(rs.getString("rejection_reason_id"));
+                c.setRejectionReasonName(rs.getString("rejection_reason_name"));
+                c.setFullName(rs.getString("full_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPhone(rs.getString("phone"));
+                c.setStatus(rs.getString("status"));
+                c.setCvUrl(rs.getString("cv_url"));
+                c.setNotes(rs.getString("notes"));
+                try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
+                try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
+                try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
+                try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
+                c.setCreatedAt(rs.getTimestamp("created_at"));
+                c.setUpdatedAt(rs.getTimestamp("updated_at"));
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy lịch sử ứng tuyển theo email: " + email, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    /**
+     * [KN-218]: Cập nhật ghi chú (notes) cho một hồ sơ ứng viên
+     */
+    public boolean updateNotes(String candidateId, String notes) {
+        String sql = "UPDATE candidates SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, notes);
+            ps.setString(2, candidateId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật ghi chú ứng viên: " + candidateId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    /**
+     * [KN-274]: Cập nhật nhãn phân loại (tags) cho hồ sơ ứng viên
+     */
+    public boolean updateTags(String candidateId, String tags) {
+        String sql = "UPDATE candidates SET tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, tags);
+            ps.setString(2, candidateId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật nhãn ứng viên: " + candidateId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
     public List<Candidate> findReferralsByUser(String referredByUserId) {
         List<Candidate> referrals = new ArrayList<>();
         String sql = "SELECT c.id, c.requisition_id, r.title AS requisition_title, c.full_name, " +
@@ -770,6 +929,7 @@ public class CandidateDAO extends BaseDAO {
         c.setStatus(rs.getString("status"));
         c.setCvUrl(rs.getString("cv_url"));
         c.setNotes(rs.getString("notes"));
+        try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
         try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
         try { c.setExtractedName(rs.getString("extracted_name")); } catch (SQLException ignored) {}
         try { c.setExtractedEmail(rs.getString("extracted_email")); } catch (SQLException ignored) {}
@@ -781,6 +941,87 @@ public class CandidateDAO extends BaseDAO {
         c.setCreatedAt(rs.getTimestamp("created_at"));
         c.setUpdatedAt(rs.getTimestamp("updated_at"));
         return c;
+    }
+
+    /**
+     * [KN-218]: Lấy danh sách tất cả các lần ứng tuyển của cùng một người (theo email)
+     */
+    public List<Candidate> findAllByEmail(String email) {
+        List<Candidate> list = new ArrayList<>();
+        if (email == null || email.trim().isEmpty()) return list;
+
+        String sql = "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                     "source.value AS application_source_name, u.full_name AS referred_by_user_name, " +
+                     "reason.value AS rejection_reason_name " +
+                     "FROM candidates c " +
+                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                     "LEFT JOIN departments d ON r.department_id = d.id " +
+                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                     "LEFT JOIN users u ON c.referred_by_user_id = u.id " +
+                     "WHERE LOWER(TRIM(c.email)) = LOWER(TRIM(?)) " +
+                     "ORDER BY c.applied_at DESC, c.created_at DESC";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, email.trim());
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Candidate c = mapCandidate(rs);
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy lịch sử ứng tuyển theo email: " + email, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    /**
+     * [KN-218]: Cập nhật ghi chú (notes) cho một hồ sơ ứng viên
+     */
+    public boolean updateNotes(String candidateId, String notes) {
+        String sql = "UPDATE candidates SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, notes);
+            ps.setString(2, candidateId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật ghi chú ứng viên: " + candidateId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
+    }
+
+    /**
+     * [KN-274]: Cập nhật nhãn phân loại (tags) cho hồ sơ ứng viên
+     */
+    public boolean updateTags(String candidateId, String tags) {
+        String sql = "UPDATE candidates SET tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, tags);
+            ps.setString(2, candidateId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi cập nhật nhãn ứng viên: " + candidateId, e);
+            return false;
+        } finally {
+            close(conn, ps);
+        }
     }
 
     /**
@@ -802,6 +1043,7 @@ public class CandidateDAO extends BaseDAO {
             addColumnIfNotExists(meta, stmt, "candidates", "extracted_phone", "VARCHAR(50) NULL");
             addColumnIfNotExists(meta, stmt, "candidates", "extraction_status", "VARCHAR(50) DEFAULT 'NONE'");
             addColumnIfNotExists(meta, stmt, "candidates", "cv_extracted_at", "TIMESTAMP NULL");
+            addColumnIfNotExists(meta, stmt, "candidates", "tags", "VARCHAR(500) NULL");
             try {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS candidate_withdrawal_tokens (" +
                         "id VARCHAR(36) PRIMARY KEY, " +

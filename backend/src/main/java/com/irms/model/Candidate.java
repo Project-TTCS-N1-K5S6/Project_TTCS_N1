@@ -30,6 +30,7 @@ public class Candidate implements Serializable {
     private String extractionStatus; // SUCCESS, PARTIAL, FAILED, CONFIRMED, NONE
     private Timestamp cvExtractedAt;
     private String notes;
+    private String tags;
     private String coverLetter;
     private String ipAddress;
     private String departmentId;
@@ -123,6 +124,23 @@ public class Candidate implements Serializable {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getTags() { return tags; }
+    public void setTags(String tags) { this.tags = tags; }
+
+    public java.util.List<String> getTagList() {
+        if (tags == null || tags.trim().isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        java.util.List<String> list = new java.util.ArrayList<>();
+        for (String t : tags.split(",")) {
+            String trimmed = t.trim();
+            if (!trimmed.isEmpty()) {
+                list.add(trimmed);
+            }
+        }
+        return list;
+    }
 
     public String getCoverLetter() { return coverLetter; }
     public void setCoverLetter(String coverLetter) { this.coverLetter = coverLetter; }
