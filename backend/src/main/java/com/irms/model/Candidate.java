@@ -24,6 +24,11 @@ public class Candidate implements Serializable {
     private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED
     private String trackingCode;
     private String cvUrl;
+    private String extractedName;
+    private String extractedEmail;
+    private String extractedPhone;
+    private String extractionStatus; // SUCCESS, PARTIAL, FAILED, CONFIRMED, NONE
+    private Timestamp cvExtractedAt;
     private String notes;
     private String coverLetter;
     private String ipAddress;
@@ -78,6 +83,43 @@ public class Candidate implements Serializable {
 
     public String getCvUrl() { return cvUrl; }
     public void setCvUrl(String cvUrl) { this.cvUrl = cvUrl; }
+
+    public String getExtractedName() { return extractedName; }
+    public void setExtractedName(String extractedName) { this.extractedName = extractedName; }
+
+    public String getExtractedEmail() { return extractedEmail; }
+    public void setExtractedEmail(String extractedEmail) { this.extractedEmail = extractedEmail; }
+
+    public String getExtractedPhone() { return extractedPhone; }
+    public void setExtractedPhone(String extractedPhone) { this.extractedPhone = extractedPhone; }
+
+    public String getExtractionStatus() { return extractionStatus; }
+    public void setExtractionStatus(String extractionStatus) { this.extractionStatus = extractionStatus; }
+
+    public Timestamp getCvExtractedAt() { return cvExtractedAt; }
+    public void setCvExtractedAt(Timestamp cvExtractedAt) { this.cvExtractedAt = cvExtractedAt; }
+
+    public boolean hasExtractedData() {
+        return (extractedName != null && !extractedName.trim().isEmpty())
+                || (extractedEmail != null && !extractedEmail.trim().isEmpty())
+                || (extractedPhone != null && !extractedPhone.trim().isEmpty());
+    }
+
+    public String getExtractionStatusBadgeClass() {
+        if ("SUCCESS".equalsIgnoreCase(extractionStatus)) return "bg-info text-white";
+        if ("PARTIAL".equalsIgnoreCase(extractionStatus)) return "bg-warning text-dark";
+        if ("CONFIRMED".equalsIgnoreCase(extractionStatus)) return "bg-success text-white";
+        if ("FAILED".equalsIgnoreCase(extractionStatus)) return "bg-danger text-white";
+        return "bg-secondary text-white";
+    }
+
+    public String getExtractionStatusLabel() {
+        if ("SUCCESS".equalsIgnoreCase(extractionStatus)) return "Đã bóc tách CV";
+        if ("PARTIAL".equalsIgnoreCase(extractionStatus)) return "Bóc tách 1 phần";
+        if ("CONFIRMED".equalsIgnoreCase(extractionStatus)) return "Đã đối chiếu";
+        if ("FAILED".equalsIgnoreCase(extractionStatus)) return "Không thể bóc tách";
+        return "Chưa bóc tách";
+    }
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
