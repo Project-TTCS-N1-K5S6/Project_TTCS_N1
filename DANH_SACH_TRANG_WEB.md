@@ -65,6 +65,7 @@ Nếu chưa khởi động server Tomcat, bạn có thể mở trực tiếp fil
 | **Quản lý Dải lương tuyển dụng** | [`http://localhost:8088/salary-ranges`](http://localhost:8088/salary-ranges) | ADMIN, HR_MANAGER *(Bảo mật riêng)* |
 | **Danh mục dùng chung** | [`http://localhost:8088/shared-catalogs`](http://localhost:8088/shared-catalogs) | ADMIN, HR_MANAGER |
 | **Hồ sơ cá nhân & Đổi mật khẩu** | [`http://localhost:8088/profile`](http://localhost:8088/profile) | Tất cả người dùng đã đăng nhập |
+| **Giới thiệu ứng viên nội bộ** | [`http://localhost:8088/referrals`](http://localhost:8088/referrals) | Tất cả nhân viên nội bộ đã đăng nhập |
 
 ---
 

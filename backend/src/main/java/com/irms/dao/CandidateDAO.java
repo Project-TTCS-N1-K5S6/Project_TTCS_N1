@@ -500,6 +500,7 @@ public class CandidateDAO extends BaseDAO {
             addColumnIfNotExists(meta, stmt, "candidates", "tracking_code", "VARCHAR(50) NULL UNIQUE");
             addColumnIfNotExists(meta, stmt, "candidates", "cover_letter", "MEDIUMTEXT NULL");
             addColumnIfNotExists(meta, stmt, "candidates", "ip_address", "VARCHAR(45) NULL");
+            addColumnIfNotExists(meta, stmt, "candidates", "referred_by_user_id", "VARCHAR(36) NULL");
         } catch (Exception e) {
             logger.log(Level.WARNING, "Không thể kiểm tra/cập nhật cột cho candidates: " + e.getMessage());
         } finally {
