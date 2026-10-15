@@ -96,6 +96,15 @@ Hệ thống hỗ trợ song song hai hình thức xử lý qua Java Servlet:
 | `POST` | `/candidates` (action: create) | `candidates.create` | Tiếp nhận hồ sơ ứng viên mới vào hệ thống |
 | `POST` | `/candidates` (action: update_status)| `candidates.manage` | Chuyển giai đoạn ứng viên (SCREENING -> INTERVIEWING -> OFFER -> HIRED/REJECTED) |
 
+### 7.1 Ứng viên tự rút hồ sơ
+
+| Phương thức | Đường dẫn URL | Quyền yêu cầu | Mô tả chức năng |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/careers/withdraw?token=...` | Công khai, cần token hợp lệ | Hiển thị thông tin hồ sơ và màn hình xác nhận cuối; không thay đổi trạng thái |
+| `POST` | `/careers/withdraw` (`token`) | Công khai, cần token hợp lệ | Dùng một lần để chuyển hồ sơ đang hoạt động sang `WITHDRAWN`, ghi audit và thông báo recruiter phụ trách |
+
+Token ngẫu nhiên được lưu dưới dạng SHA-256, có hiệu lực 7 ngày. Token hết hạn, đã dùng hoặc hồ sơ đã ở trạng thái kết thúc sẽ bị từ chối. Liên kết được gửi trong email xác nhận nộp hồ sơ.
+
 ---
 
 ## 8. QUẢN LÝ DẢI LƯƠNG NGÂN SÁCH (`/salary-ranges`)

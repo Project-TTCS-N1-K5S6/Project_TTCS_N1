@@ -4,7 +4,7 @@
   Chức năng:
   - Hiển thị danh sách hồ sơ ứng viên kèm mã tra cứu tracking code, vị trí ứng tuyển, nguồn nộp, trạng thái pipeline.
   - Phân tách dữ liệu: Chuyên viên tuyển dụng (Recruiter) chỉ xem ứng viên các vị trí mình phụ trách (US 5).
-  - Tìm kiếm theo từ khóa họ tên/email, lọc theo trạng thái (APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED).
+  - Tìm kiếm theo từ khóa họ tên/email, lọc theo trạng thái (APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED, WITHDRAWN).
   - Modal tiếp nhận ứng viên mới (upload CV file .pdf/.docx) và Modal cập nhật trạng thái pipeline/lý do loại.
   ==============================================================================
 --%>
@@ -197,6 +197,7 @@
                                 <c:when test="${paramStatus == 'OFFER'}">Gửi Offer</c:when>
                                 <c:when test="${paramStatus == 'HIRED'}">Trúng tuyển</c:when>
                                 <c:when test="${paramStatus == 'REJECTED'}">Đã từ chối</c:when>
+                                <c:when test="${paramStatus == 'WITHDRAWN'}">Ứng viên rút hồ sơ</c:when>
                                 <c:otherwise>Tất cả trạng thái</c:otherwise>
                             </c:choose>
                         </button>
@@ -208,6 +209,7 @@
                             <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=OFFER">Gửi Offer</a></li>
                             <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=HIRED">Trúng tuyển</a></li>
                             <li><a class="dropdown-item py-1 text-danger" href="${pageContext.request.contextPath}/candidates?status=REJECTED">Đã từ chối</a></li>
+                            <li><a class="dropdown-item py-1" href="${pageContext.request.contextPath}/candidates?status=WITHDRAWN">Ứng viên rút hồ sơ</a></li>
                         </ul>
                     </div>
 
@@ -268,7 +270,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning'))}">
+                                        <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'WITHDRAWN' ? 'secondary' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning')))}">
                                             ${c.getStatusLabel()}
                                         </span>
                                     </td>

@@ -1,6 +1,7 @@
 package com.irms.util;
 
 import com.irms.config.AppConfig;
+import com.irms.model.CandidateWithdrawal;
 
 /**
  * Tiện ích tạo nội dung HTML cho các mẫu email hệ thống IRMS
@@ -99,12 +100,29 @@ public class EmailTemplateUtil {
     public static String buildApplicationConfirmationEmail(String fullName, String positionTitle,
                                                            String departmentName, String trackingCode,
                                                            String submittedAt, String cvFileName) {
-        String safeName = (fullName != null && !fullName.trim().isEmpty()) ? fullName : "Bạn";
-        String safePos = (positionTitle != null && !positionTitle.trim().isEmpty()) ? positionTitle : "Vị trí tuyển dụng";
-        String safeDept = (departmentName != null && !departmentName.trim().isEmpty()) ? departmentName : "Doanh nghiệp";
-        String safeCode = (trackingCode != null && !trackingCode.trim().isEmpty()) ? trackingCode : "N/A";
-        String safeTime = (submittedAt != null && !submittedAt.trim().isEmpty()) ? submittedAt : "Vừa xong";
-        String safeCV = (cvFileName != null && !cvFileName.trim().isEmpty()) ? cvFileName : "Tệp CV đính kèm";
+        return buildApplicationConfirmationEmail(fullName, positionTitle, departmentName,
+                trackingCode, submittedAt, cvFileName, null);
+    }
+
+    public static String buildApplicationConfirmationEmail(String fullName, String positionTitle,
+                                                           String departmentName, String trackingCode,
+                                                           String submittedAt, String cvFileName,
+                                                           String withdrawalLink) {
+        String safeName = escape((fullName != null && !fullName.trim().isEmpty()) ? fullName : "Bạn");
+        String safePos = escape((positionTitle != null && !positionTitle.trim().isEmpty()) ? positionTitle : "Vị trí tuyển dụng");
+        String safeDept = escape((departmentName != null && !departmentName.trim().isEmpty()) ? departmentName : "Doanh nghiệp");
+        String safeCode = escape((trackingCode != null && !trackingCode.trim().isEmpty()) ? trackingCode : "N/A");
+        String safeTime = escape((submittedAt != null && !submittedAt.trim().isEmpty()) ? submittedAt : "Vừa xong");
+        String safeCV = escape((cvFileName != null && !cvFileName.trim().isEmpty()) ? cvFileName : "Tệp CV đính kèm");
+        String withdrawalSection = "";
+        if (withdrawalLink != null && !withdrawalLink.trim().isEmpty()) {
+            String safeWithdrawalLink = escape(withdrawalLink);
+            withdrawalSection = "    <div style=\"background-color:#fff7ed;border-left:4px solid #f97316;padding:16px 18px;border-radius:4px;margin:22px 0;\">"
+                    + "<p style=\"margin:0 0 10px;font-size:14px;color:#9a3412;\"><strong>Muốn rút hồ sơ?</strong> Dùng liên kết dưới đây để xem lại thông tin và xác nhận lần cuối. Liên kết chỉ dùng một lần và có hiệu lực trong 7 ngày.</p>"
+                    + "<a href=\"" + safeWithdrawalLink + "\" style=\"display:inline-block;background:#ea580c;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;font-weight:600;\">Rút hồ sơ ứng tuyển</a>"
+                    + "<p style=\"margin:10px 0 0;font-size:12px;color:#9a3412;word-break:break-all;\">"
+                    + "<a href=\"" + safeWithdrawalLink + "\" style=\"color:#c2410c;\">" + safeWithdrawalLink + "</a></p></div>";
+        }
 
         return "<!DOCTYPE html>"
                 + "<html lang=\"vi\">"
@@ -140,6 +158,7 @@ public class EmailTemplateUtil {
                 + "    <div style=\"background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 14px 18px; border-radius: 4px; margin-bottom: 20px;\">"
                 + "      <p style=\"margin: 0; font-size: 13px; color: #1e40af; line-height: 1.5;\"><strong>Quy trình tiếp theo:</strong> Đội ngũ Tuyển dụng sẽ sàng lọc hồ sơ và liên hệ với bạn trong vòng 3-5 ngày làm việc nếu hồ sơ đáp ứng yêu cầu của vị trí.</p>"
                 + "    </div>"
+                + withdrawalSection
                 + "    <p style=\"margin: 0; font-size: 14px; color: #475569;\">Chúc bạn có một trải nghiệm tuyển dụng tuyệt vời cùng IRMS!</p>"
                 + "  </td></tr>"
                 + "  <!-- Footer -->"
@@ -150,5 +169,33 @@ public class EmailTemplateUtil {
                 + "</table>"
                 + "</td></tr></table>"
                 + "</body></html>";
+    }
+
+    public static String buildCandidateWithdrawalNotificationEmail(CandidateWithdrawal withdrawal) {
+        String candidateName = escape(withdrawal.getFullName());
+        String candidateEmail = escape(withdrawal.getEmail());
+        String trackingCode = escape(withdrawal.getTrackingCode());
+        String position = escape(withdrawal.getRequisitionTitle() == null
+                ? "Vị trí tuyển dụng" : withdrawal.getRequisitionTitle());
+        String oldStatus = escape(withdrawal.getStatusBeforeWithdrawal());
+        String recruiterName = escape(withdrawal.getRecruiterName() == null
+                ? "Recruiter" : withdrawal.getRecruiterName());
+        return "<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head>"
+                + "<body style=\"font-family:Arial,sans-serif;color:#334155;background:#f8fafc;padding:24px;\">"
+                + "<div style=\"max-width:600px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:28px;\">"
+                + "<h2 style=\"color:#0f172a;margin-top:0;\">Ứng viên đã rút hồ sơ</h2>"
+                + "<p>Xin chào " + recruiterName + ",</p>"
+                + "<p>Ứng viên xác nhận rút hồ sơ khỏi quy trình tuyển dụng. Hồ sơ đã được chuyển khỏi pipeline đang hoạt động.</p>"
+                + "<table style=\"width:100%;border-collapse:collapse;\">"
+                + "<tr><td style=\"padding:8px;border-bottom:1px solid #e2e8f0;\">Ứng viên</td><td style=\"padding:8px;border-bottom:1px solid #e2e8f0;\">" + candidateName + " (" + candidateEmail + ")</td></tr>"
+                + "<tr><td style=\"padding:8px;border-bottom:1px solid #e2e8f0;\">Vị trí</td><td style=\"padding:8px;border-bottom:1px solid #e2e8f0;\">" + position + "</td></tr>"
+                + "<tr><td style=\"padding:8px;border-bottom:1px solid #e2e8f0;\">Mã hồ sơ</td><td style=\"padding:8px;border-bottom:1px solid #e2e8f0;\">" + trackingCode + "</td></tr>"
+                + "<tr><td style=\"padding:8px;\">Trạng thái</td><td style=\"padding:8px;\">" + oldStatus + " → WITHDRAWN</td></tr>"
+                + "</table><p style=\"font-size:12px;color:#64748b;margin-top:22px;\">Thông báo tự động từ IRMS Careers.</p>"
+                + "</div></body></html>";
+    }
+
+    private static String escape(String value) {
+        return com.irms.util.SecurityUtil.escapeHtml(value == null ? "" : value);
     }
 }

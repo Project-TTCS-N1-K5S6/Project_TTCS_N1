@@ -1,6 +1,10 @@
 package com.irms.dao;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.irms.model.Candidate;
+import com.irms.model.CandidateWithdrawal;
+import com.irms.util.SecurityUtil;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -8,8 +12,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 import java.util.logging.Level;
 
 /**
@@ -457,34 +463,236 @@ public class CandidateDAO extends BaseDAO {
      * [KN-233]: Lưu bản ghi nộp hồ sơ ứng tuyển mới (hỗ trợ tracking_code, cover_letter, ip_address)
      */
     public boolean insertApplication(Candidate c) {
+        return insertApplication(c, null);
+    }
+
+    public boolean insertApplication(Candidate c, String withdrawalTokenHash) {
         String sql = "INSERT INTO candidates (id, requisition_id, application_source_id, rejection_reason_id, " +
                      "full_name, email, phone, status, tracking_code, cv_url, notes, cover_letter, ip_address) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
-        PreparedStatement ps = null;
         try {
             conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, c.getId());
-            ps.setString(2, c.getRequisitionId());
-            ps.setString(3, c.getApplicationSourceId());
-            ps.setString(4, c.getRejectionReasonId());
-            ps.setString(5, c.getFullName());
-            ps.setString(6, c.getEmail());
-            ps.setString(7, c.getPhone());
-            ps.setString(8, c.getStatus() != null ? c.getStatus() : "APPLIED");
-            ps.setString(9, c.getTrackingCode());
-            ps.setString(10, c.getCvUrl());
-            ps.setString(11, c.getNotes());
-            ps.setString(12, c.getCoverLetter());
-            ps.setString(13, c.getIpAddress());
-            return ps.executeUpdate() > 0;
+            if (withdrawalTokenHash != null) {
+                conn.setAutoCommit(false);
+            }
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, c.getId());
+                ps.setString(2, c.getRequisitionId());
+                ps.setString(3, c.getApplicationSourceId());
+                ps.setString(4, c.getRejectionReasonId());
+                ps.setString(5, c.getFullName());
+                ps.setString(6, c.getEmail());
+                ps.setString(7, c.getPhone());
+                ps.setString(8, c.getStatus() != null ? c.getStatus() : "APPLIED");
+                ps.setString(9, c.getTrackingCode());
+                ps.setString(10, c.getCvUrl());
+                ps.setString(11, c.getNotes());
+                ps.setString(12, c.getCoverLetter());
+                ps.setString(13, c.getIpAddress());
+                if (ps.executeUpdate() == 0) {
+                    if (withdrawalTokenHash != null) conn.rollback();
+                    return false;
+                }
+            }
+
+            if (withdrawalTokenHash != null) {
+                String tokenSql = "INSERT INTO candidate_withdrawal_tokens " +
+                        "(id, candidate_id, token_hash, expires_at) VALUES (?, ?, ?, ?)";
+                try (PreparedStatement tokenPs = conn.prepareStatement(tokenSql)) {
+                    tokenPs.setString(1, SecurityUtil.generateUUID());
+                    tokenPs.setString(2, c.getId());
+                    tokenPs.setString(3, withdrawalTokenHash);
+                    tokenPs.setTimestamp(4, new Timestamp(System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000));
+                    tokenPs.executeUpdate();
+                }
+                conn.commit();
+            }
+            return true;
         } catch (SQLException e) {
+            if (conn != null && withdrawalTokenHash != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    logger.log(Level.SEVERE, "Lỗi rollback khi lưu hồ sơ và token rút hồ sơ", rollbackError);
+                }
+            }
             logger.log(Level.SEVERE, "Lỗi lưu bản ghi ứng tuyển mới: " + c.getEmail(), e);
             return false;
         } finally {
-            close(conn, ps);
+            close(conn, null);
         }
+    }
+
+    public CandidateWithdrawal findByValidWithdrawalTokenHash(String tokenHash) {
+        String sql = "SELECT c.id, c.full_name, c.email, c.tracking_code, c.status, r.title AS requisition_title " +
+                "FROM candidate_withdrawal_tokens t " +
+                "JOIN candidates c ON c.id = t.candidate_id " +
+                "LEFT JOIN recruitment_requisitions r ON r.id = c.requisition_id " +
+                "WHERE t.token_hash = ? AND t.used_at IS NULL AND t.expires_at > CURRENT_TIMESTAMP " +
+                "AND c.status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tokenHash);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? mapCandidateWithdrawal(rs) : null;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi xác thực liên kết rút hồ sơ", e);
+            throw new IllegalStateException("Không thể xác thực liên kết rút hồ sơ.", e);
+        }
+    }
+
+    public CandidateWithdrawal withdrawByTokenHash(String tokenHash, String ipAddress, String userAgent) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            String candidateId = null;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT candidate_id FROM candidate_withdrawal_tokens " +
+                    "WHERE token_hash = ? AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP FOR UPDATE")) {
+                ps.setString(1, tokenHash);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) candidateId = rs.getString("candidate_id");
+                }
+            }
+            if (candidateId == null) {
+                conn.rollback();
+                return null;
+            }
+
+            String oldStatus;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT status FROM candidates WHERE id = ? FOR UPDATE")) {
+                ps.setString(1, candidateId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        conn.rollback();
+                        return null;
+                    }
+                    oldStatus = rs.getString("status");
+                }
+            }
+
+            List<String> activeStatuses = Arrays.asList("APPLIED", "SCREENING", "INTERVIEWING", "OFFER");
+            if (!activeStatuses.contains(oldStatus)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE candidate_withdrawal_tokens SET used_at = CURRENT_TIMESTAMP " +
+                        "WHERE token_hash = ? AND used_at IS NULL")) {
+                    ps.setString(1, tokenHash);
+                    ps.executeUpdate();
+                }
+                conn.commit();
+                return null;
+            }
+
+            CandidateWithdrawal withdrawal = loadWithdrawalDetails(conn, candidateId);
+            if (withdrawal == null) {
+                conn.rollback();
+                return null;
+            }
+            withdrawal.setStatusBeforeWithdrawal(oldStatus);
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE candidates SET status = 'WITHDRAWN', updated_at = CURRENT_TIMESTAMP " +
+                    "WHERE id = ? AND status IN ('APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER')")) {
+                ps.setString(1, candidateId);
+                if (ps.executeUpdate() != 1) {
+                    conn.rollback();
+                    return null;
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE candidate_withdrawal_tokens SET used_at = CURRENT_TIMESTAMP " +
+                    "WHERE token_hash = ? AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP")) {
+                ps.setString(1, tokenHash);
+                if (ps.executeUpdate() != 1) {
+                    conn.rollback();
+                    return null;
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO audit_logs (id, user_id, action, entity_type, entity_id, description, ip_address, user_agent) " +
+                    "VALUES (?, NULL, 'CANDIDATE_WITHDRAWN', 'CANDIDATE', ?, ?, ?, ?)")) {
+                ps.setString(1, SecurityUtil.generateUUID());
+                ps.setString(2, candidateId);
+                ps.setString(3, "Ứng viên " + withdrawal.getFullName() + " (" + withdrawal.getTrackingCode()
+                        + ") đã rút hồ sơ qua liên kết email. Trạng thái: " + oldStatus + " -> WITHDRAWN.");
+                ps.setString(4, ipAddress);
+                ps.setString(5, userAgent);
+                ps.executeUpdate();
+            }
+
+            if (withdrawal.getRecruiterEmail() != null && !withdrawal.getRecruiterEmail().trim().isEmpty()) {
+                JsonObject payload = new JsonObject();
+                payload.addProperty("candidateId", withdrawal.getCandidateId());
+                payload.addProperty("candidateName", withdrawal.getFullName());
+                payload.addProperty("candidateEmail", withdrawal.getEmail());
+                payload.addProperty("trackingCode", withdrawal.getTrackingCode());
+                payload.addProperty("positionTitle", withdrawal.getRequisitionTitle());
+                payload.addProperty("previousStatus", oldStatus);
+                payload.addProperty("recruiterName", withdrawal.getRecruiterName());
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO email_outbox (id, recipient, subject, template, payload, status) " +
+                        "VALUES (?, ?, ?, 'CANDIDATE_WITHDRAWAL_RECRUITER_NOTIFICATION', ?, 'PENDING')")) {
+                    ps.setString(1, SecurityUtil.generateUUID());
+                    ps.setString(2, withdrawal.getRecruiterEmail().trim());
+                    ps.setString(3, "[IRMS] Ứng viên đã rút hồ sơ - " + withdrawal.getTrackingCode());
+                    ps.setString(4, new Gson().toJson(payload));
+                    ps.executeUpdate();
+                }
+            } else {
+                logger.warning("Không tìm thấy email recruiter phụ trách cho hồ sơ " + withdrawal.getTrackingCode());
+            }
+
+            conn.commit();
+            return withdrawal;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackError) {
+                    logger.log(Level.SEVERE, "Lỗi rollback khi rút hồ sơ ứng viên", rollbackError);
+                }
+            }
+            logger.log(Level.SEVERE, "Lỗi cập nhật trạng thái rút hồ sơ ứng viên", e);
+            throw new IllegalStateException("Không thể hoàn tất yêu cầu rút hồ sơ.", e);
+        } finally {
+            close(conn, null);
+        }
+    }
+
+    private CandidateWithdrawal loadWithdrawalDetails(Connection conn, String candidateId) throws SQLException {
+        String sql = "SELECT c.id, c.full_name, c.email, c.tracking_code, c.status, r.title AS requisition_title, " +
+                "u.full_name AS recruiter_name, u.email AS recruiter_email " +
+                "FROM candidates c " +
+                "LEFT JOIN recruitment_requisitions r ON r.id = c.requisition_id " +
+                "LEFT JOIN users u ON u.id = r.recruiter_id WHERE c.id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, candidateId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                CandidateWithdrawal withdrawal = mapCandidateWithdrawal(rs);
+                withdrawal.setRecruiterName(rs.getString("recruiter_name"));
+                withdrawal.setRecruiterEmail(rs.getString("recruiter_email"));
+                return withdrawal;
+            }
+        }
+    }
+
+    private CandidateWithdrawal mapCandidateWithdrawal(ResultSet rs) throws SQLException {
+        CandidateWithdrawal withdrawal = new CandidateWithdrawal();
+        withdrawal.setCandidateId(rs.getString("id"));
+        withdrawal.setFullName(rs.getString("full_name"));
+        withdrawal.setEmail(rs.getString("email"));
+        withdrawal.setTrackingCode(rs.getString("tracking_code"));
+        withdrawal.setStatusBeforeWithdrawal(rs.getString("status"));
+        withdrawal.setRequisitionTitle(rs.getString("requisition_title"));
+        return withdrawal;
     }
 
     /**

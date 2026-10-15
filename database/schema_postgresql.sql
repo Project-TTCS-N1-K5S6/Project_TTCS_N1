@@ -185,6 +185,17 @@ CREATE TABLE candidates (
     CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL
 );
 
+-- Token rút hồ sơ công khai, chỉ lưu SHA-256 và chỉ dùng một lần
+CREATE TABLE candidate_withdrawal_tokens (
+    id VARCHAR(36) PRIMARY KEY,
+    candidate_id VARCHAR(36) NOT NULL UNIQUE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    used_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cwt_candidate FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE
+);
+
 -- 13. Bảng Dải lương theo vị trí (salary_ranges)
 CREATE TABLE salary_ranges (
     id VARCHAR(36) PRIMARY KEY,

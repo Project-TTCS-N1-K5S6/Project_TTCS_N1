@@ -8,9 +8,11 @@ import com.irms.model.RecruitmentRequest;
 import com.irms.service.CVFileStorageService;
 import com.irms.service.CandidateService;
 import com.irms.service.EmailService;
+import com.irms.config.AppConfig;
 import com.irms.util.CaptchaValidatorUtil;
 import com.irms.util.JsonUtil;
 import com.irms.util.RateLimiterUtil;
+import com.irms.util.SecurityUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -21,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -290,8 +293,9 @@ public class PublicJobApplicationServlet extends HttpServlet {
         candidate.setTrackingCode(trackingCode);
         candidate.setIpAddress(clientIp);
 
+        String withdrawalToken = SecurityUtil.generateSecureToken();
         try {
-            candidate = candidateService.applyPublicJob(candidate);
+            candidate = candidateService.applyPublicJobWithWithdrawalToken(candidate, withdrawalToken);
         } catch (IllegalStateException e) {
             // Trường hợp phát hiện trùng lặp
             JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_CONFLICT,
@@ -311,6 +315,9 @@ public class PublicJobApplicationServlet extends HttpServlet {
         // 9. [KN-235]: GỬI EMAIL XÁC NHẬN BẤT ĐỒNG BỘ (NON-BLOCKING)
         // ======================================================================
         String submittedAtStr = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date());
+        String baseUrl = AppConfig.get("app.baseUrl", "http://localhost:8088").replaceAll("/+$", "");
+        String withdrawalLink = baseUrl + request.getContextPath()
+                + "/careers/withdraw?token=" + URLEncoder.encode(withdrawalToken, "UTF-8");
         EmailService.sendApplicationConfirmationAsync(
                 email,
                 fullName,
@@ -318,7 +325,8 @@ public class PublicJobApplicationServlet extends HttpServlet {
                 departmentName,
                 trackingCode,
                 submittedAtStr,
-                originalFileName
+                originalFileName,
+                withdrawalLink
         );
 
         // ======================================================================

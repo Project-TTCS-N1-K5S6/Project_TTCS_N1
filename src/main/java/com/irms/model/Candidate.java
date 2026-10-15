@@ -21,7 +21,7 @@ public class Candidate implements Serializable {
     private String fullName;
     private String email;
     private String phone;
-    private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED
+    private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED, WITHDRAWN
     private String trackingCode;
     private String cvUrl;
     private String notes;
@@ -107,6 +107,7 @@ public class Candidate implements Serializable {
         if ("OFFER".equalsIgnoreCase(status)) return "bg-purple text-white";
         if ("HIRED".equalsIgnoreCase(status)) return "bg-success";
         if ("REJECTED".equalsIgnoreCase(status)) return "bg-danger";
+        if ("WITHDRAWN".equalsIgnoreCase(status)) return "bg-secondary";
         return "bg-secondary";
     }
 
@@ -117,6 +118,7 @@ public class Candidate implements Serializable {
         if ("OFFER".equalsIgnoreCase(status)) return "Đã gửi Offer";
         if ("HIRED".equalsIgnoreCase(status)) return "Đã trúng tuyển";
         if ("REJECTED".equalsIgnoreCase(status)) return "Đã từ chối";
+        if ("WITHDRAWN".equalsIgnoreCase(status)) return "Ứng viên rút hồ sơ";
         return status;
     }
 }
