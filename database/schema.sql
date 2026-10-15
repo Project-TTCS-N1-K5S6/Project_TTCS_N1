@@ -261,6 +261,7 @@ CREATE TABLE candidates (
     id VARCHAR(36) PRIMARY KEY,
     requisition_id VARCHAR(36) NULL,
     application_source_id VARCHAR(36) NULL,
+    referred_by_user_id VARCHAR(36) NULL,
     rejection_reason_id VARCHAR(36) NULL,
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -275,8 +276,11 @@ CREATE TABLE candidates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL,
     CONSTRAINT fk_cand_application_source FOREIGN KEY (application_source_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_cand_referred_by FOREIGN KEY (referred_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT fk_cand_rejection_reason FOREIGN KEY (rejection_reason_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_cand_referrer ON candidates(referred_by_user_id);
 
 -- 14. Bảng Dải lương theo vị trí (salary_ranges)
 DROP TABLE IF EXISTS salary_ranges;
@@ -509,4 +513,3 @@ CREATE TABLE budget_subtasks (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
-

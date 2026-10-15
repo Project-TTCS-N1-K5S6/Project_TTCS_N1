@@ -31,7 +31,7 @@ INSERT INTO departments (id, code, name, description, parent_id, manager_id, sta
 -- 1.1. Danh mục dùng chung
 DELETE FROM shared_catalogs;
 INSERT INTO shared_catalogs (id, type_code, value, display_order) VALUES
-('cat-src-referral', 'APPLICATION_SOURCE', 'Nhân viên giới thiệu', 0),
+('cat-src-referral', 'APPLICATION_SOURCE', 'Giới thiệu nội bộ', 0),
 ('cat-src-linkedin', 'APPLICATION_SOURCE', 'LinkedIn', 1),
 ('cat-src-career-site', 'APPLICATION_SOURCE', 'Trang tuyển dụng công ty', 2),
 ('cat-src-job-board', 'APPLICATION_SOURCE', 'Trang việc làm', 3),
@@ -367,4 +367,3 @@ INSERT INTO department_headcount_budgets (id, department_id, fiscal_year, target
 ('dhb-bgd-2026', 'dept-001', 2026, 5, 300000000.00, 'VND', 'Định biên Ban Giám đốc năm 2026', 'ACTIVE', 'usr-001');
 
 SET FOREIGN_KEY_CHECKS = 1;
-

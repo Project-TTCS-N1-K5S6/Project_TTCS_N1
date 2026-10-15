@@ -225,6 +225,7 @@
                                 <th class="ps-3">Họ và tên</th>
                                 <th>Phòng ban</th>
                                 <th>Vị trí ứng tuyển</th>
+                                <th>Nguồn / Người giới thiệu</th>
                                 <th>Thời gian</th>
                                 <th>Trạng thái</th>
                                 <th class="text-end pe-4" style="min-width: 180px;">Thao tác &amp; Chuyển vòng</th>
@@ -253,6 +254,12 @@
                                             <a href="${c.cvUrl}" target="_blank" class="d-block text-primary text-xs text-decoration-none mt-1">
                                                 <i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm
                                             </a>
+                                        </c:if>
+                                    </td>
+                                    <td>
+                                        <div class="text-dark small"><c:out value="${not empty c.applicationSourceName ? c.applicationSourceName : 'Chưa xác định'}" /></div>
+                                        <c:if test="${not empty c.referredByUserName}">
+                                            <div class="text-muted small">Người giới thiệu: <c:out value="${c.referredByUserName}" /></div>
                                         </c:if>
                                     </td>
                                     <td>
@@ -300,7 +307,7 @@
                             </c:forEach>
                             <c:if test="${empty candidates}">
                                 <tr>
-                                    <td colspan="6" class="text-center py-5 text-muted">
+                                    <td colspan="7" class="text-center py-5 text-muted">
                                         <i class="bi bi-person-x fs-2 d-block mb-2 text-secondary"></i>
                                         Không có hồ sơ ứng viên nào trong giai đoạn này.
                                     </td>

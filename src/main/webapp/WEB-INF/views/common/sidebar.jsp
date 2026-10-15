@@ -59,6 +59,12 @@
                     </a>
                 </li>
             </c:if>
+            <li class="nav-item">
+                <a class="nav-link ${activeMenu == 'referrals' ? 'active' : ''}" href="${pageContext.request.contextPath}/referrals">
+                    <i class="bi bi-person-heart"></i>
+                    <span>Giới thiệu ứng viên</span>
+                </a>
+            </li>
 
         </ul>
 

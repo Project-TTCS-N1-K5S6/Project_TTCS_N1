@@ -38,11 +38,13 @@ public class CandidateDAO extends BaseDAO {
         List<Candidate> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
-                "source.value AS application_source_name, reason.value AS rejection_reason_name FROM candidates c " +
+                "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                "referrer.full_name AS referred_by_user_name FROM candidates c " +
                 "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
                 "LEFT JOIN departments d ON r.department_id = d.id " +
                 "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
-                "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id WHERE 1=1 ");
+                "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id WHERE 1=1 ");
 
         List<Object> params = new ArrayList<>();
         if (recruiterId != null && !recruiterId.trim().isEmpty()) {
@@ -90,6 +92,8 @@ public class CandidateDAO extends BaseDAO {
                 c.setDepartmentName(rs.getString("department_name"));
                 c.setApplicationSourceId(rs.getString("application_source_id"));
                 c.setApplicationSourceName(rs.getString("application_source_name"));
+                c.setReferredByUserId(rs.getString("referred_by_user_id"));
+                c.setReferredByUserName(rs.getString("referred_by_user_name"));
                 c.setRejectionReasonId(rs.getString("rejection_reason_id"));
                 c.setRejectionReasonName(rs.getString("rejection_reason_name"));
                 c.setFullName(rs.getString("full_name"));
@@ -159,9 +163,39 @@ public class CandidateDAO extends BaseDAO {
         return 0;
     }
 
+    public List<Candidate> findReferralsByUser(String referredByUserId) {
+        List<Candidate> referrals = new ArrayList<>();
+        String sql = "SELECT c.id, c.requisition_id, r.title AS requisition_title, c.full_name, " +
+                     "c.status, c.notes, c.created_at FROM candidates c " +
+                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                     "WHERE c.referred_by_user_id = ? ORDER BY c.created_at DESC";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, referredByUserId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Candidate candidate = new Candidate();
+                    candidate.setId(rs.getString("id"));
+                    candidate.setRequisitionId(rs.getString("requisition_id"));
+                    candidate.setRequisitionTitle(rs.getString("requisition_title"));
+                    candidate.setFullName(rs.getString("full_name"));
+                    candidate.setStatus(rs.getString("status"));
+                    candidate.setNotes(rs.getString("notes"));
+                    candidate.setCreatedAt(rs.getTimestamp("created_at"));
+                    referrals.add(candidate);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy hồ sơ ứng viên được người dùng giới thiệu", e);
+            throw new IllegalStateException("Không thể tải danh sách hồ sơ đã giới thiệu.", e);
+        }
+        return referrals;
+    }
+
     public boolean insert(Candidate c) {
         String sql = "INSERT INTO candidates (id, requisition_id, application_source_id, rejection_reason_id, " +
-                     "full_name, email, phone, status, cv_url, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "referred_by_user_id, full_name, email, phone, status, cv_url, notes) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
@@ -171,12 +205,13 @@ public class CandidateDAO extends BaseDAO {
             ps.setString(2, c.getRequisitionId());
             ps.setString(3, c.getApplicationSourceId());
             ps.setString(4, c.getRejectionReasonId());
-            ps.setString(5, c.getFullName());
-            ps.setString(6, c.getEmail());
-            ps.setString(7, c.getPhone());
-            ps.setString(8, c.getStatus() != null ? c.getStatus() : "APPLIED");
-            ps.setString(9, c.getCvUrl());
-            ps.setString(10, c.getNotes());
+            ps.setString(5, c.getReferredByUserId());
+            ps.setString(6, c.getFullName());
+            ps.setString(7, c.getEmail());
+            ps.setString(8, c.getPhone());
+            ps.setString(9, c.getStatus() != null ? c.getStatus() : "APPLIED");
+            ps.setString(10, c.getCvUrl());
+            ps.setString(11, c.getNotes());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi thêm ứng viên mới", e);

@@ -12,7 +12,7 @@ CREATE TABLE shared_catalogs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO shared_catalogs (id, type_code, value, display_order) VALUES
-('cat-src-referral', 'APPLICATION_SOURCE', 'Nhân viên giới thiệu', 0),
+('cat-src-referral', 'APPLICATION_SOURCE', 'Giới thiệu nội bộ', 0),
 ('cat-src-linkedin', 'APPLICATION_SOURCE', 'LinkedIn', 1),
 ('cat-src-career-site', 'APPLICATION_SOURCE', 'Trang tuyển dụng công ty', 2),
 ('cat-src-job-board', 'APPLICATION_SOURCE', 'Trang việc làm', 3),

@@ -14,6 +14,8 @@ public class Candidate implements Serializable {
     private String requisitionTitle;
     private String applicationSourceId;
     private String applicationSourceName;
+    private String referredByUserId;
+    private String referredByUserName;
     private String rejectionReasonId;
     private String rejectionReasonName;
     private String fullName;
@@ -46,6 +48,12 @@ public class Candidate implements Serializable {
 
     public String getApplicationSourceName() { return applicationSourceName; }
     public void setApplicationSourceName(String applicationSourceName) { this.applicationSourceName = applicationSourceName; }
+
+    public String getReferredByUserId() { return referredByUserId; }
+    public void setReferredByUserId(String referredByUserId) { this.referredByUserId = referredByUserId; }
+
+    public String getReferredByUserName() { return referredByUserName; }
+    public void setReferredByUserName(String referredByUserName) { this.referredByUserName = referredByUserName; }
 
     public String getRejectionReasonId() { return rejectionReasonId; }
     public void setRejectionReasonId(String rejectionReasonId) { this.rejectionReasonId = rejectionReasonId; }

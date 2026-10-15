@@ -6,10 +6,13 @@ import com.irms.model.Candidate;
 import com.irms.model.SharedCatalogType;
 import com.irms.util.SecurityUtil;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.UUID;
 
@@ -21,6 +24,7 @@ public class CandidateService {
     private final SharedCatalogDAO catalogDAO = new SharedCatalogDAO();
     private static final List<String> CANDIDATE_STATUSES =
             Arrays.asList("APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED");
+    private static final String INTERNAL_REFERRAL_SOURCE_ID = "cat-src-referral";
 
     public List<Candidate> getCandidates(String search, String status) {
         return candidateDAO.findAll(search, status, null);
@@ -42,6 +46,80 @@ public class CandidateService {
 
     public int countCandidates(String search, String status, String recruiterId) {
         return candidateDAO.countAll(search, status, recruiterId);
+    }
+
+    public List<Candidate> getReferralsByUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin người giới thiệu.");
+        }
+        return candidateDAO.findReferralsByUser(userId.trim());
+    }
+
+    public boolean createReferral(Candidate candidate, String referrerId) {
+        if (candidate == null) {
+            throw new IllegalArgumentException("Thông tin hồ sơ giới thiệu không được để trống.");
+        }
+        if (referrerId == null || referrerId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin người giới thiệu.");
+        }
+        if (candidate.getFullName() == null || candidate.getFullName().trim().isEmpty()
+                || candidate.getFullName().trim().length() > 255) {
+            throw new IllegalArgumentException("Họ và tên ứng viên là bắt buộc và không được vượt quá 255 ký tự.");
+        }
+        String email = candidate.getEmail();
+        if (email == null || !email.trim().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+                || email.trim().length() > 255) {
+            throw new IllegalArgumentException("Địa chỉ email ứng viên không hợp lệ.");
+        }
+        if (candidate.getNotes() == null || candidate.getNotes().trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng nhập ghi chú giới thiệu.");
+        }
+        if (candidate.getNotes().trim().length() > 5000) {
+            throw new IllegalArgumentException("Ghi chú giới thiệu không được vượt quá 5000 ký tự.");
+        }
+        if (candidate.getPhone() != null && candidate.getPhone().trim().length() > 50) {
+            throw new IllegalArgumentException("Số điện thoại không được vượt quá 50 ký tự.");
+        }
+        validateReferralCvUrl(candidate.getCvUrl());
+
+        candidate.setFullName(candidate.getFullName().trim());
+        candidate.setEmail(email.trim().toLowerCase(Locale.ROOT));
+        candidate.setPhone(candidate.getPhone() == null || candidate.getPhone().trim().isEmpty()
+                ? null : candidate.getPhone().trim());
+        candidate.setNotes(candidate.getNotes().trim());
+        candidate.setCvUrl(candidate.getCvUrl() == null || candidate.getCvUrl().trim().isEmpty()
+                ? null : candidate.getCvUrl().trim());
+        candidate.setRequisitionId(candidate.getRequisitionId() == null || candidate.getRequisitionId().trim().isEmpty()
+                ? null : candidate.getRequisitionId().trim());
+        candidate.setApplicationSourceId(INTERNAL_REFERRAL_SOURCE_ID);
+        candidate.setReferredByUserId(referrerId.trim());
+        candidate.setStatus("APPLIED");
+
+        if (!catalogDAO.isValueInType(INTERNAL_REFERRAL_SOURCE_ID, SharedCatalogType.APPLICATION_SOURCE)) {
+            throw new IllegalStateException("Danh mục nguồn giới thiệu nội bộ chưa được cấu hình.");
+        }
+
+        candidate.setId(SecurityUtil.generateUUID());
+        return candidateDAO.insert(candidate);
+    }
+
+    private void validateReferralCvUrl(String cvUrl) {
+        if (cvUrl == null || cvUrl.trim().isEmpty()) {
+            return;
+        }
+        if (cvUrl.trim().length() > 2048) {
+            throw new IllegalArgumentException("Đường dẫn CV không được vượt quá 2048 ký tự.");
+        }
+        try {
+            URI uri = new URI(cvUrl.trim());
+            String scheme = uri.getScheme();
+            if (!uri.isAbsolute() || uri.getHost() == null
+                    || !("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme))) {
+                throw new IllegalArgumentException("Đường dẫn CV phải là URL bắt đầu bằng http:// hoặc https://.");
+            }
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Đường dẫn CV không hợp lệ.", e);
+        }
     }
 
     public boolean createCandidate(Candidate c) {
