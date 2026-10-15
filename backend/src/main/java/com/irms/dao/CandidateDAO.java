@@ -583,39 +583,6 @@ public class CandidateDAO extends BaseDAO {
     }
 
     /**
-     * [KN-213]: Tìm hồ sơ ứng viên theo ID kèm thông tin trích xuất từ CV
-     */
-    public Candidate findById(String id) {
-        if (id == null || id.trim().isEmpty()) return null;
-        String sql = "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
-                     "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
-                     "referrer.full_name AS referred_by_user_name FROM candidates c " +
-                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
-                     "LEFT JOIN departments d ON r.department_id = d.id " +
-                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
-                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
-                     "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id " +
-                     "WHERE c.id = ?";
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, id.trim());
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return mapCandidate(rs);
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi tìm kiếm hồ sơ ứng viên theo id: " + id, e);
-        } finally {
-            close(conn, ps, rs);
-        }
-        return null;
-    }
-
-    /**
      * [KN-233]: Lưu bản ghi nộp hồ sơ ứng tuyển mới (hỗ trợ tracking_code, cover_letter, ip_address, extracted info)
      */
     public boolean insertApplication(Candidate c) {
@@ -941,87 +908,6 @@ public class CandidateDAO extends BaseDAO {
         c.setCreatedAt(rs.getTimestamp("created_at"));
         c.setUpdatedAt(rs.getTimestamp("updated_at"));
         return c;
-    }
-
-    /**
-     * [KN-218]: Lấy danh sách tất cả các lần ứng tuyển của cùng một người (theo email)
-     */
-    public List<Candidate> findAllByEmail(String email) {
-        List<Candidate> list = new ArrayList<>();
-        if (email == null || email.trim().isEmpty()) return list;
-
-        String sql = "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
-                     "source.value AS application_source_name, u.full_name AS referred_by_user_name, " +
-                     "reason.value AS rejection_reason_name " +
-                     "FROM candidates c " +
-                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
-                     "LEFT JOIN departments d ON r.department_id = d.id " +
-                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
-                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
-                     "LEFT JOIN users u ON c.referred_by_user_id = u.id " +
-                     "WHERE LOWER(TRIM(c.email)) = LOWER(TRIM(?)) " +
-                     "ORDER BY c.applied_at DESC, c.created_at DESC";
-
-        Connection conn = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, email.trim());
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                Candidate c = mapCandidate(rs);
-                list.add(c);
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi lấy lịch sử ứng tuyển theo email: " + email, e);
-        } finally {
-            close(conn, ps, rs);
-        }
-        return list;
-    }
-
-    /**
-     * [KN-218]: Cập nhật ghi chú (notes) cho một hồ sơ ứng viên
-     */
-    public boolean updateNotes(String candidateId, String notes) {
-        String sql = "UPDATE candidates SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, notes);
-            ps.setString(2, candidateId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi cập nhật ghi chú ứng viên: " + candidateId, e);
-            return false;
-        } finally {
-            close(conn, ps);
-        }
-    }
-
-    /**
-     * [KN-274]: Cập nhật nhãn phân loại (tags) cho hồ sơ ứng viên
-     */
-    public boolean updateTags(String candidateId, String tags) {
-        String sql = "UPDATE candidates SET tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-        Connection conn = null;
-        PreparedStatement ps = null;
-        try {
-            conn = getConnection();
-            ps = conn.prepareStatement(sql);
-            ps.setString(1, tags);
-            ps.setString(2, candidateId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Lỗi cập nhật nhãn ứng viên: " + candidateId, e);
-            return false;
-        } finally {
-            close(conn, ps);
-        }
     }
 
     /**

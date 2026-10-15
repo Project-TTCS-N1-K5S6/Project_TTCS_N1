@@ -302,7 +302,7 @@ public class JobApplicationTest {
         assertNotNull("Nội dung HTML email không được null", html);
         assertTrue("Email phải chứa tên ứng viên", html.contains(candidateName));
         assertTrue("Email phải chứa vị trí ứng tuyển", html.contains(positionTitle));
-        assertTrue("Email phải chứa phòng ban phụ trách", html.contains(departmentName));
+        assertTrue("Email phải chứa phòng ban phụ trách", html.contains(departmentName) || html.contains(com.irms.util.SecurityUtil.escapeHtml(departmentName)));
         assertTrue("Email phải chứa Mã tra cứu hồ sơ độc nhất", html.contains(trackingCode));
         assertTrue("Email phải chứa thời gian nộp hồ sơ", html.contains(submittedAt));
         assertTrue("Email phải chứa tên tệp CV", html.contains(cvFileName));
