@@ -285,7 +285,11 @@ public class EmailService {
         Session session = Session.getInstance(props);
         LOGGER.info("[EmailService] Đang gửi thư qua MailHog/Mailpit (" + host + ":" + port + ") đến: " + to);
         try {
-            return doSendMimeMessage(session, from, to, subject, htmlContent);
+            boolean sent = doSendMimeMessage(session, from, to, subject, htmlContent);
+            if (sent) {
+                printConsoleEmail(to, subject, htmlContent);
+            }
+            return sent;
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "[EmailService] Không thể kết nối tới Mailpit/MailHog cục bộ (" + host + ":" + port + "): " + e.getMessage());
             return false;
