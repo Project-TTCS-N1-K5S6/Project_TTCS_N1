@@ -5,12 +5,14 @@ import com.irms.model.CandidateActivity;
 import com.irms.model.CandidateMergeHistory;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
+import com.irms.model.StageTransitionResult;
 import com.irms.model.User;
 import com.irms.service.AuditService;
 import com.irms.service.CandidateDuplicateService;
 import com.irms.service.CandidateService;
 import com.irms.service.SharedCatalogService;
 import com.irms.util.JsonUtil;
+import com.irms.util.SecurityUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -345,40 +347,51 @@ public class CandidateProfileServlet extends HttpServlet {
             return;
         }
 
-        // 3. [KN-268]: Cập nhật trạng thái pipeline
+        // 3. [KN-268 / KN-283]: Cập nhật trạng thái pipeline
         if ("update-status".equals(action)) {
             String newStatus = request.getParameter("status");
             String rejectionReasonId = request.getParameter("rejectionReasonId");
-            try {
-                candidateService.updateStatus(candidateId.trim(), newStatus, rejectionReasonId);
-                auditService.log(
-                        currentUser.getId(),
-                        "UPDATE_CANDIDATE_STATUS",
-                        "CANDIDATE",
-                        candidateId.trim(),
-                        "Chuyển trạng thái tuyển dụng sang " + newStatus + " cho ứng viên " + candidate.getFullName(),
-                        request.getRemoteAddr(),
-                        request.getHeader("User-Agent")
-                );
-                if (isAjax) {
-                    Map<String, Object> res = new HashMap<>();
-                    res.put("success", true);
-                    res.put("message", "Đã cập nhật trạng thái ứng viên thành công!");
-                    res.put("newStatus", newStatus);
-                    JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_OK, res);
-                    return;
-                }
-                session.setAttribute("flashSuccess", "Đã cập nhật trạng thái ứng viên thành công!");
-            } catch (Exception e) {
+            boolean skipInterviewConfirmed = "true".equalsIgnoreCase(request.getParameter("skipInterviewConfirmed"));
+            String confirmationNote = request.getParameter("confirmationNote");
+
+            StageTransitionResult result = candidateService.transitionStage(
+                    currentUser,
+                    candidateId.trim(),
+                    newStatus,
+                    rejectionReasonId,
+                    skipInterviewConfirmed,
+                    confirmationNote,
+                    SecurityUtil.getClientIp(request),
+                    request.getHeader("User-Agent")
+            );
+
+            if (!result.isSuccess()) {
                 if (isAjax) {
                     Map<String, Object> err = new HashMap<>();
                     err.put("success", false);
-                    err.put("message", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
-                    JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, err);
+                    err.put("statusCode", result.getStatusCode());
+                    err.put("message", result.getMessage());
+                    err.put("requiresHrApproval", result.isRequiresHrApproval());
+                    err.put("canCurrentUserApprove", result.isCanCurrentUserApprove());
+                    JsonUtil.sendJsonResponse(response, result.getStatusCode(), err);
                     return;
                 }
-                session.setAttribute("flashError", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
+                session.setAttribute("flashError", result.getMessage());
+                response.sendRedirect(request.getContextPath() + "/candidates/profile?id=" + candidateId.trim());
+                return;
             }
+
+            if (isAjax) {
+                Map<String, Object> res = new HashMap<>();
+                res.put("success", true);
+                res.put("statusCode", 200);
+                res.put("message", result.getMessage());
+                res.put("newStatus", result.getNewStage());
+                res.put("newStatusName", result.getNewStageName());
+                JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_OK, res);
+                return;
+            }
+            session.setAttribute("flashSuccess", result.getMessage());
             response.sendRedirect(request.getContextPath() + "/candidates/profile?id=" + candidateId.trim());
             return;
         }

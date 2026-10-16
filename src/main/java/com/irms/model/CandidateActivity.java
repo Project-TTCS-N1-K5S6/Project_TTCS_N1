@@ -64,6 +64,9 @@ public class CandidateActivity implements Serializable {
     public Timestamp getActivityDate() { return activityDate; }
     public void setActivityDate(Timestamp activityDate) { this.activityDate = activityDate; }
 
+    public Timestamp getCreatedAt() { return activityDate; }
+    public void setCreatedAt(Timestamp createdAt) { this.activityDate = createdAt; }
+
     public String getTypeBadgeClass() {
         if ("APPLICATION".equalsIgnoreCase(activityType)) return "bg-primary text-white";
         if ("INTERVIEW".equalsIgnoreCase(activityType)) return "bg-warning text-dark";

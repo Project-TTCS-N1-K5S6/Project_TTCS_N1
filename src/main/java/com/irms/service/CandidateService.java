@@ -1,16 +1,23 @@
 package com.irms.service;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.irms.dao.CandidateDAO;
 import com.irms.dao.SharedCatalogDAO;
 import com.irms.model.CVExtractionResult;
 import com.irms.model.Candidate;
+import com.irms.model.CandidateActivity;
 import com.irms.model.CandidateWithdrawal;
+import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
+import com.irms.model.StageTransitionResult;
+import com.irms.model.User;
 import com.irms.util.SecurityUtil;
 
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -25,6 +32,7 @@ import java.util.UUID;
 public class CandidateService {
     private final CandidateDAO candidateDAO = new CandidateDAO();
     private final SharedCatalogDAO catalogDAO = new SharedCatalogDAO();
+    private final AuditService auditService = new AuditService();
     private static final List<String> CANDIDATE_STATUSES =
             Arrays.asList("APPLIED", "SCREENING", "INTERVIEWING", "OFFER", "HIRED", "REJECTED");
     private static final String INTERNAL_REFERRAL_SOURCE_ID = "cat-src-referral";
@@ -171,6 +179,223 @@ public class CandidateService {
             rejectionReasonId = null;
         }
         return candidateDAO.updateStatus(candidateId.trim(), normalizedStatus, rejectionReasonId);
+    }
+
+    /**
+     * [KN-283]: Chuyển giai đoạn tuyển dụng cho ứng viên với đầy đủ các quy tắc nghiệp vụ:
+     * 1. Kiểm tra tính hợp lệ của ứng viên và quyền thao tác (RBAC).
+     * 2. [KN-305 / KN-310]: Không cho phép bỏ qua giai đoạn Phỏng vấn để chuyển sang Đề xuất offer/Nhận việc,
+     *    trừ khi có sự xác nhận hợp lệ của Trưởng phòng Nhân sự (HR_MANAGER / ADMIN).
+     * 3. [KN-309]: Chuyển sang "Loại" (REJECTED) bắt buộc phải chọn lý do hợp lệ từ danh mục shared_catalogs.
+     * 4. [KN-306]: Lưu nhật ký chuyển giai đoạn vào candidate_activities và cập nhật trạng thái trong CÙNG MỘT GIAO DỊCH.
+     * 5. Ghi nhật ký kiểm toán hệ thống (Audit Log).
+     */
+    public StageTransitionResult transitionStage(
+            User currentUser,
+            String candidateId,
+            String targetStage,
+            String rejectionReasonId,
+            boolean skipInterviewConfirmed,
+            String confirmationNote,
+            String clientIp,
+            String userAgent) {
+
+        if (currentUser == null) {
+            return new StageTransitionResult(false, 401, "Vui lòng đăng nhập để thực hiện thao tác.");
+        }
+
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            return new StageTransitionResult(false, 400, "Thiếu mã hồ sơ ứng viên.");
+        }
+
+        Candidate candidate = candidateDAO.findById(candidateId.trim());
+        if (candidate == null) {
+            return new StageTransitionResult(false, 404, "Hồ sơ ứng viên không tồn tại hoặc đã bị xóa.");
+        }
+
+        // Kiểm tra quyền thao tác với ứng viên theo phân quyền RBAC
+        if (!canManageCandidate(currentUser, candidate)) {
+            return new StageTransitionResult(false, 403,
+                    "Bạn không có quyền chuyển giai đoạn cho ứng viên này (chỉ Recruiter phụ trách hoặc Lãnh đạo tuyển dụng mới được phép thao tác).");
+        }
+
+        String normalizedTarget = targetStage != null ? targetStage.trim().toUpperCase(Locale.ROOT) : "";
+        if (!CANDIDATE_STATUSES.contains(normalizedTarget)) {
+            return new StageTransitionResult(false, 400, "Giai đoạn tuyển dụng đích không hợp lệ: " + targetStage);
+        }
+
+        String oldStage = candidate.getStatus() != null ? candidate.getStatus().trim().toUpperCase(Locale.ROOT) : "APPLIED";
+        String oldStageName = getStageName(oldStage);
+        String targetStageName = getStageName(normalizedTarget);
+
+        StageTransitionResult result = new StageTransitionResult();
+        result.setCandidateId(candidate.getId());
+        result.setCandidateName(candidate.getFullName());
+        result.setOldStage(oldStage);
+        result.setOldStageName(oldStageName);
+        result.setNewStage(normalizedTarget);
+        result.setNewStageName(targetStageName);
+
+        // Nếu chuyển vào chính giai đoạn hiện tại
+        if (normalizedTarget.equals(oldStage)) {
+            result.setSuccess(true);
+            result.setStatusCode(200);
+            result.setMessage("Ứng viên hiện đã ở giai đoạn " + targetStageName + ".");
+            return result;
+        }
+
+        // [KN-305 / KN-310]: Kiểm tra điều kiện bỏ qua giai đoạn Phỏng vấn
+        boolean isSkippingInterview = isSkippingInterview(oldStage, normalizedTarget);
+        boolean isHrManagerOrAdmin = currentUser.hasRole("HR_MANAGER") || currentUser.hasRole("ADMIN");
+
+        if (isSkippingInterview) {
+            if (!isHrManagerOrAdmin) {
+                // Người dùng không có thẩm quyền đặc cách (ví dụ: Recruiter)
+                result.setSuccess(false);
+                result.setStatusCode(403);
+                result.setRequiresHrApproval(true);
+                result.setCanCurrentUserApprove(false);
+                result.setMessage("Quy trình tuyển dụng yêu cầu ứng viên phải qua giai đoạn Phỏng vấn trước khi Đề xuất offer. " +
+                        "Bạn không có quyền xác nhận bỏ qua phỏng vấn. Vui lòng liên hệ Trưởng phòng Nhân sự (HR Manager).");
+                return result;
+            } else {
+                // Người dùng là HR Manager hoặc Admin: Yêu cầu xác nhận rõ ràng
+                if (!skipInterviewConfirmed) {
+                    result.setSuccess(false);
+                    result.setStatusCode(400);
+                    result.setRequiresHrApproval(true);
+                    result.setCanCurrentUserApprove(true);
+                    result.setMessage("Ứng viên chưa qua giai đoạn Phỏng vấn. Cần có sự xác nhận đặc cách của Trưởng phòng Nhân sự để tiếp tục.");
+                    return result;
+                }
+                result.setSkipInterview(true);
+                result.setConfirmationNote(confirmationNote != null ? confirmationNote.trim() : "");
+            }
+        }
+
+        // [KN-309]: Ràng buộc bắt buộc chọn lý do khi chuyển sang trạng thái "Loại" (REJECTED)
+        String finalRejectionReasonId = null;
+        String rejectionReasonName = null;
+        if ("REJECTED".equals(normalizedTarget)) {
+            if (rejectionReasonId == null || rejectionReasonId.trim().isEmpty()) {
+                result.setSuccess(false);
+                result.setStatusCode(400);
+                result.setMessage("Khi chuyển ứng viên sang giai đoạn Loại, bắt buộc phải chọn lý do loại từ danh mục hợp lệ.");
+                return result;
+            }
+            SharedCatalogItem reasonItem = catalogDAO.findById(rejectionReasonId.trim());
+            if (reasonItem == null || reasonItem.getType() != SharedCatalogType.REJECTION_REASON) {
+                result.setSuccess(false);
+                result.setStatusCode(400);
+                result.setMessage("Lý do loại hồ sơ không hợp lệ hoặc không tồn tại trong danh mục hệ thống.");
+                return result;
+            }
+            finalRejectionReasonId = reasonItem.getId();
+            rejectionReasonName = reasonItem.getValue();
+            result.setRejectionReasonId(finalRejectionReasonId);
+            result.setRejectionReasonName(rejectionReasonName);
+        }
+
+        // [KN-306]: Tạo bản ghi CandidateActivity để lưu nhật ký chuyển giai đoạn
+        CandidateActivity activity = new CandidateActivity();
+        activity.setId(SecurityUtil.generateUUID());
+        activity.setCandidateId(candidate.getId());
+        activity.setActivityType("STATUS_CHANGE");
+        activity.setTitle("Chuyển giai đoạn: " + oldStageName + " → " + targetStageName);
+        activity.setPerformedBy(currentUser.getId());
+        activity.setPerformedByName(currentUser.getFullName());
+        activity.setActivityDate(new Timestamp(System.currentTimeMillis()));
+
+        StringBuilder desc = new StringBuilder();
+        if ("REJECTED".equals(normalizedTarget)) {
+            desc.append("Chuyển sang Loại hồ sơ. Lý do: ").append(rejectionReasonName);
+        } else if (isSkippingInterview) {
+            desc.append("Đặc cách bỏ qua giai đoạn Phỏng vấn bởi Trưởng phòng Nhân sự: ")
+                .append(currentUser.getFullName());
+            if (confirmationNote != null && !confirmationNote.trim().isEmpty()) {
+                desc.append(". Lý do đặc cách: ").append(confirmationNote.trim());
+            }
+        } else {
+            desc.append("Chuyển giai đoạn tuyển dụng từ [").append(oldStageName)
+                .append("] sang [").append(targetStageName).append("]");
+        }
+        activity.setDescription(desc.toString());
+
+        JsonObject meta = new JsonObject();
+        meta.addProperty("oldStage", oldStage);
+        meta.addProperty("oldStageName", oldStageName);
+        meta.addProperty("newStage", normalizedTarget);
+        meta.addProperty("newStageName", targetStageName);
+        if (rejectionReasonName != null) {
+            meta.addProperty("rejectionReasonId", finalRejectionReasonId);
+            meta.addProperty("rejectionReasonName", rejectionReasonName);
+        }
+        if (isSkippingInterview) {
+            meta.addProperty("skipInterview", true);
+            meta.addProperty("skippedInterview", true);
+            meta.addProperty("confirmedBy", currentUser.getId());
+            meta.addProperty("confirmedByName", currentUser.getFullName());
+            meta.addProperty("confirmationNote", confirmationNote != null ? confirmationNote.trim() : "");
+        }
+        activity.setMetadataJson(meta.toString());
+
+        // Cập nhật trạng thái và lưu nhật ký trong CÙNG MỘT GIAO DỊCH
+        boolean ok = candidateDAO.updateStatusAndRecordActivity(candidate.getId(), normalizedTarget, finalRejectionReasonId, activity);
+        if (!ok) {
+            result.setSuccess(false);
+            result.setStatusCode(500);
+            result.setMessage("Không thể cập nhật trạng thái ứng viên và ghi nhận nhật ký vào cơ sở dữ liệu.");
+            return result;
+        }
+
+        // Ghi Audit Log
+        try {
+            auditService.log(
+                    currentUser.getId(),
+                    "UPDATE_CANDIDATE_STAGE",
+                    "CANDIDATE",
+                    candidate.getId(),
+                    "Chuyển giai đoạn ứng viên " + candidate.getFullName() + " (" + candidate.getEmail() + ") từ [" + oldStage + "] sang [" + normalizedTarget + "]"
+                            + (rejectionReasonName != null ? " - Lý do loại: " + rejectionReasonName : "")
+                            + (isSkippingInterview ? " - Đặc cách bỏ qua phỏng vấn bởi: " + currentUser.getFullName() : ""),
+                    clientIp,
+                    userAgent
+            );
+        } catch (Exception e) {
+            // Không làm gián đoạn luồng chính nếu audit log gặp cảnh báo
+        }
+
+        result.setSuccess(true);
+        result.setStatusCode(200);
+        result.setMessage("Đã chuyển ứng viên \"" + candidate.getFullName() + "\" sang giai đoạn " + targetStageName + " thành công!");
+        return result;
+    }
+
+    /**
+     * [KN-305]: Kiểm tra hành động chuyển giai đoạn có bỏ qua giai đoạn Phỏng vấn hay không
+     */
+    public boolean isSkippingInterview(String oldStage, String targetStage) {
+        if (oldStage == null || targetStage == null) return false;
+        String oldNorm = oldStage.trim().toUpperCase(Locale.ROOT);
+        String targetNorm = targetStage.trim().toUpperCase(Locale.ROOT);
+        return ("APPLIED".equals(oldNorm) || "SCREENING".equals(oldNorm))
+                && ("OFFER".equals(targetNorm) || "HIRED".equals(targetNorm));
+    }
+
+    /**
+     * Lấy tên hiển thị tiếng Việt của từng giai đoạn Pipeline
+     */
+    public String getStageName(String stageCode) {
+        if (stageCode == null) return "Chưa xác định";
+        switch (stageCode.trim().toUpperCase(Locale.ROOT)) {
+            case "APPLIED": return "Hồ sơ mới";
+            case "SCREENING": return "Sàng lọc";
+            case "INTERVIEWING": return "Phỏng vấn";
+            case "OFFER": return "Đề xuất offer";
+            case "HIRED": return "Nhận việc";
+            case "REJECTED": return "Loại";
+            default: return stageCode;
+        }
     }
 
     public int getTotalCandidates() {

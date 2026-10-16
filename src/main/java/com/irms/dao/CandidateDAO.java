@@ -3,6 +3,7 @@ package com.irms.dao;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.irms.model.Candidate;
+import com.irms.model.CandidateActivity;
 import com.irms.model.CandidateWithdrawal;
 import com.irms.util.SecurityUtil;
 
@@ -572,6 +573,74 @@ public class CandidateDAO extends BaseDAO {
             return false;
         } finally {
             close(conn, ps);
+        }
+    }
+
+    /**
+     * [KN-283 / KN-306]: Cập nhật trạng thái ứng viên và ghi nhận nhật ký hoạt động
+     * trong CÙNG MỘT GIAO DỊCH CƠ SỞ DỮ LIỆU (Atomicity Transaction).
+     * Nếu lưu nhật ký thất bại, toàn bộ trạng thái sẽ tự động được rollback.
+     */
+    public boolean updateStatusAndRecordActivity(String candidateId, String newStatus, String rejectionReasonId, CandidateActivity activity) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            return false;
+        }
+
+        String sqlUpdate = "UPDATE candidates SET status = ?, rejection_reason_id = ?, " +
+                           "stage_entered_at = CURRENT_TIMESTAMP, is_sla_overdue = FALSE, " +
+                           "sla_overdue_detected_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+
+        Connection conn = null;
+        PreparedStatement psUpdate = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false); // Bắt đầu Transaction
+
+            // 1. Cập nhật bảng candidates
+            psUpdate = conn.prepareStatement(sqlUpdate);
+            psUpdate.setString(1, newStatus);
+            psUpdate.setString(2, rejectionReasonId != null && !rejectionReasonId.trim().isEmpty() ? rejectionReasonId.trim() : null);
+            psUpdate.setString(3, candidateId.trim());
+            int updatedRows = psUpdate.executeUpdate();
+
+            if (updatedRows <= 0) {
+                conn.rollback();
+                return false;
+            }
+
+            // 2. Ghi nhận nhật ký chuyển giai đoạn vào bảng candidate_activities
+            if (activity != null) {
+                if (activity.getId() == null || activity.getId().trim().isEmpty()) {
+                    activity.setId(SecurityUtil.generateUUID());
+                }
+                CandidateActivityDAO activityDAO = new CandidateActivityDAO();
+                boolean insertedActivity = activityDAO.insertActivity(activity, conn);
+                if (!insertedActivity) {
+                    conn.rollback();
+                    logger.log(Level.WARNING, "Không thể ghi nhật ký hoạt động ứng viên, đã rollback trạng thái.");
+                    return false;
+                }
+            }
+
+            conn.commit(); // Thành công cả hai thao tác
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    logger.log(Level.SEVERE, "Lỗi rollback transaction cập nhật trạng thái ứng viên", ex);
+                }
+            }
+            logger.log(Level.SEVERE, "Lỗi cập nhật trạng thái và ghi nhật ký ứng viên: " + candidateId, e);
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException ignored) {}
+            }
+            close(conn, psUpdate);
         }
     }
 
