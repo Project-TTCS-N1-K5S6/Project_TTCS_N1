@@ -107,6 +107,79 @@ public class CandidateDAO extends BaseDAO {
         return list;
     }
 
+    /**
+     * [KN-282 / KN-300]: Tra cứu ứng viên phục vụ màn hình Kanban Pipeline:
+     * - Nếu requisitionId != null: lọc chính xác theo vị trí tuyển dụng đó.
+     * - Nếu recruiterId != null: đảm bảo chỉ lấy ứng viên thuộc vị trí recruiter phụ trách (chính hoặc hỗ trợ).
+     * - Lọc bỏ hồ sơ đã hợp nhất (c.is_merged IS NULL OR c.is_merged = FALSE).
+     * - Hỗ trợ tìm kiếm từ khóa họ tên / email / SĐT.
+     */
+    public List<Candidate> findForPipeline(String requisitionId, String recruiterId, String search) {
+        List<Candidate> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                "r.recruiter_id, u_rec.full_name AS recruiter_name, " +
+                "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                "referrer.full_name AS referred_by_user_name, " +
+                "COALESCE(sla.sla_days, 3) AS sla_days_threshold, " +
+                "DATEDIFF(CURRENT_TIMESTAMP, COALESCE(c.stage_entered_at, c.created_at)) AS days_in_stage " +
+                "FROM candidates c " +
+                "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                "LEFT JOIN departments d ON r.department_id = d.id " +
+                "LEFT JOIN users u_rec ON r.recruiter_id = u_rec.id " +
+                "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id " +
+                "LEFT JOIN sla_configurations sla ON c.status = sla.stage_code " +
+                "WHERE (c.is_merged IS NULL OR c.is_merged = FALSE) "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (requisitionId != null && !requisitionId.trim().isEmpty() && !"ALL".equalsIgnoreCase(requisitionId)) {
+            sql.append("AND c.requisition_id = ? ");
+            params.add(requisitionId.trim());
+        }
+
+        if (recruiterId != null && !recruiterId.trim().isEmpty()) {
+            sql.append("AND (r.recruiter_id = ? OR c.requisition_id IN ("
+                + "SELECT requisition_id FROM requisition_recruiters WHERE recruiter_id = ?)) ");
+            params.add(recruiterId.trim());
+            params.add(recruiterId.trim());
+        }
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (c.full_name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        sql.append("ORDER BY c.updated_at DESC, c.created_at DESC");
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Candidate c = mapCandidate(rs);
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách ứng viên pipeline", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
     public int countAll(String search, String status, String recruiterId) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM candidates c " +
@@ -200,6 +273,8 @@ public class CandidateDAO extends BaseDAO {
                 try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
                 try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
                 try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
+                try { c.setStageEnteredAt(rs.getTimestamp("stage_entered_at")); } catch (SQLException ignored) {}
+                try { c.setSlaOverdue(rs.getBoolean("is_sla_overdue")); } catch (SQLException ignored) {}
                 c.setCreatedAt(rs.getTimestamp("created_at"));
                 c.setUpdatedAt(rs.getTimestamp("updated_at"));
                 return c;

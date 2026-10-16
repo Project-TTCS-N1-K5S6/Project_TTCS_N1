@@ -51,6 +51,13 @@ public class CandidateService {
         return candidateDAO.countAll(search, status, recruiterId);
     }
 
+    /**
+     * [KN-282 / KN-300]: Lấy danh sách ứng viên phục vụ màn hình Kanban Pipeline
+     */
+    public List<Candidate> getCandidatesForPipeline(String requisitionId, String recruiterId, String search) {
+        return candidateDAO.findForPipeline(requisitionId, recruiterId, search);
+    }
+
     public List<Candidate> getReferralsByUser(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             throw new IllegalArgumentException("Thiếu thông tin người giới thiệu.");
@@ -480,6 +487,32 @@ public class CandidateService {
 
         if (user.hasRole("HIRING_MANAGER")) {
             return isHiringManagerOfRequisition(requisitionId, user.getId());
+        }
+
+        return false;
+    }
+
+    /**
+     * [KN-282 / KN-301]: Kiểm tra quyền chuyển giai đoạn / cập nhật ứng viên:
+     * - ADMIN và HR_MANAGER có toàn quyền.
+     * - RECRUITER: Phải có quyền candidates.manage hoặc vai trò RECRUITER VÀ phải được phân công phụ trách vị trí đó.
+     */
+    public boolean canManageCandidate(com.irms.model.User user, Candidate candidate) {
+        if (user == null || candidate == null) return false;
+        if (user.hasRole("ADMIN") || user.hasRole("HR_MANAGER")) return true;
+
+        if (!user.hasPermission("candidates.manage") && !user.hasRole("RECRUITER")) {
+            return false;
+        }
+
+        String requisitionId = candidate.getRequisitionId();
+        if (requisitionId == null || requisitionId.trim().isEmpty()) {
+            return user.hasRole("ADMIN") || user.hasRole("HR_MANAGER");
+        }
+
+        if (user.hasRole("RECRUITER")) {
+            com.irms.dao.RecruiterAssignmentDAO assignmentDAO = new com.irms.dao.RecruiterAssignmentDAO();
+            return assignmentDAO.isRecruiterAssigned(requisitionId, user.getId());
         }
 
         return false;
