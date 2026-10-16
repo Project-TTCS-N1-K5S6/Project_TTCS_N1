@@ -39,6 +39,7 @@ ttcs_n1/
 │
 ├── database/                                 <- Kịch bản Cơ sở dữ liệu MySQL
 │   ├── schema.sql                            <- DDL tạo bảng, chỉ mục và khóa ngoại MySQL
+│   ├── candidate_schema.sql                  <- Bảng hồ sơ ứng viên thủ công
 │   └── seed.sql                              <- DML nạp dữ liệu mẫu ban đầu (Users, Roles, Perms)
 │
 ├── src/main/
@@ -103,6 +104,21 @@ ttcs_n1/
     ├── architecture.md                       <- Tài liệu kiến trúc MVC & Bảo mật
     └── database.md                           <- Lược đồ CSDL MySQL chi tiết
 ```
+
+### Luồng thêm ứng viên thủ công (Java Servlet + MySQL)
+Module hiện có thể chạy độc lập dưới dạng Maven WAR vì thư mục ban đầu chưa có backend cũ để tích hợp. Trang `frontend/candidates.html` gửi dữ liệu tới `POST /api/candidates`; API kiểm tra trùng email/số điện thoại đã chuẩn hóa ở server, có unique index chống race condition, lưu metadata vào MySQL và lưu CV ngoài thư mục web.
+
+Để chạy module:
+1. Cài Java 8+ và Maven, tạo database/bảng bằng `database/candidate_schema.sql` trong MySQL 8.
+2. Cấu hình các biến môi trường trước khi khởi động Tomcat:
+   - `IRMS_DB_URL`: JDBC URL, ví dụ `jdbc:mysql://localhost:3306/ttcs_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8`
+   - `IRMS_DB_USER` và `IRMS_DB_PASSWORD`: tài khoản database có quyền trên schema `ttcs_db`.
+   - `IRMS_UPLOAD_DIR` (tùy chọn): thư mục lưu CV; mặc định là `.irms/candidate-cv` trong home của tài khoản chạy Tomcat.
+3. Chạy `mvn clean package`, triển khai `target/irms-candidate.war` lên Tomcat 8.5/9, rồi mở `http://localhost:8080/irms-candidate/frontend/candidates.html`.
+
+API hỗ trợ `GET /api/candidates` (20 hồ sơ mới nhất), `POST /api/candidates` (`multipart/form-data`: `fullName`, `email`, `phone`, `position`, `source`, `cv`) và tải CV qua `GET /api/candidates/{id}/cv`. CV không bắt buộc, giới hạn 5 MB, chỉ nhận PDF/DOC/DOCX và được kiểm tra chữ ký tệp cơ bản. Trùng trả HTTP 409 kèm các hồ sơ khớp; dữ liệu không hợp lệ trả HTTP 400.
+
+**Lưu ý tích hợp/bảo mật:** backend đăng nhập, session và RBAC chưa có trong workspace này. API mới chưa tự xác thực người dùng; chỉ chạy trong môi trường phát triển tin cậy. Trước khi triển khai dùng thật, phải đặt API sau lớp xác thực/ủy quyền tuyển dụng hiện có và HTTPS; không công khai endpoint hoặc CV ra Internet khi chưa tích hợp quyền truy cập.
 
 ---
 
