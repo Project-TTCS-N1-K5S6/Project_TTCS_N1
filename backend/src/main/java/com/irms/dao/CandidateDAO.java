@@ -14,8 +14,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 
 /**
@@ -940,6 +941,29 @@ public class CandidateDAO extends BaseDAO {
                         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP" +
                         ")");
             } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS candidate_history (" +
+                        "id BIGINT AUTO_INCREMENT PRIMARY KEY, " +
+                        "action VARCHAR(50) NOT NULL, " +
+                        "candidate_id VARCHAR(36) NULL, " +
+                        "full_name VARCHAR(255) NULL, " +
+                        "email VARCHAR(255) NULL, " +
+                        "phone VARCHAR(50) NULL, " +
+                        "source_name VARCHAR(100) NULL, " +
+                        "has_cv BOOLEAN NOT NULL DEFAULT FALSE, " +
+                        "details VARCHAR(500) NULL, " +
+                        "client_ip VARCHAR(45) NULL, " +
+                        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                        "INDEX idx_history_candidate (candidate_id), " +
+                        "INDEX idx_history_created_at (created_at)" +
+                        ")");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("CREATE INDEX idx_cand_email ON candidates(email)");
+            } catch (SQLException ignored) {}
+            try {
+                stmt.executeUpdate("CREATE INDEX idx_cand_phone ON candidates(phone)");
+            } catch (SQLException ignored) {}
         } catch (Exception e) {
             logger.log(Level.WARNING, "Không thể kiểm tra/cập nhật cột cho candidates: " + e.getMessage());
         } finally {
@@ -963,4 +987,117 @@ public class CandidateDAO extends BaseDAO {
             } catch (SQLException ignored2) {}
         }
     }
+
+    /**
+     * [KN-346, KN-352]: Chuẩn hóa số điện thoại loại bỏ ký tự không phải số để so khớp trùng
+     */
+    public static String normalizePhone(String phone) {
+        if (phone == null) return "";
+        String clean = phone.replaceAll("[^0-9]", "");
+        if (clean.startsWith("84") && clean.length() >= 10) {
+            clean = "0" + clean.substring(2);
+        }
+        return clean;
+    }
+
+    /**
+     * [KN-346, KN-352]: Tìm kiếm các hồ sơ ứng viên trùng lặp theo email hoặc số điện thoại
+     */
+    public List<Candidate> findDuplicates(String email, String phone) {
+        List<Candidate> result = new ArrayList<>();
+        String normEmail = (email != null) ? email.trim().toLowerCase(Locale.ROOT) : "";
+        String normPhone = normalizePhone(phone);
+
+        if (normEmail.isEmpty() && normPhone.isEmpty()) {
+            return result;
+        }
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                "referrer.full_name AS referred_by_user_name FROM candidates c " +
+                "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                "LEFT JOIN departments d ON r.department_id = d.id " +
+                "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        if (!normEmail.isEmpty() && !normPhone.isEmpty()) {
+            String phoneSuffix = (normPhone.length() >= 7) ? "%" + normPhone.substring(normPhone.length() - 7) : "%" + normPhone;
+            sql.append("AND (LOWER(TRIM(c.email)) = ? OR c.phone LIKE ?) ");
+            params.add(normEmail);
+            params.add(phoneSuffix);
+        } else if (!normEmail.isEmpty()) {
+            sql.append("AND LOWER(TRIM(c.email)) = ? ");
+            params.add(normEmail);
+        } else {
+            String phoneSuffix = (normPhone.length() >= 7) ? "%" + normPhone.substring(normPhone.length() - 7) : "%" + normPhone;
+            sql.append("AND c.phone LIKE ? ");
+            params.add(phoneSuffix);
+        }
+
+        sql.append("ORDER BY c.created_at DESC");
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Candidate c = mapCandidate(rs);
+                boolean matched = false;
+                if (!normEmail.isEmpty() && c.getEmail() != null && normEmail.equalsIgnoreCase(c.getEmail().trim())) {
+                    matched = true;
+                }
+                if (!normPhone.isEmpty() && c.getPhone() != null && normPhone.equals(normalizePhone(c.getPhone()))) {
+                    matched = true;
+                }
+                if (matched) {
+                    result.add(c);
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi kiểm tra trùng ứng viên", e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return result;
+    }
+
+    /**
+     * [KN-353]: Ghi nhận lịch sử thao tác thêm ứng viên thủ công và xử lý trùng lặp
+     */
+    public void insertHistory(String action, String candidateId, String fullName, String email,
+                              String phone, String sourceName, boolean hasCv, String details,
+                              String clientIp) {
+        String sql = "INSERT INTO candidate_history (action, candidate_id, full_name, email, phone, " +
+                     "source_name, has_cv, details, client_ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, action);
+            ps.setString(2, candidateId);
+            ps.setString(3, fullName);
+            ps.setString(4, email);
+            ps.setString(5, phone);
+            ps.setString(6, sourceName);
+            ps.setBoolean(7, hasCv);
+            ps.setString(8, details);
+            ps.setString(9, clientIp);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, "Không thể ghi candidate_history: " + e.getMessage());
+        } finally {
+            close(conn, ps);
+        }
+    }
 }
+

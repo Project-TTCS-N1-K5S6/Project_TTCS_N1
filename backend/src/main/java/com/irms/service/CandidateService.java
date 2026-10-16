@@ -473,4 +473,166 @@ public class CandidateService {
             return false;
         }
     }
+
+    // =========================================================================
+    // [KN-288]: CÁC CHỨC NĂNG THÊM ỨNG VIÊN THỦ CÔNG & KIỂM TRA TRÙNG
+    // =========================================================================
+
+    public static class DuplicateMatch {
+        private final Candidate candidate;
+        private final List<String> matchedFields;
+        private final boolean sameName;
+        private final boolean samePosition;
+
+        public DuplicateMatch(Candidate candidate, List<String> matchedFields, boolean sameName, boolean samePosition) {
+            this.candidate = candidate;
+            this.matchedFields = matchedFields;
+            this.sameName = sameName;
+            this.samePosition = samePosition;
+        }
+
+        public Candidate getCandidate() { return candidate; }
+        public List<String> getMatchedFields() { return matchedFields; }
+        public boolean isSameName() { return sameName; }
+        public boolean isSamePosition() { return samePosition; }
+    }
+
+    public static class DuplicateCandidateException extends Exception {
+        private final List<DuplicateMatch> matches;
+
+        public DuplicateCandidateException(List<DuplicateMatch> matches) {
+            super("Đã tồn tại hồ sơ có cùng email hoặc số điện thoại trong hệ thống.");
+            this.matches = matches;
+        }
+
+        public List<DuplicateMatch> getMatches() {
+            return matches;
+        }
+    }
+
+    /**
+     * [KN-346, KN-352]: Rà soát và đối sánh dữ liệu trùng theo hồ sơ hiện có
+     */
+    public List<DuplicateMatch> checkDuplicates(String email, String phone, String fullName, String requisitionId) {
+        List<Candidate> duplicates = candidateDAO.findDuplicates(email, phone);
+        List<DuplicateMatch> matches = new java.util.ArrayList<>();
+        String normEmail = (email != null) ? email.trim().toLowerCase(Locale.ROOT) : "";
+        String normPhone = CandidateDAO.normalizePhone(phone);
+        String normName = (fullName != null) ? fullName.trim() : "";
+
+        for (Candidate existing : duplicates) {
+            List<String> fields = new java.util.ArrayList<>();
+            if (!normEmail.isEmpty() && existing.getEmail() != null && normEmail.equalsIgnoreCase(existing.getEmail().trim())) {
+                fields.add("email");
+            }
+            if (!normPhone.isEmpty() && existing.getPhone() != null && normPhone.equals(CandidateDAO.normalizePhone(existing.getPhone()))) {
+                fields.add("phone");
+            }
+            boolean sameName = !normName.isEmpty() && existing.getFullName() != null && normName.equalsIgnoreCase(existing.getFullName().trim());
+            boolean samePosition = requisitionId != null && !requisitionId.trim().isEmpty() && requisitionId.trim().equals(existing.getRequisitionId());
+
+            matches.add(new DuplicateMatch(existing, fields, sameName, samePosition));
+        }
+        return matches;
+    }
+
+    /**
+     * [KN-347, KN-350, KN-353]: Tạo mới ứng viên thủ công kèm lưu trữ CV và ghi nhận lịch sử
+     */
+    public Candidate createManualCandidate(Candidate candidate, javax.servlet.http.Part cvPart, String uploadRootPath,
+                                           String clientIp, String userAgent, com.irms.model.User currentUser,
+                                           boolean allowDuplicate)
+            throws DuplicateCandidateException, java.io.IOException, IllegalArgumentException {
+        if (candidate == null) {
+            throw new IllegalArgumentException("Dữ liệu ứng viên không được để trống.");
+        }
+        String fullName = (candidate.getFullName() != null) ? candidate.getFullName().trim() : "";
+        if (fullName.isEmpty()) {
+            throw new IllegalArgumentException("Họ và tên ứng viên là bắt buộc.");
+        }
+        if (fullName.length() > 120) {
+            throw new IllegalArgumentException("Họ và tên không được vượt quá 120 ký tự.");
+        }
+        String email = (candidate.getEmail() != null) ? candidate.getEmail().trim().toLowerCase(Locale.ROOT) : "";
+        if (email.isEmpty() || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new IllegalArgumentException("Email không đúng định dạng chuẩn.");
+        }
+        String phone = (candidate.getPhone() != null) ? candidate.getPhone().trim() : "";
+        String normPhone = CandidateDAO.normalizePhone(phone);
+        if (normPhone.length() < 8 || normPhone.length() > 15) {
+            throw new IllegalArgumentException("Số điện thoại phải có từ 8 đến 15 chữ số.");
+        }
+
+        // 1. Kiểm tra trùng lặp (KN-346, KN-352)
+        List<DuplicateMatch> matches = checkDuplicates(email, phone, fullName, candidate.getRequisitionId());
+        if (!matches.isEmpty() && !allowDuplicate) {
+            recordHistory("DUPLICATE_BLOCKED", null, fullName, email, phone,
+                    candidate.getApplicationSourceName(), cvPart != null && cvPart.getSize() > 0,
+                    "Phát hiện trùng với " + matches.size() + " hồ sơ hiện có.", clientIp);
+            throw new DuplicateCandidateException(matches);
+        }
+
+        // 2. Xử lý lưu trữ CV nếu có tải lên (KN-349, KN-350)
+        String trackingCode = (candidate.getTrackingCode() != null && !candidate.getTrackingCode().trim().isEmpty())
+                ? candidate.getTrackingCode().trim()
+                : generateUniqueTrackingCode();
+        candidate.setTrackingCode(trackingCode);
+
+        if (cvPart != null && cvPart.getSize() > 0) {
+            CVFileStorageService storageService = new CVFileStorageService();
+            CVFileStorageService.ValidationResult validation = storageService.validate(cvPart);
+            if (!validation.isValid()) {
+                throw new IllegalArgumentException(validation.getErrorMessage());
+            }
+            String cvPath = storageService.storeCV(cvPart, uploadRootPath, trackingCode);
+            candidate.setCvUrl(cvPath);
+        }
+
+        if (candidate.getId() == null || candidate.getId().trim().isEmpty()) {
+            candidate.setId(SecurityUtil.generateUUID());
+        }
+        if (candidate.getStatus() == null || candidate.getStatus().trim().isEmpty()) {
+            candidate.setStatus("APPLIED");
+        }
+
+        // 3. Lưu vào cơ sở dữ liệu (KN-347)
+        boolean ok = candidateDAO.insertApplication(candidate);
+        if (!ok) {
+            throw new IllegalStateException("Không thể lưu thông tin ứng viên vào cơ sở dữ liệu.");
+        }
+
+        // 4. Ghi nhận lịch sử xử lý (KN-353)
+        String action = allowDuplicate && !matches.isEmpty() ? "CREATED_DESPITE_DUPLICATE" : "MANUAL_CREATED";
+        String detail = allowDuplicate && !matches.isEmpty()
+                ? "Người dùng xác nhận tạo mới dù trùng thông tin với " + matches.size() + " hồ sơ hiện có."
+                : "Thêm ứng viên thủ công thành công.";
+
+        recordHistory(action, candidate.getId(), fullName, email, phone,
+                candidate.getApplicationSourceName(), candidate.getCvUrl() != null, detail, clientIp);
+
+        if (currentUser != null) {
+            try {
+                com.irms.dao.AuditDAO auditDAO = new com.irms.dao.AuditDAO();
+                com.irms.model.AuditLog log = new com.irms.model.AuditLog();
+                log.setId(SecurityUtil.generateUUID());
+                log.setUserId(currentUser.getId());
+                log.setAction(action);
+                log.setEntityType("CANDIDATE");
+                log.setEntityId(candidate.getId());
+                log.setDescription(detail + " Ứng viên: " + fullName + " (" + email + ")");
+                log.setIpAddress(clientIp);
+                log.setUserAgent(userAgent);
+                auditDAO.insert(log);
+            } catch (Exception ignored) {}
+        }
+
+        return candidate;
+    }
+
+    public void recordHistory(String action, String candidateId, String fullName, String email,
+                              String phone, String sourceName, boolean hasCv, String details,
+                              String clientIp) {
+        candidateDAO.insertHistory(action, candidateId, fullName, email, phone, sourceName, hasCv, details, clientIp);
+    }
 }
+

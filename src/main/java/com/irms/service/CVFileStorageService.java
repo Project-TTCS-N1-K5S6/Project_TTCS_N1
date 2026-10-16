@@ -29,10 +29,13 @@ public class CVFileStorageService {
     public static final long MAX_FILE_SIZE = 10 * 1024 * 1024L;
 
     // Danh sách phần mở rộng hợp lệ
-    public static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(".pdf", ".docx");
+    public static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(".pdf", ".doc", ".docx");
 
     // Magic Bytes cho PDF: %PDF- (0x25 0x50 0x44 0x46)
     private static final byte[] PDF_MAGIC_BYTES = new byte[]{0x25, 0x50, 0x44, 0x46};
+
+    // Magic Bytes cho DOC (OLE Structured Storage): 0xD0 0xCF 0x11 0xE0
+    private static final byte[] DOC_MAGIC_BYTES = new byte[]{(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0};
 
     // Magic Bytes cho DOCX (Zip archive): PK\x03\x04 (0x50 0x4B 0x03 0x04)
     private static final byte[] DOCX_MAGIC_BYTES = new byte[]{0x50, 0x4B, 0x03, 0x04};
@@ -119,7 +122,7 @@ public class CVFileStorageService {
         }
 
         if (!ALLOWED_EXTENSIONS.contains(ext)) {
-            return ValidationResult.failure("Định dạng tệp không hợp lệ (" + (ext.isEmpty() ? "không có đuôi" : ext) + "). Hệ thống chỉ chấp nhận tệp định dạng .pdf hoặc .docx.");
+            return ValidationResult.failure("Định dạng tệp không hợp lệ (" + (ext.isEmpty() ? "không có đuôi" : ext) + "). Hệ thống chỉ chấp nhận tệp định dạng .pdf, .doc hoặc .docx.");
         }
 
         // 3. Kiểm tra Magic Bytes chống đổi đuôi tệp độc hại
@@ -127,6 +130,10 @@ public class CVFileStorageService {
             if (".pdf".equals(ext)) {
                 if (!matchesHeader(headerBytes, PDF_MAGIC_BYTES)) {
                     return ValidationResult.failure("Tệp không đúng định dạng PDF chuẩn (Magic bytes không khớp).");
+                }
+            } else if (".doc".equals(ext)) {
+                if (!matchesHeader(headerBytes, DOC_MAGIC_BYTES)) {
+                    return ValidationResult.failure("Tệp không đúng định dạng Word (DOC) chuẩn.");
                 }
             } else if (".docx".equals(ext)) {
                 if (!matchesHeader(headerBytes, DOCX_MAGIC_BYTES)) {

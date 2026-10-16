@@ -291,6 +291,26 @@ CREATE TABLE candidates (
 
 CREATE INDEX idx_cand_referrer ON candidates(referred_by_user_id);
 CREATE INDEX idx_cand_extract_status ON candidates(extraction_status);
+CREATE INDEX idx_cand_email ON candidates(email);
+CREATE INDEX idx_cand_phone ON candidates(phone);
+
+-- 13.1. Bảng Lịch sử thêm ứng viên & xử lý trùng lặp (candidate_history - KN-353)
+DROP TABLE IF EXISTS candidate_history;
+CREATE TABLE candidate_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    action VARCHAR(50) NOT NULL,
+    candidate_id VARCHAR(36) NULL,
+    full_name VARCHAR(255) NULL,
+    email VARCHAR(255) NULL,
+    phone VARCHAR(50) NULL,
+    source_name VARCHAR(100) NULL,
+    has_cv BOOLEAN NOT NULL DEFAULT FALSE,
+    details VARCHAR(500) NULL,
+    client_ip VARCHAR(45) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_history_candidate (candidate_id),
+    INDEX idx_history_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Token rút hồ sơ công khai, chỉ lưu SHA-256 và chỉ dùng một lần
 CREATE TABLE candidate_withdrawal_tokens (
