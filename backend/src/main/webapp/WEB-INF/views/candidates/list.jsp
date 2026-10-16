@@ -48,7 +48,7 @@
                 </div>
                 <div>
                     <div class="fw-bold text-info-emphasis mb-1">
-                        <i class="bi bi-info-circle me-1"></i>Phạm vi hiển thị bị giới hạn (KN-116)
+                        <i class="bi bi-info-circle me-1"></i>Phạm vi hiển thị bị giới hạn
                     </div>
                     <div class="text-info-emphasis small">
                         Bạn chỉ xem được hồ sơ ứng viên của các <strong>vị trí tuyển dụng được giao cho bạn</strong>
@@ -224,13 +224,13 @@
                     <table class="table table-custom table-fit mb-0 align-middle" id="candidatesMainTable">
                         <thead>
                             <tr>
-                                <th class="ps-3">Họ và tên</th>
-                                <th>Phòng ban</th>
-                                <th>Vị trí ứng tuyển &amp; CV</th>
-                                <th>Nguồn / Người giới thiệu</th>
-                                <th>Thời gian</th>
-                                <th>Trạng thái</th>
-                                <th class="text-end pe-4" style="min-width: 220px;">Thao tác &amp; Chuyển vòng</th>
+                                <th class="ps-3" style="min-width: 180px; width: 22%;">Họ và tên</th>
+                                <th style="min-width: 120px; width: 14%;">Phòng ban</th>
+                                <th style="min-width: 170px; width: 18%;">Vị trí ứng tuyển &amp; CV</th>
+                                <th style="min-width: 130px; width: 14%;">Nguồn / Giới thiệu</th>
+                                <th style="min-width: 105px; width: 10%;">Thời gian</th>
+                                <th style="min-width: 105px; width: 10%;">Trạng thái</th>
+                                <th class="text-end pe-3" style="min-width: 195px; width: 12%;">Thao tác &amp; Vòng tuyển</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -238,26 +238,26 @@
                                 <tr>
                                     <td class="ps-3">
                                         <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                                            <div class="user-avatar" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">
                                                 ${c.fullName != null && c.fullName.length() > 0 ? c.fullName.substring(0, 1) : 'U'}
                                             </div>
-                                            <div>
+                                            <div style="min-width: 0;">
                                                 <a href="${pageContext.request.contextPath}/candidates/profile?id=${c.id}"
-                                                   class="fw-bold text-dark text-decoration-none d-block"
+                                                   class="fw-bold text-dark text-decoration-none d-block text-nowrap"
                                                    title="Xem hồ sơ hợp nhất của ${c.fullName}"
-                                                   style="transition: color .15s;"
+                                                   style="font-size: 0.865rem; transition: color .15s;"
                                                    onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color=''">
                                                     ${c.fullName}
                                                 </a>
-                                                <div class="text-muted text-xs">${c.email}</div>
+                                                <div class="text-muted text-xs text-nowrap" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis;" title="${c.email}">${c.email}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="text-dark fw-semibold">${c.departmentName != null ? c.departmentName : 'Đang cập nhật'}</span>
+                                        <span class="text-dark fw-semibold" style="font-size: 0.825rem;">${c.departmentName != null ? c.departmentName : 'Đang cập nhật'}</span>
                                     </td>
                                     <td>
-                                        <span class="text-secondary">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn vị trí'}</span>
+                                        <div class="text-secondary fw-medium" style="font-size: 0.825rem;">${c.requisitionTitle != null ? c.requisitionTitle : 'Chưa gắn vị trí'}</div>
                                         <c:if test="${not empty c.cvUrl}">
                                             <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
                                                 <a href="${pageContext.request.contextPath}/candidates/cv-preview?id=${c.id}" target="_blank" class="text-primary text-xs text-decoration-none fw-semibold">
@@ -289,13 +289,13 @@
                                         </c:if>
                                     </td>
                                     <td>
-                                        <div class="text-dark small"><c:out value="${not empty c.applicationSourceName ? c.applicationSourceName : 'Chưa xác định'}" /></div>
+                                        <div class="text-dark" style="font-size: 0.825rem;"><c:out value="${not empty c.applicationSourceName ? c.applicationSourceName : 'Chưa xác định'}" /></div>
                                         <c:if test="${not empty c.referredByUserName}">
-                                            <div class="text-muted small">Người giới thiệu: <c:out value="${c.referredByUserName}" /></div>
+                                            <div class="text-muted text-xs">Người giới thiệu: <c:out value="${c.referredByUserName}" /></div>
                                         </c:if>
                                     </td>
                                     <td>
-                                        <div class="text-secondary small">
+                                        <div class="text-secondary font-monospace" style="font-size: 0.785rem;">
                                             <fmt:formatDate value="${c.createdAt}" pattern="dd/MM/yyyy HH:mm" />
                                         </div>
                                     </td>
@@ -304,11 +304,11 @@
                                             ${c.getStatusLabel()}
                                         </span>
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <div class="d-inline-flex align-items-center gap-2">
+                                    <td class="text-end pe-3">
+                                        <div class="d-inline-flex align-items-center gap-1.5 justify-content-end">
                                             <c:if test="${not empty c.cvUrl}">
                                                 <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-1 px-2"
-                                                        style="font-size: 0.75rem; border-radius: 6px; white-space: nowrap;"
+                                                        style="font-size: 0.72rem; border-radius: 6px; white-space: nowrap;"
                                                         data-bs-toggle="modal" data-bs-target="#reviewCVExtractionModal"
                                                         data-id="${c.id}"
                                                         data-fullname="<c:out value='${c.fullName}' />"
@@ -330,7 +330,7 @@
                                                   class="candidate-status-form d-inline-flex flex-column gap-1 align-items-end"
                                                   data-current-status="${c.status}" data-current-reason="${c.rejectionReasonId}">
                                                 <input type="hidden" name="candidateId" value="${c.id}">
-                                                <select class="form-select form-select-sm" name="status" onchange="toggleCandidateStatusForm(this)" style="width: 135px; font-size: 0.8rem; border-radius: 8px;">
+                                                <select class="form-select form-select-sm" name="status" onchange="toggleCandidateStatusForm(this)" style="width: 118px; font-size: 0.78rem; border-radius: 6px; padding: 0.25rem 0.45rem;">
                                                     <option value="APPLIED" ${c.status == 'APPLIED' ? 'selected' : ''}>Mới ứng tuyển</option>
                                                     <option value="SCREENING" ${c.status == 'SCREENING' ? 'selected' : ''}>Sàng lọc CV</option>
                                                     <option value="INTERVIEWING" ${c.status == 'INTERVIEWING' ? 'selected' : ''}>Phỏng vấn</option>
@@ -340,7 +340,7 @@
                                                 </select>
                                                 <div class="rejection-reason-field ${c.status == 'REJECTED' ? '' : 'd-none'}">
                                                     <select class="form-select form-select-sm" name="rejectionReasonId"
-                                                            aria-label="Lý do loại hồ sơ" onchange="toggleCandidateStatusForm(this)" style="width: 135px; font-size: 0.75rem;">
+                                                            aria-label="Lý do loại hồ sơ" onchange="toggleCandidateStatusForm(this)" style="width: 118px; font-size: 0.72rem; padding: 0.2rem 0.4rem;">
                                                         <option value="">Lý do loại</option>
                                                         <c:forEach var="reason" items="${rejectionReasons}">
                                                             <option value="${reason.id}" ${c.rejectionReasonId == reason.id ? 'selected' : ''}>
@@ -349,7 +349,7 @@
                                                         </c:forEach>
                                                     </select>
                                                 </div>
-                                                <button type="submit" class="btn btn-sm btn-primary candidate-status-submit py-0 px-2" style="font-size: 0.75rem;" hidden>
+                                                <button type="submit" class="btn btn-sm btn-primary candidate-status-submit py-0 px-2" style="font-size: 0.72rem;" hidden>
                                                     Lưu
                                                 </button>
                                             </form>
@@ -490,17 +490,17 @@
                             <h5 class="modal-title fw-bold text-dark mb-0" id="reviewCVExtractionModalLabel">
                                 Đối chiếu &amp; Xác nhận thông tin bóc tách từ CV
                             </h5>
-                            <small class="text-muted">Tính năng tự động bóc tách thông tin từ CV PDF &bull; User Story KN-213</small>
+                            <small class="text-muted">Tính năng tự động bóc tách thông tin từ CV PDF</small>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <!-- Banner hướng dẫn & Quy tắc nghiệp vụ KN-213 -->
+                    <!-- Banner hướng dẫn & Quy tắc nghiệp vụ -->
                     <div class="alert alert-primary d-flex align-items-start gap-3 border border-primary-subtle rounded-3 py-2 px-3 mb-4" role="alert" style="background-color: #f0f7ff;">
                         <i class="bi bi-info-circle-fill text-primary fs-5 mt-1"></i>
                         <div class="small">
-                            <strong>Nguyên tắc bảo vệ dữ liệu (KN-213):</strong> Kết quả bóc tách tự động chỉ mang tính chất hỗ trợ và <strong>không tự ý ghi đè</strong> thông tin ứng viên đã nộp. Recruiter có thể đối chiếu, trực tiếp chỉnh sửa các trường trước khi xác nhận lưu vào hồ sơ chính thức. Bóc tách thất bại không ảnh hưởng đến hồ sơ nộp.
+                            <strong>Nguyên tắc bảo vệ dữ liệu:</strong> Kết quả bóc tách tự động chỉ mang tính chất hỗ trợ và <strong>không tự ý ghi đè</strong> thông tin ứng viên đã nộp. Recruiter có thể đối chiếu, trực tiếp chỉnh sửa các trường trước khi xác nhận lưu vào hồ sơ chính thức. Bóc tách thất bại không ảnh hưởng đến hồ sơ nộp.
                         </div>
                     </div>
 
@@ -656,7 +656,7 @@ function populateExtractionModal(button) {
     badgeElem.className = 'badge ' + badgeClass;
     badgeElem.textContent = statusLabel;
 }
-</script>
+
 function toggleCandidateStatusForm(control) {
     var form = control.closest('.candidate-status-form');
     var status = form.querySelector('[name="status"]');

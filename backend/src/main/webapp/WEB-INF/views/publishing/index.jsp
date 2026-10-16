@@ -23,14 +23,14 @@
     <jsp:include page="../common/navbar.jsp" />
 
     <div class="app-content">
+        <jsp:include page="../common/alerts.jsp" />
         <div class="container-fluid py-4 px-lg-4">
-            <!-- Breadcrumbs chuẩn theo vé KN-120 -->
+            <!-- Breadcrumbs -->
             <nav aria-label="breadcrumb" class="mb-3">
                 <ol class="breadcrumb mb-1 text-xs">
-                    <li class="breadcrumb-item text-muted">Không gian</li>
-                    <li class="breadcrumb-item text-muted"><i class="bi bi-cloud me-1"></i>K5S6_N1</li>
-                    <li class="breadcrumb-item text-muted"><i class="bi bi-lightning me-1 text-warning"></i>KN-110</li>
-                    <li class="breadcrumb-item active text-primary fw-bold" aria-current="page"><i class="bi bi-check-square me-1"></i>KN-120</li>
+                    <li class="breadcrumb-item text-muted"><a href="${pageContext.request.contextPath}/dashboard" class="text-decoration-none text-muted">Trang chủ</a></li>
+                    <li class="breadcrumb-item text-muted"><i class="bi bi-briefcase me-1"></i>Tuyển dụng</li>
+                    <li class="breadcrumb-item active text-primary fw-bold" aria-current="page"><i class="bi bi-broadcast-pin me-1"></i>Xuất bản bài đăng</li>
                 </ol>
             </nav>
 
@@ -60,7 +60,7 @@
                 </div>
             </div>
 
-            <!-- Quy định nghiệp vụ vé KN-120 (Alert tiêu chí) -->
+            <!-- Quy định nghiệp vụ (Alert tiêu chí) -->
             <div class="card border-0 bg-primary-subtle text-primary-emphasis mb-4 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-start gap-3">
@@ -68,7 +68,7 @@
                             <i class="bi bi-shield-check fs-5"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="fw-bold fs-6 mb-1">Quy định xuất bản theo tiêu chuẩn vé KN-120:</div>
+                            <div class="fw-bold fs-6 mb-1">Quy định xuất bản tin tuyển dụng:</div>
                             <ul class="mb-0 ps-3 small">
                                 <li><strong>Tin phải duyệt trước khi show công khai:</strong> Chỉ các tin ở trạng thái <em>Đã duyệt (APPROVED / OPEN)</em> mới được xuất bản. Tin nháp hoặc chờ duyệt sẽ bị hệ thống chặn.</li>
                                 <li><strong>Xem trước đúng như giao diện khai báo:</strong> Hỗ trợ đối chiếu chuẩn xác từng thông tin đã kê khai trước khi xác nhận bấm xuất bản.</li>
@@ -78,22 +78,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Thông báo Flash Messages -->
-            <c:if test="${not empty flashSuccess}">
-                <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i> ${flashSuccess}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <c:remove var="flashSuccess" scope="session" />
-            </c:if>
-            <c:if test="${not empty flashError}">
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> ${flashError}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <c:remove var="flashError" scope="session" />
-            </c:if>
 
             <!-- Thống kê nhanh KPI -->
             <div class="row g-3 mb-4">
@@ -203,16 +187,16 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                        <table class="table table-custom table-hover align-middle mb-0" style="font-size: 0.82rem;">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 11%;">Mã tin</th>
-                                    <th style="width: 20%;">Vị trí / Tiêu đề bài đăng</th>
-                                    <th style="width: 14%;">Phòng ban &amp; SL</th>
-                                    <th class="text-center" style="width: 13%;">Điều kiện duyệt</th>
-                                    <th class="text-center" style="width: 13%;">Trạng thái xuất bản</th>
-                                    <th style="width: 14%;">Bản xuất &amp; Thời điểm</th>
-                                    <th class="text-end pe-3" style="width: 15%;">Thao tác</th>
+                                    <th style="width: 10%; min-width: 90px;">Mã tin</th>
+                                    <th style="width: 23%; min-width: 160px;">Vị trí / Tiêu đề bài đăng</th>
+                                    <th style="width: 15%; min-width: 130px;">Phòng ban &amp; SL</th>
+                                    <th class="text-center" style="width: 13%; min-width: 110px;">Điều kiện duyệt</th>
+                                    <th class="text-center" style="width: 12%; min-width: 105px;">Trạng thái xuất bản</th>
+                                    <th style="width: 13%; min-width: 115px;">Bản xuất &amp; Thời điểm</th>
+                                    <th class="text-end pe-3" style="width: 14%; min-width: 130px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -221,24 +205,24 @@
                                         <c:forEach var="p" items="${postings}">
                                             <tr>
                                                 <td>
-                                                    <span class="badge bg-light text-dark border font-monospace px-1.5 py-1">${p.requisition.code}</span>
-                                                    <div class="text-muted text-xs mt-1">
+                                                    <span class="badge bg-light text-dark border font-monospace px-1.5 py-0.5 text-nowrap">${p.requisition.code}</span>
+                                                    <div class="text-muted text-xs mt-1 text-nowrap">
                                                         <fmt:formatDate value="${p.requisition.createdAt}" pattern="dd/MM/yyyy" />
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="fw-bold text-dark text-truncate" style="max-width: 240px;" title="${p.requisition.positionTitle}">
+                                                    <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" title="${p.requisition.positionTitle}">
                                                         ${p.requisition.positionTitle}
                                                     </div>
-                                                    <div class="text-muted small text-truncate" style="max-width: 240px;" title="${p.title}">
+                                                    <div class="text-muted small text-truncate" style="max-width: 220px;" title="${p.title}">
                                                         ${p.title}
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="fw-semibold text-secondary small text-truncate" style="max-width: 160px;" title="${p.requisition.departmentName}">
+                                                    <div class="fw-semibold text-secondary small text-truncate" style="max-width: 150px;" title="${p.requisition.departmentName}">
                                                         <i class="bi bi-building me-1 text-muted"></i>${p.requisition.departmentName != null ? p.requisition.departmentName : 'Chưa gán'}
                                                     </div>
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-xs mt-0.5">
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-xs mt-0.5 text-nowrap">
                                                         ${p.requisition.headcount} chỉ tiêu
                                                     </span>
                                                 </td>
@@ -246,24 +230,24 @@
                                                     <!-- TIÊU CHÍ 1: Tin phải duyệt trước khi show công khai -->
                                                     <c:choose>
                                                         <c:when test="${p.approved}">
-                                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                                                <i class="bi bi-check-circle-fill me-1"></i>Đã duyệt (Đủ điều kiện)
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 text-nowrap" title="Đã duyệt (Đủ điều kiện xuất bản)">
+                                                                <i class="bi bi-check-circle-fill me-1"></i>Đã duyệt (Đủ ĐK)
                                                             </span>
                                                         </c:when>
                                                         <c:when test="${p.requisition.status == 'PENDING_APPROVAL'}">
-                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1" title="Cần duyệt trước khi xuất bản">
-                                                                <i class="bi bi-clock-fill me-1"></i>Chờ phê duyệt
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 text-nowrap" title="Cần duyệt trước khi xuất bản">
+                                                                <i class="bi bi-clock-fill me-1"></i>Chờ duyệt
                                                             </span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
+                                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 text-nowrap">
                                                                 <i class="bi bi-dash-circle me-1"></i>${p.requisition.statusLabel}
                                                             </span>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge ${p.statusBadgeClass} px-2 py-1">
+                                                    <span class="badge ${p.statusBadgeClass} px-2 py-1 text-nowrap">
                                                         <c:if test="${p.published}"><i class="bi bi-broadcast me-1"></i></c:if>
                                                         ${p.statusLabel}
                                                     </span>
@@ -272,55 +256,55 @@
                                                     <!-- TIÊU CHÍ 3: Ghi lại bản xuất và thời điểm -->
                                                     <c:choose>
                                                         <c:when test="${p.currentVersion > 0}">
-                                                            <div class="fw-bold text-dark font-monospace" style="font-size: 0.8rem;">
-                                                                <i class="bi bi-layers-fill text-primary me-1"></i>Bản xuất #${p.currentVersion}
+                                                            <div class="fw-bold text-dark font-monospace text-nowrap" style="font-size: 0.78rem;">
+                                                                <i class="bi bi-layers-fill text-primary me-1"></i>Bản #${p.currentVersion}
                                                             </div>
-                                                            <div class="text-muted text-xs" title="Thời điểm xuất bản gần nhất">
+                                                            <div class="text-muted text-xs text-nowrap" title="Thời điểm xuất bản gần nhất">
                                                                 <i class="bi bi-clock-history me-1"></i>${p.formattedPublishedAt}
                                                             </div>
                                                             <c:if test="${not empty p.publishedByName}">
-                                                                <div class="text-muted text-xs">
+                                                                <div class="text-muted text-xs text-nowrap">
                                                                     Bởi: <strong>${p.publishedByName}</strong>
                                                                 </div>
                                                             </c:if>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <span class="text-muted text-xs italic">Chưa từng xuất bản</span>
+                                                            <span class="text-muted text-xs italic text-nowrap">Chưa từng xuất</span>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="text-end pe-3">
                                                     <div class="btn-group btn-group-sm">
                                                         <!-- Nút Xem trước (Tiêu chí 2: Xem trước đúng như khai báo trước khi xuất bản) -->
-                                                        <button type="button" class="btn btn-outline-info" 
+                                                        <button type="button" class="btn btn-outline-info py-1 px-2" style="font-size: 0.74rem;" 
                                                                 onclick="openPreviewModal('${p.requisition.id}')" 
-                                                                title="Xem trước đúng như giao diện khai báo trước khi xuất bản">
-                                                            <i class="bi bi-eye"></i> Xem trước
+                                                                title="Xem trước giao diện">
+                                                            <i class="bi bi-eye"></i> Xem
                                                         </button>
 
                                                         <!-- Nút Xuất bản (Tiêu chí 1: Tin phải duyệt trước khi show công khai) -->
                                                         <c:choose>
                                                             <c:when test="${p.approved}">
-                                                                <button type="button" class="btn btn-success" 
+                                                                <button type="button" class="btn btn-success py-1 px-2" style="font-size: 0.74rem;" 
                                                                         onclick="openPublishModal('${p.requisition.id}', '${p.requisition.code}', '${p.requisition.positionTitle}', ${p.currentVersion})" 
                                                                         title="Tiến hành xuất bản">
-                                                                    <i class="bi bi-upload"></i> ${p.published ? 'Cập nhật' : 'Xuất bản'}
+                                                                    <i class="bi bi-upload"></i> ${p.published ? 'Lưu' : 'Xuất'}
                                                                 </button>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <button type="button" class="btn btn-outline-secondary" 
+                                                                <button type="button" class="btn btn-outline-secondary py-1 px-2" style="font-size: 0.74rem;" 
                                                                         onclick="alertNotApproved('${p.requisition.id}', '${p.requisition.code}', '${p.requisition.statusLabel}')" 
-                                                                        title="Chưa đủ điều kiện: Tin phải duyệt trước khi show công khai">
-                                                                    <i class="bi bi-lock-fill"></i> Xuất bản
+                                                                        title="Chưa đủ điều kiện: Tin phải duyệt trước khi xuất bản">
+                                                                    <i class="bi bi-lock-fill"></i> Xuất
                                                                 </button>
                                                             </c:otherwise>
                                                         </c:choose>
 
                                                         <!-- Menu dropdown thao tác bổ sung -->
-                                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split py-1 px-1.5" style="font-size: 0.74rem;" data-bs-toggle="dropdown" aria-expanded="false">
                                                             <span class="visually-hidden">Tùy chọn</span>
                                                         </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" style="font-size: 0.8rem;">
                                                             <!-- TIÊU CHÍ 3: Lịch sử các bản xuất và thời điểm -->
                                                             <li>
                                                                 <a class="dropdown-item" href="javascript:void(0)" onclick="openHistoryModal('${p.requisition.id}', '${p.requisition.code}', '${p.requisition.positionTitle}')">
@@ -736,7 +720,7 @@
                 </div>
                 <div class="modal-body p-3">
                     <input type="hidden" name="requisitionId" id="approveFormReqId">
-                    <p class="mb-2">Sau khi duyệt, bài đăng này sẽ đủ điều kiện để xuất bản công khai theo quy định vé KN-120:</p>
+                    <p class="mb-2">Sau khi duyệt, bài đăng này sẽ đủ điều kiện để xuất bản công khai:</p>
                     <div class="p-2 bg-light border rounded fw-semibold text-dark mb-2" id="approveFormInfo">--</div>
                 </div>
                 <div class="modal-footer py-2 bg-light">
@@ -749,18 +733,18 @@
 </div>
 
 <!-- ============================================================== -->
-<!-- MODAL 4: TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG (KN-204, KN-206)       -->
+<!-- MODAL: TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG                           -->
 <!-- ============================================================== -->
 <div class="modal fade" id="quickJobPostingModal" tabindex="-1" aria-labelledby="quickJobPostingModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow-lg border-0">
-            <form id="quickJobPostingForm" method="POST" action="${pageContext.request.contextPath}/post-publishing/quick-create">
+            <form id="quickJobPostingForm" method="POST" action="${pageContext.request.contextPath}/post-publishing/quick-create" class="d-flex flex-column h-100 overflow-hidden mb-0">
                 <div class="modal-header bg-gradient bg-primary text-white py-3">
                     <div>
                         <h5 class="modal-title fw-bold mb-0" id="quickJobPostingModalLabel">
                             <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Tạo nhanh Bài đăng Tuyển dụng
                         </h5>
-                        <small class="text-white-50">Kế thừa và chuẩn hóa tự động từ yêu cầu tuyển dụng đã duyệt (KN-204)</small>
+                        <small class="text-white-50">Kế thừa và chuẩn hóa tự động từ yêu cầu tuyển dụng đã duyệt</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -1011,10 +995,15 @@ function openPublishModal(id, code, pos, ver) {
 
 // 3. Cảnh báo khi tin chưa duyệt
 function alertNotApproved(id, code, statusLabel) {
-    alert('TIÊU CHÍ BẮT BUỘC (KN-120):\nTin phải duyệt trước khi show công khai!\n\nTin ' + code + ' hiện đang ở trạng thái: ' + statusLabel + '.\nVui lòng gửi phê duyệt hoặc duyệt tin trước khi xuất bản.');
+    var msg = 'Tin phải được phê duyệt trước khi xuất bản công khai! Vị trí ' + code + ' hiện đang ở trạng thái: ' + statusLabel + '.';
+    if (window.showToast) {
+        window.showToast(msg, 'warning', 'Chưa đủ điều kiện xuất bản', 6000);
+    } else {
+        alert(msg + '\nVui lòng gửi phê duyệt hoặc duyệt tin trước khi xuất bản.');
+    }
 }
 
-// 4. Mở Modal Lịch sử các bản xuất và thời điểm [KN-120]
+// 4. Mở Modal Lịch sử các bản xuất và thời điểm
 function openHistoryModal(reqId, code, pos) {
     document.getElementById('historySubTitle').innerText = code + ' - ' + pos;
     const tbody = document.getElementById('historyTableBody');
@@ -1249,22 +1238,28 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
 
     const reqId = document.getElementById('modalRequisitionSelect').value;
     if (!reqId) {
+        const msg = 'Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!';
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!';
+        errMsgSpan.innerText = msg;
+        if (window.showToast) window.showToast(msg, 'warning', 'Chưa chọn yêu cầu');
         return;
     }
 
     const title = document.getElementById('mPostTitle').value.trim();
     if (!title) {
+        const msg = 'Vui lòng nhập tiêu đề bài đăng!';
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Vui lòng nhập tiêu đề bài đăng!';
+        errMsgSpan.innerText = msg;
+        if (window.showToast) window.showToast(msg, 'warning', 'Thiếu tiêu đề bài đăng');
         return;
     }
 
     const jd = document.getElementById('mPostDescription').value.trim();
     if (!jd) {
+        const msg = 'Vui lòng nhập mô tả công việc (JD)!';
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Vui lòng nhập mô tả công việc (JD)!';
+        errMsgSpan.innerText = msg;
+        if (window.showToast) window.showToast(msg, 'warning', 'Thiếu mô tả công việc');
         return;
     }
 
@@ -1274,8 +1269,10 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (selected < today) {
+            const msg = 'Hạn nhận hồ sơ không thể ở trong quá khứ!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Hạn nhận hồ sơ không thể ở trong quá khứ!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Hạn nhận hồ sơ không hợp lệ');
             return;
         }
     }
@@ -1285,18 +1282,24 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         const minVal = parseFloat(document.getElementById('mMinSalary').value);
         const maxVal = parseFloat(document.getElementById('mMaxSalary').value);
         if (!isNaN(minVal) && minVal < 0) {
+            const msg = 'Mức lương tối thiểu không được là số âm!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Mức lương tối thiểu không được là số âm!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Lương không hợp lệ');
             return;
         }
         if (!isNaN(maxVal) && maxVal < 0) {
+            const msg = 'Mức lương tối đa không được là số âm!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Mức lương tối đa không được là số âm!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Lương không hợp lệ');
             return;
         }
         if (!isNaN(minVal) && !isNaN(maxVal) && minVal > maxVal) {
+            const msg = 'Mức lương tối thiểu không được lớn hơn mức lương tối đa!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Mức lương tối thiểu không được lớn hơn mức lương tối đa!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Dải lương không hợp lệ');
             return;
         }
     }
@@ -1321,18 +1324,34 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Tạo bài đăng';
 
         if (!data.success) {
+            const errMsg = data.error || 'Có lỗi xảy ra khi tạo bài đăng!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = data.error || 'Có lỗi xảy ra khi tạo bài đăng!';
+            errMsgSpan.innerText = errMsg;
+            if (window.showToast) {
+                window.showToast(errMsg, 'error', 'Lỗi tạo bài đăng', 6500);
+            }
         } else {
-            alert(data.message || 'Tạo bài đăng thành công!');
-            window.location.href = data.redirectUrl || (ctx + '/post-publishing');
+            const successMsg = data.message || 'Tạo bài đăng thành công!';
+            if (window.showToast) {
+                window.showToast(successMsg, 'success', 'Thành công', 5000);
+            }
+            if (quickModalInstance) {
+                quickModalInstance.hide();
+            }
+            setTimeout(() => {
+                window.location.href = data.redirectUrl || (ctx + '/post-publishing');
+            }, 800);
         }
     })
     .catch(err => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Tạo bài đăng';
+        const errMsg = 'Lỗi kết nối máy chủ: ' + err;
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Lỗi kết nối máy chủ: ' + err;
+        errMsgSpan.innerText = errMsg;
+        if (window.showToast) {
+            window.showToast(errMsg, 'error', 'Lỗi kết nối');
+        }
     });
 });
 </script>

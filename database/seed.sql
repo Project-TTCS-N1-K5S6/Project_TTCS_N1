@@ -268,11 +268,11 @@ INSERT INTO recruitment_approval_logs (id, requisition_id, step_order, step_name
 -- 8. Khởi tạo danh sách ứng viên mẫu (Candidates)
 DELETE FROM candidates;
 INSERT INTO candidates (id, requisition_id, application_source_id, full_name, email, phone, status, cv_url, notes) VALUES
-('cand-001', 'req-001', 'cat-src-linkedin', 'Nguyễn Văn An', 'an.nguyen@email.test', '0912345671', 'INTERVIEWING', 'https://cv.storage/an_nguyen_java.pdf', 'Ứng viên có 4 năm kinh nghiệm Java Servlet & Spring Boot'),
-('cand-002', 'req-001', 'cat-src-referral', 'Trần Bảo Bình', 'binh.tran@email.test', '0912345672', 'SCREENING', 'https://cv.storage/binh_tran_backend.pdf', 'Điểm đồ án tốt nghiệp xuất sắc, tiếng Anh TOEIC 850'),
-('cand-003', 'req-001', 'cat-src-career-site', 'Lê Hữu Cường', 'cuong.le@email.test', '0912345673', 'OFFER', 'https://cv.storage/cuong_le_senior.pdf', 'Đã pass vòng phỏng vấn kỹ thuật, đề xuất mức lương 32M'),
-('cand-004', 'req-002', 'cat-src-job-board', 'Phạm Minh Dung', 'dung.pham@email.test', '0912345674', 'APPLIED', 'https://cv.storage/dung_pham_hr.pdf', 'Kinh nghiệm 2 năm tuyển dụng IT & Headhunter'),
-('cand-005', 'req-003', 'cat-src-referral', 'Hoàng Gia Long', 'long.hoang@email.test', '0912345675', 'HIRED', 'https://cv.storage/long_hoang_sales.pdf', 'Đã nhận việc từ ngày 01/10/2026');
+('cand-001', 'req-001', 'cat-src-linkedin', 'Nguyễn Văn An', 'an.nguyen@email.test', '0912345671', 'INTERVIEWING', '/uploads/cv/an_nguyen_java.pdf', 'Ứng viên có 4 năm kinh nghiệm Java Servlet & Spring Boot'),
+('cand-002', 'req-001', 'cat-src-referral', 'Trần Bảo Bình', 'binh.tran@email.test', '0912345672', 'SCREENING', '/uploads/cv/binh_tran_backend.pdf', 'Điểm đồ án tốt nghiệp xuất sắc, tiếng Anh TOEIC 850'),
+('cand-003', 'req-001', 'cat-src-career-site', 'Lê Hữu Cường', 'cuong.le@email.test', '0912345673', 'OFFER', '/uploads/cv/cuong_le_senior.pdf', 'Đã pass vòng phỏng vấn kỹ thuật, đề xuất mức lương 32M'),
+('cand-004', 'req-002', 'cat-src-job-board', 'Phạm Minh Dung', 'dung.pham@email.test', '0912345674', 'APPLIED', '/uploads/cv/dung_pham_hr.pdf', 'Kinh nghiệm 2 năm tuyển dụng IT & Headhunter'),
+('cand-005', 'req-003', 'cat-src-referral', 'Hoàng Gia Long', 'long.hoang@email.test', '0912345675', 'HIRED', '/uploads/cv/long_hoang_sales.pdf', 'Đã nhận việc từ ngày 01/10/2026');
 
 -- 9. Khởi tạo dải lương chuẩn theo vị trí (Salary Ranges)
 DELETE FROM salary_ranges;

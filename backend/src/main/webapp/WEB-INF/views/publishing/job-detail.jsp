@@ -89,6 +89,18 @@
             }
         }
 
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 90px;
+        }
+
+        #detailNavbar {
+            position: sticky;
+            top: 0;
+            z-index: 1050 !important;
+            background-color: #0f172a !important;
+        }
+
         .apply-card {
             background: #ffffff;
             border-radius: 16px;
@@ -96,6 +108,25 @@
             box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
             padding: 24px;
             transition: all 0.2s ease;
+            scroll-margin-top: 90px;
+        }
+
+        @media (min-width: 992px) {
+            .apply-card.sticky-top,
+            #expiredNoticeCard.sticky-top {
+                position: sticky;
+                top: 85px !important;
+                z-index: 100 !important;
+                max-height: calc(100vh - 100px);
+                overflow-y: auto;
+            }
+            .apply-card::-webkit-scrollbar {
+                width: 4px;
+            }
+            .apply-card::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
         }
 
         .form-label {
@@ -265,7 +296,7 @@
 <body>
 
     <!-- Header Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 shadow-sm sticky-top" id="detailNavbar">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark py-3 shadow-sm sticky-top" id="detailNavbar" style="z-index: 1050 !important;">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="${pageContext.request.contextPath}/careers" id="brandLink">
                 <span class="p-1.5 rounded-3 bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -499,7 +530,7 @@
                 <c:choose>
                     <%-- TRƯỜNG HỢP 1: TIN ĐÃ HẾT HẠN HOẶC ĐÃ ĐÓNG TUYỂN DỤNG --%>
                     <c:when test="${!canApply}">
-                        <div class="card border-0 rounded-4 shadow-sm p-4 text-center sticky-top" style="top: 85px;" id="expiredNoticeCard">
+                        <div class="card border-0 rounded-4 shadow-sm p-4 text-center sticky-top" style="top: 85px; z-index: 100;" id="expiredNoticeCard">
                             <div class="mb-3 mx-auto d-inline-flex align-items-center justify-content-center rounded-circle ${isExpired ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'}" style="width: 80px; height: 80px;">
                                 <i class="bi ${isExpired ? 'bi-clock-history' : 'bi-lock-fill'}" style="font-size: 2.8rem;"></i>
                             </div>
@@ -557,7 +588,7 @@
 
                     <%-- TRƯỜNG HỢP 2: TIN CÒN HẠN & ĐANG TUYỂN (HIỂN THỊ BIỂU MẪU ỨNG TUYỂN) --%>
                     <c:otherwise>
-                        <div class="apply-card sticky-top" style="top: 85px;" id="applyCardContainer">
+                        <div class="apply-card sticky-top" style="top: 85px; z-index: 100;" id="applyCardContainer">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                                     <i class="bi bi-send-fill text-primary"></i> Ứng tuyển vị trí này
@@ -816,10 +847,13 @@
             window.scrollToApplySection = function() {
                 const target = document.getElementById('applyCardContainer') || document.getElementById('expiredNoticeCard');
                 if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const nav = document.getElementById('detailNavbar');
+                    const navHeight = nav ? nav.offsetHeight : 70;
+                    const targetTop = target.getBoundingClientRect().top + window.pageYOffset - (navHeight + 20);
+                    window.scrollTo({ top: targetTop, behavior: 'smooth' });
                     const nameInput = document.getElementById('fullNameInput');
                     if (nameInput) {
-                        setTimeout(() => nameInput.focus(), 400);
+                        setTimeout(() => nameInput.focus({ preventScroll: true }), 450);
                     }
                 }
             };

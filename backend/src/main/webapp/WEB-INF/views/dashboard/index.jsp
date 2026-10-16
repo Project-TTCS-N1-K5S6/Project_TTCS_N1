@@ -205,12 +205,12 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
-                                            <div class="user-avatar" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                                            <div class="user-avatar" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0;">
                                                 ${c.fullName != null && c.fullName.length() > 0 ? c.fullName.substring(0, 1) : 'U'}
                                             </div>
-                                            <div>
-                                                <div class="fw-bold text-dark">${c.fullName}</div>
-                                                <div class="text-muted text-xs">${c.email}</div>
+                                            <div style="min-width: 0;">
+                                                <div class="fw-bold text-dark text-nowrap" style="font-size: 0.865rem;">${c.fullName}</div>
+                                                <div class="text-muted text-xs text-nowrap" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis;">${c.email}</div>
                                             </div>
                                         </div>
                                     </td>

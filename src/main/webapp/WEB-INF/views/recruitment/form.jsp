@@ -27,9 +27,8 @@
 
         <c:if test="${isCopy}">
             <div class="alert alert-info border shadow-sm">
-                <strong class="me-2">KN-115</strong>
                 <i class="bi bi-info-circle-fill me-1"></i>
-                Mô tả công việc và yêu cầu ứng viên đã được sao chép. Hãy điền thông tin còn lại; yêu cầu mới sẽ luôn được lưu ở trạng thái Nháp.
+                <strong>Sao chép yêu cầu:</strong> Mô tả công việc và yêu cầu ứng viên đã được sao chép. Hãy điền thông tin còn lại; yêu cầu mới sẽ luôn được lưu ở trạng thái Nháp.
             </div>
         </c:if>
 

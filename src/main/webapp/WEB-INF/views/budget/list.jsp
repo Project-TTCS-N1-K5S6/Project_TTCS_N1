@@ -26,321 +26,31 @@
     <div class="app-content">
         <jsp:include page="../common/alerts.jsp" />
 
-<style>
-    /* Styling bám sát 100% hình ảnh tham chiếu */
-    .reference-title-bar {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 1.25rem;
-    }
-    .reference-title-bar h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-    }
-    .btn-icon-sq {
-        width: 32px;
-        height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        color: #64748b;
-        border-radius: 6px;
-        padding: 0;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .btn-icon-sq:hover {
-        background: #f1f5f9;
-        color: #0f172a;
-        border-color: #94a3b8;
-    }
-    
-    .section-collapse-header {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        user-select: none;
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: #1e293b;
-        margin-bottom: 0.75rem;
-    }
-    .section-collapse-header i.chevron-icon {
-        font-size: 0.8rem;
-        margin-right: 0.5rem;
-        transition: transform 0.2s ease;
-    }
-    .section-collapse-header.collapsed i.chevron-icon {
-        transform: rotate(-90deg);
-    }
-    
-    .description-box {
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
-        background: #ffffff;
-        padding: 1rem 1.25rem;
-        margin-bottom: 1.5rem;
-    }
-    .description-box ul {
-        margin: 0;
-        padding-left: 1.25rem;
-        list-style-type: disc;
-    }
-    .description-box li {
-        color: #334155;
-        font-size: 0.875rem;
-        line-height: 1.6;
-        margin-bottom: 0.25rem;
-    }
-    .description-box li:last-child {
-        margin-bottom: 0;
-    }
-
-    .subtasks-panel {
-        margin-bottom: 2rem;
-    }
-    .subtasks-progress-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
-    .subtasks-progress-bar-track {
-        flex: 1;
-        height: 6px;
-        background-color: #cbd5e1;
-        border-radius: 3px;
-        overflow: hidden;
-    }
-    .subtasks-progress-bar-fill {
-        height: 100%;
-        background-color: #475569;
-        transition: width 0.3s ease;
-    }
-    .subtasks-progress-text {
-        font-size: 0.825rem;
-        font-weight: 500;
-        color: #64748b;
-        white-space: nowrap;
-    }
-
-    .subtasks-table {
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        overflow: hidden;
-        background: #ffffff;
-        width: 100%;
-    }
-    .subtasks-table th {
-        background-color: #f8fafc;
-        color: #475569;
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.55rem 0.75rem;
-        border-bottom: 1px solid #e2e8f0;
-        border-right: 1px solid #e2e8f0;
-    }
-    .subtasks-table th:last-child {
-        border-right: none;
-    }
-    .subtasks-table td {
-        padding: 0.6rem 0.75rem;
-        vertical-align: middle;
-        font-size: 0.85rem;
-        border-bottom: 1px solid #f1f5f9;
-        border-right: 1px solid #f1f5f9;
-    }
-    .subtasks-table td:last-child {
-        border-right: none;
-    }
-    .subtasks-table tr:last-child td {
-        border-bottom: none;
-    }
-    .subtasks-table tr:hover td {
-        background-color: #f8fafc;
-    }
-
-    .work-link {
-        color: #2563eb;
-        text-decoration: none;
-        font-weight: 500;
-        margin-right: 0.35rem;
-    }
-    .work-link:hover {
-        text-decoration: underline;
-    }
-    .work-icon {
-        color: #3b82f6;
-        font-size: 1rem;
-        margin-right: 0.35rem;
-    }
-    .pri-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        color: #d97706;
-        font-weight: 600;
-        font-size: 0.8rem;
-    }
-    .assignee-avatar {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        color: #64748b;
-        font-size: 0.8rem;
-    }
-    .assignee-circle {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background-color: #e2e8f0;
-        color: #475569;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-    }
-    .status-select {
-        padding: 0.2rem 1.5rem 0.2rem 0.5rem;
-        font-size: 0.8rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
-        background-color: #ffffff;
-        color: #334155;
-    }
-</style>
-
-        <!-- 2.1. TIÊU ĐỀ CHÍNH VÀ CÁC THAO TÁC NHANH (BÁM SÁT ẢNH THAM CHIẾU) -->
-        <div class="reference-title-bar">
-            <h2>Quản lý Định biên &amp; Ngân sách Nhân sự</h2>
-            <button type="button" class="btn-icon-sq ms-2" title="Thêm định biên mới" onclick="openCreateModal()">
-                <i class="bi bi-plus-lg"></i>
-            </button>
-            <div class="dropdown d-inline-block">
-                <button type="button" class="btn-icon-sq" data-bs-toggle="dropdown" aria-expanded="false" title="Thao tác khác">
-                    <i class="bi bi-three-dots"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                    <li><a class="dropdown-item small" href="javascript:void(0)" onclick="openCreateModal()"><i class="bi bi-plus-circle me-2"></i>Khai báo định biên</a></li>
-                    <li><a class="dropdown-item small" href="javascript:void(0)" onclick="location.reload()"><i class="bi bi-arrow-clockwise me-2"></i>Làm mới dữ liệu</a></li>
-                </ul>
+        <!-- TIÊU ĐỀ TRANG VÀ THAO TÁC CHÍNH -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-wallet2 text-primary me-2"></i>Quản lý Định biên &amp; Ngân sách Nhân sự
+                </h4>
+                <p class="text-muted small mb-0">Theo dõi chỉ tiêu headcount và hạn mức ngân sách lương phê duyệt cho từng đơn vị theo năm tài chính</p>
             </div>
-            <button type="button" class="btn-icon-sq" title="Bộ lọc nâng cao" onclick="toggleFilterBar()">
-                <i class="bi bi-list-task"></i>
-            </button>
-        </div>
-
-        <!-- 2.2. KHU VỰC DESCRIPTION (BÁM SÁT 100% THEO HÌNH ẢNH THAM CHIẾU) -->
-        <div class="section-collapse-header" data-bs-toggle="collapse" data-bs-target="#descriptionCollapse" aria-expanded="true">
-            <i class="bi bi-chevron-down chevron-icon"></i>
-            <span>Description</span>
-        </div>
-        <div class="collapse show" id="descriptionCollapse">
-            <div class="description-box">
-                <ul>
-                    <li>Khai báo chỉ tiêu headcount và ngân sách lương theo phòng ban theo năm</li>
-                    <li>Yêu cầu tuyển dụng mới hiển thị số headcount còn lại của phòng ban</li>
-                    <li>Vượt chỉ tiêu là cảnh báo chặn, cần Trưởng phòng Nhân sự xác nhận ghi đè kèm lý do</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- 2.3. KHU VỰC SUBTASKS (BÁM SÁT 100% THEO HÌNH ẢNH THAM CHIẾU) -->
-        <div class="subtasks-panel">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <div class="section-collapse-header mb-0" data-bs-toggle="collapse" data-bs-target="#subtasksCollapse" aria-expanded="true">
-                    <i class="bi bi-chevron-down chevron-icon"></i>
-                    <span>Subtasks</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn-icon-sq" title="Tùy chọn hiển thị">
-                        <i class="bi bi-three-dots"></i>
+            <div>
+                <c:if test="${canManage}">
+                    <button type="button" class="btn btn-primary shadow-sm" onclick="openCreateModal()">
+                        <i class="bi bi-plus-circle me-1"></i> Khai báo định biên mới
                     </button>
-                    <button type="button" class="btn-icon-sq" title="Chế độ cột">
-                        <i class="bi bi-layout-three-columns"></i>
-                    </button>
-                    <button type="button" class="btn-icon-sq" title="Thêm công việc" onclick="openCreateModal()">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="collapse show" id="subtasksCollapse">
-                <!-- Thanh tiến độ Subtasks có tỷ lệ % Done -->
-                <div class="subtasks-progress-wrapper">
-                    <div class="subtasks-progress-bar-track">
-                        <div class="subtasks-progress-bar-fill" id="subtasksProgressFill" style="width: ${completionRate}%;"></div>
-                    </div>
-                    <span class="subtasks-progress-text" id="subtasksProgressText">${completionRate}% Done</span>
-                </div>
-
-                <!-- Bảng Subtasks (Work, Pri..., As..., Status) đúng bố cục hình ảnh -->
-                <div class="table-responsive">
-                    <table class="subtasks-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 65%;">Work</th>
-                                <th style="width: 10%;">Pri...</th>
-                                <th style="width: 10%;">As...</th>
-                                <th style="width: 15%;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="st" items="${subtasks}">
-                                <tr>
-                                    <td>
-                                        <i class="bi bi-diagram-2 work-icon"></i>
-                                        <a href="javascript:void(0)" class="work-link" onclick="viewSubtaskDetail('${st.code}', '${fn:escapeXml(st.title)}')">${st.code}</a>
-                                        <span>${st.title}</span>
-                                    </td>
-                                    <td>
-                                        <div class="pri-indicator">
-                                            <span>=</span>
-                                            <span>M</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="assignee-avatar">
-                                            <span class="assignee-circle"><i class="bi bi-person"></i></span>
-                                            <span>${not empty st.assigneeName ? st.assigneeName : 'U'}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <select class="form-select form-select-sm status-select" 
-                                                onchange="updateSubtaskStatusAjax('${st.id}', this.value)">
-                                            <option value="TODO" ${st.status == 'TODO' ? 'selected' : ''}>To Do</option>
-                                            <option value="IN_PROGRESS" ${st.status == 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
-                                            <option value="DONE" ${st.status == 'DONE' ? 'selected' : ''}>Done</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                        </tbody>
-                    </table>
-                </div>
+                </c:if>
             </div>
         </div>
 
-        <!-- 3. PHÂN HỆ QUẢN LÝ ĐỊNH BIÊN & NGÂN SÁCH THEO PHÒNG BAN (NGHIỆP VỤ BỔ TRỢ) -->
+        <!-- BẢNG ĐỊNH BIÊN & NGÂN SÁCH THEO PHÒNG BAN -->
         <div class="card border shadow-sm mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
                     <h6 class="fw-bold mb-0 text-dark">
-                        <i class="bi bi-wallet2 text-primary me-2"></i>Bảng Định biên &amp; Ngân sách theo Phòng ban năm ${fiscalYear}
+                        <i class="bi bi-table text-primary me-2"></i>Bảng Định biên &amp; Ngân sách theo Phòng ban năm ${fiscalYear}
                     </h6>
                     <small class="text-muted">Quản lý tổng số headcount và ngân sách lương phê duyệt cho từng đơn vị</small>
-                </div>
-                <div>
-                    <c:if test="${canManage}">
-                        <button type="button" class="btn btn-primary btn-sm px-3" onclick="openCreateModal()">
-                            <i class="bi bi-plus-circle me-1"></i> Khai báo định biên mới
-                        </button>
-                    </c:if>
                 </div>
             </div>
 
@@ -645,54 +355,24 @@
         let dept = document.getElementById('modalDeptId').value;
         let hc = document.getElementById('modalTargetHeadcount').value;
         if (!dept) {
-            alert('Vui lòng chọn phòng ban!');
+            let msg = 'Vui lòng chọn phòng ban áp dụng!';
+            if (window.showToast) {
+                window.showToast(msg, 'warning', 'Thiếu thông tin');
+            } else {
+                alert(msg);
+            }
             return false;
         }
         if (hc < 0) {
-            alert('Chỉ tiêu headcount không được là số âm!');
+            let msg = 'Chỉ tiêu headcount không được là số âm!';
+            if (window.showToast) {
+                window.showToast(msg, 'warning', 'Số lượng không hợp lệ');
+            } else {
+                alert(msg);
+            }
             return false;
         }
         return true;
-    }
-
-    function toggleFilterBar() {
-        let bar = document.getElementById('budgetFilterBar');
-        if (bar.style.display === 'none') {
-            bar.style.display = 'block';
-        } else {
-            bar.style.display = 'none';
-        }
-    }
-
-    function viewSubtaskDetail(code, title) {
-        alert(code + ':\n' + title);
-    }
-
-    function updateSubtaskStatusAjax(subtaskId, status) {
-        let params = new URLSearchParams();
-        params.append('id', subtaskId);
-        params.append('status', status);
-
-        fetch('${pageContext.request.contextPath}/headcount-budgets/subtasks/update-status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-            body: params.toString()
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Cập nhật thanh tiến độ % Done ngay trên UI
-                let rate = data.completionRate || 0;
-                document.getElementById('subtasksProgressFill').style.width = rate + '%';
-                document.getElementById('subtasksProgressText').innerText = rate + '% Done';
-            } else {
-                alert('Lỗi cập nhật: ' + (data.message || 'Không thể cập nhật'));
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('Lỗi kết nối khi cập nhật trạng thái subtask');
-        });
     }
 </script>
 

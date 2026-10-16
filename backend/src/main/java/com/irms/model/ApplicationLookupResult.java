@@ -76,8 +76,9 @@ public class ApplicationLookupResult implements Serializable {
         if (rawStatus == null) return "DANG_XEM_XET";
         switch (rawStatus.toUpperCase()) {
             case "APPLIED":
-            case "SCREENING":
                 return "DA_NHAN";
+            case "SCREENING":
+                return "DANG_XEM_XET";
             case "INTERVIEWING":
                 return "MOI_PHONG_VAN";
             case "OFFER":

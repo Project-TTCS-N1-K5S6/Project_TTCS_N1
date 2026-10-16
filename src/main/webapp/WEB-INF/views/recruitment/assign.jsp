@@ -161,21 +161,26 @@
                                 <div id="supportList" class="mb-2">
                                     <c:forEach var="a" items="${assignments}">
                                         <c:if test="${a.role == 'SUPPORT'}">
-                                            <div class="support-item d-flex align-items-center gap-2 p-2 border rounded mb-2 bg-light"
+                                            <div class="support-item d-flex align-items-center justify-content-between p-2.5 px-3 border rounded mb-2 bg-white shadow-sm"
                                                  data-id="${a.recruiterId}">
-                                                <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center"
-                                                     style="width: 32px; height: 32px; min-width: 32px;">
-                                                    <i class="bi bi-person text-info"></i>
+                                                <div class="d-flex align-items-center gap-2.5 overflow-hidden">
+                                                    <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center text-info flex-shrink-0"
+                                                         style="width: 36px; height: 36px;">
+                                                        <i class="bi bi-person-fill fs-5"></i>
+                                                    </div>
+                                                    <div class="overflow-hidden">
+                                                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;">${a.recruiterName}</div>
+                                                        <div class="text-muted text-xs text-truncate">${a.recruiterJobTitle}</div>
+                                                    </div>
                                                 </div>
-                                                <div class="flex-grow-1">
-                                                    <div class="fw-semibold" style="font-size: 0.85rem;">${a.recruiterName}</div>
-                                                    <div class="text-muted" style="font-size: 0.75rem;">${a.recruiterJobTitle}</div>
+                                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                                    <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">Hỗ trợ</span>
+                                                    <input type="hidden" name="supportRecruiterIds" value="${a.recruiterId}">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2"
+                                                            onclick="removeSupportItem(this)" title="Xóa khỏi danh sách">
+                                                        <i class="bi bi-trash3"></i>
+                                                    </button>
                                                 </div>
-                                                <input type="hidden" name="supportRecruiterIds" value="${a.recruiterId}">
-                                                <button type="button" class="btn btn-sm btn-outline-danger p-1"
-                                                        onclick="removeSupportItem(this)" title="Xóa khỏi danh sách">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
                                             </div>
                                         </c:if>
                                     </c:forEach>
@@ -198,7 +203,7 @@
                                         <i class="bi bi-plus-lg me-1"></i>Thêm
                                     </button>
                                 </div>
-                                <div id="supportListEmpty" class="text-muted small mt-2 ${not empty supportList ? 'd-none' : ''}">
+                                <div id="supportListEmpty" class="text-muted small mt-2">
                                     <i class="bi bi-info-circle me-1"></i>Chưa có recruiter hỗ trợ nào.
                                 </div>
                             </div>
@@ -341,87 +346,161 @@
 </style>
 
 <script>
+// Escape HTML string utility
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Danh sách ID recruiter hỗ trợ hiện đang trong danh sách
-let supportIds = new Set();
+var supportIds = new Set();
 
 // Khởi tạo từ các item đã có
 document.querySelectorAll('.support-item').forEach(function(item) {
-    supportIds.add(item.getAttribute('data-id'));
+    var sid = item.getAttribute('data-id');
+    if (sid) {
+        supportIds.add(sid);
+    }
 });
 
 function addSupportRecruiter() {
-    const sel = document.getElementById('addSupportSelect');
-    const id = sel.value;
-    if (!id) return;
+    var sel = document.getElementById('addSupportSelect');
+    if (!sel) return;
+    var id = sel.value;
+    if (!id) {
+        if (window.showToast) {
+            window.showToast('Vui lòng chọn recruiter từ danh sách trước khi nhấn Thêm!', 'warning', 'Chưa chọn recruiter');
+        } else {
+            alert('Vui lòng chọn recruiter từ danh sách trước khi nhấn Thêm!');
+        }
+        return;
+    }
 
-    const opt = sel.options[sel.selectedIndex];
-    const name = opt.getAttribute('data-name');
-    const title = opt.getAttribute('data-title') || '';
-    const dept = opt.getAttribute('data-dept') || '';
+    var opt = sel.options[sel.selectedIndex];
+    var name = opt.getAttribute('data-name') || opt.text || '';
+    var title = opt.getAttribute('data-title') || '';
+    var dept = opt.getAttribute('data-dept') || '';
 
-    // Kiểm tra trùng
+    // Kiểm tra trùng với danh sách hỗ trợ
     if (supportIds.has(id)) {
-        alert('Recruiter này đã có trong danh sách hỗ trợ!');
+        if (window.showToast) {
+            window.showToast('Recruiter này đã có trong danh sách hỗ trợ!', 'warning', 'Đã tồn tại');
+        } else {
+            alert('Recruiter này đã có trong danh sách hỗ trợ!');
+        }
         return;
     }
 
     // Kiểm tra trùng với recruiter chính
-    const primarySel = document.getElementById('primaryRecruiterId');
+    var primarySel = document.getElementById('primaryRecruiterId');
     if (primarySel && primarySel.value === id) {
-        alert('Recruiter này đã là recruiter chính! Không thể thêm vào hỗ trợ.');
+        if (window.showToast) {
+            window.showToast('Recruiter này hiện đang là recruiter chính! Không thể thêm vào danh sách hỗ trợ.', 'warning', 'Trùng recruiter chính');
+        } else {
+            alert('Recruiter này hiện đang là recruiter chính! Không thể thêm vào hỗ trợ.');
+        }
         return;
     }
 
-    // Tạo item HTML
-    const div = document.createElement('div');
-    div.className = 'support-item d-flex align-items-center gap-2 p-2 border rounded mb-2 bg-light';
+    var subText = escapeHtml(title);
+    if (dept) {
+        subText += (subText ? ' — ' : '') + escapeHtml(dept);
+    }
+    if (!subText) {
+        subText = 'Chuyên viên tuyển dụng';
+    }
+
+    // Tạo item HTML an toàn (không dùng ES6 template literal trong JSP để tránh xung đột JSP EL)
+    var div = document.createElement('div');
+    div.className = 'support-item d-flex align-items-center justify-content-between p-2.5 px-3 border rounded mb-2 bg-white shadow-sm';
     div.setAttribute('data-id', id);
-    div.innerHTML = `
-        <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center"
-             style="width: 32px; height: 32px; min-width: 32px;">
-            <i class="bi bi-person text-info"></i>
-        </div>
-        <div class="flex-grow-1">
-            <div class="fw-semibold" style="font-size: 0.85rem;">${name}</div>
-            <div class="text-muted" style="font-size: 0.75rem;">${title}${dept ? ' — ' + dept : ''}</div>
-        </div>
-        <input type="hidden" name="supportRecruiterIds" value="${id}">
-        <button type="button" class="btn btn-sm btn-outline-danger p-1"
-                onclick="removeSupportItem(this)" title="Xóa khỏi danh sách">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    `;
+
+    div.innerHTML = 
+        '<div class="d-flex align-items-center gap-2.5 overflow-hidden">' +
+            '<div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center text-info flex-shrink-0" style="width: 36px; height: 36px;">' +
+                '<i class="bi bi-person-fill fs-5"></i>' +
+            '</div>' +
+            '<div class="overflow-hidden">' +
+                '<div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;">' + escapeHtml(name) + '</div>' +
+                '<div class="text-muted text-xs text-truncate">' + subText + '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2 flex-shrink-0">' +
+            '<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">Hỗ trợ</span>' +
+            '<input type="hidden" name="supportRecruiterIds" value="' + escapeHtml(id) + '">' +
+            '<button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" onclick="removeSupportItem(this)" title="Xóa khỏi danh sách">' +
+                '<i class="bi bi-trash3"></i>' +
+            '</button>' +
+        '</div>';
 
     document.getElementById('supportList').appendChild(div);
     supportIds.add(id);
     sel.value = '';
     updateEmptyMsg();
+
+    if (window.showToast) {
+        window.showToast('Đã thêm "' + name + '" vào danh sách recruiter hỗ trợ.', 'success', 'Thêm thành công', 3000);
+    }
 }
 
 function removeSupportItem(btn) {
-    const item = btn.closest('.support-item');
-    const id = item.getAttribute('data-id');
-    supportIds.delete(id);
+    var item = btn.closest('.support-item');
+    if (!item) return;
+    var id = item.getAttribute('data-id');
+    if (id) {
+        supportIds.delete(id);
+    }
     item.remove();
     updateEmptyMsg();
+    if (window.showToast) {
+        window.showToast('Đã xóa recruiter khỏi danh sách hỗ trợ.', 'info', 'Đã cập nhật', 2500);
+    }
 }
 
 function updateEmptyMsg() {
-    const empty = document.getElementById('supportListEmpty');
+    var empty = document.getElementById('supportListEmpty');
     if (empty) {
         empty.classList.toggle('d-none', supportIds.size > 0);
     }
 }
 
-// Xác nhận khi submit form
-document.getElementById('frmAssign').addEventListener('submit', function(e) {
-    const primarySel = document.getElementById('primaryRecruiterId');
-    if (!primarySel.value) {
-        if (!confirm('Bạn chưa chọn recruiter chính. Tiếp tục lưu không?')) {
-            e.preventDefault();
+// Khi người dùng đổi Recruiter chính, nếu người đó đang nằm trong danh sách hỗ trợ thì tự động gỡ khỏi hỗ trợ
+var primarySel = document.getElementById('primaryRecruiterId');
+if (primarySel) {
+    primarySel.addEventListener('change', function() {
+        var val = this.value;
+        if (val && supportIds.has(val)) {
+            var item = document.querySelector('.support-item[data-id="' + val + '"]');
+            if (item) {
+                var btn = item.querySelector('button');
+                if (btn) {
+                    removeSupportItem(btn);
+                    if (window.showToast) {
+                        window.showToast('Recruiter này được chọn làm Recruiter chính nên đã tự động đưa ra khỏi danh sách hỗ trợ.', 'info', 'Tự động điều chỉnh', 4000);
+                    }
+                }
+            }
         }
-    }
-});
+    });
+}
+
+// Xác nhận khi submit form
+var frmAssign = document.getElementById('frmAssign');
+if (frmAssign) {
+    frmAssign.addEventListener('submit', function(e) {
+        var primarySel = document.getElementById('primaryRecruiterId');
+        if (primarySel && !primarySel.value) {
+            if (!confirm('Bạn chưa chọn recruiter chính. Tiếp tục lưu không?')) {
+                e.preventDefault();
+            }
+        }
+    });
+}
 
 // Khởi tạo trạng thái empty msg
 updateEmptyMsg();

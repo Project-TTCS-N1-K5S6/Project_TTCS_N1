@@ -94,7 +94,6 @@
                     <h4 class="fw-bold mb-0">
                         <i class="bi bi-file-earmark-text text-primary me-2"></i>Giám sát &amp; Cảnh báo Tiến độ Tuyển dụng
                     </h4>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace" style="font-size: 0.75rem;">KN-109 / KN-118</span>
                 </div>
                 <p class="text-muted small mb-0">
                     Theo dõi tiến độ, số ngày mở, thời hạn cần người và tự động cảnh báo các vị trí quá hạn cần tuyển gấp.
@@ -306,15 +305,15 @@
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 120px;">Mã yêu cầu</th>
-                                <th>Chức danh &amp; Tiêu đề</th>
-                                <th>Phòng ban &amp; Recruiter</th>
-                                <th class="text-center" style="width: 80px;">SL tuyển</th>
-                                <th style="width: 130px;">Thời gian mở</th>
-                                <th style="width: 175px;">Hạn cần &amp; Còn lại</th>
-                                <th>Dải lương</th>
-                                <th class="text-center" style="width: 130px;">Trạng thái</th>
-                                <th class="text-end pe-3" style="width: 210px;">Thao tác</th>
+                                <th style="width: 95px; min-width: 90px;">Mã yêu cầu</th>
+                                <th style="min-width: 160px;">Chức danh &amp; Tiêu đề</th>
+                                <th style="min-width: 135px;">Phòng ban &amp; Recruiter</th>
+                                <th class="text-center" style="width: 65px; min-width: 60px;">SL</th>
+                                <th style="width: 110px; min-width: 100px;">Thời gian mở</th>
+                                <th style="width: 140px; min-width: 130px;">Hạn cần &amp; Còn lại</th>
+                                <th style="width: 115px; min-width: 105px;">Dải lương</th>
+                                <th class="text-center" style="width: 115px; min-width: 105px;">Trạng thái</th>
+                                <th class="text-end pe-3" style="width: 170px; min-width: 160px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -481,7 +480,7 @@
                                                     </button>
                                                     <c:if test="${not empty r.jobDescription or not empty r.jobRequirements}">
                                                         <a href="${pageContext.request.contextPath}/recruitment-requests/create?copyFrom=${r.id}"
-                                                           class="btn btn-outline-success" title="KN-115: Sao chép JD và yêu cầu thành bản nháp">
+                                                           class="btn btn-outline-success" title="Sao chép JD và yêu cầu thành bản nháp">
                                                             <i class="bi bi-copy"></i>
                                                         </a>
                                                     </c:if>
@@ -492,24 +491,24 @@
                                                             <i class="bi bi-pencil"></i>
                                                         </a>
                                                     </c:if>
-                                                    <%-- [KN-116]: Phân bổ recruiter --%>
+                                                    <%-- Phân bổ recruiter --%>
                                                     <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('requisitions.assign')}">
                                                         <a href="${pageContext.request.contextPath}/recruitment-requests/assign?id=${r.id}"
-                                                           class="btn btn-outline-success" title="Phân bổ Recruiter (KN-116)">
+                                                           class="btn btn-outline-success" title="Phân bổ Recruiter">
                                                             <i class="bi bi-person-lines-fill"></i>
                                                         </a>
                                                     </c:if>
-                                                    <!-- KN-204: Tạo nhanh bài đăng tuyển dụng nếu đã duyệt -->
+                                                    <!-- Tạo nhanh bài đăng tuyển dụng nếu đã duyệt -->
                                                     <c:if test="${r.status == 'APPROVED' || r.status == 'OPEN'}">
                                                         <button type="button" class="btn btn-outline-warning text-dark" 
                                                                 onclick="openQuickCreateModal('${r.id}')"
-                                                                title="Tạo nhanh bài đăng tuyển dụng (KN-204)">
+                                                                title="Tạo nhanh bài đăng tuyển dụng">
                                                             <i class="bi bi-lightning-charge-fill text-warning"></i>
                                                         </button>
                                                     </c:if>
                                                     <!-- Quản lý xuất bản tin tuyển dụng -->
                                                     <a href="${pageContext.request.contextPath}/post-publishing?search=${r.code}" 
-                                                       class="btn btn-outline-success" title="Quản lý xuất bản bài đăng (KN-120)">
+                                                       class="btn btn-outline-success" title="Quản lý xuất bản bài đăng">
                                                         <i class="bi bi-broadcast"></i>
                                                     </a>
                                                     <!-- Đóng / Kết thúc yêu cầu khi đang mở hoặc chờ duyệt -->
@@ -876,7 +875,7 @@
                     <button type="button" id="modalQuickPostBtn" class="btn btn-warning btn-sm text-dark fw-semibold" style="display:none;" onclick="openQuickPostFromDetail()">
                         <i class="bi bi-lightning-charge-fill me-1"></i>Tạo nhanh bài đăng
                     </button>
-                    <a id="modalCopyBtn" href="#" class="btn btn-outline-success btn-sm" title="KN-115: Sao chép JD và yêu cầu thành bản nháp mới">
+                    <a id="modalCopyBtn" href="#" class="btn btn-outline-success btn-sm" title="Sao chép JD và yêu cầu thành bản nháp mới">
                         <i class="bi bi-copy me-1"></i>Sao chép JD &amp; Yêu cầu
                     </a>
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
@@ -887,18 +886,18 @@
 </div>
 
 <!-- ============================================================== -->
-<!-- MODAL: TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG (KN-204, KN-206, KN-207) -->
+<!-- MODAL: TẠO NHANH BÀI ĐĂNG TUYỂN DỤNG                           -->
 <!-- ============================================================== -->
 <div class="modal fade" id="quickJobPostingModal" tabindex="-1" aria-labelledby="quickJobPostingModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow-lg border-0">
-            <form id="quickJobPostingForm" method="POST" action="${pageContext.request.contextPath}/post-publishing/quick-create">
+            <form id="quickJobPostingForm" method="POST" action="${pageContext.request.contextPath}/post-publishing/quick-create" class="d-flex flex-column h-100 overflow-hidden mb-0">
                 <div class="modal-header bg-gradient bg-primary text-white py-3">
                     <div>
                         <h5 class="modal-title fw-bold mb-0" id="quickJobPostingModalLabel">
                             <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Tạo nhanh Bài đăng Tuyển dụng
                         </h5>
-                        <small class="text-white-50">Kế thừa và chuẩn hóa tự động từ yêu cầu tuyển dụng đã duyệt (KN-204)</small>
+                        <small class="text-white-50">Kế thừa và chuẩn hóa tự động từ yêu cầu tuyển dụng đã duyệt</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -1698,7 +1697,7 @@ function renderApprovalModalData(data) {
                 '</div>' +
                 '<div class="d-flex align-items-center gap-2">' +
                     '<span class="badge ' + escapeHtml(s.statusBadgeClass) + ' text-nowrap"><i class="bi ' + escapeHtml(s.statusIcon) + ' me-1"></i>' + escapeHtml(s.statusLabel) + '</span>' +
-                    '<span class="approval-lock-badge" title="Lịch sử không cho sửa hoặc xoá (KN-155, KN-160)"><i class="bi bi-shield-lock text-success"></i>Chỉ đọc</span>' +
+                    '<span class="approval-lock-badge" title="Lịch sử không cho sửa hoặc xoá (Chỉ đọc)"><i class="bi bi-shield-lock text-success"></i>Chỉ đọc</span>' +
                 '</div>' +
             '</div>' +
             '<div class="row g-2 align-items-center py-1">' +
@@ -1927,6 +1926,9 @@ function onModalRequisitionChanged(reqId) {
             if (data.error) {
                 errAlert.classList.remove('d-none');
                 document.getElementById('quickPostErrorMessage').innerText = data.error;
+                if (window.showToast) {
+                    window.showToast(data.error, 'warning', 'Yêu cầu không hợp lệ');
+                }
                 return;
             }
 
@@ -1942,7 +1944,7 @@ function onModalRequisitionChanged(reqId) {
             // Tiêu đề bài đăng
             document.getElementById('mPostTitle').value = data.title || data.positionTitle || '';
 
-            // Kế thừa và chuẩn hóa JD (KN-206)
+            // Kế thừa và chuẩn hóa JD
             document.getElementById('mPostDescription').value = data.normalizedJobDescription || data.rawJobDescription || '';
             updateModalCharCount();
 
@@ -1971,10 +1973,13 @@ function onModalRequisitionChanged(reqId) {
         .catch(function(err) {
             errAlert.classList.remove('d-none');
             document.getElementById('quickPostErrorMessage').innerText = 'Không thể tải thông tin yêu cầu tuyển dụng: ' + err;
+            if (window.showToast) {
+                window.showToast('Không thể tải thông tin yêu cầu tuyển dụng: ' + err, 'error', 'Lỗi tải dữ liệu');
+            }
         });
 }
 
-// Submit xử lý AJAX
+// Submit xử lý AJAX với thông báo nổi ở góc dưới bên phải màn hình
 document.getElementById('quickJobPostingForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -1984,22 +1989,28 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
 
     var reqId = document.getElementById('modalRequisitionSelect').value;
     if (!reqId) {
+        var msg = 'Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!';
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!';
+        errMsgSpan.innerText = msg;
+        if (window.showToast) window.showToast(msg, 'warning', 'Chưa chọn yêu cầu');
         return;
     }
 
     var title = document.getElementById('mPostTitle').value.trim();
     if (!title) {
+        var msg = 'Vui lòng nhập tiêu đề bài đăng!';
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Vui lòng nhập tiêu đề bài đăng!';
+        errMsgSpan.innerText = msg;
+        if (window.showToast) window.showToast(msg, 'warning', 'Thiếu tiêu đề bài đăng');
         return;
     }
 
     var jd = document.getElementById('mPostDescription').value.trim();
     if (!jd) {
+        var msg = 'Vui lòng nhập mô tả công việc (JD)!';
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Vui lòng nhập mô tả công việc (JD)!';
+        errMsgSpan.innerText = msg;
+        if (window.showToast) window.showToast(msg, 'warning', 'Thiếu mô tả công việc');
         return;
     }
 
@@ -2009,8 +2020,10 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         var today = new Date();
         today.setHours(0, 0, 0, 0);
         if (selected < today) {
+            var msg = 'Hạn nhận hồ sơ không thể ở trong quá khứ!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Hạn nhận hồ sơ không thể ở trong quá khứ!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Hạn nhận hồ sơ không hợp lệ');
             return;
         }
     }
@@ -2020,18 +2033,24 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         var minVal = parseFloat(document.getElementById('mMinSalary').value);
         var maxVal = parseFloat(document.getElementById('mMaxSalary').value);
         if (!isNaN(minVal) && minVal < 0) {
+            var msg = 'Mức lương tối thiểu không được là số âm!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Mức lương tối thiểu không được là số âm!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Lương không hợp lệ');
             return;
         }
         if (!isNaN(maxVal) && maxVal < 0) {
+            var msg = 'Mức lương tối đa không được là số âm!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Mức lương tối đa không được là số âm!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Lương không hợp lệ');
             return;
         }
         if (!isNaN(minVal) && !isNaN(maxVal) && minVal > maxVal) {
+            var msg = 'Mức lương tối thiểu không được lớn hơn mức lương tối đa!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = 'Mức lương tối thiểu không được lớn hơn mức lương tối đa!';
+            errMsgSpan.innerText = msg;
+            if (window.showToast) window.showToast(msg, 'warning', 'Dải lương không hợp lệ');
             return;
         }
     }
@@ -2056,18 +2075,34 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Tạo bài đăng';
 
         if (!data.success) {
+            var errMsg = data.error || 'Có lỗi xảy ra khi tạo bài đăng!';
             errAlert.classList.remove('d-none');
-            errMsgSpan.innerText = data.error || 'Có lỗi xảy ra khi tạo bài đăng!';
+            errMsgSpan.innerText = errMsg;
+            if (window.showToast) {
+                window.showToast(errMsg, 'error', 'Lỗi tạo bài đăng', 6500);
+            }
         } else {
-            alert(data.message || 'Tạo bài đăng thành công!');
-            window.location.href = '${pageContext.request.contextPath}/post-publishing';
+            var successMsg = data.message || 'Tạo bài đăng thành công!';
+            if (window.showToast) {
+                window.showToast(successMsg, 'success', 'Thành công', 5000);
+            }
+            if (listQuickModalInstance) {
+                listQuickModalInstance.hide();
+            }
+            setTimeout(function() {
+                window.location.href = '${pageContext.request.contextPath}/post-publishing';
+            }, 800);
         }
     })
     .catch(function(err) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Tạo bài đăng';
+        var errMsg = 'Lỗi kết nối máy chủ: ' + err;
         errAlert.classList.remove('d-none');
-        errMsgSpan.innerText = 'Lỗi kết nối máy chủ: ' + err;
+        errMsgSpan.innerText = errMsg;
+        if (window.showToast) {
+            window.showToast(errMsg, 'error', 'Lỗi kết nối');
+        }
     });
 });
 </script>

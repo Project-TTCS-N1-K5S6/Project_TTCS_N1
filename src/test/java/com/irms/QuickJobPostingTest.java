@@ -360,4 +360,34 @@ public class QuickJobPostingTest {
         post.setSalaryVisible(false);
         assertEquals("Thỏa thuận", post.getFormattedSalaryRange());
     }
+
+    /**
+     * Kiểm thử tích hợp trực tiếp CSDL: Xác minh lưu bài đăng không còn lỗi current_version
+     */
+    @Test
+    public void testCreateQuickJobPosting_DatabaseIntegration() throws Exception {
+        User admin = new User();
+        admin.setId("usr-001");
+        admin.setFullName("Nguyễn Quản Trị");
+        com.irms.model.Role rAdmin = new com.irms.model.Role();
+        rAdmin.setCode("ADMIN");
+        admin.setRoles(java.util.Collections.singletonList(rAdmin));
+
+        JobPosting posting = new JobPosting();
+        posting.setRequisitionId("req-001");
+        posting.setTitle("Kỹ sư Java Test DB " + System.currentTimeMillis());
+        posting.setJobDescription("- Lập trình ứng dụng Java\n- Xử lý cơ sở dữ liệu");
+        posting.setWorkLocation("Hà Nội");
+        posting.setWorkMode("Toàn thời gian");
+        posting.setApplicationDeadline(Date.valueOf(LocalDate.now().plusDays(15)));
+        posting.setSalaryVisible(true);
+        posting.setMinSalary(new BigDecimal("15000000"));
+        posting.setMaxSalary(new BigDecimal("25000000"));
+        posting.setStatus("PUBLISHED");
+
+        JobPosting created = publishingService.createQuickJobPosting(posting, admin, "127.0.0.1", "JUnit-Test");
+        assertNotNull(created);
+        assertNotNull(created.getId());
+        assertEquals("PUBLISHED", created.getStatus());
+    }
 }

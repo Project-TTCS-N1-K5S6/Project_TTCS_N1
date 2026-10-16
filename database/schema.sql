@@ -245,10 +245,14 @@ CREATE TABLE job_postings (
     currency VARCHAR(10) DEFAULT 'VND',
     platform VARCHAR(100) DEFAULT 'INTERNAL', -- 'INTERNAL', 'CAREER_SITE', 'LINKEDIN', 'TOPCV'
     status VARCHAR(50) NOT NULL DEFAULT 'PUBLISHED', -- 'PUBLISHED', 'UNPUBLISHED', 'CLOSED', 'DRAFT', 'ARCHIVED'
+    current_version INT NOT NULL DEFAULT 1,
     views_count INT DEFAULT 0,
     posted_url VARCHAR(255) NULL,
+    public_url VARCHAR(255) NULL,
     published_at TIMESTAMP NULL,
+    published_by VARCHAR(36) NULL,
     unpublished_at TIMESTAMP NULL,
+    unpublished_by VARCHAR(36) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_jp_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE CASCADE,

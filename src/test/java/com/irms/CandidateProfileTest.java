@@ -21,11 +21,14 @@ import static org.junit.Assert.*;
  * BỘ KIỂM THỬ TÍNH NĂNG "XEM HỒ SƠ ỨNG VIÊN HỢP NHẤT" (KN-268 ĐẾN KN-276)
  * ==============================================================================
  * Kiểm thử đầy đủ các yêu cầu cốt lõi của User Story:
- * 1. [KN-269]: Phân quyền truy cập hồ sơ theo Recruiter phụ trách và Hiring Manager.
- * 2. [KN-271]: Logic gộp dữ liệu các lần ứng tuyển của cùng ứng viên theo email.
+ * 1. [KN-269]: Phân quyền truy cập hồ sơ theo Recruiter phụ trách và Hiring
+ * Manager.
+ * 2. [KN-271]: Logic gộp dữ liệu các lần ứng tuyển của cùng ứng viên theo
+ * email.
  * 3. [KN-274]: Quản lý và xử lý nhãn phân loại (tags) và ghi chú (notes).
  * 4. [KN-275]: Cấu hình xem trước CV an toàn (inline preview & headers).
- * 5. [KN-276]: Ghi nhận nhật ký kiểm toán (Audit Log) khi truy cập hồ sơ hợp nhất.
+ * 5. [KN-276]: Ghi nhận nhật ký kiểm toán (Audit Log) khi truy cập hồ sơ hợp
+ * nhất.
  * ==============================================================================
  */
 public class CandidateProfileTest {
@@ -147,7 +150,8 @@ public class CandidateProfileTest {
     @Test
     public void testUnauthenticatedUserDenied() {
         assertFalse("User null không được phép xem hồ sơ", candidateService.canAccessCandidateProfile(null, candidate));
-        assertFalse("Candidate null không được phép xử lý", candidateService.canAccessCandidateProfile(new User(), null));
+        assertFalse("Candidate null không được phép xử lý",
+                candidateService.canAccessCandidateProfile(new User(), null));
     }
 
     @Test
@@ -192,7 +196,8 @@ public class CandidateProfileTest {
         log.setAction("VIEW_CANDIDATE_PROFILE");
         log.setEntityType("CANDIDATE");
         log.setEntityId(candidate.getId());
-        log.setDescription("Xem hồ sơ ứng viên hợp nhất: " + candidate.getFullName() + " (" + candidate.getEmail() + ")");
+        log.setDescription(
+                "Xem hồ sơ ứng viên hợp nhất: " + candidate.getFullName() + " (" + candidate.getEmail() + ")");
         log.setIpAddress("192.168.1.100");
         log.setUserAgent("Mozilla/5.0 IRMS-Client");
 

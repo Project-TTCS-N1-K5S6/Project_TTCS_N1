@@ -102,6 +102,11 @@ public class JobPostingDAO extends BaseDAO {
         try {
             DatabaseMetaData meta = conn.getMetaData();
             stmt = conn.createStatement();
+            addColumnIfNotExists(meta, stmt, "job_postings", "current_version", "INT NOT NULL DEFAULT 1");
+            addColumnIfNotExists(meta, stmt, "job_postings", "published_by", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "unpublished_by", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "public_url", "VARCHAR(255) NULL");
+            addColumnIfNotExists(meta, stmt, "job_postings", "views_count", "INT NOT NULL DEFAULT 0");
             addColumnIfNotExists(meta, stmt, "job_postings", "job_description", "LONGTEXT NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "description", "LONGTEXT NULL");
             addColumnIfNotExists(meta, stmt, "job_postings", "department_id", "VARCHAR(36) NULL");

@@ -35,7 +35,7 @@
                         <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Tạo nhanh Bài đăng Tuyển dụng
                     </h4>
                     <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1">
-                        <i class="bi bi-shield-check me-1"></i>Từ yêu cầu đã duyệt (KN-204)
+                        <i class="bi bi-shield-check me-1"></i>Từ yêu cầu đã duyệt
                     </span>
                 </div>
                 <p class="text-muted small mb-0 ms-4 ps-2">
@@ -457,16 +457,22 @@
             })
             .catch(function(err) {
                 console.error(err);
-                alert('Không thể tải thông tin yêu cầu tuyển dụng!');
+                if (window.showToast) {
+                    window.showToast('Không thể tải thông tin yêu cầu tuyển dụng: ' + err, 'error', 'Lỗi tải dữ liệu');
+                } else {
+                    alert('Không thể tải thông tin yêu cầu tuyển dụng!');
+                }
             });
     }
 
-    // Client-side validation trước khi submit (KN-205)
+    // Client-side validation trước khi submit
     document.getElementById('quickPostForm').addEventListener('submit', function(e) {
         var reqSelect = document.getElementById('requisitionSelect');
         if (!reqSelect.value) {
             e.preventDefault();
-            alert('Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!');
+            var msg = 'Vui lòng chọn yêu cầu tuyển dụng nguồn đã được phê duyệt!';
+            if (window.showToast) window.showToast(msg, 'warning', 'Chưa chọn yêu cầu');
+            else alert(msg);
             reqSelect.focus();
             return;
         }
@@ -474,7 +480,9 @@
         var title = document.getElementById('postTitle').value.trim();
         if (!title) {
             e.preventDefault();
-            alert('Vui lòng nhập tiêu đề bài đăng tuyển dụng!');
+            var msg = 'Vui lòng nhập tiêu đề bài đăng tuyển dụng!';
+            if (window.showToast) window.showToast(msg, 'warning', 'Thiếu tiêu đề');
+            else alert(msg);
             document.getElementById('postTitle').focus();
             return;
         }
@@ -482,7 +490,9 @@
         var jd = document.getElementById('postDescription').value.trim();
         if (!jd) {
             e.preventDefault();
-            alert('Vui lòng nhập nội dung mô tả công việc (JD)!');
+            var msg = 'Vui lòng nhập nội dung mô tả công việc (JD)!';
+            if (window.showToast) window.showToast(msg, 'warning', 'Thiếu mô tả');
+            else alert(msg);
             document.getElementById('postDescription').focus();
             return;
         }
@@ -494,7 +504,9 @@
             today.setHours(0, 0, 0, 0);
             if (selectedDate < today) {
                 e.preventDefault();
-                alert('Hạn nhận hồ sơ không thể ở trong quá khứ!');
+                var msg = 'Hạn nhận hồ sơ không thể ở trong quá khứ!';
+                if (window.showToast) window.showToast(msg, 'warning', 'Hạn nhận không hợp lệ');
+                else alert(msg);
                 document.getElementById('applicationDeadline').focus();
                 return;
             }
@@ -507,19 +519,25 @@
 
             if (!isNaN(minSal) && minSal < 0) {
                 e.preventDefault();
-                alert('Mức lương tối thiểu không thể là số âm!');
+                var msg = 'Mức lương tối thiểu không thể là số âm!';
+                if (window.showToast) window.showToast(msg, 'warning', 'Lương không hợp lệ');
+                else alert(msg);
                 document.getElementById('minSalary').focus();
                 return;
             }
             if (!isNaN(maxSal) && maxSal < 0) {
                 e.preventDefault();
-                alert('Mức lương tối đa không thể là số âm!');
+                var msg = 'Mức lương tối đa không thể là số âm!';
+                if (window.showToast) window.showToast(msg, 'warning', 'Lương không hợp lệ');
+                else alert(msg);
                 document.getElementById('maxSalary').focus();
                 return;
             }
             if (!isNaN(minSal) && !isNaN(maxSal) && minSal > maxSal) {
                 e.preventDefault();
-                alert('Mức lương tối thiểu không được lớn hơn mức lương tối đa!');
+                var msg = 'Mức lương tối thiểu không được lớn hơn mức lương tối đa!';
+                if (window.showToast) window.showToast(msg, 'warning', 'Dải lương không hợp lệ');
+                else alert(msg);
                 document.getElementById('minSalary').focus();
                 return;
             }

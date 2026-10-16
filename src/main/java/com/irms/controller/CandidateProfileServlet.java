@@ -390,16 +390,32 @@ public class CandidateProfileServlet extends HttpServlet {
             uploadRoot = System.getProperty("user.dir");
         }
 
+        // Tách tên file gốc kể cả khi cvUrl là đường dẫn URL hoặc mock storage
+        String fileNameOnly = cvUrl.trim();
+        if (fileNameOnly.contains("?")) fileNameOnly = fileNameOnly.substring(0, fileNameOnly.indexOf('?'));
+        if (fileNameOnly.contains("/")) fileNameOnly = fileNameOnly.substring(fileNameOnly.lastIndexOf('/') + 1);
+
         // Chuẩn hóa đường dẫn chống Path Traversal
         String relativePath = cvUrl.startsWith("/") ? cvUrl.substring(1) : cvUrl;
-        File cvFile = new File(uploadRoot, relativePath.replace("/", File.separator));
 
-        if (!cvFile.exists() || !cvFile.isFile()) {
-            // Thử tìm theo đường dẫn tương đối từ workspace
-            cvFile = new File(relativePath.replace("/", File.separator));
+        // Tìm kiếm tệp qua nhiều thư mục tiềm năng
+        File[] candidatePaths = new File[] {
+                new File(uploadRoot, relativePath.replace("/", File.separator)),
+                new File(relativePath.replace("/", File.separator)),
+                new File(uploadRoot, "uploads" + File.separator + "cv" + File.separator + fileNameOnly),
+                new File(new File(System.getProperty("user.dir"), "src" + File.separator + "main" + File.separator + "webapp" + File.separator + "uploads" + File.separator + "cv"), fileNameOnly),
+                new File(new File(System.getProperty("user.dir"), "uploads" + File.separator + "cv"), fileNameOnly)
+        };
+
+        File cvFile = null;
+        for (File f : candidatePaths) {
+            if (f != null && f.exists() && f.isFile()) {
+                cvFile = f;
+                break;
+            }
         }
 
-        if (!cvFile.exists() || !cvFile.isFile()) {
+        if (cvFile == null || !cvFile.exists() || !cvFile.isFile()) {
             LOGGER.warning("Không tìm thấy tệp CV trên ổ đĩa: " + cvUrl);
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy tệp CV trên máy chủ.");
             return;
@@ -421,7 +437,8 @@ public class CandidateProfileServlet extends HttpServlet {
 
         // Cấu hình Header an toàn
         response.setContentType(contentType);
-        response.setContentLengthLong(cvFile.length());
+        response.setContentLength((int) cvFile.length());
+        response.setHeader("Content-Length", String.valueOf(cvFile.length()));
         response.setHeader("X-Content-Type-Options", "nosniff");
         // Cho phép iframe nhúng từ chính trang này
         response.setHeader("Content-Security-Policy", "frame-ancestors 'self'");

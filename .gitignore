@@ -14,6 +14,15 @@ dist/
 build/
 **/build/
 
+# Maven & Java build artifacts
+target/
+**/target/
+*.class
+*.war
+*.ear
+*.jar
+*.nar
+
 # Environment files (CRITICAL: Never commit credentials)
 .env
 .env.*
