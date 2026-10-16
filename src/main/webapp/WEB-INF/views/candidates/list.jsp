@@ -193,7 +193,7 @@
                                 <th>Phòng ban</th>
                                 <th>Vị trí ứng tuyển</th>
                                 <th>Thời gian</th>
-                                <th>Trạng thái</th>
+                                <th>Trạng thái &amp; SLA</th>
                                 <th class="text-end pe-4" style="min-width: 180px;">Thao tác &amp; Chuyển vòng</th>
                             </tr>
                         </thead>
@@ -228,9 +228,16 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning'))}">
-                                            ${c.getStatusLabel()}
-                                        </span>
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning'))}">
+                                                ${c.getStatusLabel()}
+                                            </span>
+                                            <c:if test="${c.slaOverdue}">
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.72rem; width: fit-content;" title="Hồ sơ đã ở giai đoạn ${c.daysInCurrentStage} ngày (Ngưỡng SLA: ${c.slaDaysThreshold} ngày)">
+                                                    <i class="bi bi-flag-fill text-danger"></i> Quá hạn SLA (${c.daysInCurrentStage}/${c.slaDaysThreshold} ngày)
+                                                </span>
+                                            </c:if>
+                                        </div>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-inline-flex align-items-center gap-2">

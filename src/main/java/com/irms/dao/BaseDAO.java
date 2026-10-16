@@ -34,4 +34,20 @@ public abstract class BaseDAO {
     protected void close(Connection conn, PreparedStatement ps) {
         close(conn, ps, null);
     }
+
+    protected void close(Connection conn, java.sql.Statement stmt, ResultSet rs) {
+        if (rs != null) {
+            try { rs.close(); } catch (SQLException e) { logger.log(Level.WARNING, "Lỗi đóng ResultSet", e); }
+        }
+        if (stmt != null) {
+            try { stmt.close(); } catch (SQLException e) { logger.log(Level.WARNING, "Lỗi đóng Statement", e); }
+        }
+        if (conn != null) {
+            try { conn.close(); } catch (SQLException e) { logger.log(Level.WARNING, "Lỗi đóng Connection", e); }
+        }
+    }
+
+    protected void close(Connection conn, java.sql.Statement stmt) {
+        close(conn, stmt, null);
+    }
 }

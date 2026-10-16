@@ -232,7 +232,19 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // 9. [US 5]: Cơ chế từ chối mặc định (Deny-by-default) cho toàn bộ các endpoint /admin/ nếu không có vai trò ADMIN
+        // 10. Phân hệ Cấu hình ngưỡng SLA & Nhắc việc (/admin/sla-configs)
+        if (path.startsWith("/admin/sla-configs")) {
+            boolean isAuthorizedSla = currentUser.hasRole("ADMIN") || currentUser.hasRole("HR_MANAGER")
+                    || currentUser.hasPermission("candidates.manage");
+            if (!isAuthorizedSla) {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+                return;
+            }
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // [US 5]: Cơ chế từ chối mặc định (Deny-by-default) cho toàn bộ các endpoint /admin/ nếu không có vai trò ADMIN
         if (path.startsWith("/admin/") && !currentUser.hasRole("ADMIN")) {
             request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
             return;

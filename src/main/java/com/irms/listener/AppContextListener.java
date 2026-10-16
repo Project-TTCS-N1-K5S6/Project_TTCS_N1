@@ -24,11 +24,13 @@ public class AppContextListener implements ServletContextListener {
         LOGGER.info("🚀 HỆ THỐNG IRMS ĐANG KHỞI CHẠY - BẬT DỊCH VỤ EMAIL OUTBOX");
         LOGGER.info("================================================================");
         EmailService.startScheduledWorker();
+        com.irms.service.SlaService.startDailyScheduler();
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        LOGGER.info("Đang tắt hệ thống IRMS: dọn dẹp Email Worker và DB Pool...");
+        LOGGER.info("Đang tắt hệ thống IRMS: dọn dẹp Email Worker, SLA Scheduler và DB Pool...");
+        com.irms.service.SlaService.shutdown();
         EmailService.shutdown();
         DBConnection.closePool();
     }

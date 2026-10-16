@@ -91,4 +91,56 @@ public class EmailTemplateUtil {
                 + "</td></tr></table>"
                 + "</body></html>";
     }
+
+    /**
+     * [KN-365]: Mẫu email: Nhắc việc xử lý hồ sơ quá hạn SLA (SLA_REMINDER)
+     */
+    public static String buildSlaReminderEmail(String recruiterName, String candidateName, String candidateEmail,
+                                              String candidatePhone, String positionTitle, String stageName,
+                                              int daysInStage, int slaThreshold, String actionUrl) {
+        String safeRecruiter = (recruiterName != null && !recruiterName.trim().isEmpty()) ? recruiterName : "Chuyên viên tuyển dụng";
+        String safePosition = (positionTitle != null && !positionTitle.trim().isEmpty()) ? positionTitle : "Chưa chỉ định";
+        int overdueDays = Math.max(0, daysInStage - slaThreshold);
+        String targetUrl = (actionUrl != null && !actionUrl.trim().isEmpty()) ? actionUrl : (APP_URL + "/candidates");
+
+        return "<!DOCTYPE html>"
+                + "<html lang=\"vi\">"
+                + "<head><meta charset=\"UTF-8\"><title>Nhắc việc: Hồ sơ quá hạn SLA</title></head>"
+                + "<body style=\"margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\">"
+                + "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background-color: #f8fafc; padding: 30px 15px;\">"
+                + "<tr><td align=\"center\">"
+                + "<table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;\">"
+                + "  <!-- Header -->"
+                + "  <tr><td style=\"background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 26px 30px; text-align: left; color: #ffffff;\">"
+                + "    <div style=\"font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; opacity: 0.9;\">HỆ THỐNG CẢNH BÁO SLA TUYỂN DỤNG</div>"
+                + "    <h2 style=\"margin: 6px 0 0; font-size: 20px; font-weight: 700;\">⚠️ Nhắc việc: Hồ sơ ứng viên quá hạn xử lý</h2>"
+                + "  </td></tr>"
+                + "  <!-- Body -->"
+                + "  <tr><td style=\"padding: 30px; color: #334155; line-height: 1.6;\">"
+                + "    <h3 style=\"margin: 0 0 12px; color: #0f172a; font-size: 16px;\">Kính gửi " + safeRecruiter + ",</h3>"
+                + "    <p style=\"margin: 0 0 16px;\">Hệ thống IRMS phát hiện bạn có hồ sơ ứng viên đang bị <strong>quá hạn cam kết thời gian SLA</strong> cần được xử lý ngay:</p>"
+                + "    <div style=\"background-color: #fff1f2; border-left: 4px solid #f43f5e; padding: 16px 20px; border-radius: 6px; margin: 20px 0;\">"
+                + "      <table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"4\" style=\"font-size: 14px; color: #1e293b;\">"
+                + "        <tr><td width=\"35%\" style=\"color: #64748b;\">Họ tên ứng viên:</td><td><strong>" + candidateName + "</strong></td></tr>"
+                + "        <tr><td style=\"color: #64748b;\">Email / Điện thoại:</td><td>" + (candidateEmail != null ? candidateEmail : "") + " " + (candidatePhone != null ? "• " + candidatePhone : "") + "</td></tr>"
+                + "        <tr><td style=\"color: #64748b;\">Vị trí ứng tuyển:</td><td>" + safePosition + "</td></tr>"
+                + "        <tr><td style=\"color: #64748b;\">Giai đoạn hiện tại:</td><td><span style=\"background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-weight:600;\">" + stageName + "</span></td></tr>"
+                + "        <tr><td style=\"color: #64748b;\">Thời gian đã lưu lại:</td><td><strong style=\"color:#e11d48;\">" + daysInStage + " ngày</strong> (Ngưỡng SLA: " + slaThreshold + " ngày)</td></tr>"
+                + "        <tr><td style=\"color: #64748b;\">Mức độ quá hạn:</td><td><span style=\"color:#dc2626; font-weight:700;\">Quá hạn " + overdueDays + " ngày</span></td></tr>"
+                + "      </table>"
+                + "    </div>"
+                + "    <p style=\"margin: 0 0 24px; font-size: 14px; color: #475569;\">Vui lòng kiểm tra hồ sơ, thực hiện đánh giá hoặc chuyển vòng tiếp theo để đảm bảo chất lượng và trải nghiệm ứng viên.</p>"
+                + "    <div style=\"text-align: center; margin: 25px 0;\">"
+                + "      <a href=\"" + targetUrl + "\" style=\"display: inline-block; background-color: #dc2626; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 6px rgba(220,38,38,0.25);\">Xem và xử lý hồ sơ ngay</a>"
+                + "    </div>"
+                + "  </td></tr>"
+                + "  <!-- Footer -->"
+                + "  <tr><td style=\"background-color: #f8fafc; padding: 18px 30px; text-align: center; color: #94a3b8; font-size: 12px; border-top: 1px solid #e2e8f0;\">"
+                + "    <p style=\"margin: 0 0 4px;\">Hệ thống thông báo tự động mỗi ngày 1 lần • Không gửi trùng trong cùng ngày</p>"
+                + "    <p style=\"margin: 0;\">&copy; 2026 IRMS Platform. Quản trị Tuyển dụng Nội bộ.</p>"
+                + "  </td></tr>"
+                + "</table>"
+                + "</td></tr></table>"
+                + "</body></html>";
+    }
 }

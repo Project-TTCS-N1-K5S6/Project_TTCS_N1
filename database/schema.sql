@@ -223,6 +223,9 @@ CREATE TABLE candidates (
     status VARCHAR(50) NOT NULL DEFAULT 'APPLIED', -- 'APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'HIRED', 'REJECTED'
     cv_url TEXT,
     notes TEXT,
+    is_sla_overdue BOOLEAN NOT NULL DEFAULT FALSE,
+    sla_overdue_detected_at TIMESTAMP NULL,
+    stage_entered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL,
@@ -352,7 +355,65 @@ CREATE TABLE position_competency_frameworks (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_pcf_framework ON position_competency_frameworks(framework_id);
-CREATE INDEX idx_pcf_position ON position_competency_frameworks(position_id);
+-- 19. Bảng Cấu hình ngưỡng SLA theo giai đoạn (sla_configurations)
+DROP TABLE IF EXISTS sla_configurations;
+CREATE TABLE sla_configurations (
+    id VARCHAR(36) PRIMARY KEY,
+    stage_code VARCHAR(50) NOT NULL UNIQUE,
+    stage_name VARCHAR(100) NOT NULL,
+    sla_days INT NOT NULL DEFAULT 3,
+    warning_threshold_days INT NOT NULL DEFAULT 1,
+    action_required VARCHAR(255) NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(36) NULL,
+    CONSTRAINT fk_sla_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_sla_stage (stage_code),
+    INDEX idx_sla_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 20. Bảng Thông báo nội bộ (in_app_notifications)
+DROP TABLE IF EXISTS in_app_notifications;
+CREATE TABLE in_app_notifications (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL DEFAULT 'SLA_OVERDUE',
+    reference_id VARCHAR(36) NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_notif_user_read (user_id, is_read),
+    INDEX idx_notif_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 21. Bảng Nhật ký cảnh báo & Nhắc việc SLA (sla_reminder_logs)
+DROP TABLE IF EXISTS sla_reminder_logs;
+CREATE TABLE sla_reminder_logs (
+    id VARCHAR(36) PRIMARY KEY,
+    candidate_id VARCHAR(36) NOT NULL,
+    candidate_name VARCHAR(255) NOT NULL,
+    requisition_id VARCHAR(36) NULL,
+    requisition_title VARCHAR(255) NULL,
+    stage_code VARCHAR(50) NOT NULL,
+    sla_days_threshold INT NOT NULL,
+    days_in_stage INT NOT NULL,
+    recruiter_id VARCHAR(36) NULL,
+    recruiter_name VARCHAR(255) NULL,
+    recruiter_email VARCHAR(255) NULL,
+    channel VARCHAR(50) NOT NULL DEFAULT 'IN_APP_AND_EMAIL',
+    status VARCHAR(50) NOT NULL DEFAULT 'SENT',
+    message TEXT NULL,
+    sent_date DATE NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_sla_log_cand FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_sla_log_recruiter FOREIGN KEY (recruiter_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_sla_remind_dedup (candidate_id, stage_code, sent_date),
+    INDEX idx_sla_remind_date (sent_date),
+    INDEX idx_sla_remind_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

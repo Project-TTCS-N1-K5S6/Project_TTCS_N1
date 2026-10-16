@@ -116,6 +116,32 @@ public class EmailService {
             return EmailTemplateUtil.buildResetPasswordEmail(fullName, resetLink);
         } else if ("ACCOUNT_ACTIVATION".equalsIgnoreCase(template)) {
             return EmailTemplateUtil.buildAccountActivationEmail(fullName, recipient, tempPass);
+        } else if ("SLA_REMINDER".equalsIgnoreCase(template) || "SLA_OVERDUE".equalsIgnoreCase(template)) {
+            String recruiterName = fullName;
+            String candidateName = "";
+            String candidateEmail = "";
+            String candidatePhone = "";
+            String positionTitle = "";
+            String stageName = "";
+            int daysInStage = 0;
+            int slaThreshold = 3;
+            String actionUrl = "";
+
+            if (payloadJson != null && !payloadJson.trim().isEmpty()) {
+                try {
+                    JsonObject json = JsonParser.parseString(payloadJson).getAsJsonObject();
+                    if (json.has("recruiterName")) recruiterName = json.get("recruiterName").getAsString();
+                    if (json.has("candidateName")) candidateName = json.get("candidateName").getAsString();
+                    if (json.has("candidateEmail")) candidateEmail = json.get("candidateEmail").getAsString();
+                    if (json.has("candidatePhone")) candidatePhone = json.get("candidatePhone").getAsString();
+                    if (json.has("positionTitle")) positionTitle = json.get("positionTitle").getAsString();
+                    if (json.has("stageName")) stageName = json.get("stageName").getAsString();
+                    if (json.has("daysInStage")) daysInStage = json.get("daysInStage").getAsInt();
+                    if (json.has("slaThreshold")) slaThreshold = json.get("slaThreshold").getAsInt();
+                    if (json.has("actionUrl")) actionUrl = json.get("actionUrl").getAsString();
+                } catch (Exception ignored) {}
+            }
+            return EmailTemplateUtil.buildSlaReminderEmail(recruiterName, candidateName, candidateEmail, candidatePhone, positionTitle, stageName, daysInStage, slaThreshold, actionUrl);
         }
 
         // Mặc định nếu không trùng template

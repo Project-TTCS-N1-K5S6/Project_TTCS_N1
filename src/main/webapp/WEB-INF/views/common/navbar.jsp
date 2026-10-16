@@ -19,12 +19,31 @@
         </button>
 
         <!-- Nút thông báo hệ thống theo phong cách RisApps -->
-        <a href="#" class="header-action-btn" title="Thông báo" onclick="if(window.showToast) window.showToast('Không có thông báo mới nào chưa đọc.', 'info', 'Hộp thư thông báo'); return false;">
-            <i class="bi bi-bell"></i>
-            <c:if test="${not empty unreadNotificationsCount && unreadNotificationsCount > 0}">
-                <span class="btn-badge-dot"></span>
-            </c:if>
-        </a>
+        <div class="dropdown">
+            <a href="#" class="header-action-btn position-relative" id="notifBellBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo" onclick="fetchRecentNotifications()">
+                <i class="bi bi-bell"></i>
+                <span class="btn-badge-dot d-none" id="notifBadgeDot"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-0 mt-2" style="width: 340px; max-width: 90vw; z-index: 1050;" aria-labelledby="notifBellBtn">
+                <div class="p-3 border-bottom d-flex align-items-center justify-content-between bg-light rounded-top">
+                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">Thông báo &amp; Nhắc việc</div>
+                    <span class="badge bg-danger rounded-pill d-none" id="notifUnreadBadge">0 mới</span>
+                </div>
+                <div id="notifListContainer" style="max-height: 320px; overflow-y: auto;">
+                    <div class="p-3 text-center text-muted small">
+                        <span class="spinner-border spinner-border-sm me-1"></span> Đang tải thông báo...
+                    </div>
+                </div>
+                <div class="p-2 border-top text-center bg-light rounded-bottom d-flex justify-content-between align-items-center px-3">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none p-0" style="font-size: 0.75rem;" onclick="markAllNotificationsAsRead()">
+                        <i class="bi bi-check2-all me-1"></i> Đã đọc tất cả
+                    </button>
+                    <a href="${pageContext.request.contextPath}/notifications" class="btn btn-link text-primary text-decoration-none fw-semibold p-0" style="font-size: 0.75rem;">
+                        Xem tất cả <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
         <!-- Nút thông tin người dùng dạng Viên thuốc (User Pill) theo ảnh tham khảo -->
         <div class="dropdown">
@@ -260,5 +279,102 @@ function showPreviewImage(src) {
     if (placeholderEl) {
         placeholderEl.classList.add('d-none');
     }
+}
+
+// Khởi tạo kiểm tra số lượng thông báo chưa đọc
+document.addEventListener('DOMContentLoaded', function() {
+    loadUnreadNotificationsCount();
+});
+
+function loadUnreadNotificationsCount() {
+    fetch('${pageContext.request.contextPath}/api/notifications/unread-count')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            updateNotifBadgeUI(d.unreadCount || 0);
+        })
+        .catch(function() {});
+}
+
+function updateNotifBadgeUI(count) {
+    var dot = document.getElementById('notifBadgeDot');
+    var badge = document.getElementById('notifUnreadBadge');
+    if (dot) {
+        if (count > 0) dot.classList.remove('d-none');
+        else dot.classList.add('d-none');
+    }
+    if (badge) {
+        if (count > 0) {
+            badge.innerText = count + ' mới';
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    }
+}
+
+function fetchRecentNotifications() {
+    var container = document.getElementById('notifListContainer');
+    if (!container) return;
+
+    fetch('${pageContext.request.contextPath}/api/notifications/list')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            updateNotifBadgeUI(d.unreadCount || 0);
+            var list = d.notifications || [];
+            if (list.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-muted small"><i class="bi bi-bell-slash fs-4 d-block mb-1 text-secondary"></i>Không có thông báo mới nào.</div>';
+                return;
+            }
+
+            var html = '';
+            list.forEach(function(item) {
+                var isUnread = !item.read;
+                var iconClass = item.type === 'SLA_OVERDUE' ? 'bi-exclamation-triangle-fill text-danger' : 'bi-info-circle-fill text-primary';
+                var bgClass = isUnread ? 'bg-light' : '';
+                
+                html += '<div class="p-3 border-bottom ' + bgClass + ' position-relative notif-item" style="cursor: pointer;" onclick="markSingleNotifRead(\'' + item.id + '\', \'' + (item.referenceId ? ('${pageContext.request.contextPath}/candidates?search=' + item.referenceId) : '#') + '\')">';
+                html += '  <div class="d-flex align-items-start gap-2">';
+                html += '    <i class="bi ' + iconClass + ' fs-6 mt-1 flex-shrink-0"></i>';
+                html += '    <div class="flex-grow-1 overflow-hidden">';
+                html += '      <div class="fw-semibold text-dark text-xs mb-1 text-truncate">' + (item.title || 'Thông báo') + '</div>';
+                html += '      <div class="text-secondary small" style="font-size: 0.78rem; line-height: 1.35;">' + (item.content || '') + '</div>';
+                html += '      <div class="text-muted mt-1" style="font-size: 0.7rem;">' + (item.createdAt || '') + '</div>';
+                html += '    </div>';
+                if (isUnread) {
+                    html += '    <span class="rounded-circle bg-primary flex-shrink-0" style="width: 8px; height: 8px; margin-top: 6px;"></span>';
+                }
+                html += '  </div>';
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        })
+        .catch(function(err) {
+            container.innerHTML = '<div class="p-3 text-center text-danger small">Lỗi tải thông báo.</div>';
+        });
+}
+
+function markSingleNotifRead(id, redirectUrl) {
+    var p = new URLSearchParams();
+    p.append('id', id);
+    fetch('${pageContext.request.contextPath}/api/notifications/mark-read', {
+        method: 'POST',
+        body: p
+    }).then(function() {
+        if (redirectUrl && redirectUrl !== '#') {
+            window.location.href = redirectUrl;
+        } else {
+            fetchRecentNotifications();
+        }
+    });
+}
+
+function markAllNotificationsAsRead() {
+    fetch('${pageContext.request.contextPath}/api/notifications/mark-all-read', {
+        method: 'POST'
+    }).then(function() {
+        updateNotifBadgeUI(0);
+        fetchRecentNotifications();
+        if (window.showToast) window.showToast('Đã đánh dấu đã đọc tất cả thông báo.', 'success', 'Thông báo');
+    });
 }
 </script>
