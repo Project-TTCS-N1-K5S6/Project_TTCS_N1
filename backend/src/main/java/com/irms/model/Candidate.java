@@ -22,8 +22,20 @@ public class Candidate implements Serializable {
     private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED
     private String cvUrl;
     private String notes;
+    private String departmentId;
+    private String departmentName;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+
+    // Các trường phục vụ Quản lý & Cảnh báo SLA (KN-363, KN-364, KN-365)
+    private boolean isSlaOverdue = false;
+    private Timestamp slaOverdueDetectedAt;
+    private Timestamp stageEnteredAt;
+    private int daysInCurrentStage = 0;
+    private int slaDaysThreshold = 3;
+    private String recruiterId;
+    private String recruiterName;
+    private String recruiterEmail;
 
     public Candidate() {}
 
@@ -66,6 +78,12 @@ public class Candidate implements Serializable {
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
 
+    public String getDepartmentId() { return departmentId; }
+    public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
     public Timestamp getCreatedAt() { return createdAt; }
     public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 
@@ -90,5 +108,34 @@ public class Candidate implements Serializable {
         if ("HIRED".equalsIgnoreCase(status)) return "Đã trúng tuyển";
         if ("REJECTED".equalsIgnoreCase(status)) return "Đã từ chối";
         return status;
+    }
+
+    public boolean isSlaOverdue() { return isSlaOverdue; }
+    public boolean getSlaOverdue() { return isSlaOverdue; }
+    public void setSlaOverdue(boolean isSlaOverdue) { this.isSlaOverdue = isSlaOverdue; }
+
+    public Timestamp getSlaOverdueDetectedAt() { return slaOverdueDetectedAt; }
+    public void setSlaOverdueDetectedAt(Timestamp slaOverdueDetectedAt) { this.slaOverdueDetectedAt = slaOverdueDetectedAt; }
+
+    public Timestamp getStageEnteredAt() { return stageEnteredAt; }
+    public void setStageEnteredAt(Timestamp stageEnteredAt) { this.stageEnteredAt = stageEnteredAt; }
+
+    public int getDaysInCurrentStage() { return daysInCurrentStage; }
+    public void setDaysInCurrentStage(int daysInCurrentStage) { this.daysInCurrentStage = daysInCurrentStage; }
+
+    public int getSlaDaysThreshold() { return slaDaysThreshold; }
+    public void setSlaDaysThreshold(int slaDaysThreshold) { this.slaDaysThreshold = slaDaysThreshold; }
+
+    public String getRecruiterId() { return recruiterId; }
+    public void setRecruiterId(String recruiterId) { this.recruiterId = recruiterId; }
+
+    public String getRecruiterName() { return recruiterName; }
+    public void setRecruiterName(String recruiterName) { this.recruiterName = recruiterName; }
+
+    public String getRecruiterEmail() { return recruiterEmail; }
+    public void setRecruiterEmail(String recruiterEmail) { this.recruiterEmail = recruiterEmail; }
+
+    public int getOverdueDays() {
+        return Math.max(0, daysInCurrentStage - slaDaysThreshold);
     }
 }

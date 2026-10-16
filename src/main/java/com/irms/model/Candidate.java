@@ -111,6 +111,7 @@ public class Candidate implements Serializable {
     }
 
     public boolean isSlaOverdue() { return isSlaOverdue; }
+    public boolean getSlaOverdue() { return isSlaOverdue; }
     public void setSlaOverdue(boolean isSlaOverdue) { this.isSlaOverdue = isSlaOverdue; }
 
     public Timestamp getSlaOverdueDetectedAt() { return slaOverdueDetectedAt; }
