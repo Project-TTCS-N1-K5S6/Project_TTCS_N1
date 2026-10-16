@@ -59,6 +59,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'candidate-pipeline' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates/pipeline">
+                        <i class="bi bi-kanban-fill"></i>
+                        <span>Pipeline tuyển dụng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link ${activeMenu == 'candidate-duplicates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates/duplicates">
                         <i class="bi bi-copy"></i>
                         <span>Hồ sơ trùng lặp</span>

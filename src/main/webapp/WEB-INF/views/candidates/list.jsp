@@ -31,7 +31,23 @@
                 <h3 class="fw-bold text-dark mb-1">Danh sách ứng viên</h3>
                 <div class="text-muted small">Hệ thống quản trị / Danh sách ứng viên</div>
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Bộ nút chuyển đổi View giữa Danh sách và Kanban -->
+                <div class="btn-group shadow-sm" role="group" aria-label="Chế độ xem">
+                    <a href="${pageContext.request.contextPath}/candidates" 
+                       class="btn btn-primary active btn-sm d-flex align-items-center gap-1"
+                       title="Đang ở chế độ xem bảng danh sách">
+                        <i class="bi bi-list-ul"></i>
+                        <span>Bảng danh sách</span>
+                    </a>
+                    <a href="${pageContext.request.contextPath}/candidates/pipeline" 
+                       class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
+                       title="Chuyển sang dạng bảng Kanban">
+                        <i class="bi bi-kanban"></i>
+                        <span>Bảng Kanban</span>
+                    </a>
+                </div>
+
                 <a href="${pageContext.request.contextPath}/candidates/duplicates" class="btn btn-outline-warning position-relative fw-semibold d-flex align-items-center gap-1 shadow-sm" style="border-radius: 8px;">
                     <i class="bi bi-exclamation-triangle-fill text-warning"></i>
                     <span>Hồ sơ nghi trùng</span>

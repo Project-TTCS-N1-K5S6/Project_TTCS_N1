@@ -1,0 +1,277 @@
+// ============================================================
+// IRMS SASS - Giao diện Pipeline Kanban Tuyển dụng (KN-282)
+// File: src/main/webapp/assets/scss/pages/_kanban.scss
+// ============================================================
+
+.kanban-page-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+// 1. Thanh điều khiển & Bộ lọc vị trí tuyển dụng (Toolbar)
+.kanban-toolbar-card {
+  background-color: #ffffff;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  padding: 1rem 1.25rem;
+  box-shadow: $box-shadow-card;
+  margin-bottom: 1.25rem;
+}
+
+.kanban-req-select {
+  font-weight: 600;
+  border-color: #cbd5e1;
+  color: $text-main;
+  min-width: 260px;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 0.2rem rgba($primary, 0.15);
+  }
+}
+
+// 2. Bảng Kanban cuộn ngang (Board Container)
+.kanban-board-container {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  padding-bottom: 1.5rem;
+  min-height: 580px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+
+  &.is-drag-active {
+    .kanban-cards-container {
+      background-color: rgba(248, 250, 252, 0.9);
+    }
+  }
+}
+
+// 3. Cột giai đoạn Kanban (Column)
+.kanban-column {
+  flex: 0 0 300px;
+  width: 300px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: $border-radius;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+
+  // Thanh màu nhận diện thương hiệu trên đầu mỗi cột
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }
+
+  &[data-stage="APPLIED"]::before { background-color: #2563eb; }
+  &[data-stage="SCREENING"]::before { background-color: #06b6d4; }
+  &[data-stage="INTERVIEWING"]::before { background-color: #f59e0b; }
+  &[data-stage="OFFER"]::before { background-color: #8b5cf6; }
+  &[data-stage="HIRED"]::before { background-color: #10b981; }
+  &[data-stage="REJECTED"]::before { background-color: #ef4444; }
+
+  .kanban-column-header {
+    padding: 1rem 1rem 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .column-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .stage-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .column-title {
+        font-size: 0.925rem;
+        font-weight: 700;
+        color: $text-main;
+        margin: 0;
+      }
+    }
+
+    .kanban-column-count {
+      font-size: 0.785rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: $border-radius-full;
+      background-color: #f1f5f9;
+      color: $text-main;
+      border: 1px solid #e2e8f0;
+    }
+  }
+
+  .kanban-cards-container {
+    padding: 0.75rem;
+    flex-grow: 1;
+    min-height: 420px;
+    max-height: calc(100vh - 290px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    border: 2px dashed transparent;
+    border-radius: 0 0 $border-radius $border-radius;
+
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    &.drag-over {
+      background-color: rgba(37, 99, 235, 0.06) !important;
+      border-color: #2563eb !important;
+    }
+  }
+}
+
+// 4. Thẻ ứng viên (Kanban Card)
+.kanban-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: $border-radius;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.is-dragging {
+    opacity: 0.45;
+    cursor: grabbing;
+    transform: scale(0.98);
+    border: 1px dashed $primary;
+    box-shadow: $box-shadow-lg;
+  }
+
+  &.card-saving {
+    opacity: 0.7;
+    pointer-events: none;
+    position: relative;
+
+    &::after {
+      content: 'Đang lưu...';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+  }
+
+  .cand-avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #bfdbfe;
+  }
+
+  .cand-name-link {
+    font-size: 0.9rem;
+    line-height: 1.25;
+    &:hover {
+      color: $primary !important;
+      text-decoration: underline !important;
+    }
+  }
+
+  .cand-position-text {
+    font-size: 0.785rem;
+  }
+
+  .cand-contact-info {
+    font-size: 0.775rem;
+  }
+}
+
+// 5. Trạng thái cột trống (Empty State)
+.kanban-empty-state {
+  border: 1px dashed #cbd5e1;
+  border-radius: $border-radius;
+  background-color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  margin: auto 0;
+}
+
+// 6. Loading Overlay
+.kanban-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius;
+}
+
+.spin-animation {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
