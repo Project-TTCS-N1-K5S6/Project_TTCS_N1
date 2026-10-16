@@ -1,11 +1,13 @@
 package com.irms.controller;
 
 import com.irms.model.Candidate;
+import com.irms.model.CandidateInteraction;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
 import com.irms.model.User;
 import com.irms.service.AuditService;
 import com.irms.service.CandidateService;
+import com.irms.service.CandidateInteractionService;
 import com.irms.service.SharedCatalogService;
 import com.irms.util.JsonUtil;
 
@@ -59,6 +61,7 @@ public class CandidateProfileServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(CandidateProfileServlet.class.getName());
 
     private final CandidateService candidateService = new CandidateService();
+    private final CandidateInteractionService interactionService = new CandidateInteractionService();
     private final SharedCatalogService catalogService = new SharedCatalogService();
     private final AuditService auditService = new AuditService();
 
@@ -158,6 +161,8 @@ public class CandidateProfileServlet extends HttpServlet {
 
         // [KN-271]: Lấy toàn bộ lịch sử ứng tuyển của cùng một người (theo email)
         List<Candidate> applicationHistory = candidateService.getApplicationHistory(candidate.getEmail());
+        List<CandidateInteraction> interactionHistory =
+                interactionService.getTimeline(candidate.getId());
 
         boolean canEdit = currentUser.hasRole("ADMIN")
                 || currentUser.hasRole("HR_MANAGER")
@@ -171,6 +176,7 @@ public class CandidateProfileServlet extends HttpServlet {
             data.put("success", true);
             data.put("candidate", candidate);
             data.put("applicationHistory", applicationHistory);
+            data.put("interactionHistory", interactionHistory);
             data.put("totalApplications", applicationHistory.size());
             data.put("canEdit", canEdit);
             JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_OK, data);
@@ -184,6 +190,7 @@ public class CandidateProfileServlet extends HttpServlet {
 
         request.setAttribute("candidate", candidate);
         request.setAttribute("applicationHistory", applicationHistory);
+        request.setAttribute("interactionHistory", interactionHistory);
         request.setAttribute("rejectionReasons", rejectionReasons);
         request.setAttribute("canEdit", canEdit);
 
@@ -193,6 +200,7 @@ public class CandidateProfileServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession(false);
         User currentUser = (session != null) ? (User) session.getAttribute("currentUser") : null;
@@ -255,6 +263,26 @@ public class CandidateProfileServlet extends HttpServlet {
                 session.setAttribute("flashError", "Bạn không có quyền chỉnh sửa hồ sơ ứng viên này.");
                 response.sendRedirect(request.getContextPath() + "/candidates/profile?id=" + candidateId.trim());
             }
+            return;
+        }
+
+        if ("record-interaction".equals(action)) {
+            try {
+                interactionService.record(
+                        candidateId.trim(),
+                        request.getParameter("interactionType"),
+                        request.getParameter("details"),
+                        request.getParameter("scheduledAt"),
+                        currentUser.getId()
+                );
+                session.setAttribute("flashSuccess", "Đã ghi nhận tương tác ứng viên.");
+            } catch (IllegalArgumentException e) {
+                session.setAttribute("flashError", e.getMessage());
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Không thể ghi nhận tương tác ứng viên " + candidateId, e);
+                session.setAttribute("flashError", "Không thể ghi nhận tương tác. Vui lòng thử lại.");
+            }
+            response.sendRedirect(request.getContextPath() + "/candidates/profile?id=" + candidateId.trim() + "#interaction-log");
             return;
         }
 
@@ -336,16 +364,24 @@ public class CandidateProfileServlet extends HttpServlet {
             String newStatus = request.getParameter("status");
             String rejectionReasonId = request.getParameter("rejectionReasonId");
             try {
-                candidateService.updateStatus(candidateId.trim(), newStatus, rejectionReasonId);
-                auditService.log(
-                        currentUser.getId(),
-                        "UPDATE_CANDIDATE_STATUS",
-                        "CANDIDATE",
-                        candidateId.trim(),
-                        "Chuyển trạng thái tuyển dụng sang " + newStatus + " cho ứng viên " + candidate.getFullName(),
-                        request.getRemoteAddr(),
-                        request.getHeader("User-Agent")
-                );
+                if (!candidateService.updateStatus(candidateId.trim(), newStatus, rejectionReasonId)) {
+                    throw new IllegalStateException("Không thể cập nhật trạng thái ứng viên.");
+                }
+                if (newStatus != null && !newStatus.trim().equalsIgnoreCase(candidate.getStatus())) {
+                    String nextStatus = newStatus.trim().toUpperCase();
+                    auditService.log(
+                            currentUser.getId(),
+                            "UPDATE_CANDIDATE_STATUS",
+                            "CANDIDATE",
+                            candidateId.trim(),
+                            "Chuyển giai đoạn từ " + candidate.getStatus() + " sang " + nextStatus
+                                    + " cho ứng viên " + candidate.getFullName(),
+                            request.getRemoteAddr(),
+                            request.getHeader("User-Agent")
+                    );
+                    interactionService.recordStageChange(candidateId.trim(), candidate.getStatus(), nextStatus,
+                            currentUser.getId(), candidate.getFullName());
+                }
                 if (isAjax) {
                     Map<String, Object> res = new HashMap<>();
                     res.put("success", true);

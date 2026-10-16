@@ -166,6 +166,15 @@ public class EmailService {
                                                         String positionTitle, String departmentName,
                                                         String trackingCode, String submittedAt,
                                                         String cvFileName, String withdrawalLink) {
+        sendApplicationConfirmationAsync(toEmail, candidateName, positionTitle, departmentName,
+                trackingCode, submittedAt, cvFileName, withdrawalLink, null);
+    }
+
+    public static void sendApplicationConfirmationAsync(String toEmail, String candidateName,
+                                                        String positionTitle, String departmentName,
+                                                        String trackingCode, String submittedAt,
+                                                        String cvFileName, String withdrawalLink,
+                                                        String candidateId) {
         if (toEmail == null || toEmail.trim().isEmpty()) {
             return;
         }
@@ -177,7 +186,15 @@ public class EmailService {
                         candidateName, positionTitle, departmentName, trackingCode, submittedAt, cvFileName,
                         withdrawalLink
                 );
-                sendHtmlEmail(toEmail.trim(), subject, html);
+                boolean sent = sendHtmlEmail(toEmail.trim(), subject, html);
+                if (sent && candidateId != null && !candidateId.trim().isEmpty()) {
+                    try {
+                        new CandidateInteractionService().recordEmailSent(candidateId, subject);
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, "[EmailService] Đã gửi email nhưng không thể ghi vào nhật ký ứng viên "
+                                + candidateId, e);
+                    }
+                }
                 LOGGER.info("[EmailService] Đã kích hoạt gửi xác nhận ứng tuyển tới ứng viên: " + toEmail + " (" + trackingCode + ")");
             } catch (Throwable t) {
                 LOGGER.log(Level.WARNING, "[EmailService] Không thể gửi email xác nhận ứng tuyển tới " + toEmail, t);

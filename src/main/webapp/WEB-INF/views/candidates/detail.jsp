@@ -140,6 +140,13 @@
     background: linear-gradient(135deg, #eff6ff, #eef2ff);
     border-color: #a5b4fc;
 }
+.interaction-item { border-left: 3px solid #6366f1; padding: .75rem 1rem; background: #f8fafc; border-radius: 0 8px 8px 0; }
+.interaction-item + .interaction-item { margin-top: .75rem; }
+.interaction-item.interview { border-color: #f59e0b; }
+.interaction-item.evaluation { border-color: #10b981; }
+.interaction-item.email { border-color: #3b82f6; }
+.interaction-item.application { border-color: #8b5cf6; }
+.interaction-description { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* --- Notes Editor --- */
 .notes-textarea {
@@ -569,6 +576,89 @@
 
             <%-- ===== CỘT PHẢI: Lịch sử ứng tuyển + Ghi chú + Nhãn ===== --%>
             <div class="col-12 col-lg-5">
+
+                <%-- Nhật ký tương tác theo hồ sơ ứng viên đang mở --%>
+                <div class="info-card" id="interaction-log">
+                    <div class="info-card-header">
+                        <div class="card-icon" style="background:rgba(99,102,241,0.1); color:#4f46e5;">
+                            <i class="bi bi-activity"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark fs-6">Nhật ký tương tác</div>
+                            <small class="text-muted">Nộp hồ sơ, chuyển giai đoạn, email, phỏng vấn và đánh giá</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${interactionHistory.size()}</span>
+                    </div>
+                    <div class="info-card-body">
+                        <c:choose>
+                            <c:when test="${empty interactionHistory}">
+                                <div class="text-center py-3 text-muted">
+                                    Chưa có tương tác nào được ghi nhận cho hồ sơ này.
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="event" items="${interactionHistory}">
+                                    <div class="interaction-item
+                                        ${event.type == 'INTERVIEW_SCHEDULED' ? 'interview' :
+                                          event.type == 'EVALUATION_RECORDED' ? 'evaluation' :
+                                          event.type == 'EMAIL_SENT' ? 'email' :
+                                          event.type == 'APPLICATION' ? 'application' : ''}">
+                                        <div class="d-flex justify-content-between align-items-start gap-2">
+                                            <strong><c:out value="${event.title}" /></strong>
+                                            <small class="text-muted flex-shrink-0">
+                                                <fmt:formatDate value="${event.occurredAt}" pattern="dd/MM/yyyy HH:mm" />
+                                            </small>
+                                        </div>
+                                        <div class="interaction-description small mt-1">
+                                            <c:out value="${event.description}" />
+                                        </div>
+                                        <c:if test="${not empty event.actorName}">
+                                            <small class="text-muted d-block mt-1">Người thực hiện: <c:out value="${event.actorName}" /></small>
+                                        </c:if>
+                                    </div>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+
+                        <c:if test="${canEdit}">
+                            <form action="${pageContext.request.contextPath}/candidates/profile#interaction-log"
+                                  method="POST" class="border-top mt-3 pt-3" id="interactionForm">
+                                <input type="hidden" name="action" value="record-interaction">
+                                <input type="hidden" name="candidateId" value="${candidate.id}">
+                                <label for="interactionType" class="form-label small fw-semibold">Ghi nhận tương tác</label>
+                                <select class="form-select form-select-sm mb-2" id="interactionType" name="interactionType" required>
+                                    <option value="INTERVIEW_SCHEDULED">Lịch phỏng vấn</option>
+                                    <option value="EVALUATION_RECORDED">Đánh giá</option>
+                                </select>
+                                <div id="interviewScheduleField" class="mb-2">
+                                    <label for="scheduledAt" class="form-label small">Thời gian phỏng vấn</label>
+                                    <input type="datetime-local" class="form-control form-control-sm" id="scheduledAt" name="scheduledAt">
+                                </div>
+                                <label for="interactionDetails" class="form-label small">Chi tiết</label>
+                                <textarea class="form-control form-control-sm" id="interactionDetails" name="details"
+                                          rows="3" maxlength="2000" required
+                                          placeholder="Địa điểm/người phỏng vấn hoặc kết quả và nhận xét đánh giá"></textarea>
+                                <button type="submit" class="btn btn-sm btn-primary mt-2">
+                                    <i class="bi bi-plus-lg me-1"></i>Ghi nhận
+                                </button>
+                            </form>
+                            <script>
+                                (function () {
+                                    var type = document.getElementById('interactionType');
+                                    var schedule = document.getElementById('interviewScheduleField');
+                                    var date = document.getElementById('scheduledAt');
+                                    function syncInteractionFields() {
+                                        var interview = type.value === 'INTERVIEW_SCHEDULED';
+                                        schedule.hidden = !interview;
+                                        date.required = interview;
+                                    }
+                                    type.addEventListener('change', syncInteractionFields);
+                                    syncInteractionFields();
+                                }());
+                            </script>
+                        </c:if>
+                    </div>
+                </div>
 
                 <%-- 3. LỊCH SỬ ỨNG TUYỂN --%>
                 <div class="info-card">

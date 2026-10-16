@@ -13,9 +13,10 @@
 
 ```text
 database/
-├── schema.sql    <- DDL: Lược đồ tạo Database, 14 bảng quan hệ, ràng buộc FK và Index
+├── schema.sql    <- DDL: Lược đồ tạo các bảng quan hệ, ràng buộc FK và Index
 ├── seed.sql      <- DML: Dữ liệu mẫu ban đầu (30 quyền hạn, 7 vai trò, người dùng, dải lương)
 ├── migrations/
+│   ├── 20261016_candidate_interaction_log.sql <- Nhật ký phỏng vấn và đánh giá ứng viên
 │   ├── 20261007_shared_catalogs.sql <- Nâng cấp CSDL hiện có cho danh mục dùng chung
 │   ├── 20261015_internal_employee_referrals.sql <- Lưu người giới thiệu cho hồ sơ nội bộ
 │   └── 20261015_candidate_withdrawal.sql <- Token xác nhận rút hồ sơ ứng viên
@@ -54,7 +55,8 @@ database/
 12. **`recruitment_requisitions`**: Yêu cầu tuyển dụng nhân sự (`id`, `code`, `title`, `department_id`, `recruiter_id`, `hiring_manager_id`, `work_location_id`, `work_mode_id`, `status`).
 13. **`candidates`**: Hồ sơ ứng viên & Pipeline (`id`, `requisition_id`, `application_source_id`, `referred_by_user_id`, `rejection_reason_id`, `full_name`, `email`, `phone`, `status`, `cv_url`, `notes`).
 14. **`salary_ranges`**: Dải lương ngân sách theo vị trí (`id`, `department_id`, `position_title`, `min_salary`, `max_salary`, `currency`).
-15. **`candidate_withdrawal_tokens`**: Hash token rút hồ sơ có hạn 7 ngày, chỉ dùng một lần (`candidate_id`, `token_hash`, `expires_at`, `used_at`).
+15. **`candidate_interaction_events`**: Lịch phỏng vấn và kết quả đánh giá gắn với hồ sơ, có người ghi nhận và thời điểm.
+16. **`candidate_withdrawal_tokens`**: Hash token rút hồ sơ có hạn 7 ngày, chỉ dùng một lần (`candidate_id`, `token_hash`, `expires_at`, `used_at`).
 
 Giá trị danh mục đang được ứng viên hoặc yêu cầu tuyển dụng tham chiếu không thể bị xóa nhờ kiểm tra ứng dụng và khóa ngoại `ON DELETE RESTRICT`.
 
@@ -69,7 +71,7 @@ docker compose up -d mysql
 ```
 Container `irms-mysql` sẽ tự động:
 1. Tạo database `ttcs_db` với charset `utf8mb4`.
-2. Thực thi `schema.sql` để tạo toàn bộ 14 bảng và chỉ mục.
+2. Thực thi `schema.sql` để tạo các bảng và chỉ mục.
 3. Thực thi `seed.sql` để nạp dữ liệu mẫu ban đầu.
 
 ### Cách 2: Sử dụng MySQL Server cục bộ (MySQL Workbench / Command Line)
@@ -81,7 +83,7 @@ SOURCE database/schema.sql;
 SOURCE database/seed.sql;
 ```
 
-Với CSDL đã được khởi tạo trước đó, chạy các migration mới theo thứ tự thay vì chạy lại `schema.sql` (schema sẽ tạo lại bảng và làm mất dữ liệu hiện có). Chạy `database/migrations/20261015_candidate_withdrawal.sql` để bật token rút hồ sơ; migration giới thiệu nội bộ là `database/migrations/20261015_internal_employee_referrals.sql`.
+Với CSDL đã được khởi tạo trước đó, chạy các migration mới theo thứ tự thay vì chạy lại `schema.sql` (schema sẽ tạo lại bảng và làm mất dữ liệu hiện có). Chạy `database/migrations/20261016_candidate_interaction_log.sql` để bật nhật ký phỏng vấn và đánh giá; các migration ứng viên trước đó gồm `database/migrations/20261015_candidate_withdrawal.sql` và `database/migrations/20261015_internal_employee_referrals.sql`.
 
 ---
 

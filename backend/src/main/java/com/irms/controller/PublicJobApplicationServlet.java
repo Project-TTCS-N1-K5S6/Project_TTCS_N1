@@ -407,7 +407,8 @@ public class PublicJobApplicationServlet extends HttpServlet {
                 trackingCode,
                 submittedAtStr,
                 originalFileName,
-                withdrawalLink
+                withdrawalLink,
+                candidate.getId()
         );
 
         // ======================================================================

@@ -7,6 +7,8 @@ import com.irms.model.RecruitmentRequest;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
 import com.irms.service.CandidateService;
+import com.irms.service.AuditService;
+import com.irms.service.CandidateInteractionService;
 import com.irms.service.SharedCatalogService;
 import com.irms.model.User;
 
@@ -18,6 +20,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * ==============================================================================
@@ -42,7 +46,10 @@ import java.util.List;
         "/candidates/extraction-details"
 })
 public class CandidateServlet extends HttpServlet {
+    private static final Logger LOGGER = Logger.getLogger(CandidateServlet.class.getName());
     private final CandidateService candidateService = new CandidateService();
+    private final AuditService auditService = new AuditService();
+    private final CandidateInteractionService interactionService = new CandidateInteractionService();
     private final SharedCatalogService catalogService = new SharedCatalogService();
     private final RecruitmentRequestDAO requisitionDAO = new RecruitmentRequestDAO();
 
@@ -183,8 +190,25 @@ public class CandidateServlet extends HttpServlet {
             } else if ("/candidates/update-status".equals(path)) {
                 String id = request.getParameter("candidateId");
                 String newStatus = request.getParameter("status");
+                Candidate candidate = candidateService.getCandidateById(id);
+                if (candidate == null) {
+                    throw new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên.");
+                }
                 if (!candidateService.updateStatus(id, newStatus, request.getParameter("rejectionReasonId"))) {
                     throw new IllegalStateException("Không thể cập nhật trạng thái hồ sơ ứng viên.");
+                }
+                if (newStatus != null && !newStatus.trim().equalsIgnoreCase(candidate.getStatus())) {
+                    try {
+                        auditService.log(currentUser.getId(), "UPDATE_CANDIDATE_STATUS", "CANDIDATE", id,
+                                "Chuyển giai đoạn từ " + candidate.getStatus() + " sang "
+                                        + newStatus.trim().toUpperCase() + " cho ứng viên " + candidate.getFullName(),
+                                request.getRemoteAddr(), request.getHeader("User-Agent"));
+                        interactionService.recordStageChange(id, candidate.getStatus(),
+                                newStatus.trim().toUpperCase(), currentUser.getId(), candidate.getFullName());
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, "Đã đổi trạng thái nhưng không ghi được nhật ký cho ứng viên " + id, e);
+                        throw new IllegalStateException("Trạng thái đã đổi nhưng không thể ghi nhật ký tương tác.", e);
+                    }
                 }
                 if (session != null) session.setAttribute("flashSuccess", "Đã cập nhật trạng thái ứng viên thành công!");
             } else if ("/candidates/confirm-extraction".equals(path)) {
