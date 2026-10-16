@@ -39,7 +39,8 @@ ttcs_n1/
 │
 ├── database/                                 <- Kịch bản Cơ sở dữ liệu MySQL
 │   ├── schema.sql                            <- DDL tạo bảng, chỉ mục và khóa ngoại MySQL
-│   └── seed.sql                              <- DML nạp dữ liệu mẫu ban đầu (Users, Roles, Perms)
+│   ├── seed.sql                              <- DML nạp dữ liệu mẫu ban đầu (Users, Roles, Perms)
+│   └── migrations/                           <- Migration an toàn cho cơ sở dữ liệu đang sử dụng
 │
 ├── src/main/
 │   ├── java/com/irms/                        <- Mã nguồn Java Backend
@@ -48,10 +49,11 @@ ttcs_n1/
 │   │   │   └── DBConnection.java             <- HikariCP Connection Pool kết nối MySQL
 │   │   ├── model/                            <- JavaBeans / Thực thể dữ liệu (Models)
 │   │   │   ├── User.java, Role.java, Permission.java, Department.java
-│   │   │   ├── Candidate.java, SalaryRange.java, AuditLog.java
+│   │   │   ├── Candidate.java, CandidateTag.java, CandidateTagCategory.java
+│   │   │   ├── CandidateInternalNote.java, SalaryRange.java, AuditLog.java
 │   │   ├── dao/                              <- Tầng truy vấn CSDL JDBC (Data Access Objects)
 │   │   │   ├── BaseDAO.java, UserDAO.java, RoleDAO.java, PermissionDAO.java
-│   │   │   ├── DepartmentDAO.java, CandidateDAO.java, SalaryRangeDAO.java, AuditDAO.java
+│   │   │   ├── DepartmentDAO.java, CandidateDAO.java, CandidateScreeningDAO.java, SalaryRangeDAO.java, AuditDAO.java
 │   │   ├── service/                          <- Tầng nghiệp vụ (Business Logic Layer)
 │   │   │   ├── AuthService.java, UserService.java, RolePermissionService.java
 │   │   │   ├── DepartmentService.java, CandidateService.java, SalaryRangeService.java, AuditService.java
@@ -94,7 +96,7 @@ ttcs_n1/
 │       └── assets/                           <- Tài nguyên tĩnh (Static Assets)
 │           ├── scss/                         <- Các tệp nguồn SASS (_variables, _layout, _components, _tables, _auth, main.scss)
 │           ├── css/                          <- Tệp CSS biên dịch hoàn chỉnh (main.css)
-│           └── js/                           <- Mã JavaScript giao diện (main.js, users.js, matrix.js)
+│           └── js/                           <- Mã JavaScript giao diện (main.js, users.js, matrix.js, candidates.js)
 │
 ├── frontend/                                 <- Bản xem trước giao diện HTML + Bootstrap + SASS độc lập
 │   ├── index.html, dashboard.html, users.html, candidates.html, permissions.html
@@ -125,11 +127,18 @@ docker compose up -d mysql
    source database/seed.sql;
    ```
 3. Mở file `src/main/resources/application.properties`, kiểm tra thông số kết nối:
-   ```properties
+   ```
+
    db.url=jdbc:mysql://localhost:3306/ttcs_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
    db.user=root
    db.password=root
    ```
+
+Với cơ sở dữ liệu đang sử dụng, chạy migration bổ sung chức năng sàng lọc nhanh trước khi khởi động ứng dụng:
+```sql
+source database/migrations/20261016_rapid_application_screen.sql;
+```
+Migration tạo danh mục nhãn, nhãn hồ sơ, đánh giá 1-5 sao và ghi chú nội bộ; không xóa dữ liệu hồ sơ hiện có.
 
 ### Bước 2: Chạy ứng dụng Java Servlet
 
@@ -146,6 +155,12 @@ docker compose up -d mysql
 mvn tomcat7:run
 ```
 Ứng dụng sẽ khởi chạy tại: **http://localhost:8080**
+
+### Sàng lọc nhanh hồ sơ ứng viên
+- Gắn nhiều nhãn từ danh mục nhãn; nhân sự có quyền quản lý hồ sơ có thể tạo danh mục và khai báo nhãn mới.
+- Mỗi nhân sự có thể chấm hồ sơ từ 1 đến 5 sao; điểm trung bình và số lượt đánh giá được hiển thị trên danh sách.
+- Ghi chú sàng lọc được lưu riêng với tên người viết và thời điểm tạo, chỉ trong phân hệ nội bộ `/candidates`.
+- Các thao tác gắn nhãn, chấm sao và thêm ghi chú được ghi vào `audit_logs`; endpoint kiểm tra quyền `candidates.manage` và quyền sở hữu hồ sơ Recruiter ở phía máy chủ.
 
 ### Bước 3: Xem giao diện Frontend độc lập (Tùy chọn)
 Nếu muốn xem trước các màn hình HTML/CSS/JS/Bootstrap tĩnh mà không cần bật máy chủ Java:

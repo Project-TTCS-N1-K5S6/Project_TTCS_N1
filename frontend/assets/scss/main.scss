@@ -1,0 +1,33 @@
+// ============================================================
+// IRMS SASS - Điểm nạp chính (Master Stylesheet)
+// File: frontend/assets/scss/main.scss
+// ============================================================
+
+// 1. Abstracts (Biến, Mixin, Hàm)
+@import "abstracts/variables";
+@import "abstracts/mixins";
+@import "abstracts/functions";
+
+// 2. Base (Reset, Typography, Global)
+@import "base/reset";
+@import "base/typography";
+@import "base/global";
+
+// 3. Components (Thành phần giao diện)
+@import "components/buttons";
+@import "components/forms";
+@import "components/cards";
+@import "components/tables";
+@import "components/navbar";
+@import "components/badges";
+
+// 4. Layouts (Cấu trúc bố cục giao diện)
+@import "layouts/header";
+@import "layouts/sidebar";
+@import "layouts/footer";
+@import "layouts/taskbar";
+
+// 5. Pages (Đặc thù từng trang)
+@import "pages/login";
+@import "pages/dashboard";
+@import "pages/matrix";

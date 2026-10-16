@@ -1,0 +1,156 @@
+// ============================================================
+// IRMS SASS - Các thành phần giao diện (Cards, Badges, Buttons, Modals)
+// File: src/main/webapp/assets/scss/_components.scss
+// ============================================================
+
+// 1. Stat Cards (Thẻ thống kê Dashboard)
+.stat-card {
+  background-color: $card-bg;
+  border-radius: $border-radius;
+  border: 1px solid $border-color;
+  padding: 1.5rem;
+  box-shadow: $box-shadow-card;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow;
+  }
+
+  .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: $border-radius;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+
+    &.primary { background-color: $primary-light; color: $primary; }
+    &.success { background-color: #ecfdf5; color: $success; }
+    &.warning { background-color: #fffbeb; color: $warning; }
+    &.info    { background-color: #ecfeff; color: $info; }
+    &.purple  { background-color: #f5f3ff; color: $purple; }
+  }
+
+  .stat-content {
+    .stat-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: $text-muted;
+      margin-bottom: 0.25rem;
+    }
+    .stat-value {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: $text-main;
+      line-height: 1.1;
+    }
+  }
+}
+
+// 2. Custom Card Styles
+.card {
+  background-color: $card-bg;
+  border-radius: $border-radius;
+  border: 1px solid $border-color;
+  box-shadow: $box-shadow-card;
+  margin-bottom: 1.5rem;
+
+  .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid $border-color;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+// 3. Status Badges & Pills
+.badge {
+  font-weight: 600;
+  padding: 0.4em 0.75em;
+  border-radius: $border-radius-full;
+  font-size: 0.785rem;
+  letter-spacing: 0.02em;
+
+  &.badge-active { background-color: #ecfdf5; color: #047857; }
+  &.badge-locked { background-color: #fef2f2; color: #b91c1c; }
+  &.badge-inactive { background-color: #f1f5f9; color: #475569; }
+  &.badge-role { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+}
+
+// 4. Buttons
+.btn {
+  font-weight: 500;
+  border-radius: $border-radius-sm;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  &-primary {
+    background-color: $primary;
+    border-color: $primary;
+    color: #ffffff;
+    &:hover {
+      background-color: $primary-hover;
+      border-color: $primary-hover;
+    }
+  }
+
+  &-sm {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.825rem;
+  }
+}
+
+// 5. Search & Filter Bar
+.filter-bar {
+  background-color: $card-bg;
+  padding: 1rem 1.25rem;
+  border-radius: $border-radius;
+  border: 1px solid $border-color;
+  margin-bottom: 1.25rem;
+  box-shadow: $box-shadow-card;
+}
+
+// 6. Flash Alerts
+.alert {
+  border-radius: $border-radius-sm;
+  border: none;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  box-shadow: $box-shadow-sm;
+
+  &-success {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+  &-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+}

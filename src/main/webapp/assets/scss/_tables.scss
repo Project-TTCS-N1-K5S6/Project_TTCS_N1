@@ -1,0 +1,125 @@
+// ============================================================
+// IRMS SASS - Định kiểu Bảng dữ liệu Enterprise (Data Tables)
+// File: src/main/webapp/assets/scss/_tables.scss
+// ============================================================
+
+.table-responsive {
+  border-radius: $border-radius-sm;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-custom {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead {
+    th {
+      background-color: #f8fafc;
+      color: $text-muted;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 0.65rem 0.65rem;
+      border-bottom: 1px solid $border-color;
+      border-top: none;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: background-color 0.15s ease;
+
+      td {
+        padding: 0.65rem 0.65rem;
+        vertical-align: middle;
+        font-size: 0.835rem;
+        color: $text-main;
+        border-bottom: 1px solid $border-color;
+        word-break: break-word;
+      }
+
+      &:hover {
+        background-color: #f1f5f9;
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .avatar-sm {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $primary, $info);
+      color: #ffffff;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .user-meta {
+      line-height: 1.25;
+      .user-name {
+        font-weight: 600;
+        color: $text-main;
+      }
+      .user-email {
+        font-size: 0.8rem;
+        color: $text-muted;
+      }
+    }
+  }
+}
+
+// Ma trận phân quyền table
+.matrix-table {
+  border: 1px solid $border-color;
+
+  th, td {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .module-header {
+    background-color: #f1f5f9;
+    font-weight: 700;
+    color: $primary;
+    text-align: left;
+    padding-left: 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  .permission-label {
+    text-align: left;
+    padding-left: 1.5rem;
+    .perm-name {
+      font-weight: 600;
+    }
+    .perm-code {
+      font-size: 0.785rem;
+      color: $text-muted;
+      font-family: monospace;
+    }
+  }
+
+  .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+  }
+}
