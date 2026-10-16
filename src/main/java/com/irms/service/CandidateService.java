@@ -140,7 +140,13 @@ public class CandidateService {
             throw new IllegalArgumentException("Lý do loại hồ sơ không hợp lệ.");
         }
         c.setId(SecurityUtil.generateUUID());
-        return candidateDAO.insert(c);
+        boolean ok = candidateDAO.insert(c);
+        if (ok) {
+            try {
+                new CandidateDuplicateService().detectAndRecordDuplicates(c, null);
+            } catch (Exception ignored) {}
+        }
+        return ok;
     }
 
     public boolean updateStatus(String candidateId, String newStatus) {
@@ -285,6 +291,10 @@ public class CandidateService {
             throw new RuntimeException("Không thể lưu thông tin hồ sơ ứng tuyển vào hệ thống.");
         }
 
+        try {
+            new CandidateDuplicateService().detectAndRecordDuplicates(candidate, null);
+        } catch (Exception ignored) {}
+
         return candidate;
     }
 
@@ -398,7 +408,16 @@ public class CandidateService {
             cleanPhone = confirmedPhone.trim().replaceAll("[\\s.-]", "");
         }
 
-        return candidateDAO.updateConfirmExtraction(candidateId.trim(), confirmedName.trim(), confirmedEmail.trim().toLowerCase(Locale.ROOT), cleanPhone);
+        boolean ok = candidateDAO.updateConfirmExtraction(candidateId.trim(), confirmedName.trim(), confirmedEmail.trim().toLowerCase(Locale.ROOT), cleanPhone);
+        if (ok) {
+            try {
+                Candidate updated = candidateDAO.findById(candidateId.trim());
+                if (updated != null) {
+                    new CandidateDuplicateService().detectAndRecordDuplicates(updated, null);
+                }
+            } catch (Exception ignored) {}
+        }
+        return ok;
     }
 
     /**
@@ -407,6 +426,14 @@ public class CandidateService {
     public List<Candidate> getApplicationHistory(String email) {
         if (email == null || email.trim().isEmpty()) return new java.util.ArrayList<>();
         return candidateDAO.findAllByEmail(email.trim().toLowerCase());
+    }
+
+    /**
+     * Lấy toàn bộ lịch sử ứng tuyển của cả hai hồ sơ được bảo toàn sau hợp nhất (theo email và các hồ sơ đã gộp)
+     */
+    public List<Candidate> getApplicationHistory(Candidate candidate) {
+        if (candidate == null) return new java.util.ArrayList<>();
+        return candidateDAO.findAllApplicationsForCandidate(candidate);
     }
 
     /**

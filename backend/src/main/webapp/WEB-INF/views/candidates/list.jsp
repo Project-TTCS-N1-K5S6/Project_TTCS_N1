@@ -31,10 +31,37 @@
                 <h3 class="fw-bold text-dark mb-1">Danh sách ứng viên</h3>
                 <div class="text-muted small">Hệ thống quản trị / Danh sách ứng viên</div>
             </div>
-            <button class="btn-ris-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
-                <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                <a href="${pageContext.request.contextPath}/candidates/duplicates" class="btn btn-outline-warning position-relative fw-semibold d-flex align-items-center gap-1 shadow-sm" style="border-radius: 8px;">
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    <span>Hồ sơ nghi trùng</span>
+                    <c:if test="${pendingDuplicateCount > 0}">
+                        <span class="badge bg-danger rounded-pill ms-1">${pendingDuplicateCount}</span>
+                    </c:if>
+                </a>
+                <button class="btn-ris-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
+                </button>
+            </div>
         </div>
+
+        <%-- Banner cảnh báo hồ sơ trùng lặp nếu có cảnh báo PENDING --%>
+        <c:if test="${pendingDuplicateCount > 0}">
+            <div class="alert alert-warning border border-warning-subtle shadow-sm d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-warning bg-opacity-25 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;">
+                        <i class="bi bi-exclamation-diamond-fill text-warning fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark mb-0">Hệ thống phát hiện ${pendingDuplicateCount} cặp hồ sơ có nguy cơ trùng lặp!</div>
+                        <div class="text-secondary small">Các ứng viên có trùng số điện thoại hoặc email liên hệ. Vui lòng xem xét đối chiếu và hợp nhất.</div>
+                    </div>
+                </div>
+                <a href="${pageContext.request.contextPath}/candidates/duplicates" class="btn btn-warning btn-sm fw-bold px-3 py-2 text-dark shadow-sm rounded-pill text-nowrap mt-2 mt-md-0">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Xử lý hồ sơ trùng ngay
+                </a>
+            </div>
+        </c:if>
 
         <%-- [KN-116]: Thông báo phạm vi hiển thị cho Recruiter được phân công --%>
         <c:if test="${currentUser.hasRole('RECRUITER') && !currentUser.hasRole('ADMIN') && !currentUser.hasRole('HR_MANAGER')}">
@@ -426,11 +453,25 @@
                             </div>
                             <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-semibold">Email liên hệ <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" name="email" required placeholder="candidate@email.com">
+                                <input type="email" class="form-control" name="email" id="addCandEmail" required placeholder="candidate@email.com">
                             </div>
                             <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-semibold">Số điện thoại</label>
-                                <input type="text" class="form-control" name="phone" placeholder="0901234567">
+                                <input type="text" class="form-control" name="phone" id="addCandPhone" placeholder="0901234567">
+                            </div>
+                            
+                            <!-- Container hiển thị cảnh báo nghi trùng thời gian thực -->
+                            <div class="col-12" id="addCandDuplicateAlert" style="display: none;">
+                                <div class="alert alert-warning border border-warning-subtle py-2 px-3 mb-0" style="background-color: #fffbeb; border-radius: 8px;">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning fs-6"></i>
+                                        <strong class="text-dark small" id="dupAlertTitle">Phát hiện hồ sơ nghi trùng khớp!</strong>
+                                    </div>
+                                    <div class="small text-secondary mb-2" id="dupAlertDesc">
+                                        Email hoặc số điện thoại này đã tồn tại trong hệ thống.
+                                    </div>
+                                    <div id="dupMatchesList" class="d-flex flex-column gap-1"></div>
+                                </div>
                             </div>
                             <div class="col-12 col-sm-6">
                                 <label class="form-label small fw-semibold">Vị trí tuyển dụng</label>
@@ -656,26 +697,90 @@ function populateExtractionModal(button) {
     badgeElem.className = 'badge ' + badgeClass;
     badgeElem.textContent = statusLabel;
 }
-</script>
+
 function toggleCandidateStatusForm(control) {
     var form = control.closest('.candidate-status-form');
+    if (!form) return;
     var status = form.querySelector('[name="status"]');
     var reasonBox = form.querySelector('.rejection-reason-field');
     var reason = form.querySelector('[name="rejectionReasonId"]');
     var submit = form.querySelector('.candidate-status-submit');
     var rejected = status.value === 'REJECTED';
 
-    reasonBox.classList.toggle('d-none', !rejected);
-    reason.required = rejected;
-    if (!rejected) {
-        reason.value = '';
+    if (reasonBox) reasonBox.classList.toggle('d-none', !rejected);
+    if (reason) {
+        reason.required = rejected;
+        if (!rejected) {
+            reason.value = '';
+        }
     }
-    submit.hidden = status.value === form.dataset.currentStatus
-        && (!rejected || reason.value === form.dataset.currentReason);
+    if (submit) {
+        submit.hidden = status.value === form.dataset.currentStatus
+            && (!rejected || reason.value === form.dataset.currentReason);
+    }
 }
 
 document.querySelectorAll('.candidate-status-form').forEach(function (form) {
     toggleCandidateStatusForm(form.querySelector('[name="status"]'));
 });
+
+// Real-time Duplicate Check in Add Candidate Modal
+(function() {
+    var emailInput = document.getElementById('addCandEmail');
+    var phoneInput = document.getElementById('addCandPhone');
+    var alertBox = document.getElementById('addCandDuplicateAlert');
+    var matchesList = document.getElementById('dupMatchesList');
+    var checkTimer = null;
+
+    function checkDuplicates() {
+        var email = emailInput ? emailInput.value.trim() : '';
+        var phone = phoneInput ? phoneInput.value.trim() : '';
+
+        if (!email && !phone) {
+            if (alertBox) alertBox.style.display = 'none';
+            return;
+        }
+
+        var url = '${pageContext.request.contextPath}/api/candidates/check-duplicate?email=' 
+            + encodeURIComponent(email) + '&phone=' + encodeURIComponent(phone);
+
+        fetch(url)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!alertBox || !matchesList) return;
+                if (data.isDuplicate && data.matches && data.matches.length > 0) {
+                    alertBox.style.display = 'block';
+                    var html = '';
+                    data.matches.forEach(function(m) {
+                        html += '<div class="d-flex align-items-center justify-content-between p-2 bg-white rounded border border-warning-subtle small">';
+                        html += '  <div>';
+                        html += '    <strong class="text-dark">' + (m.fullName || 'Ứng viên') + '</strong> ';
+                        html += '    <span class="text-muted">(' + (m.email || '') + ' - ' + (m.phone || 'N/A') + ')</span>';
+                        if (m.requisitionTitle) {
+                            html += '    <div class="text-xs text-muted">Vị trí: ' + m.requisitionTitle + '</div>';
+                        }
+                        html += '  </div>';
+                        html += '  <a href="${pageContext.request.contextPath}/candidates/profile?id=' + m.id + '" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2 rounded-pill">Xem hồ sơ</a>';
+                        html += '</div>';
+                    });
+                    matchesList.innerHTML = html;
+                } else {
+                    alertBox.style.display = 'none';
+                    matchesList.innerHTML = '';
+                }
+            })
+            .catch(function(err) {
+                console.error('Error checking candidate duplicates:', err);
+            });
+    }
+
+    function onInputChange() {
+        clearTimeout(checkTimer);
+        checkTimer = setTimeout(checkDuplicates, 400);
+    }
+
+    if (emailInput) emailInput.addEventListener('input', onInputChange);
+    if (phoneInput) phoneInput.addEventListener('input', onInputChange);
+})();
 </script>
 <jsp:include page="../common/footer.jsp" />

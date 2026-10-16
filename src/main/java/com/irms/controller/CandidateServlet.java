@@ -6,9 +6,11 @@ import com.irms.model.CVExtractionResult;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
+import com.irms.model.CandidateDuplicateWarning;
+import com.irms.model.User;
+import com.irms.service.CandidateDuplicateService;
 import com.irms.service.CandidateService;
 import com.irms.service.SharedCatalogService;
-import com.irms.model.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -45,6 +47,7 @@ public class CandidateServlet extends HttpServlet {
     private final CandidateService candidateService = new CandidateService();
     private final SharedCatalogService catalogService = new SharedCatalogService();
     private final RecruitmentRequestDAO requisitionDAO = new RecruitmentRequestDAO();
+    private final CandidateDuplicateService duplicateService = new CandidateDuplicateService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -82,6 +85,10 @@ public class CandidateServlet extends HttpServlet {
         List<Candidate> list = candidateService.getCandidates(search, status, recruiterId, page, pageSize);
         int totalCandidates = candidateService.countCandidates(search, status, recruiterId);
         int totalPages = (int) Math.ceil((double) totalCandidates / pageSize);
+
+        CandidateDuplicateService duplicateService = new CandidateDuplicateService();
+        int pendingDuplicateCount = duplicateService.getPendingWarningsCount();
+        request.setAttribute("pendingDuplicateCount", pendingDuplicateCount);
 
         request.setAttribute("candidates", list);
         request.setAttribute("currentPage", page);
@@ -179,7 +186,16 @@ public class CandidateServlet extends HttpServlet {
                 if (!candidateService.createCandidate(c)) {
                     throw new IllegalStateException("Không thể thêm hồ sơ ứng viên.");
                 }
-                if (session != null) session.setAttribute("flashSuccess", "Thêm hồ sơ ứng viên thành công!");
+                List<CandidateDuplicateWarning> dups = duplicateService.detectAndRecordDuplicates(c, currentUser);
+                if (!dups.isEmpty()) {
+                    if (session != null) {
+                        session.setAttribute("flashWarning", "Đã thêm hồ sơ ứng viên! Cảnh báo: Phát hiện " + dups.size() +
+                                " hồ sơ nghi trùng lặp theo Email hoặc Số điện thoại. <a href='" + request.getContextPath() +
+                                "/candidates/duplicates' class='alert-link fw-bold text-decoration-underline'>Xem & Đối chiếu hợp nhất ngay</a>");
+                    }
+                } else {
+                    if (session != null) session.setAttribute("flashSuccess", "Thêm hồ sơ ứng viên thành công!");
+                }
             } else if ("/candidates/update-status".equals(path)) {
                 String id = request.getParameter("candidateId");
                 String newStatus = request.getParameter("status");

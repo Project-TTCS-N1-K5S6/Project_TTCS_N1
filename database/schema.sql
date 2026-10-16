@@ -266,7 +266,10 @@ CREATE TABLE candidates (
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
-    status VARCHAR(50) NOT NULL DEFAULT 'APPLIED', -- 'APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'HIRED', 'REJECTED'
+    normalized_phone VARCHAR(50) NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'APPLIED', -- 'APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'HIRED', 'REJECTED', 'MERGED'
+    merged_into_id VARCHAR(36) NULL,
+    is_merged BOOLEAN DEFAULT FALSE,
     tracking_code VARCHAR(50) NULL UNIQUE,
     cv_url TEXT,
     extracted_name VARCHAR(255) NULL,
@@ -275,6 +278,7 @@ CREATE TABLE candidates (
     extraction_status VARCHAR(50) DEFAULT 'NONE', -- 'SUCCESS', 'PARTIAL', 'FAILED', 'CONFIRMED', 'NONE'
     cv_extracted_at TIMESTAMP NULL,
     notes TEXT,
+    tags TEXT NULL,
     cover_letter MEDIUMTEXT NULL,
     ip_address VARCHAR(45) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -282,7 +286,8 @@ CREATE TABLE candidates (
     CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL,
     CONSTRAINT fk_cand_application_source FOREIGN KEY (application_source_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
     CONSTRAINT fk_cand_referred_by FOREIGN KEY (referred_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_cand_rejection_reason FOREIGN KEY (rejection_reason_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT
+    CONSTRAINT fk_cand_rejection_reason FOREIGN KEY (rejection_reason_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_cand_merged_into FOREIGN KEY (merged_into_id) REFERENCES candidates(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_cand_referrer ON candidates(referred_by_user_id);
@@ -548,5 +553,75 @@ CREATE TABLE questions (
     INDEX idx_q_difficulty (difficulty_level)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   COMMENT='Ngân hàng câu hỏi phỏng vấn theo tiêu chí năng lực';
+
+-- 25. Bảng cảnh báo hồ sơ nghi trùng lặp (candidate_duplicate_warnings)
+DROP TABLE IF EXISTS candidate_duplicate_warnings;
+CREATE TABLE candidate_duplicate_warnings (
+    id VARCHAR(36) PRIMARY KEY,
+    candidate_id_1 VARCHAR(36) NOT NULL,
+    candidate_id_2 VARCHAR(36) NOT NULL,
+    match_type VARCHAR(20) NOT NULL, -- 'EMAIL', 'PHONE', 'BOTH'
+    match_value VARCHAR(255) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'DISMISSED', 'MERGED', 'SNOOZED'
+    snooze_until TIMESTAMP NULL,
+    reminder_count INT NOT NULL DEFAULT 0,
+    reminder_interval_days INT NOT NULL DEFAULT 3,
+    notes TEXT NULL,
+    resolved_by VARCHAR(36) NULL,
+    resolved_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cdw_cand1 FOREIGN KEY (candidate_id_1) REFERENCES candidates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cdw_cand2 FOREIGN KEY (candidate_id_2) REFERENCES candidates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cdw_resolver FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT uq_cdw_pair UNIQUE (candidate_id_1, candidate_id_2),
+    INDEX idx_cdw_status (status),
+    INDEX idx_cdw_snooze (snooze_until),
+    INDEX idx_cdw_cand1 (candidate_id_1),
+    INDEX idx_cdw_cand2 (candidate_id_2)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 26. Bảng lịch sử hợp nhất hồ sơ (candidate_merge_history)
+DROP TABLE IF EXISTS candidate_merge_history;
+CREATE TABLE candidate_merge_history (
+    id VARCHAR(36) PRIMARY KEY,
+    warning_id VARCHAR(36) NULL,
+    primary_candidate_id VARCHAR(36) NOT NULL,
+    secondary_candidate_id VARCHAR(36) NOT NULL,
+    primary_candidate_name VARCHAR(255) NOT NULL,
+    secondary_candidate_name VARCHAR(255) NOT NULL,
+    merged_by_user_id VARCHAR(36) NULL,
+    merged_by_user_name VARCHAR(255) NULL,
+    field_selection_details LONGTEXT NULL,
+    merged_snapshot LONGTEXT NULL,
+    merge_notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cmh_warning FOREIGN KEY (warning_id) REFERENCES candidate_duplicate_warnings(id) ON DELETE SET NULL,
+    CONSTRAINT fk_cmh_primary FOREIGN KEY (primary_candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cmh_user FOREIGN KEY (merged_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_cmh_primary (primary_candidate_id),
+    INDEX idx_cmh_secondary (secondary_candidate_id),
+    INDEX idx_cmh_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 27. Bảng hoạt động & bảo toàn lịch sử ứng viên (candidate_activities)
+DROP TABLE IF EXISTS candidate_activities;
+CREATE TABLE candidate_activities (
+    id VARCHAR(36) PRIMARY KEY,
+    candidate_id VARCHAR(36) NOT NULL,
+    activity_type VARCHAR(50) NOT NULL, -- 'APPLICATION', 'INTERVIEW', 'ASSESSMENT', 'NOTE', 'STATUS_CHANGE', 'MERGE', 'WARNING'
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    performed_by VARCHAR(36) NULL,
+    performed_by_name VARCHAR(255) NULL,
+    original_candidate_id VARCHAR(36) NULL,
+    metadata_json LONGTEXT NULL,
+    activity_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ca_candidate FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ca_user FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_ca_candidate (candidate_id),
+    INDEX idx_ca_type (activity_type),
+    INDEX idx_ca_date (activity_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

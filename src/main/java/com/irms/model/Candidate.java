@@ -21,7 +21,10 @@ public class Candidate implements Serializable {
     private String fullName;
     private String email;
     private String phone;
-    private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED, WITHDRAWN
+    private String normalizedPhone;
+    private String status; // APPLIED, SCREENING, INTERVIEWING, OFFER, HIRED, REJECTED, WITHDRAWN, MERGED
+    private String mergedIntoId;
+    private boolean isMerged;
     private String trackingCode;
     private String cvUrl;
     private String extractedName;
@@ -160,6 +163,15 @@ public class Candidate implements Serializable {
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
 
+    public String getNormalizedPhone() { return normalizedPhone; }
+    public void setNormalizedPhone(String normalizedPhone) { this.normalizedPhone = normalizedPhone; }
+
+    public String getMergedIntoId() { return mergedIntoId; }
+    public void setMergedIntoId(String mergedIntoId) { this.mergedIntoId = mergedIntoId; }
+
+    public boolean isMerged() { return isMerged; }
+    public void setMerged(boolean merged) { isMerged = merged; }
+
     public String getStatusBadgeClass() {
         if ("APPLIED".equalsIgnoreCase(status)) return "bg-primary";
         if ("SCREENING".equalsIgnoreCase(status)) return "bg-info";
@@ -168,6 +180,7 @@ public class Candidate implements Serializable {
         if ("HIRED".equalsIgnoreCase(status)) return "bg-success";
         if ("REJECTED".equalsIgnoreCase(status)) return "bg-danger";
         if ("WITHDRAWN".equalsIgnoreCase(status)) return "bg-secondary";
+        if ("MERGED".equalsIgnoreCase(status)) return "bg-dark text-white";
         return "bg-secondary";
     }
 
@@ -179,6 +192,7 @@ public class Candidate implements Serializable {
         if ("HIRED".equalsIgnoreCase(status)) return "Đã trúng tuyển";
         if ("REJECTED".equalsIgnoreCase(status)) return "Đã từ chối";
         if ("WITHDRAWN".equalsIgnoreCase(status)) return "Ứng viên rút hồ sơ";
+        if ("MERGED".equalsIgnoreCase(status)) return "Đã hợp nhất";
         return status;
     }
 }

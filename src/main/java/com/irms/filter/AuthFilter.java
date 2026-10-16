@@ -256,9 +256,20 @@ public class AuthFilter implements Filter {
             }
         }
 
-        // 6. Phân hệ Hồ sơ ứng viên (/candidates) - Yêu cầu quyền candidates.view hoặc ADMIN
-        if (path.startsWith("/candidates") && !currentUser.hasPermission("candidates.view") && !currentUser.hasRole("ADMIN")) {
-            request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+        // 6. Phân hệ Hồ sơ ứng viên (/candidates, /api/candidates) - Yêu cầu quyền candidates.view, candidates.manage hoặc ADMIN / HR_MANAGER / RECRUITER
+        if ((path.startsWith("/candidates") || path.startsWith("/api/candidates"))
+                && !currentUser.hasPermission("candidates.view")
+                && !currentUser.hasPermission("candidates.manage")
+                && !currentUser.hasRole("ADMIN")
+                && !currentUser.hasRole("HR_MANAGER")
+                && !currentUser.hasRole("RECRUITER")) {
+            if (path.startsWith("/api/")) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"success\":false,\"message\":\"Bạn không có quyền truy cập dữ liệu ứng viên.\"}");
+            } else {
+                request.getRequestDispatcher("/WEB-INF/views/errors/403.jsp").forward(request, response);
+            }
             return;
         }
 

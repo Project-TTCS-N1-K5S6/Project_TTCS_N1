@@ -261,6 +261,51 @@
             </a>
         </div>
 
+        <%-- ========== CẢNH BÁO HỒ SƠ TRÙNG LẶP ========== --%>
+        <c:if test="${not empty duplicateCandidates && duplicateCandidates.size() > 0}">
+            <div class="alert border shadow-sm d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3"
+                 style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-color: #f59e0b !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width: 48px; height: 48px; background: rgba(245,158,11,0.2);">
+                        <i class="bi bi-exclamation-diamond-fill text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">
+                            <i class="bi bi-shield-exclamation me-1"></i>
+                            Phát hiện ${duplicateCandidates.size()} hồ sơ nghi trùng lặp!
+                        </div>
+                        <div class="text-secondary small">
+                            Ứng viên này có email hoặc số điện thoại trùng khớp với hồ sơ khác trong hệ thống. 
+                            Bạn nên đối chiếu và hợp nhất để tránh dữ liệu trùng lặp.
+                        </div>
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            <c:forEach var="dup" items="${duplicateCandidates}">
+                                <span class="badge bg-white border text-dark py-1 px-2" style="font-size: .77rem;">
+                                    <i class="bi bi-person-fill text-warning me-1"></i>
+                                    ${dup.fullName} (${dup.email})
+                                </span>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-column gap-2 mt-2 mt-md-0">
+                    <c:forEach var="dup" items="${duplicateCandidates}" varStatus="dupLoop">
+                        <c:if test="${dupLoop.index == 0}">
+                            <a href="${pageContext.request.contextPath}/candidates/duplicates/compare?id1=${candidate.id}&id2=${dup.id}"
+                               class="btn btn-warning btn-sm fw-bold px-3 py-2 text-dark shadow-sm rounded-pill text-nowrap">
+                                <i class="bi bi-arrow-left-right me-1"></i> Đối chiếu & Hợp nhất
+                            </a>
+                        </c:if>
+                    </c:forEach>
+                    <a href="${pageContext.request.contextPath}/candidates/duplicates"
+                       class="btn btn-outline-dark btn-sm px-3 py-1 rounded-pill text-nowrap" style="font-size:.78rem;">
+                        <i class="bi bi-list-check me-1"></i> Xem tất cả cảnh báo
+                    </a>
+                </div>
+            </div>
+        </c:if>
+
         <%-- ========== HERO BANNER ========== --%>
         <div class="profile-hero">
             <div class="d-flex flex-wrap align-items-start gap-4" style="position:relative;z-index:1;">
@@ -609,6 +654,11 @@
                                                         <c:if test="${app.id == candidate.id}">
                                                             <span class="badge bg-primary ms-1" style="font-size:.65rem;">Hiện tại</span>
                                                         </c:if>
+                                                        <c:if test="${app.merged}">
+                                                            <span class="badge ms-1" style="font-size:.65rem; background:rgba(147,51,234,0.1); color:#7e22ce; border:1px solid rgba(147,51,234,0.25);" title="Hồ sơ được bảo toàn từ lần hợp nhất">
+                                                                <i class="bi bi-intersect me-1"></i>Hồ sơ gộp
+                                                            </span>
+                                                        </c:if>
                                                     </div>
                                                     <span class="status-pill ${app.status} flex-shrink-0">
                                                         ${app.getStatusLabel()}
@@ -779,6 +829,154 @@
 
             </div><%-- end col-right --%>
         </div><%-- end row --%>
+
+        <%-- ========== LỊCH SỬ HỢP NHẤT & HOẠT ĐỘNG BẢO TOÀN ========== --%>
+        <c:if test="${not empty mergeHistories || not empty candidateActivities}">
+        <div class="row g-4 mt-2">
+            <%-- Lịch sử hợp nhất --%>
+            <c:if test="${not empty mergeHistories}">
+            <div class="col-12 col-lg-6">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="card-icon" style="background:rgba(99,102,241,0.1); color:#6366f1;">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark fs-6">Lịch sử hợp nhất hồ sơ</div>
+                            <small class="text-muted">Các lần hợp nhất hồ sơ trùng lặp đã thực hiện</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${mergeHistories.size()}</span>
+                    </div>
+                    <div class="info-card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div class="timeline">
+                            <c:forEach var="mh" items="${mergeHistories}">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot current"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex align-items-start justify-content-between mb-1">
+                                            <div class="fw-bold text-dark" style="font-size:.85rem;">
+                                                <i class="bi bi-arrow-left-right text-primary me-1"></i>
+                                                Hợp nhất: <strong><c:out value="${mh.primaryCandidateName}" /></strong> ← <strong><c:out value="${mh.secondaryCandidateName}" /></strong>
+                                            </div>
+                                            <c:choose>
+                                                <c:when test="${mh.undone}">
+                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.68rem;">Đã hoàn tác</span>
+                                                </c:when>
+                                                <c:when test="${mh.canUndo}">
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size:.68rem;">
+                                                        <i class="bi bi-clock-history me-1"></i>${mh.remainingUndoText}
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.68rem;">Đã hợp nhất</span>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <div class="small text-muted mb-1">
+                                            <i class="bi bi-person me-1"></i>Thực hiện bởi: <strong><c:out value="${mh.mergedByUsername}" /></strong>
+                                        </div>
+                                        <div class="small text-muted mb-1">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            <fmt:formatDate value="${mh.mergedAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                        </div>
+                                        <c:if test="${not empty mh.mergeNotes}">
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-chat-quote me-1"></i>Ghi chú: <em><c:out value="${mh.mergeNotes}" /></em>
+                                            </div>
+                                        </c:if>
+                                        <c:if test="${not empty mh.fieldSelections}">
+                                            <details class="mt-2">
+                                                <summary class="small text-primary fw-semibold" style="cursor:pointer;">
+                                                    <i class="bi bi-eye me-1"></i>Xem chi tiết trường đã chọn
+                                                </summary>
+                                                <div class="mt-1 p-2 bg-light rounded border small" style="font-size:.78rem; white-space:pre-wrap; max-height:120px; overflow-y:auto;">
+                                                    <c:out value="${mh.fieldSelections}" />
+                                                </div>
+                                            </details>
+                                        </c:if>
+
+                                        <c:if test="${mh.canUndo && canEdit}">
+                                            <div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between">
+                                                <small class="text-warning-emphasis fw-semibold">
+                                                    <i class="bi bi-shield-check me-1"></i>Có thể hoàn tác trong vòng 24 giờ (${mh.remainingUndoText})
+                                                </small>
+                                                <button type="button" class="btn btn-xs btn-outline-danger py-1 px-2 rounded-pill shadow-sm"
+                                                        onclick="openUndoMergeModal('${mh.id}', '<c:out value="${mh.primaryCandidateName}" />', '<c:out value="${mh.secondaryCandidateName}" />', '${mh.remainingUndoText}')">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Hoàn tác hợp nhất
+                                                </button>
+                                            </div>
+                                        </c:if>
+
+                                        <c:if test="${mh.undone}">
+                                            <div class="mt-2 p-2 bg-light rounded border text-muted small" style="font-size:.78rem;">
+                                                <i class="bi bi-info-circle me-1 text-info"></i>Đã hoàn tác vào lúc <fmt:formatDate value="${mh.undoneAt}" pattern="dd/MM/yyyy HH:mm"/> bởi <strong><c:out value="${mh.undoneByUserName}" /></strong>.
+                                                <c:if test="${not empty mh.undoNotes}"><br/>Lý do: <em><c:out value="${mh.undoNotes}" /></em></c:if>
+                                            </div>
+                                        </c:if>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </c:if>
+
+            <%-- Hoạt động bảo toàn (Activities) --%>
+            <c:if test="${not empty candidateActivities}">
+            <div class="col-12 col-lg-6">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="card-icon" style="background:rgba(16,185,129,0.1); color:#059669;">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark fs-6">Hoạt động & Lịch sử bảo toàn</div>
+                            <small class="text-muted">Toàn bộ lịch sử tuyển dụng, phỏng vấn, đánh giá, ghi chú</small>
+                        </div>
+                        <span class="badge bg-success rounded-pill">${candidateActivities.size()}</span>
+                    </div>
+                    <div class="info-card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div class="timeline">
+                            <c:forEach var="act" items="${candidateActivities}">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot
+                                        ${act.activityType == 'INTERVIEW' ? 'warning' :
+                                          act.activityType == 'EVALUATION' ? 'info' :
+                                          act.activityType == 'NOTE' ? 'secondary' :
+                                          act.activityType == 'STATUS_CHANGE' ? 'current' :
+                                          act.activityType == 'MERGE' ? 'success' : 'secondary'}"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span class="badge rounded-pill
+                                                ${act.activityType == 'INTERVIEW' ? 'bg-warning-subtle text-warning border border-warning-subtle' :
+                                                  act.activityType == 'EVALUATION' ? 'bg-info-subtle text-info border border-info-subtle' :
+                                                  act.activityType == 'STATUS_CHANGE' ? 'bg-primary-subtle text-primary border border-primary-subtle' :
+                                                  act.activityType == 'MERGE' ? 'bg-success-subtle text-success border border-success-subtle' :
+                                                  'bg-secondary-subtle text-secondary border border-secondary-subtle'}"
+                                                style="font-size:.68rem;">
+                                                ${act.activityType}
+                                            </span>
+                                            <span class="small text-muted">
+                                                <fmt:formatDate value="${act.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                            </span>
+                                        </div>
+                                        <div class="small text-dark" style="white-space:pre-wrap;"><c:out value="${act.description}" /></div>
+                                        <c:if test="${not empty act.performedBy}">
+                                            <div class="small text-muted mt-1">
+                                                <i class="bi bi-person-fill me-1"></i>${act.performedBy}
+                                            </div>
+                                        </c:if>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </c:if>
+        </div>
+        </c:if>
     </div>
     <jsp:include page="../common/footer.jsp" />
 </main>
@@ -915,3 +1113,55 @@ document.querySelectorAll('.tag-suggestion').forEach(function(btn) {
 });
 </script>
 </c:if>
+
+<!-- MODAL XÁC NHẬN HOÀN TÁC HỢP NHẤT HỒ SƠ TRONG 24H -->
+<div class="modal fade" id="undoMergeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="${pageContext.request.contextPath}/candidates/duplicates/undo" method="POST">
+                <input type="hidden" name="historyId" id="undoHistoryId" value="" />
+                <input type="hidden" name="redirectUrl" value="${pageContext.request.contextPath}/candidates/profile?id=${candidate.id}" />
+                <div class="modal-header bg-danger text-white py-3">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-arrow-counterclockwise me-2"></i>Xác nhận hoàn tác hợp nhất hồ sơ
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Hệ thống chỉ cho phép hoàn tác việc hợp nhất trong vòng <strong>24 giờ</strong> kể từ thời điểm thực hiện.
+                        <div id="undoTimeRemainingText" class="mt-1 fw-bold text-danger"></div>
+                    </div>
+                    <p class="small text-secondary mb-3">
+                        Khi hoàn tác, hồ sơ <strong id="undoSecondaryName"></strong> sẽ được khôi phục thành hồ sơ độc lập,
+                        các trường dữ liệu ban đầu của hồ sơ <strong id="undoPrimaryName"></strong> sẽ được phục hồi nguyên trạng
+                        và toàn bộ lịch sử ứng tuyển sẽ được phân tách chính xác.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Lý do hoàn tác (Tùy chọn):</label>
+                        <textarea class="form-control form-control-sm" name="undoNotes" rows="2"
+                                  placeholder="Ví dụ: Gộp nhầm do trùng tên nhưng khác người..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Xác nhận hoàn tác
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openUndoMergeModal(historyId, primaryName, secondaryName, remainingText) {
+    document.getElementById('undoHistoryId').value = historyId;
+    document.getElementById('undoPrimaryName').innerText = primaryName || 'Hồ sơ chính';
+    document.getElementById('undoSecondaryName').innerText = secondaryName || 'Hồ sơ phụ';
+    document.getElementById('undoTimeRemainingText').innerText = 'Thời hạn hoàn tác: ' + (remainingText || 'Trong vòng 24 giờ');
+    var modal = new bootstrap.Modal(document.getElementById('undoMergeModal'));
+    modal.show();
+}
+</script>
