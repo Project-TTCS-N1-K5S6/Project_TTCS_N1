@@ -58,6 +58,12 @@
                         <span>Danh sách ứng viên</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'candidate-duplicates' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates/duplicates">
+                        <i class="bi bi-copy"></i>
+                        <span>Hồ sơ trùng lặp</span>
+                    </a>
+                </li>
             </c:if>
             <li class="nav-item">
                 <a class="nav-link ${activeMenu == 'referrals' ? 'active' : ''}" href="${pageContext.request.contextPath}/referrals">

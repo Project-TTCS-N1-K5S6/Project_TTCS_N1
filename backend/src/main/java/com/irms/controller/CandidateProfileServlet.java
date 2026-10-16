@@ -1,10 +1,13 @@
 package com.irms.controller;
 
 import com.irms.model.Candidate;
+import com.irms.model.CandidateActivity;
+import com.irms.model.CandidateMergeHistory;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
 import com.irms.model.User;
 import com.irms.service.AuditService;
+import com.irms.service.CandidateDuplicateService;
 import com.irms.service.CandidateService;
 import com.irms.service.SharedCatalogService;
 import com.irms.util.JsonUtil;
@@ -156,12 +159,17 @@ public class CandidateProfileServlet extends HttpServlet {
             LOGGER.log(Level.WARNING, "Không thể ghi audit log truy cập hồ sơ: " + e.getMessage());
         }
 
-        // [KN-271]: Lấy toàn bộ lịch sử ứng tuyển của cùng một người (theo email)
-        List<Candidate> applicationHistory = candidateService.getApplicationHistory(candidate.getEmail());
+        // [KN-271]: Lấy toàn bộ lịch sử ứng tuyển bảo toàn của cả hai hồ sơ sau hợp nhất
+        List<Candidate> applicationHistory = candidateService.getApplicationHistory(candidate);
 
         boolean canEdit = currentUser.hasRole("ADMIN")
                 || currentUser.hasRole("HR_MANAGER")
                 || currentUser.hasRole("RECRUITER");
+
+        CandidateDuplicateService dupService = new CandidateDuplicateService();
+        List<Candidate> duplicateCandidates = dupService.checkForDuplicates(candidate.getEmail(), candidate.getPhone(), candidate.getId());
+        List<CandidateMergeHistory> mergeHistories = dupService.getMergeHistories(candidate.getId());
+        List<CandidateActivity> candidateActivities = dupService.getCandidateActivities(candidate.getId());
 
         // ======================================================================
         // NHÁNH 2: [KN-270] API JSON LẤY HỒ SƠ ỨNG VIÊN HỢP NHẤT
@@ -172,6 +180,9 @@ public class CandidateProfileServlet extends HttpServlet {
             data.put("candidate", candidate);
             data.put("applicationHistory", applicationHistory);
             data.put("totalApplications", applicationHistory.size());
+            data.put("duplicateCandidates", duplicateCandidates);
+            data.put("mergeHistories", mergeHistories);
+            data.put("candidateActivities", candidateActivities);
             data.put("canEdit", canEdit);
             JsonUtil.sendJsonResponse(response, HttpServletResponse.SC_OK, data);
             return;
@@ -184,6 +195,9 @@ public class CandidateProfileServlet extends HttpServlet {
 
         request.setAttribute("candidate", candidate);
         request.setAttribute("applicationHistory", applicationHistory);
+        request.setAttribute("duplicateCandidates", duplicateCandidates);
+        request.setAttribute("mergeHistories", mergeHistories);
+        request.setAttribute("candidateActivities", candidateActivities);
         request.setAttribute("rejectionReasons", rejectionReasons);
         request.setAttribute("canEdit", canEdit);
 

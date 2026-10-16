@@ -75,6 +75,8 @@ public class CandidateDAO extends BaseDAO {
         if (status != null && !status.trim().isEmpty()) {
             sql.append("AND c.status = ? ");
             params.add(status.trim());
+        } else {
+            sql.append("AND (c.is_merged IS NULL OR c.is_merged = FALSE) ");
         }
 
         sql.append("ORDER BY c.created_at DESC");
@@ -128,6 +130,8 @@ public class CandidateDAO extends BaseDAO {
         if (status != null && !status.trim().isEmpty()) {
             sql.append("AND c.status = ? ");
             params.add(status.trim());
+        } else {
+            sql.append("AND (c.is_merged IS NULL OR c.is_merged = FALSE) ");
         }
 
         Connection conn = null;
@@ -269,6 +273,100 @@ public class CandidateDAO extends BaseDAO {
     }
 
     /**
+     * Lấy toàn bộ lịch sử ứng tuyển bảo toàn của cả hai hồ sơ sau khi hợp nhất.
+     * Bao gồm: các đơn ứng tuyển cùng email, hoặc các hồ sơ đã được gộp vào hồ sơ này (merged_into_id),
+     * hoặc nếu hồ sơ hiện tại là hồ sơ phụ đã gộp thì lấy cả hồ sơ chính.
+     */
+    public List<Candidate> findAllApplicationsForCandidate(Candidate candidate) {
+        List<Candidate> list = new ArrayList<>();
+        if (candidate == null) return list;
+        String email = candidate.getEmail() != null ? candidate.getEmail().trim().toLowerCase() : "";
+        String candidateId = candidate.getId();
+        String mergedIntoId = candidate.getMergedIntoId();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                "referrer.full_name AS referred_by_user_name FROM candidates c " +
+                "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                "LEFT JOIN departments d ON r.department_id = d.id " +
+                "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id WHERE (");
+
+        List<Object> params = new ArrayList<>();
+        boolean hasCondition = false;
+        if (!email.isEmpty()) {
+            sql.append("LOWER(TRIM(c.email)) = ? ");
+            params.add(email);
+            hasCondition = true;
+        }
+        if (candidateId != null && !candidateId.trim().isEmpty()) {
+            if (hasCondition) sql.append("OR ");
+            sql.append("c.merged_into_id = ? OR c.id = ? ");
+            params.add(candidateId.trim());
+            params.add(candidateId.trim());
+            hasCondition = true;
+        }
+        if (mergedIntoId != null && !mergedIntoId.trim().isEmpty()) {
+            if (hasCondition) sql.append("OR ");
+            sql.append("c.id = ? OR c.merged_into_id = ? ");
+            params.add(mergedIntoId.trim());
+            params.add(mergedIntoId.trim());
+            hasCondition = true;
+        }
+        if (!hasCondition) return list;
+
+        sql.append(") ORDER BY c.created_at DESC");
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Candidate c = new Candidate();
+                c.setId(rs.getString("id"));
+                c.setRequisitionId(rs.getString("requisition_id"));
+                c.setRequisitionTitle(rs.getString("requisition_title"));
+                c.setDepartmentId(rs.getString("department_id"));
+                c.setDepartmentName(rs.getString("department_name"));
+                c.setApplicationSourceId(rs.getString("application_source_id"));
+                c.setApplicationSourceName(rs.getString("application_source_name"));
+                c.setReferredByUserId(rs.getString("referred_by_user_id"));
+                c.setReferredByUserName(rs.getString("referred_by_user_name"));
+                c.setRejectionReasonId(rs.getString("rejection_reason_id"));
+                c.setRejectionReasonName(rs.getString("rejection_reason_name"));
+                c.setFullName(rs.getString("full_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPhone(rs.getString("phone"));
+                try { c.setNormalizedPhone(rs.getString("normalized_phone")); } catch (SQLException ignored) {}
+                c.setStatus(rs.getString("status"));
+                try { c.setMergedIntoId(rs.getString("merged_into_id")); } catch (SQLException ignored) {}
+                try { c.setMerged(rs.getBoolean("is_merged")); } catch (SQLException ignored) {}
+                c.setCvUrl(rs.getString("cv_url"));
+                c.setNotes(rs.getString("notes"));
+                try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
+                try { c.setTrackingCode(rs.getString("tracking_code")); } catch (SQLException ignored) {}
+                try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
+                try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
+                c.setCreatedAt(rs.getTimestamp("created_at"));
+                c.setUpdatedAt(rs.getTimestamp("updated_at"));
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy toàn bộ lịch sử ứng tuyển bảo toàn của ứng viên: " + candidateId, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    /**
      * [KN-218]: Cập nhật ghi chú (notes) cho một hồ sơ ứng viên
      */
     public boolean updateNotes(String candidateId, String notes) {
@@ -340,10 +438,11 @@ public class CandidateDAO extends BaseDAO {
     }
 
     public boolean insert(Candidate c) {
+        String normPhone = c.getNormalizedPhone() != null ? c.getNormalizedPhone() : CandidateDuplicateDAO.normalizePhone(c.getPhone());
         String sql = "INSERT INTO candidates (id, requisition_id, application_source_id, rejection_reason_id, " +
-                     "referred_by_user_id, full_name, email, phone, status, cv_url, " +
+                     "referred_by_user_id, full_name, email, phone, normalized_phone, status, cv_url, " +
                      "extracted_name, extracted_email, extracted_phone, extraction_status, cv_extracted_at, notes) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement ps = null;
         try {
@@ -357,14 +456,15 @@ public class CandidateDAO extends BaseDAO {
             ps.setString(6, c.getFullName());
             ps.setString(7, c.getEmail());
             ps.setString(8, c.getPhone());
-            ps.setString(9, c.getStatus() != null ? c.getStatus() : "APPLIED");
-            ps.setString(10, c.getCvUrl());
-            ps.setString(11, c.getExtractedName());
-            ps.setString(12, c.getExtractedEmail());
-            ps.setString(13, c.getExtractedPhone());
-            ps.setString(14, c.getExtractionStatus() != null ? c.getExtractionStatus() : "NONE");
-            ps.setTimestamp(15, c.getCvExtractedAt());
-            ps.setString(16, c.getNotes());
+            ps.setString(9, normPhone);
+            ps.setString(10, c.getStatus() != null ? c.getStatus() : "APPLIED");
+            ps.setString(11, c.getCvUrl());
+            ps.setString(12, c.getExtractedName());
+            ps.setString(13, c.getExtractedEmail());
+            ps.setString(14, c.getExtractedPhone());
+            ps.setString(15, c.getExtractionStatus() != null ? c.getExtractionStatus() : "NONE");
+            ps.setTimestamp(16, c.getCvExtractedAt());
+            ps.setString(17, c.getNotes());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi thêm ứng viên mới", e);
@@ -666,11 +766,12 @@ public class CandidateDAO extends BaseDAO {
     }
 
     public boolean insertApplication(Candidate c, String withdrawalTokenHash) {
+        String normPhone = c.getNormalizedPhone() != null ? c.getNormalizedPhone() : CandidateDuplicateDAO.normalizePhone(c.getPhone());
         String sql = "INSERT INTO candidates (id, requisition_id, application_source_id, rejection_reason_id, " +
-                     "full_name, email, phone, status, tracking_code, cv_url, " +
+                     "full_name, email, phone, normalized_phone, status, tracking_code, cv_url, " +
                      "extracted_name, extracted_email, extracted_phone, extraction_status, cv_extracted_at, " +
                      "notes, cover_letter, ip_address) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         try {
             conn = getConnection();
@@ -685,17 +786,18 @@ public class CandidateDAO extends BaseDAO {
                 ps.setString(5, c.getFullName());
                 ps.setString(6, c.getEmail());
                 ps.setString(7, c.getPhone());
-                ps.setString(8, c.getStatus() != null ? c.getStatus() : "APPLIED");
-                ps.setString(9, c.getTrackingCode());
-                ps.setString(10, c.getCvUrl());
-                ps.setString(11, c.getExtractedName());
-                ps.setString(12, c.getExtractedEmail());
-                ps.setString(13, c.getExtractedPhone());
-                ps.setString(14, c.getExtractionStatus() != null ? c.getExtractionStatus() : "NONE");
-                ps.setTimestamp(15, c.getCvExtractedAt());
-                ps.setString(16, c.getNotes());
-                ps.setString(17, c.getCoverLetter());
-                ps.setString(18, c.getIpAddress());
+                ps.setString(8, normPhone);
+                ps.setString(9, c.getStatus() != null ? c.getStatus() : "APPLIED");
+                ps.setString(10, c.getTrackingCode());
+                ps.setString(11, c.getCvUrl());
+                ps.setString(12, c.getExtractedName());
+                ps.setString(13, c.getExtractedEmail());
+                ps.setString(14, c.getExtractedPhone());
+                ps.setString(15, c.getExtractionStatus() != null ? c.getExtractionStatus() : "NONE");
+                ps.setTimestamp(16, c.getCvExtractedAt());
+                ps.setString(17, c.getNotes());
+                ps.setString(18, c.getCoverLetter());
+                ps.setString(19, c.getIpAddress());
                 if (ps.executeUpdate() == 0) {
                     if (withdrawalTokenHash != null) conn.rollback();
                     return false;
@@ -969,7 +1071,10 @@ public class CandidateDAO extends BaseDAO {
         c.setFullName(rs.getString("full_name"));
         c.setEmail(rs.getString("email"));
         c.setPhone(rs.getString("phone"));
+        try { c.setNormalizedPhone(rs.getString("normalized_phone")); } catch (SQLException ignored) {}
         c.setStatus(rs.getString("status"));
+        try { c.setMergedIntoId(rs.getString("merged_into_id")); } catch (SQLException ignored) {}
+        try { c.setMerged(rs.getBoolean("is_merged")); } catch (SQLException ignored) {}
         c.setCvUrl(rs.getString("cv_url"));
         c.setNotes(rs.getString("notes"));
         try { c.setTags(rs.getString("tags")); } catch (SQLException ignored) {}
@@ -999,6 +1104,81 @@ public class CandidateDAO extends BaseDAO {
     }
 
     /**
+     * Khóa dòng hồ sơ ứng viên để tránh tranh chấp dữ liệu khi xử lý đồng thời (Concurrency Lock)
+     */
+    public Candidate lockCandidateForUpdate(String candidateId, Connection conn) throws SQLException {
+        if (candidateId == null) return null;
+        String sql = "SELECT c.*, r.title AS requisition_title, d.name AS department_name, " +
+                     "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                     "referrer.full_name AS referred_by_user_name FROM candidates c " +
+                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                     "LEFT JOIN departments d ON r.department_id = d.id " +
+                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                     "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id " +
+                     "WHERE c.id = ? FOR UPDATE";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, candidateId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapCandidate(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Cập nhật thông tin các trường của hồ sơ chính sau khi hợp nhất trong transaction
+     */
+    public boolean updateCandidateFields(Candidate c, Connection conn) throws SQLException {
+        String sql = "UPDATE candidates SET full_name = ?, email = ?, phone = ?, normalized_phone = ?, " +
+                     "cv_url = ?, status = ?, requisition_id = ?, application_source_id = ?, notes = ?, " +
+                     "tags = ?, cover_letter = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, c.getFullName());
+            ps.setString(2, c.getEmail());
+            ps.setString(3, c.getPhone());
+            ps.setString(4, c.getNormalizedPhone() != null ? c.getNormalizedPhone() : CandidateDuplicateDAO.normalizePhone(c.getPhone()));
+            ps.setString(5, c.getCvUrl());
+            ps.setString(6, c.getStatus());
+            ps.setString(7, c.getRequisitionId());
+            ps.setString(8, c.getApplicationSourceId());
+            ps.setString(9, c.getNotes());
+            ps.setString(10, c.getTags());
+            ps.setString(11, c.getCoverLetter());
+            ps.setString(12, c.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Đánh dấu hồ sơ phụ đã bị hợp nhất vào hồ sơ chính trong transaction
+     */
+    public boolean markCandidateAsMerged(String secondaryId, String primaryId, Connection conn) throws SQLException {
+        String sql = "UPDATE candidates SET is_merged = TRUE, merged_into_id = ?, status = 'MERGED', " +
+                     "updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, primaryId);
+            ps.setString(2, secondaryId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Khôi phục hồ sơ phụ sau khi hoàn tác hợp nhất
+     */
+    public boolean unmarkCandidateMerged(String candidateId, String originalStatus, Connection conn) throws SQLException {
+        String sql = "UPDATE candidates SET is_merged = FALSE, merged_into_id = NULL, status = ?, " +
+                     "updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, (originalStatus != null && !originalStatus.trim().isEmpty()) ? originalStatus : "APPLIED");
+            ps.setString(2, candidateId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
      * Tự động kiểm tra và thêm các cột cần thiết cho bảng candidates nếu chưa tồn tại
      */
     private void ensureColumnsExist() {
@@ -1021,6 +1201,9 @@ public class CandidateDAO extends BaseDAO {
             addColumnIfNotExists(meta, stmt, "candidates", "is_sla_overdue", "BOOLEAN NOT NULL DEFAULT FALSE");
             addColumnIfNotExists(meta, stmt, "candidates", "sla_overdue_detected_at", "TIMESTAMP NULL");
             addColumnIfNotExists(meta, stmt, "candidates", "stage_entered_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            addColumnIfNotExists(meta, stmt, "candidates", "normalized_phone", "VARCHAR(50) NULL");
+            addColumnIfNotExists(meta, stmt, "candidates", "merged_into_id", "VARCHAR(36) NULL");
+            addColumnIfNotExists(meta, stmt, "candidates", "is_merged", "BOOLEAN DEFAULT FALSE");
             try {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS candidate_withdrawal_tokens (" +
                         "id VARCHAR(36) PRIMARY KEY, " +
