@@ -70,6 +70,8 @@ Nếu chưa khởi động server Tomcat, bạn có thể mở trực tiếp fil
 | **Danh mục dùng chung** | [`http://localhost:8088/shared-catalogs`](http://localhost:8088/shared-catalogs) | ADMIN, HR_MANAGER |
 | **Hồ sơ cá nhân & Đổi mật khẩu** | [`http://localhost:8088/profile`](http://localhost:8088/profile) | Tất cả người dùng đã đăng nhập |
 | **Giới thiệu ứng viên nội bộ** | [`http://localhost:8088/referrals`](http://localhost:8088/referrals) | Tất cả nhân viên nội bộ đã đăng nhập |
+| **⭐ Chấm điểm & Xếp hạng hồ sơ tự động** | [`http://localhost:8088/screening-criteria`](http://localhost:8088/screening-criteria) | ADMIN, HR_MANAGER, RECRUITER |
+| **Cấu hình tiêu chí sàng lọc** | `http://localhost:8088/screening-criteria/setup?requisitionId={id}` | ADMIN, HR_MANAGER, RECRUITER |
 
 ---
 
@@ -98,3 +100,10 @@ Nếu chưa khởi động server Tomcat, bạn có thể mở trực tiếp fil
 2. **Xem hồ sơ vừa nộp trong trang quản trị:**
    - Mở trình duyệt chính, đăng nhập bằng tài khoản `recruiter@company.local` hoặc `hr.manager@company.local` với mật khẩu `Admin@123456`.
    - Vào menu **"Hồ sơ ứng viên"** (`/candidates`) để kiểm tra hồ sơ ứng viên và file CV vừa được tải lên.
+3. **Thử tính năng Chấm điểm & Xếp hạng hồ sơ tự động:**
+   - Đăng nhập bằng `recruiter@company.local` hoặc `hr.manager@company.local`.
+   - Vào menu **"Chấm điểm hồ sơ"** (`/screening-criteria`).
+   - Bấm **"Cấu hình tiêu chí mới"** → Chọn vị trí tuyển dụng → Nhập yêu cầu kinh nghiệm, bằng cấp, kỹ năng bắt buộc → **Lưu**.
+   - Bấm **"Chấm điểm hàng loạt"** → Hệ thống tính điểm (0–100) và gắn cờ ĐẠT/KHÔNG ĐẠT cho từng hồ sơ.
+   - Vào **"Danh sách ứng viên"** → Thấy cột **Điểm & Xếp hạng** hiển thị inline.
+   - Bấm nút ⚡ **"Chấm điểm"** trên từng hồ sơ để xem báo cáo chi tiết ngay lập tức.

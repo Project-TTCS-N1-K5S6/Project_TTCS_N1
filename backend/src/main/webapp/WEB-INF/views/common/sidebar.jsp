@@ -59,6 +59,15 @@
                     </a>
                 </li>
             </c:if>
+            <%-- Chấm điểm & Xếp hạng hồ sơ tự động --%>
+            <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('RECRUITER')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'screening' ? 'active' : ''}" href="${pageContext.request.contextPath}/screening-criteria">
+                        <i class="bi bi-award-fill"></i>
+                        <span>Chấm điểm hồ sơ</span>
+                    </a>
+                </li>
+            </c:if>
             <li class="nav-item">
                 <a class="nav-link ${activeMenu == 'referrals' ? 'active' : ''}" href="${pageContext.request.contextPath}/referrals">
                     <i class="bi bi-person-heart"></i>
@@ -67,6 +76,7 @@
             </li>
 
         </ul>
+
 
         <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
         <ul class="nav flex-column mb-3">

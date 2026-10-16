@@ -230,6 +230,7 @@
                                 <th>Nguồn / Người giới thiệu</th>
                                 <th>Thời gian</th>
                                 <th>Trạng thái</th>
+                                <th>Điểm &amp; Xếp hạng</th>
                                 <th class="text-end pe-4" style="min-width: 220px;">Thao tác &amp; Chuyển vòng</th>
                             </tr>
                         </thead>
@@ -304,7 +305,36 @@
                                             ${c.getStatusLabel()}
                                         </span>
                                     </td>
+                                    <%-- Cột điểm phù hợp & cờ tiêu chí bắt buộc --%>
+                                    <td style="min-width:130px;">
+                                        <c:choose>
+                                            <c:when test="${c.matchScore != null}">
+                                                <div class="d-flex flex-column gap-1 align-items-start">
+                                                    <span class="score-badge ${c.scoreBadgeClass}" title="Điểm phù hợp (0-100)">
+                                                        <i class="bi bi-star-half" style="font-size:.65rem;"></i>&nbsp;${c.matchScore}/100
+                                                    </span>
+                                                    <span class="${c.mandatoryFlagBadgeClass}" style="font-size:.66rem;">
+                                                        <c:choose>
+                                                            <c:when test="${c.mandatoryFlag == 'PASS'}"><i class="bi bi-check-circle-fill"></i></c:when>
+                                                            <c:otherwise><i class="bi bi-x-circle-fill"></i></c:otherwise>
+                                                        </c:choose>
+                                                        ${c.mandatoryFlagLabel}
+                                                    </span>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <button type="button"
+                                                        class="btn score-one-btn"
+                                                        data-id="${c.id}"
+                                                        title="Chấm điểm ngay cho ứng viên này (cần cấu hình tiêu chí trước)"
+                                                        style="font-size:.68rem;border-radius:6px;padding:2px 8px;white-space:nowrap;background:#f1f5f9;border:1px solid #e2e8f0;color:#64748b;">
+                                                    <i class="bi bi-lightning-charge-fill" style="color:#f59e0b;"></i> Chấm điểm
+                                                </button>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </td>
                                     <td class="text-end pe-4">
+
                                         <div class="d-inline-flex align-items-center gap-2">
                                             <c:if test="${not empty c.cvUrl}">
                                                 <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-1 px-2"
@@ -359,7 +389,7 @@
                             </c:forEach>
                             <c:if test="${empty candidates}">
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
+                                    <td colspan="8" class="text-center py-5 text-muted">
                                         <i class="bi bi-person-x fs-2 d-block mb-2 text-secondary"></i>
                                         Không có hồ sơ ứng viên nào trong giai đoạn này.
                                     </td>
@@ -407,6 +437,39 @@
             });
         }
         </script>
+
+        <%-- CSS: Scoring badges – chấm điểm hồ sơ --%>
+        <style>
+        .score-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            min-width: 56px; padding: 3px 9px; border-radius: 20px;
+            font-size: .78rem; font-weight: 700; border: 1px solid rgba(0,0,0,.08);
+        }
+        .score-high   { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#065f46; }
+        .score-medium { background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; }
+        .score-low    { background:linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; }
+        .score-pending{ background:#f3f4f6; color:#9ca3af; border-color:#e5e7eb; }
+        .badge-pass {
+            display:inline-flex; align-items:center; gap:3px;
+            background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#065f46;
+            border:1px solid #6ee7b7; padding:2px 8px; border-radius:20px;
+            font-size:.68rem; font-weight:700;
+        }
+        .badge-fail {
+            display:inline-flex; align-items:center; gap:3px;
+            background:linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b;
+            border:1px solid #fca5a5; padding:2px 8px; border-radius:20px;
+            font-size:.68rem; font-weight:700;
+        }
+        .badge-pending {
+            display:inline-flex; align-items:center; gap:3px;
+            background:#f3f4f6; color:#6b7280; border:1px solid #d1d5db;
+            padding:2px 8px; border-radius:20px; font-size:.68rem; font-weight:600;
+        }
+        /* Toast thông báo chấm điểm */
+        #scoreToast { min-width: 320px; z-index: 9999; }
+        .score-result-bar { height: 8px; border-radius: 4px; }
+        </style>
     </div>
 
     <!-- Modal Thêm Ứng Viên -->
@@ -616,6 +679,49 @@
         </div>
     </div>
 
+    <%-- Toast thông báo kết quả chấm điểm --%>
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:9999;">
+        <div id="scoreToast" class="toast align-items-center shadow-lg" role="alert" data-bs-autohide="true" data-bs-delay="6000"
+             style="border:0;border-radius:14px;overflow:hidden;min-width:320px;">
+            <div id="scoreToastHeader" class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1e293b;">
+                <i class="bi bi-award-fill text-warning fs-5"></i>
+                <strong class="me-auto text-white">Kết quả chấm điểm</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div id="scoreToastBody" class="toast-body bg-white"></div>
+        </div>
+    </div>
+
+    <%-- Modal Chi tiết Điểm Chấm --%>
+    <div class="modal fade" id="scoreDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius:16px;overflow:hidden;border:0;">
+                <div class="modal-header" style="background:linear-gradient(135deg,#1e1b4b,#312e81);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bar-chart-line-fill text-warning fs-4"></i>
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0">Báo cáo Chấm điểm Hồ sơ</h5>
+                            <small class="text-indigo-200" style="color:#a5b4fc;">Phân tích độ phù hợp theo Tiêu chí Tuyển dụng</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" id="scoreDetailBody">
+                    <div class="text-center py-5 text-muted">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div class="mt-2">Đang chấm điểm...</div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Dóng</button>
+                    <a href="${pageContext.request.contextPath}/screening-criteria" class="btn btn-outline-primary" style="border-radius:8px;">
+                        <i class="bi bi-award me-1"></i>Cấu hình tiêu chí
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
 function populateExtractionModal(button) {
     var id = button.getAttribute('data-id') || '';
@@ -677,5 +783,163 @@ function toggleCandidateStatusForm(control) {
 document.querySelectorAll('.candidate-status-form').forEach(function (form) {
     toggleCandidateStatusForm(form.querySelector('[name="status"]'));
 });
+
+// ===== XỬ LÝ NÚT CHẤM ĐIỂM ĐƠN LẺ (score-one-btn) =====
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.score-one-btn');
+    if (!btn) return;
+    e.preventDefault();
+
+    var candidateId = btn.getAttribute('data-id');
+    if (!candidateId) return;
+
+    // Hiện modal loading
+    var modal = new bootstrap.Modal(document.getElementById('scoreDetailModal'));
+    document.getElementById('scoreDetailBody').innerHTML =
+        '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div>' +
+        '<div class="mt-2 text-muted">Đang phân tích hồ sơ và chấm điểm...</div></div>';
+    modal.show();
+
+    // Gọi API chấm điểm đơn lẻ
+    fetch(contextPath + '/screening-criteria/score-one', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+        body: 'candidateId=' + encodeURIComponent(candidateId)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.error) {
+            document.getElementById('scoreDetailBody').innerHTML = buildErrorHtml(data.error);
+            return;
+        }
+        // Cập nhật cell điểm inline (không reload trang)
+        updateScoreCellInline(btn, data);
+        // Hiển thị báo cáo chi tiết trong modal
+        document.getElementById('scoreDetailBody').innerHTML = buildScoreReportHtml(data);
+        // Show toast
+        showScoreToast(data);
+    })
+    .catch(function(err) {
+        document.getElementById('scoreDetailBody').innerHTML = buildErrorHtml('Không thể kết nối. Vui lòng thử lại.');
+    });
+});
+
+/** Cập nhật ô điểm inline mà không reload trang */
+function updateScoreCellInline(btn, data) {
+    var td = btn.closest('td');
+    if (!td) return;
+    var scoreClass = data.scoreBadgeClass || 'score-pending';
+    var flagClass  = data.mandatoryFlagBadgeClass || 'badge-pending';
+    var flagIcon   = data.mandatoryFlag === 'PASS'
+        ? '<i class="bi bi-check-circle-fill"></i>'
+        : '<i class="bi bi-x-circle-fill"></i>';
+    td.innerHTML =
+        '<div class="d-flex flex-column gap-1 align-items-start">' +
+        '<span class="score-badge ' + scoreClass + '" title="Điểm phù hợp (0-100)">' +
+        '<i class="bi bi-star-half" style="font-size:.65rem;"></i>&nbsp;' + data.totalScore + '/100</span>' +
+        '<span class="' + flagClass + '" style="font-size:.66rem;">' + flagIcon + ' ' + data.mandatoryFlagLabel + '</span>' +
+        '</div>';
+}
+
+/** Tạo HTML báo cáo chi tiết điểm chấm */
+function buildScoreReportHtml(d) {
+    var flagBg  = d.mandatoryFlag === 'PASS' ? '#d1fae5' : '#fee2e2';
+    var flagClr = d.mandatoryFlag === 'PASS' ? '#065f46' : '#991b1b';
+    var recBadge = '';
+    if (d.recommendation === 'HIGH') recBadge = '<span style="background:#4f46e5;color:#fff;border-radius:12px;padding:2px 12px;font-size:.75rem;font-weight:700;">🔵 Ưu tiên cao</span>';
+    else if (d.recommendation === 'MEDIUM') recBadge = '<span style="background:#f59e0b;color:#fff;border-radius:12px;padding:2px 12px;font-size:.75rem;font-weight:700;">🟡 Ưu tiên trung bình</span>';
+    else recBadge = '<span style="background:#e5e7eb;color:#374151;border-radius:12px;padding:2px 12px;font-size:.75rem;font-weight:700;">⚪ Xem xét thêm</span>';
+
+    var scoreColor = d.totalScore >= 75 ? '#065f46' : (d.totalScore >= 50 ? '#92400e' : '#991b1b');
+    var scoreBg    = d.totalScore >= 75 ? '#d1fae5' : (d.totalScore >= 50 ? '#fef3c7' : '#fee2e2');
+
+    return '<div class="p-4">' +
+        // Header tổng quan
+        '<div class="d-flex align-items-center justify-content-between gap-3 mb-4 p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">' +
+            '<div>' +
+                '<div class="fw-bold text-dark fs-6">' + escJ(d.candidateName) + '</div>' +
+                '<div class="text-muted small">' + escJ(d.requisitionTitle || '') + '</div>' +
+            '</div>' +
+            '<div class="text-center">' +
+                '<div style="font-size:2.2rem;font-weight:800;color:' + scoreColor + ';background:' + scoreBg + ';border-radius:50%;width:72px;height:72px;display:flex;align-items:center;justify-content:center;margin:0 auto;">' + d.totalScore + '</div>' +
+                '<div class="small text-muted mt-1">/ 100 điểm</div>' +
+            '</div>' +
+        '</div>' +
+        // Cờ bắt buộc & xếp hạng
+        '<div class="d-flex gap-2 mb-4 flex-wrap">' +
+            '<span style="background:' + flagBg + ';color:' + flagClr + ';border-radius:12px;padding:4px 14px;font-size:.8rem;font-weight:700;">' +
+                (d.mandatoryFlag === 'PASS' ? '✅' : '❌') + ' ' + escJ(d.mandatoryFlagLabel) + '</span>' +
+            recBadge +
+        '</div>' +
+        // Bảng chi tiết 3 hạng mục
+        '<table class="table table-bordered table-sm" style="font-size:.82rem;">' +
+            '<thead style="background:#f1f5f9;"><tr>' +
+                '<th>Tiêu chí bắt buộc</th>' +
+                '<th class="text-center" style="width:90px;">Kết quả</th>' +
+                '<th class="text-center" style="width:90px;">Điểm</th>' +
+            '</tr></thead><tbody>' +
+            '<tr>' +
+                '<td><strong>⏱ Kinh nghiệm</strong><div class="text-muted" style="font-size:.75rem;">' + escJ(d.experienceDetail || '') + '</div></td>' +
+                '<td class="text-center">' + (d.expPassed ? '<span class="badge-pass">✓ Đạt</span>' : '<span class="badge-fail">✗ Chưa đạt</span>') + '</td>' +
+                '<td class="text-center fw-bold">' + d.experienceScore + '</td>' +
+            '</tr>' +
+            '<tr>' +
+                '<td><strong>🛠 Kỹ năng</strong><div class="text-muted" style="font-size:.75rem;">' + escJ(d.skillDetail || '') + '</div></td>' +
+                '<td class="text-center">' + (d.skillsPassed ? '<span class="badge-pass">✓ Đạt</span>' : '<span class="badge-fail">✗ Thiếu</span>') + '</td>' +
+                '<td class="text-center fw-bold">' + d.skillScore + '</td>' +
+            '</tr>' +
+            '<tr>' +
+                '<td><strong>🎓 Bằng cấp</strong><div class="text-muted" style="font-size:.75rem;">' + escJ(d.degreeDetail || '') + '</div></td>' +
+                '<td class="text-center">' + (d.degreePassed ? '<span class="badge-pass">✓ Đạt</span>' : '<span class="badge-fail">✗ Chưa đạt</span>') + '</td>' +
+                '<td class="text-center fw-bold">' + d.educationScore + '</td>' +
+            '</tr>' +
+            '<tr style="background:#f8fafc;"><td><strong>TỔNG ĐIỂM PHÙ HỢP</strong></td><td></td><td class="text-center fw-bold fs-6" style="color:' + scoreColor + ';">' + d.totalScore + '/100</td></tr>' +
+        '</tbody></table>' +
+        // Thanh tiến trình
+        '<div class="mt-2 mb-1 small text-muted fw-semibold">Phân bổ điểm thực tế</div>' +
+        '<div style="display:flex;height:12px;border-radius:999px;overflow:hidden;gap:2px;">' +
+            '<div style="width:' + d.experienceScore + '%;background:#4f46e5;" title="Kinh nghiệm: ' + d.experienceScore + '"></div>' +
+            '<div style="width:' + d.skillScore + '%;background:#7c3aed;" title="Kỹ năng: ' + d.skillScore + '"></div>' +
+            '<div style="width:' + d.educationScore + '%;background:#0ea5e9;" title="Bằng cấp: ' + d.educationScore + '"></div>' +
+            '<div style="flex:1;background:#e5e7eb;"></div>' +
+        '</div>' +
+        '<div class="d-flex gap-3 mt-1" style="font-size:.72rem;color:#64748b;">' +
+            '<span>● KN: ' + d.experienceScore + 'đ</span><span>● KĐ: ' + d.skillScore + 'đ</span><span>● BK: ' + d.educationScore + 'đ</span>' +
+        '</div>' +
+        '<div class="alert alert-info mt-3 py-2 small" style="border-radius:8px;">' +
+            '<i class="bi bi-info-circle me-1"></i> Điểm số chỉ để <strong>gợi ý thứ tự ưu tiên</strong>. Nhà tuyển dụng quyết định cuối cùng.' +
+        '</div>' +
+    '</div>';
+}
+
+function buildErrorHtml(msg) {
+    return '<div class="text-center py-5"><div class="text-danger fs-2"><i class="bi bi-exclamation-triangle"></i></div>' +
+        '<div class="fw-semibold text-danger mt-2">Chưa thể chấm điểm</div>' +
+        '<div class="text-muted small mt-1 px-4">' + escJ(msg) + '</div>' +
+        '<a href="' + contextPath + '/screening-criteria" class="btn btn-primary btn-sm mt-3">' +
+        '<i class="bi bi-award me-1"></i>Cấu hình tiêu chí ngay</a></div>';
+}
+
+function showScoreToast(d) {
+    var body = document.getElementById('scoreToastBody');
+    var scoreColor = d.totalScore >= 75 ? '#065f46' : (d.totalScore >= 50 ? '#92400e' : '#991b1b');
+    body.innerHTML =
+        '<div class="d-flex align-items-center gap-3 py-1">' +
+            '<div style="font-size:1.6rem;font-weight:800;color:' + scoreColor + ';">' + d.totalScore + '<small style="font-size:.8rem;">/100</small></div>' +
+            '<div>' +
+                '<div class="fw-bold text-dark" style="font-size:.85rem;">' + escJ(d.candidateName) + '</div>' +
+                '<div class="text-muted" style="font-size:.75rem;">' + escJ(d.mandatoryFlagLabel) + ' · ' + escJ(d.recommendationLabel) + '</div>' +
+            '</div>' +
+        '</div>';
+    var toast = new bootstrap.Toast(document.getElementById('scoreToast'));
+    toast.show();
+}
+
+function escJ(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+var contextPath = '${pageContext.request.contextPath}';
 </script>
 <jsp:include page="../common/footer.jsp" />

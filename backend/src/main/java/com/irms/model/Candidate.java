@@ -38,6 +38,13 @@ public class Candidate implements Serializable {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // ===== Chấm điểm & Xếp hạng hồ sơ tự động =====
+    private Integer matchScore;       // Điểm phù hợp (0-100), null = chưa chấm
+    private String  mandatoryFlag;    // "PASS" | "FAIL" | null = chưa đánh giá
+    private String  scoreBreakdown;   // JSON chi tiết điểm từng hạng mục
+    private Timestamp scoredAt;       // Thời điểm chấm điểm gần nhất
+    private String  scoredBy;         // Người/hệ thống thực hiện chấm
+
     public Candidate() {}
 
     public String getId() { return id; }
@@ -159,6 +166,51 @@ public class Candidate implements Serializable {
 
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    // ===== Getters & Setters - Chấm điểm & Xếp hạng =====
+
+    public Integer getMatchScore() { return matchScore; }
+    public void setMatchScore(Integer matchScore) { this.matchScore = matchScore; }
+
+    public String getMandatoryFlag() { return mandatoryFlag; }
+    public void setMandatoryFlag(String mandatoryFlag) { this.mandatoryFlag = mandatoryFlag; }
+
+    public String getScoreBreakdown() { return scoreBreakdown; }
+    public void setScoreBreakdown(String scoreBreakdown) { this.scoreBreakdown = scoreBreakdown; }
+
+    public Timestamp getScoredAt() { return scoredAt; }
+    public void setScoredAt(Timestamp scoredAt) { this.scoredAt = scoredAt; }
+
+    public String getScoredBy() { return scoredBy; }
+    public void setScoredBy(String scoredBy) { this.scoredBy = scoredBy; }
+
+    /**
+     * Badge CSS class cho cờ tiêu chí bắt buộc hiển thị trên UI
+     */
+    public String getMandatoryFlagBadgeClass() {
+        if ("PASS".equals(mandatoryFlag)) return "badge-pass";
+        if ("FAIL".equals(mandatoryFlag)) return "badge-fail";
+        return "badge-pending";
+    }
+
+    /**
+     * Nhãn hiển thị cho cờ tiêu chí bắt buộc
+     */
+    public String getMandatoryFlagLabel() {
+        if ("PASS".equals(mandatoryFlag)) return "ĐẠT";
+        if ("FAIL".equals(mandatoryFlag)) return "KHÔNG ĐẠT";
+        return "Chưa chấm";
+    }
+
+    /**
+     * CSS class màu điểm theo dải điểm số
+     */
+    public String getScoreBadgeClass() {
+        if (matchScore == null) return "score-pending";
+        if (matchScore >= 75) return "score-high";
+        if (matchScore >= 50) return "score-medium";
+        return "score-low";
+    }
 
     public String getStatusBadgeClass() {
         if ("APPLIED".equalsIgnoreCase(status)) return "bg-primary";

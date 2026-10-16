@@ -264,6 +264,40 @@ public class CandidateDAO extends BaseDAO {
     }
 
     /**
+     * Lấy danh sách ứng viên theo vị trí tuyển dụng (dùng cho chấm điểm hàng loạt)
+     */
+    public List<Candidate> findByRequisitionId(String requisitionId) {
+        List<Candidate> list = new ArrayList<>();
+        if (requisitionId == null || requisitionId.trim().isEmpty()) return list;
+        String sql = "SELECT c.*, r.title AS requisition_title, r.department_id, d.name AS department_name, " +
+                     "source.value AS application_source_name, reason.value AS rejection_reason_name, " +
+                     "referrer.full_name AS referred_by_user_name FROM candidates c " +
+                     "LEFT JOIN recruitment_requisitions r ON c.requisition_id = r.id " +
+                     "LEFT JOIN departments d ON r.department_id = d.id " +
+                     "LEFT JOIN shared_catalogs source ON c.application_source_id = source.id " +
+                     "LEFT JOIN shared_catalogs reason ON c.rejection_reason_id = reason.id " +
+                     "LEFT JOIN users referrer ON c.referred_by_user_id = referrer.id " +
+                     "WHERE c.requisition_id = ? ORDER BY c.match_score DESC, c.created_at DESC";
+        Connection conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            conn = getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, requisitionId.trim());
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapCandidate(rs));
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi lấy danh sách ứng viên theo vị trí: " + requisitionId, e);
+        } finally {
+            close(conn, ps, rs);
+        }
+        return list;
+    }
+
+    /**
      * [KN-218]: Cập nhật ghi chú (notes) cho một hồ sơ ứng viên
      */
     public boolean updateNotes(String candidateId, String notes) {
@@ -905,6 +939,15 @@ public class CandidateDAO extends BaseDAO {
         try { c.setCvExtractedAt(rs.getTimestamp("cv_extracted_at")); } catch (SQLException ignored) {}
         try { c.setCoverLetter(rs.getString("cover_letter")); } catch (SQLException ignored) {}
         try { c.setIpAddress(rs.getString("ip_address")); } catch (SQLException ignored) {}
+        // Chấm điểm & Xếp hạng hồ sơ tự động
+        try {
+            int ms = rs.getInt("match_score");
+            if (!rs.wasNull()) c.setMatchScore(ms);
+        } catch (SQLException ignored) {}
+        try { c.setMandatoryFlag(rs.getString("mandatory_flag")); } catch (SQLException ignored) {}
+        try { c.setScoreBreakdown(rs.getString("score_breakdown")); } catch (SQLException ignored) {}
+        try { c.setScoredAt(rs.getTimestamp("scored_at")); } catch (SQLException ignored) {}
+        try { c.setScoredBy(rs.getString("scored_by")); } catch (SQLException ignored) {}
         c.setCreatedAt(rs.getTimestamp("created_at"));
         c.setUpdatedAt(rs.getTimestamp("updated_at"));
         return c;
