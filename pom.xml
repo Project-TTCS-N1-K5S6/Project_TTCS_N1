@@ -37,6 +37,12 @@
       <artifactId>gson</artifactId>
       <version>2.10.1</version>
     </dependency>
+    <!-- Apache POI: xuất danh sách ứng viên ra Excel (.xlsx) -->
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.2.5</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -64,35 +70,38 @@
           </webResources>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.cargo</groupId>
-        <artifactId>cargo-maven3-plugin</artifactId>
-        <version>1.10.14</version>
-        <configuration>
-          <container>
+      
+
+<plugin>
+    <groupId>org.codehaus.cargo</groupId>
+    <artifactId>cargo-maven3-plugin</artifactId>
+    <version>1.10.14</version>
+    <configuration>
+        <container>
             <containerId>tomcat9x</containerId>
             <type>installed</type>
             <artifactInstaller>
-              <groupId>org.apache.tomcat</groupId>
-              <artifactId>tomcat</artifactId>
-              <version>9.0.89</version>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat</artifactId>
+                <version>9.0.89</version>
             </artifactInstaller>
-          </container>
-          <configuration>
+        </container>
+        <configuration>
             <properties>
-              <cargo.servlet.port>8080</cargo.servlet.port>
+                <cargo.servlet.port>8080</cargo.servlet.port>
             </properties>
-          </configuration>
-          <deployables>
-            <deployable>
-              <type>war</type>
-              <properties>
-                <context>/irms-candidate</context>
-              </properties>
-            </deployable>
-          </deployables>
         </configuration>
-      </plugin>
+        <deployables>
+            <deployable>
+                <type>war</type>
+                <properties>
+                    <context>/irms-candidate</context>
+                </properties>
+            </deployable>
+        </deployables>
+    </configuration>
+</plugin>
+
     </plugins>
   </build>
 </project>

@@ -187,6 +187,72 @@
     .cv-preview iframe { display: block; width: 100%; height: 420px; border: 0; }
     .cv-preview-note { padding: 18px 14px; font-size: 12px; color: var(--muted); line-height: 1.5; }
 
+    /* ── Export filter bar ── */
+    .export-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 22px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgb(16 24 40 / 3%);
+    }
+    .export-bar-title {
+      width: 100%;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--muted);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .export-bar-title svg { flex: 0 0 auto; color: var(--primary); }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label { font-size: 12px; font-weight: 650; color: var(--ink); }
+    .filter-group input, .filter-group select {
+      min-height: 36px;
+      padding: 7px 10px;
+      font-size: 13px;
+      border: 1px solid #d0d5dd;
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .filter-group input:focus, .filter-group select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgb(49 89 201 / 13%);
+    }
+    .filter-group input[type="date"] { min-width: 150px; }
+    .filter-group input[type="text"] { min-width: 190px; }
+    .filter-group select { min-width: 160px; }
+    .export-spacer { flex: 1; }
+    .export-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 8px 15px;
+      border: 1px solid #1b7a3e;
+      border-radius: 8px;
+      background: #1d8a47;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, box-shadow .15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .export-button:hover { background: #166b38; border-color: #155f32; }
+    .export-button:disabled { opacity: .6; cursor: not-allowed; }
+    .export-button svg { flex: 0 0 auto; }
+
     @media (max-width: 760px) {
       .topbar { height: 60px; padding: 0 20px; }
       .topbar-context { display: none; }
@@ -227,6 +293,41 @@
         <p class="subtitle">Nhập thông tin và đính kèm CV cho ứng viên từ nguồn bên ngoài.</p>
       </div>
       <div class="count-pill"><strong id="candidate-count">0</strong> hồ sơ đã lưu</div>
+    </div>
+
+    <!-- Thanh bộ lọc và xuất Excel -->
+    <div class="export-bar" role="search" aria-label="Bộ lọc xuất Excel">
+      <div class="export-bar-title">
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h14M6 10h8M9 15h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        Bộ lọc xuất danh sách ứng viên ra Excel
+      </div>
+      <div class="filter-group">
+        <label for="filter-position">Vị trí ứng tuyển</label>
+        <input id="filter-position" type="text" placeholder="Tất cả vị trí" maxlength="120">
+      </div>
+      <div class="filter-group">
+        <label for="filter-source">Nguồn ứng viên</label>
+        <select id="filter-source">
+          <option value="">Tất cả nguồn</option>
+          <option value="Giới thiệu">Giới thiệu</option>
+          <option value="Mạng xã hội">Mạng xã hội</option>
+          <option value="Sự kiện tuyển dụng">Sự kiện tuyển dụng</option>
+          <option value="Nguồn khác">Nguồn khác</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-from">Từ ngày</label>
+        <input id="filter-from" type="date">
+      </div>
+      <div class="filter-group">
+        <label for="filter-to">Đến ngày</label>
+        <input id="filter-to" type="date">
+      </div>
+      <span class="export-spacer" aria-hidden="true"></span>
+      <button class="export-button" id="btn-export" type="button" aria-label="Xuất danh sách ứng viên ra Excel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 12-4-4m4 4 4-4M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Xuất Excel
+      </button>
     </div>
 
     <div class="layout">
@@ -595,6 +696,73 @@
       form.addEventListener("submit", function (event) {
         event.preventDefault();
         submitCandidate(false);
+      });
+
+      // ── Xuất Excel ──
+      var exportBtn = document.getElementById("btn-export");
+      var filterPosition = document.getElementById("filter-position");
+      var filterSource   = document.getElementById("filter-source");
+      var filterFrom     = document.getElementById("filter-from");
+      var filterTo       = document.getElementById("filter-to");
+      var exportBaseUrl  = contextPath + "/api/candidates/export";
+
+      exportBtn.addEventListener("click", function () {
+        var params = new URLSearchParams();
+        var pos  = filterPosition.value.trim();
+        var src  = filterSource.value.trim();
+        var from = filterFrom.value.trim();
+        var to   = filterTo.value.trim();
+
+        // Validate ngày
+        if (from && to && from > to) {
+          showFeedback("error", "Khoảng ngày không hợp lệ",
+              "Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+          return;
+        }
+        if (pos)  params.set("position", pos);
+        if (src)  params.set("source", src);
+        if (from) params.set("fromDate", from);
+        if (to)   params.set("toDate", to);
+
+        var url = exportBaseUrl + (params.toString() ? "?" + params.toString() : "");
+
+        exportBtn.disabled = true;
+        // Dùng fetch thay vì anchor click để bắt lỗi server đúng cách
+        fetch(url, { credentials: "same-origin" })
+          .then(function (response) {
+            var ct = response.headers.get("Content-Type") || "";
+            if (!response.ok || ct.indexOf("spreadsheetml") === -1) {
+              // Server trả về lỗi – đọc text rồi hiển thị thông báo
+              return response.text().then(function () {
+                throw new Error("Máy chủ trả về HTTP " + response.status +
+                    ". Kiểm tra kết nối cơ sở dữ liệu.");
+              });
+            }
+            return response.blob();
+          })
+          .then(function (blob) {
+            // Lấy tên tệp từ header Content-Disposition nếu có
+            var disposition = "";
+            try {
+              // fetch không expose header này nếu không có CORS, nhưng same-origin thì OK
+            } catch (e) {}
+            var blobUrl = URL.createObjectURL(blob);
+            var link = document.createElement("a");
+            link.href = blobUrl;
+            // Tên file mặc định – server sẽ ghi đè qua Content-Disposition
+            link.download = "candidates_export.xlsx";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 10000);
+          })
+          .catch(function (error) {
+            showFeedback("error", "Không thể xuất Excel",
+                error.message || "Không kết nối được máy chủ.");
+          })
+          .finally(function () {
+            exportBtn.disabled = false;
+          });
       });
 
       if (window.location.protocol === "file:") {

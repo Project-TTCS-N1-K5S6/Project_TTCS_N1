@@ -31,6 +31,55 @@ public class CandidateDAO {
         }
     }
 
+    /**
+     * Tìm ứng viên theo bộ lọc để xuất Excel.
+     * Các tham số null/rỗng được bỏ qua (không lọc trường đó).
+     *
+     * @param position  vị trí ứng tuyển (khớp chứa, không phân biệt hoa thường)
+     * @param source    nguồn ứng viên (khớp chính xác)
+     * @param fromDate  ngày bắt đầu (YYYY-MM-DD), tính từ 00:00:00
+     * @param toDate    ngày kết thúc (YYYY-MM-DD), tính đến 23:59:59
+     */
+    public List<Candidate> findWithFilters(String position, String source,
+                                           String fromDate, String toDate) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "SELECT " + CANDIDATE_COLUMNS + " FROM candidates WHERE 1=1");
+        List<Object> params = new ArrayList<Object>();
+
+        if (position != null && !position.trim().isEmpty()) {
+            sql.append(" AND position_applied LIKE ?");
+            params.add("%" + position.trim() + "%");
+        }
+        if (source != null && !source.trim().isEmpty()) {
+            sql.append(" AND source_name = ?");
+            params.add(source.trim());
+        }
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            sql.append(" AND created_at >= ?");
+            params.add(fromDate.trim() + " 00:00:00");
+        }
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            sql.append(" AND created_at <= ?");
+            params.add(toDate.trim() + " 23:59:59");
+        }
+        sql.append(" ORDER BY created_at DESC");
+
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<Candidate> candidates = new ArrayList<Candidate>();
+                while (resultSet.next()) {
+                    candidates.add(mapCandidate(resultSet));
+                }
+                return candidates;
+            }
+        }
+    }
+
+
     public List<Candidate> findDuplicates(String normalizedEmail, String normalizedPhone) throws SQLException {
         String sql = "SELECT " + CANDIDATE_COLUMNS
                 + " FROM candidates WHERE email_normalized = ? OR phone_normalized = ?"
