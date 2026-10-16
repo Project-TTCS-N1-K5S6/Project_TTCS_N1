@@ -453,6 +453,15 @@
                         </c:when>
                     </c:choose>
 
+                    <%-- Nút Đặc cách gửi Offer (Chỉ dành cho Trưởng phòng Nhân sự & Admin khi ở APPLIED hoặc SCREENING) --%>
+                    <c:if test="${(candidate.status == 'APPLIED' || candidate.status == 'SCREENING') && (currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN'))}">
+                        <button type="button" class="btn-pipeline"
+                                data-bs-toggle="modal" data-bs-target="#skipInterviewDetailModal" id="btn-open-skip-interview"
+                                style="background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">
+                            <i class="bi bi-shield-check"></i> Đặc cách gửi Offer
+                        </button>
+                    </c:if>
+
                     <%-- Nút Từ chối (có modal chọn lý do) --%>
                     <button type="button" class="btn-pipeline btn-move-reject"
                             data-bs-toggle="modal" data-bs-target="#rejectModal" id="btn-open-reject">
@@ -831,11 +840,11 @@
         </div><%-- end row --%>
 
         <%-- ========== LỊCH SỬ HỢP NHẤT & HOẠT ĐỘNG BẢO TOÀN ========== --%>
-        <c:if test="${not empty mergeHistories || not empty candidateActivities}">
+        <%-- ========== [KN-308]: LỊCH SỬ HỢP NHẤT & NHẬT KÝ CHUYỂN GIAI ĐOẠN / HOẠT ĐỘNG ========== --%>
         <div class="row g-4 mt-2">
             <%-- Lịch sử hợp nhất --%>
             <c:if test="${not empty mergeHistories}">
-            <div class="col-12 col-lg-6">
+            <div class="col-12 ${not empty candidateActivities ? 'col-lg-6' : ''}">
                 <div class="info-card">
                     <div class="info-card-header">
                         <div class="card-icon" style="background:rgba(99,102,241,0.1); color:#6366f1;">
@@ -922,61 +931,71 @@
             </div>
             </c:if>
 
-            <%-- Hoạt động bảo toàn (Activities) --%>
-            <c:if test="${not empty candidateActivities}">
-            <div class="col-12 col-lg-6">
+            <%-- [KN-308]: Nhật ký chuyển giai đoạn & Hoạt động tuyển dụng --%>
+            <div class="col-12 ${not empty mergeHistories ? 'col-lg-6' : ''}">
                 <div class="info-card">
                     <div class="info-card-header">
                         <div class="card-icon" style="background:rgba(16,185,129,0.1); color:#059669;">
-                            <i class="bi bi-journal-text"></i>
+                            <i class="bi bi-clock-history"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="fw-bold text-dark fs-6">Hoạt động & Lịch sử bảo toàn</div>
-                            <small class="text-muted">Toàn bộ lịch sử tuyển dụng, phỏng vấn, đánh giá, ghi chú</small>
+                            <div class="fw-bold text-dark fs-6">Nhật ký chuyển giai đoạn & Hoạt động</div>
+                            <small class="text-muted">Lịch sử thay đổi trạng thái, lý do loại và phê duyệt đặc cách</small>
                         </div>
-                        <span class="badge bg-success rounded-pill">${candidateActivities.size()}</span>
+                        <span class="badge bg-success rounded-pill">${candidateActivities != null ? candidateActivities.size() : 0}</span>
                     </div>
                     <div class="info-card-body" style="max-height: 400px; overflow-y: auto;">
-                        <div class="timeline">
-                            <c:forEach var="act" items="${candidateActivities}">
-                                <div class="timeline-item">
-                                    <div class="timeline-dot
-                                        ${act.activityType == 'INTERVIEW' ? 'warning' :
-                                          act.activityType == 'EVALUATION' ? 'info' :
-                                          act.activityType == 'NOTE' ? 'secondary' :
-                                          act.activityType == 'STATUS_CHANGE' ? 'current' :
-                                          act.activityType == 'MERGE' ? 'success' : 'secondary'}"></div>
-                                    <div class="timeline-content">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <span class="badge rounded-pill
-                                                ${act.activityType == 'INTERVIEW' ? 'bg-warning-subtle text-warning border border-warning-subtle' :
-                                                  act.activityType == 'EVALUATION' ? 'bg-info-subtle text-info border border-info-subtle' :
-                                                  act.activityType == 'STATUS_CHANGE' ? 'bg-primary-subtle text-primary border border-primary-subtle' :
-                                                  act.activityType == 'MERGE' ? 'bg-success-subtle text-success border border-success-subtle' :
-                                                  'bg-secondary-subtle text-secondary border border-secondary-subtle'}"
-                                                style="font-size:.68rem;">
-                                                ${act.activityType}
-                                            </span>
-                                            <span class="small text-muted">
-                                                <fmt:formatDate value="${act.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
-                                            </span>
-                                        </div>
-                                        <div class="small text-dark" style="white-space:pre-wrap;"><c:out value="${act.description}" /></div>
-                                        <c:if test="${not empty act.performedBy}">
-                                            <div class="small text-muted mt-1">
-                                                <i class="bi bi-person-fill me-1"></i>${act.performedBy}
+                        <c:choose>
+                            <c:when test="${not empty candidateActivities}">
+                                <div class="timeline">
+                                    <c:forEach var="act" items="${candidateActivities}">
+                                        <div class="timeline-item">
+                                            <div class="timeline-dot
+                                                ${act.activityType == 'INTERVIEW' ? 'warning' :
+                                                  act.activityType == 'EVALUATION' ? 'info' :
+                                                  act.activityType == 'NOTE' ? 'secondary' :
+                                                  act.activityType == 'STATUS_CHANGE' ? 'current' :
+                                                  act.activityType == 'MERGE' ? 'success' : 'secondary'}"></div>
+                                            <div class="timeline-content">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge rounded-pill
+                                                            ${act.activityType == 'INTERVIEW' ? 'bg-warning-subtle text-warning border border-warning-subtle' :
+                                                              act.activityType == 'EVALUATION' ? 'bg-info-subtle text-info border border-info-subtle' :
+                                                              act.activityType == 'STATUS_CHANGE' ? 'bg-primary text-white' :
+                                                              act.activityType == 'MERGE' ? 'bg-purple text-white' :
+                                                              'bg-secondary-subtle text-secondary border border-secondary-subtle'}"
+                                                            style="font-size:.7rem;">
+                                                            <i class="bi ${act.typeIcon} me-1"></i>${act.typeLabel}
+                                                        </span>
+                                                        <span class="fw-bold text-dark small"><c:out value="${act.title}" /></span>
+                                                    </div>
+                                                    <span class="small text-muted" style="font-size:.75rem;">
+                                                        <fmt:formatDate value="${act.activityDate != null ? act.activityDate : act.createdAt}" pattern="dd/MM/yyyy HH:mm"/>
+                                                    </span>
+                                                </div>
+                                                <div class="small text-secondary" style="white-space:pre-wrap;"><c:out value="${act.description}" /></div>
+                                                <c:if test="${not empty act.performedByName || not empty act.performedBy}">
+                                                    <div class="small text-muted mt-1" style="font-size:0.75rem;">
+                                                        <i class="bi bi-person-fill me-1"></i><c:out value="${not empty act.performedByName ? act.performedByName : act.performedBy}" />
+                                                    </div>
+                                                </c:if>
                                             </div>
-                                        </c:if>
-                                    </div>
+                                        </div>
+                                    </c:forEach>
                                 </div>
-                            </c:forEach>
-                        </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-clock-history fs-3 mb-2 d-block opacity-50"></i>
+                                    <div class="small">Chưa có nhật ký hoạt động nào cho ứng viên này.</div>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                 </div>
             </div>
-            </c:if>
         </div>
-        </c:if>
     </div>
     <jsp:include page="../common/footer.jsp" />
 </main>
@@ -1043,6 +1062,52 @@ document.getElementById('rejectionReasonId').addEventListener('change', function
     this.classList.remove('is-invalid');
 });
 </script>
+
+<%-- ========== MODAL ĐẶC CÁCH BỎ QUA PHỎNG VẤN (KN-310 & KN-312) ========== --%>
+<c:if test="${canEdit && (currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN'))}">
+<div class="modal fade" id="skipInterviewDetailModal" tabindex="-1" aria-labelledby="skipInterviewDetailModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden;">
+            <form action="${pageContext.request.contextPath}/candidates/profile" method="POST" id="skipInterviewForm">
+                <input type="hidden" name="action" value="update-status">
+                <input type="hidden" name="candidateId" value="${candidate.id}">
+                <input type="hidden" name="status" value="OFFER">
+                <input type="hidden" name="skipInterviewConfirmed" value="true">
+                <div class="modal-header border-0" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe); padding:1.25rem 1.5rem;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:40px;height:40px;border-radius:10px;background:#ddd6fe;display:flex;align-items:center;justify-content:center;">
+                            <i class="bi bi-shield-check fs-5" style="color:#7c3aed;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-purple" id="skipInterviewDetailModalLabel" style="color:#6d28d9;">Xác nhận đặc cách — Bỏ qua Phỏng vấn</h5>
+                            <small class="text-muted">${candidate.fullName} — Giai đoạn hiện tại: ${candidate.getStatusLabel()}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-3">
+                    <div class="alert alert-warning py-2 px-3 small border border-warning-subtle rounded-3 mb-3">
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+                        Ứng viên hiện <strong>chưa qua giai đoạn Phỏng vấn</strong>. Với vai trò <strong>Trưởng phòng Nhân sự</strong>, bạn đang thực hiện quyền hạn phê duyệt đặc cách để chuyển thẳng sang <strong>Đề xuất offer</strong>.
+                    </div>
+                    <div class="mb-3">
+                        <label for="detailConfirmationNote" class="form-label fw-semibold small">Lý do đặc cách / Ghi chú phê duyệt <span class="text-muted">(tùy chọn)</span></label>
+                        <textarea class="form-control" name="confirmationNote" id="detailConfirmationNote" rows="3"
+                                  placeholder="Nhập lý do đặc cách hoặc căn cứ phê duyệt..."></textarea>
+                        <div class="form-text text-muted">Thông tin phê duyệt sẽ được ghi nhận vào nhật ký hoạt động ứng viên và audit log.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn rounded-pill px-4 text-white" style="background:#7c3aed;" id="confirmSkipInterviewDetailBtn">
+                        <i class="bi bi-check2-circle me-1"></i>Xác nhận đặc cách gửi Offer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</c:if>
 
 <%-- ========== MODAL CHỈNH SỬA NHÃN (KN-274) ========== --%>
 <div class="modal fade" id="editTagsModal" tabindex="-1" aria-labelledby="editTagsModalLabel" aria-hidden="true">

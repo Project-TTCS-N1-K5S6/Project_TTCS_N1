@@ -278,7 +278,7 @@
     </div>
 </main>
 
-<!-- Modal Xác nhận lý do loại khi chuyển vào cột "Loại" (KN-282 & KN-283) -->
+<!-- Modal Xác nhận lý do loại khi chuyển vào cột "Loại" (KN-282 & KN-283 / KN-307) -->
 <div class="modal fade" id="rejectionReasonModal" tabindex="-1" aria-labelledby="rejectionReasonModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0 rounded-4">
@@ -310,12 +310,105 @@
                             <option value="${item.id}">${item.value}</option>
                         </c:forEach>
                     </select>
+                    <div id="rejectionReasonError" class="text-danger small mt-1" style="display: none;">
+                        Vui lòng chọn một lý do loại hợp lệ từ danh mục!
+                    </div>
                 </div>
             </div>
             <div class="modal-footer border-0 bg-light py-2 px-4 rounded-bottom-4">
                 <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Hủy bỏ</button>
                 <button type="button" class="btn btn-sm btn-danger px-3 fw-bold" id="confirmRejectBtn">
                     <i class="bi bi-x-circle-fill me-1"></i> Xác nhận loại
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cảnh báo khi người dùng không đủ quyền bỏ qua Phỏng vấn (KN-312 - Recruiter) -->
+<div class="modal fade" id="skipInterviewWarningModal" tabindex="-1" aria-labelledby="skipInterviewWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-warning-subtle border-0 py-3">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2 fs-6" id="skipInterviewWarningModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill text-warning"></i> Cảnh báo: Yêu cầu qua giai đoạn Phỏng vấn
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div class="rounded-circle p-2 bg-warning bg-opacity-10 text-warning flex-shrink-0" style="width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+                        <i class="bi bi-shield-lock-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-6 text-dark" id="skipWarningCandidateName">-</div>
+                        <div class="text-secondary small mb-2" id="skipWarningPositionTitle">-</div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" id="skipWarningSourceStage">-</span>
+                            <i class="bi bi-arrow-right text-muted"></i>
+                            <span class="badge bg-purple text-white" id="skipWarningTargetStage">Đề xuất offer</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger py-2 px-3 small border border-danger-subtle rounded-3 mb-0">
+                    <i class="bi bi-slash-circle me-1"></i>
+                    <strong>Không được phép bỏ qua giai đoạn Phỏng vấn:</strong><br>
+                    Quy trình tuyển dụng yêu cầu ứng viên phải qua giai đoạn <strong>Phỏng vấn</strong> trước khi tiến hành <strong>Đề xuất offer</strong> hoặc <strong>Nhận việc</strong>.<br>
+                    <span class="text-muted mt-1 d-block">Bạn không có thẩm quyền đặc cách. Vui lòng chuyển ứng viên sang giai đoạn <strong>Phỏng vấn</strong> hoặc liên hệ <strong>Trưởng phòng Nhân sự (HR Manager)</strong> để được xem xét.</span>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light py-2 px-4 rounded-bottom-4">
+                <button type="button" class="btn btn-sm btn-primary px-4 fw-semibold" data-bs-dismiss="modal">
+                    <i class="bi bi-check2 me-1"></i> Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận của Trưởng phòng Nhân sự khi đặc cách bỏ qua Phỏng vấn (KN-310 & KN-312) -->
+<div class="modal fade" id="skipInterviewApprovalModal" tabindex="-1" aria-labelledby="skipInterviewApprovalModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-primary-subtle border-0 py-3">
+                <h5 class="modal-title fw-bold text-primary d-flex align-items-center gap-2 fs-6" id="skipInterviewApprovalModalLabel">
+                    <i class="bi bi-shield-check"></i> Xác nhận Trưởng phòng Nhân sự — Bỏ qua Phỏng vấn
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <div class="text-muted small mb-1">Ứng viên:</div>
+                    <div class="fw-bold fs-6 text-dark" id="skipApprovalCandidateName">-</div>
+                    <div class="text-secondary small" id="skipApprovalPositionTitle">-</div>
+                    <div class="d-flex align-items-center gap-2 mt-2">
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" id="skipApprovalSourceStage">-</span>
+                        <i class="bi bi-arrow-right text-muted"></i>
+                        <span class="badge bg-purple text-white" id="skipApprovalTargetStage">Đề xuất offer</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning py-2 px-3 small border border-warning-subtle rounded-3 mb-3">
+                    <i class="bi bi-exclamation-circle-fill me-1 text-warning"></i>
+                    Ứng viên hiện <strong>chưa qua giai đoạn Phỏng vấn</strong>. Với thẩm quyền <strong>Trưởng phòng Nhân sự</strong>, bạn có xác nhận đặc cách chuyển thẳng sang giai đoạn này không?
+                </div>
+
+                <div class="mb-3">
+                    <label for="skipInterviewNoteInput" class="form-label fw-semibold small text-dark">
+                        Lý do đặc cách / Ghi chú phê duyệt <span class="text-muted">(tùy chọn)</span>
+                    </label>
+                    <textarea id="skipInterviewNoteInput" class="form-control form-control-sm" rows="3"
+                              placeholder="Nhập lý do đặc cách (ví dụ: Đã phỏng vấn trực tiếp ngoài quy trình, ứng viên chuyển công tác nội bộ, v.v.)..."></textarea>
+                    <div class="form-text text-muted" style="font-size: 0.75rem;">
+                        Thông tin xác nhận và ghi chú sẽ được lưu vĩnh viễn trong nhật ký hoạt động ứng viên và audit log.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light py-2 px-4 rounded-bottom-4">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-sm btn-primary px-3 fw-bold" id="confirmSkipInterviewBtn">
+                    <i class="bi bi-check-circle-fill me-1"></i> Xác nhận đặc cách
                 </button>
             </div>
         </div>
@@ -331,7 +424,8 @@
         IrmsKanban.init({
             contextPath: '${pageContext.request.contextPath}',
             initialRequisitionId: '${selectedRequisitionId}',
-            isRecruiterOnly: ${isRecruiterOnly ? 'true' : 'false'}
+            isRecruiterOnly: ${isRecruiterOnly ? 'true' : 'false'},
+            canApproveSkipInterview: ${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN')}
         });
     });
 </script>

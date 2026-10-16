@@ -10,10 +10,12 @@ import com.irms.model.Candidate;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.SharedCatalogItem;
 import com.irms.model.SharedCatalogType;
+import com.irms.model.StageTransitionResult;
 import com.irms.model.User;
 import com.irms.service.AuditService;
 import com.irms.service.CandidateService;
 import com.irms.service.SharedCatalogService;
+import com.irms.util.SecurityUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -38,18 +40,24 @@ import java.util.logging.Logger;
  * ==============================================================================
  * BỘ ĐIỀU KHIỂN PIPELINE TUYỂN DỤNG DẠNG KANBAN (CandidatePipelineServlet)
  * ==============================================================================
- * Phục vụ Jira Issue KN-282 & các Subtasks:
+ * Phục vụ Jira Issue KN-282 & KN-283 và các Subtasks:
  * - KN-300: [BE] Thiết kế API lấy dữ liệu Pipeline Kanban theo vị trí tuyển dụng
  * - KN-299: [FE] Bộ lọc vị trí tuyển dụng cho Pipeline Kanban
  * - KN-301: [BE] Xử lý cập nhật giai đoạn ứng viên bằng kéo thả
  * - KN-302: [FE] Xây dựng giao diện bảng Kanban pipeline tuyển dụng
  * - KN-303: [FE] Hiển thị số lượng ứng viên theo từng giai đoạn
  * - KN-304: [BE] Xác định phạm vi dữ liệu mặc định theo vị trí recruiter phụ trách
+ * - KN-305: [BE] Kiểm tra điều kiện bỏ qua giai đoạn Phỏng vấn trước khi chuyển sang Đề xuất offer
+ * - KN-306: [BE] Lưu nhật ký mỗi lần chuyển giai đoạn ứng viên
+ * - KN-309: [BE] Ràng buộc chuyển sang trạng thái Loại phải chọn lý do từ danh mục
+ * - KN-310: [BE] Xử lý xác nhận của Trưởng phòng Nhân sự cho trường hợp bỏ qua Phỏng vấn
+ * - KN-311: [BE] Thiết kế API lấy danh mục lý do loại ứng viên
  *
  * URLs:
  *   GET  /candidates/pipeline               — Giao diện bảng Kanban Pipeline
  *   GET  /api/candidates/pipeline           — API lấy dữ liệu Kanban theo vị trí
- *   POST /api/candidates/pipeline/update-stage — API cập nhật giai đoạn khi kéo thả
+ *   GET  /api/candidates/rejection-reasons  — API lấy danh mục lý do loại ứng viên (KN-311)
+ *   POST /api/candidates/pipeline/update-stage — API cập nhật giai đoạn khi kéo thả (KN-283)
  *   POST /candidates/pipeline/update-stage  — Alias cập nhật giai đoạn
  * ==============================================================================
  */
@@ -57,7 +65,8 @@ import java.util.logging.Logger;
         "/candidates/pipeline",
         "/api/candidates/pipeline",
         "/api/candidates/pipeline/update-stage",
-        "/candidates/pipeline/update-stage"
+        "/candidates/pipeline/update-stage",
+        "/api/candidates/rejection-reasons"
 })
 public class CandidatePipelineServlet extends HttpServlet {
 
@@ -128,6 +137,12 @@ public class CandidatePipelineServlet extends HttpServlet {
             } else {
                 response.sendRedirect(request.getContextPath() + "/auth/login?redirect=" + request.getRequestURI());
             }
+            return;
+        }
+
+        // [KN-311]: API lấy danh mục lý do loại ứng viên (REJECTION_REASON)
+        if ("/api/candidates/rejection-reasons".equals(servletPath)) {
+            handleRejectionReasonsJson(response);
             return;
         }
 
@@ -296,6 +311,8 @@ public class CandidatePipelineServlet extends HttpServlet {
         String candidateId = null;
         String targetStage = null;
         String rejectionReasonId = null;
+        boolean skipInterviewConfirmed = false;
+        String confirmationNote = null;
 
         // Hỗ trợ đọc cả JSON request body và form URL-encoded
         String contentType = request.getContentType();
@@ -314,6 +331,12 @@ public class CandidatePipelineServlet extends HttpServlet {
                     if (jsonObj.has("rejectionReasonId") && !jsonObj.get("rejectionReasonId").isJsonNull()) {
                         rejectionReasonId = jsonObj.get("rejectionReasonId").getAsString();
                     }
+                    if (jsonObj.has("skipInterviewConfirmed") && !jsonObj.get("skipInterviewConfirmed").isJsonNull()) {
+                        skipInterviewConfirmed = jsonObj.get("skipInterviewConfirmed").getAsBoolean();
+                    }
+                    if (jsonObj.has("confirmationNote") && !jsonObj.get("confirmationNote").isJsonNull()) {
+                        confirmationNote = jsonObj.get("confirmationNote").getAsString();
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Lỗi đọc JSON payload update-stage: " + e.getMessage());
@@ -324,112 +347,53 @@ public class CandidatePipelineServlet extends HttpServlet {
         if (targetStage == null) targetStage = request.getParameter("targetStage");
         if (targetStage == null) targetStage = request.getParameter("status");
         if (rejectionReasonId == null) rejectionReasonId = request.getParameter("rejectionReasonId");
+        if (!skipInterviewConfirmed && "true".equalsIgnoreCase(request.getParameter("skipInterviewConfirmed"))) {
+            skipInterviewConfirmed = true;
+        }
+        if (confirmationNote == null) confirmationNote = request.getParameter("confirmationNote");
 
-        if (candidateId == null || candidateId.trim().isEmpty()) {
-            sendErrorJson(response, HttpServletResponse.SC_BAD_REQUEST, "Thiếu mã ứng viên (candidateId).");
+        // [KN-283]: Chuyển giao toàn bộ nghiệp vụ kiểm tra cho candidateService.transitionStage
+        StageTransitionResult result = candidateService.transitionStage(
+                currentUser,
+                candidateId,
+                targetStage,
+                rejectionReasonId,
+                skipInterviewConfirmed,
+                confirmationNote,
+                SecurityUtil.getClientIp(request),
+                request.getHeader("User-Agent")
+        );
+
+        if (!result.isSuccess()) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("statusCode", result.getStatusCode());
+            err.put("message", result.getMessage());
+            err.put("requiresHrApproval", result.isRequiresHrApproval());
+            err.put("canCurrentUserApprove", result.isCanCurrentUserApprove());
+            err.put("candidateId", result.getCandidateId());
+            err.put("candidateName", result.getCandidateName());
+            err.put("oldStage", result.getOldStage());
+            err.put("oldStageName", result.getOldStageName());
+            err.put("newStage", result.getNewStage());
+            err.put("newStageName", result.getNewStageName());
+            sendErrorJson(response, result.getStatusCode(), err);
             return;
-        }
-
-        if (targetStage == null || targetStage.trim().isEmpty()) {
-            sendErrorJson(response, HttpServletResponse.SC_BAD_REQUEST, "Thiếu giai đoạn đích cần chuyển (targetStage).");
-            return;
-        }
-
-        targetStage = targetStage.trim().toUpperCase(Locale.ROOT);
-
-        // Kiểm tra giai đoạn có thuộc 6 giai đoạn hợp lệ không
-        boolean isValidStage = false;
-        String targetStageName = targetStage;
-        for (StageDefinition def : PIPELINE_STAGES) {
-            if (def.getCode().equals(targetStage)) {
-                isValidStage = true;
-                targetStageName = def.getName();
-                break;
-            }
-        }
-        if (!isValidStage) {
-            sendErrorJson(response, HttpServletResponse.SC_BAD_REQUEST, "Giai đoạn tuyển dụng không hợp lệ: " + targetStage);
-            return;
-        }
-
-        // Lấy thông tin ứng viên từ cơ sở dữ liệu
-        Candidate candidate = candidateDAO.findById(candidateId.trim());
-        if (candidate == null) {
-            sendErrorJson(response, HttpServletResponse.SC_NOT_FOUND, "Không tìm thấy hồ sơ ứng viên tương ứng.");
-            return;
-        }
-
-        // [KN-301]: Kiểm tra tính hợp lệ và thẩm quyền quản lý ứng viên theo phân quyền RBAC
-        boolean isRecruiterOnly = currentUser.hasRole("RECRUITER")
-                && !currentUser.hasRole("ADMIN")
-                && !currentUser.hasRole("HR_MANAGER");
-
-        if (isRecruiterOnly) {
-            String candidateReqId = candidate.getRequisitionId();
-            if (candidateReqId == null || !assignmentDAO.isRecruiterAssigned(candidateReqId, currentUser.getId())) {
-                sendErrorJson(response, HttpServletResponse.SC_FORBIDDEN,
-                        "Bạn không có quyền chuyển giai đoạn cho ứng viên thuộc vị trí này (chỉ Recruiter phụ trách mới có quyền thao tác).");
-                return;
-            }
-        }
-
-        // Nếu chuyển sang giai đoạn "Loại" (REJECTED), bắt buộc phải có lý do loại
-        if ("REJECTED".equals(targetStage)) {
-            if (rejectionReasonId == null || rejectionReasonId.trim().isEmpty()) {
-                sendErrorJson(response, HttpServletResponse.SC_BAD_REQUEST, "Vui lòng chọn lý do loại hồ sơ ứng viên.");
-                return;
-            }
-            if (!catalogDAO.isValueInType(rejectionReasonId.trim(), SharedCatalogType.REJECTION_REASON)) {
-                sendErrorJson(response, HttpServletResponse.SC_BAD_REQUEST, "Lý do loại hồ sơ không hợp lệ trong danh mục hệ thống.");
-                return;
-            }
-        }
-
-        String oldStage = candidate.getStatus();
-        if (targetStage.equals(oldStage)) {
-            // Không thay đổi trạng thái
-            Map<String, Object> res = new HashMap<>();
-            res.put("success", true);
-            res.put("message", "Ứng viên hiện đã ở giai đoạn " + targetStageName + ".");
-            res.put("candidateId", candidate.getId());
-            res.put("candidateName", candidate.getFullName());
-            res.put("oldStage", oldStage);
-            res.put("newStage", targetStage);
-            sendSuccessJson(response, res);
-            return;
-        }
-
-        // Cập nhật trạng thái trong cơ sở dữ liệu thật
-        boolean ok = candidateDAO.updateStatus(candidate.getId(), targetStage, "REJECTED".equals(targetStage) ? rejectionReasonId.trim() : null);
-        if (!ok) {
-            sendErrorJson(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Không thể cập nhật trạng thái ứng viên trong cơ sở dữ liệu.");
-            return;
-        }
-
-        // Ghi nhận nhật ký kiểm toán (Audit Log)
-        try {
-            auditService.log(
-                    currentUser.getId(),
-                    "UPDATE_CANDIDATE_STAGE",
-                    "CANDIDATE",
-                    candidate.getId(),
-                    "Chuyển giai đoạn ứng viên " + candidate.getFullName() + " (" + candidate.getEmail()
-                            + ") từ [" + oldStage + "] sang [" + targetStage + "] trên Pipeline Kanban",
-                    request.getRemoteAddr(),
-                    request.getHeader("User-Agent")
-            );
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Không thể ghi nhật ký kiểm toán chuyển giai đoạn Kanban: " + e.getMessage());
         }
 
         Map<String, Object> res = new HashMap<>();
         res.put("success", true);
-        res.put("message", "Đã chuyển ứng viên \"" + candidate.getFullName() + "\" sang giai đoạn " + targetStageName + " thành công!");
-        res.put("candidateId", candidate.getId());
-        res.put("candidateName", candidate.getFullName());
-        res.put("oldStage", oldStage);
-        res.put("newStage", targetStage);
-        res.put("newStageName", targetStageName);
+        res.put("statusCode", 200);
+        res.put("message", result.getMessage());
+        res.put("candidateId", result.getCandidateId());
+        res.put("candidateName", result.getCandidateName());
+        res.put("oldStage", result.getOldStage());
+        res.put("oldStageName", result.getOldStageName());
+        res.put("newStage", result.getNewStage());
+        res.put("newStageName", result.getNewStageName());
+        res.put("skipInterview", result.isSkipInterview());
+        res.put("rejectionReasonId", result.getRejectionReasonId());
+        res.put("rejectionReasonName", result.getRejectionReasonName());
         sendSuccessJson(response, res);
     }
 
@@ -559,12 +523,37 @@ public class CandidatePipelineServlet extends HttpServlet {
     }
 
     private void sendErrorJson(HttpServletResponse response, int statusCode, String message) throws IOException {
-        response.setStatus(statusCode);
-        response.setContentType("application/json;charset=UTF-8");
-        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         Map<String, Object> err = new HashMap<>();
         err.put("success", false);
         err.put("message", message);
-        response.getWriter().write(gson.toJson(err));
+        sendErrorJson(response, statusCode, err);
+    }
+
+    private void sendErrorJson(HttpServletResponse response, int statusCode, Map<String, Object> errData) throws IOException {
+        response.setStatus(statusCode);
+        response.setContentType("application/json;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.getWriter().write(gson.toJson(errData));
+    }
+
+    /**
+     * [KN-311]: API lấy danh mục lý do loại hồ sơ ứng viên (REJECTION_REASON)
+     */
+    private void handleRejectionReasonsJson(HttpServletResponse response) throws IOException {
+        List<SharedCatalogItem> reasons = catalogDAO.findAll(SharedCatalogType.REJECTION_REASON);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (SharedCatalogItem r : reasons) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", r.getId());
+            map.put("name", r.getValue());
+            map.put("value", r.getValue());
+            map.put("displayOrder", r.getDisplayOrder());
+            list.add(map);
+        }
+        Map<String, Object> res = new HashMap<>();
+        res.put("success", true);
+        res.put("reasons", list);
+        res.put("total", list.size());
+        sendSuccessJson(response, res);
     }
 }

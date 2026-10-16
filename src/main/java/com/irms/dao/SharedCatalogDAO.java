@@ -314,6 +314,7 @@ public class SharedCatalogDAO extends BaseDAO {
         }
     }
 
+
     /**
      * Chức năng: Chuyển đổi dòng ResultSet thành đối tượng SharedCatalogItem
      *

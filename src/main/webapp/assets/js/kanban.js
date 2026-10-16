@@ -18,11 +18,13 @@
     let currentConfig = {
         contextPath: '',
         initialRequisitionId: null,
-        isRecruiterOnly: false
+        isRecruiterOnly: false,
+        canApproveSkipInterview: false
     };
 
     let pipelineData = null;
     let pendingRejection = null;
+    let pendingSkipApproval = null;
     let isUpdating = false;
 
     // Tên hiển thị tiếng Việt của 6 giai đoạn chuẩn
@@ -88,6 +90,9 @@
 
         // Đăng ký sự kiện cho Modal chọn lý do loại
         initRejectionModal();
+
+        // [KN-312]: Đăng ký sự kiện cho Modal bỏ qua phỏng vấn & xác nhận HR
+        initSkipInterviewModals();
 
         // Tải dữ liệu ban đầu
         const initialReqId = reqSelect ? reqSelect.value : currentConfig.initialRequisitionId;
@@ -470,9 +475,138 @@
                 return;
             }
 
+            // [KN-283 / KN-305 & KN-312]: Kiểm tra trường hợp bỏ qua giai đoạn Phỏng vấn (APPLIED/SCREENING -> OFFER/HIRED)
+            if (isSkippingInterview(sourceStage, targetStageCode)) {
+                if (currentConfig.canApproveSkipInterview) {
+                    promptSkipInterviewApproval(candidateId, sourceStage, targetStageCode, cardEl);
+                } else {
+                    promptSkipInterviewWarning(candidateId, sourceStage, targetStageCode, cardEl);
+                }
+                return;
+            }
+
             // Chuyển giai đoạn thông thường
-            executeStageChange(candidateId, sourceStage, targetStageCode, null, cardEl);
+            executeStageChange(candidateId, sourceStage, targetStageCode, null, cardEl, false, null);
         });
+    }
+
+    /**
+     * [KN-305]: Kiểm tra xem thao tác chuyển giai đoạn có đang bỏ qua giai đoạn Phỏng vấn không
+     */
+    function isSkippingInterview(sourceStage, targetStage) {
+        const isEarly = (sourceStage === 'APPLIED' || sourceStage === 'SCREENING');
+        const isOfferOrHired = (targetStage === 'OFFER' || targetStage === 'HIRED');
+        return isEarly && isOfferOrHired;
+    }
+
+    /**
+     * [KN-312]: Mở modal cảnh báo khi người dùng không đủ quyền bỏ qua Phỏng vấn
+     */
+    function promptSkipInterviewWarning(candidateId, sourceStage, targetStageCode, cardEl) {
+        const candidateName = cardEl.getAttribute('data-full-name') || 'Ứng viên';
+        const positionTitle = cardEl.getAttribute('data-position') || '';
+
+        const nameEl = document.getElementById('skipWarningCandidateName');
+        if (nameEl) nameEl.textContent = candidateName;
+
+        const posEl = document.getElementById('skipWarningPositionTitle');
+        if (posEl) posEl.textContent = positionTitle;
+
+        const srcEl = document.getElementById('skipWarningSourceStage');
+        if (srcEl) srcEl.textContent = STAGE_NAMES[sourceStage] || sourceStage;
+
+        const dstEl = document.getElementById('skipWarningTargetStage');
+        if (dstEl) dstEl.textContent = STAGE_NAMES[targetStageCode] || targetStageCode;
+
+        const modalEl = document.getElementById('skipInterviewWarningModal');
+        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        } else {
+            alert('Cảnh báo: Không được phép bỏ qua giai đoạn Phỏng vấn để chuyển sang Đề xuất offer trừ khi có sự xác nhận của Trưởng phòng Nhân sự.');
+        }
+    }
+
+    /**
+     * [KN-310 & KN-312]: Mở modal xác nhận đặc cách của Trưởng phòng Nhân sự
+     */
+    function promptSkipInterviewApproval(candidateId, sourceStage, targetStageCode, cardEl) {
+        const candidateName = cardEl.getAttribute('data-full-name') || 'Ứng viên';
+        const positionTitle = cardEl.getAttribute('data-position') || '';
+
+        const nameEl = document.getElementById('skipApprovalCandidateName');
+        if (nameEl) nameEl.textContent = candidateName;
+
+        const posEl = document.getElementById('skipApprovalPositionTitle');
+        if (posEl) posEl.textContent = positionTitle;
+
+        const srcEl = document.getElementById('skipApprovalSourceStage');
+        if (srcEl) srcEl.textContent = STAGE_NAMES[sourceStage] || sourceStage;
+
+        const dstEl = document.getElementById('skipApprovalTargetStage');
+        if (dstEl) dstEl.textContent = STAGE_NAMES[targetStageCode] || targetStageCode;
+
+        const noteEl = document.getElementById('skipInterviewNoteInput');
+        if (noteEl) noteEl.value = '';
+
+        pendingSkipApproval = {
+            candidateId: candidateId,
+            sourceStage: sourceStage,
+            targetStage: targetStageCode,
+            cardEl: cardEl
+        };
+
+        const modalEl = document.getElementById('skipInterviewApprovalModal');
+        if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        } else {
+            if (confirm(`Bạn có chắc chắn muốn đặc cách bỏ qua giai đoạn Phỏng vấn cho ứng viên "${candidateName}" không?`)) {
+                executeStageChange(candidateId, sourceStage, targetStageCode, null, cardEl, true, 'Đã xác nhận đặc cách');
+            }
+        }
+    }
+
+    /**
+     * Khởi tạo sự kiện cho Modal xác nhận bỏ qua Phỏng vấn
+     */
+    function initSkipInterviewModals() {
+        const modalEl = document.getElementById('skipInterviewApprovalModal');
+        const confirmBtn = document.getElementById('confirmSkipInterviewBtn');
+        const noteEl = document.getElementById('skipInterviewNoteInput');
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (!pendingSkipApproval) return;
+
+                const { candidateId, sourceStage, targetStage, cardEl } = pendingSkipApproval;
+                const note = noteEl ? noteEl.value.trim() : '';
+
+                // Khóa nút tránh double submit
+                confirmBtn.disabled = true;
+                const originalHtml = confirmBtn.innerHTML;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Đang xử lý...';
+
+                // Đóng modal
+                if (modalEl && window.bootstrap && window.bootstrap.Modal) {
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+
+                pendingSkipApproval = null;
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalHtml;
+
+                executeStageChange(candidateId, sourceStage, targetStage, null, cardEl, true, note);
+            });
+        }
+
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                pendingSkipApproval = null;
+                if (noteEl) noteEl.value = '';
+            });
+        }
     }
 
     /**
@@ -487,6 +621,15 @@
 
         const posEl = document.getElementById('rejectModalPositionTitle');
         if (posEl) posEl.textContent = positionTitle;
+
+        // Reset lỗi
+        const selectEl = document.getElementById('rejectionReasonSelect');
+        if (selectEl) {
+            selectEl.selectedIndex = 0;
+            selectEl.classList.remove('is-invalid');
+        }
+        const errorEl = document.getElementById('rejectionReasonError');
+        if (errorEl) errorEl.style.display = 'none';
 
         // Lưu thông tin chờ xử lý
         pendingRejection = {
@@ -504,7 +647,7 @@
             // Fallback nếu không có bootstrap modal instance
             const reason = prompt(`Nhập lý do loại ứng viên "${candidateName}":`);
             if (reason) {
-                executeStageChange(candidateId, sourceStage, targetStageCode, reason, cardEl);
+                executeStageChange(candidateId, sourceStage, targetStageCode, reason, cardEl, false, null);
             }
         }
     }
@@ -516,6 +659,7 @@
         const modalEl = document.getElementById('rejectionReasonModal');
         const confirmBtn = document.getElementById('confirmRejectBtn');
         const selectEl = document.getElementById('rejectionReasonSelect');
+        const errorEl = document.getElementById('rejectionReasonError');
 
         if (confirmBtn && selectEl) {
             confirmBtn.addEventListener('click', function () {
@@ -523,7 +667,8 @@
 
                 const reasonId = selectEl.value;
                 if (!reasonId || reasonId.trim() === '') {
-                    alert('Vui lòng chọn một lý do loại hợp lệ từ danh mục!');
+                    if (errorEl) errorEl.style.display = 'block';
+                    selectEl.classList.add('is-invalid');
                     selectEl.focus();
                     return;
                 }
@@ -537,7 +682,14 @@
                 }
 
                 pendingRejection = null;
-                executeStageChange(candidateId, sourceStage, targetStage, reasonId, cardEl);
+                executeStageChange(candidateId, sourceStage, targetStage, reasonId, cardEl, false, null);
+            });
+
+            selectEl.addEventListener('change', function () {
+                if (this.value) {
+                    if (errorEl) errorEl.style.display = 'none';
+                    this.classList.remove('is-invalid');
+                }
             });
         }
 
@@ -545,7 +697,11 @@
         if (modalEl) {
             modalEl.addEventListener('hidden.bs.modal', function () {
                 pendingRejection = null;
-                if (selectEl) selectEl.selectedIndex = 0;
+                if (selectEl) {
+                    selectEl.selectedIndex = 0;
+                    selectEl.classList.remove('is-invalid');
+                }
+                if (errorEl) errorEl.style.display = 'none';
             });
         }
     }
@@ -569,9 +725,9 @@
     }
 
     /**
-     * [KN-301]: Gửi yêu cầu cập nhật giai đoạn lên Backend và đồng bộ giao diện
+     * [KN-301 & KN-306]: Gửi yêu cầu cập nhật giai đoạn lên Backend và đồng bộ giao diện
      */
-    function executeStageChange(candidateId, sourceStage, targetStage, rejectionReasonId, cardEl) {
+    function executeStageChange(candidateId, sourceStage, targetStage, rejectionReasonId, cardEl, skipInterviewConfirmed, confirmationNote) {
         if (isUpdating) return;
         isUpdating = true;
 
@@ -603,7 +759,9 @@
         const payload = {
             candidateId: candidateId,
             targetStage: targetStage,
-            rejectionReasonId: rejectionReasonId || ''
+            rejectionReasonId: rejectionReasonId || '',
+            skipInterviewConfirmed: !!skipInterviewConfirmed,
+            confirmationNote: confirmationNote || ''
         };
 
         fetch(currentConfig.contextPath + '/api/candidates/pipeline/update-stage', {
@@ -622,7 +780,10 @@
             }
             return response.json().then(data => {
                 if (!response.ok) {
-                    throw new Error(data.message || 'Lỗi cập nhật giai đoạn trên máy chủ (Mã ' + response.status + ').');
+                    const err = new Error(data.message || 'Lỗi cập nhật giai đoạn trên máy chủ (Mã ' + response.status + ').');
+                    err.data = data;
+                    err.status = response.status;
+                    throw err;
                 }
                 return data;
             });
@@ -649,6 +810,13 @@
             } else {
                 // Thất bại từ API: Khôi phục lại vị trí ban đầu
                 rollbackCardMove(cardEl, sourceContainer, targetContainer, sourceStage, targetStage, data.message || 'Cập nhật thất bại.');
+                if (data.requiresHrApproval) {
+                    if (currentConfig.canApproveSkipInterview) {
+                        promptSkipInterviewApproval(candidateId, sourceStage, targetStage, cardEl);
+                    } else {
+                        promptSkipInterviewWarning(candidateId, sourceStage, targetStage, cardEl);
+                    }
+                }
             }
         })
         .catch(err => {
@@ -656,6 +824,13 @@
             cardEl.classList.remove('card-saving');
             // Thất bại kết nối hoặc lỗi server: Khôi phục lại thẻ về vị trí ban đầu
             rollbackCardMove(cardEl, sourceContainer, targetContainer, sourceStage, targetStage, err.message || 'Lỗi hệ thống khi cập nhật trạng thái.');
+            if (err.data && err.data.requiresHrApproval) {
+                if (currentConfig.canApproveSkipInterview) {
+                    promptSkipInterviewApproval(candidateId, sourceStage, targetStage, cardEl);
+                } else {
+                    promptSkipInterviewWarning(candidateId, sourceStage, targetStage, cardEl);
+                }
+            }
         });
     }
 
