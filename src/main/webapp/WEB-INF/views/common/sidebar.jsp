@@ -117,6 +117,14 @@
                     <span>Ngân hàng câu hỏi</span>
                 </a>
             </li>
+            <c:if test="${currentUser.hasRole('HR_MANAGER') || currentUser.hasRole('ADMIN') || currentUser.hasPermission('candidates.manage')}">
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'sla-configs' ? 'active' : ''}" href="${pageContext.request.contextPath}/admin/sla-configs">
+                        <i class="bi bi-stopwatch-fill"></i>
+                        <span>Cấu hình SLA &amp; Nhắc việc</span>
+                    </a>
+                </li>
+            </c:if>
         </ul>
 
         <c:if test="${currentUser.hasRole('ADMIN') || currentUser.hasRole('HR_MANAGER') || currentUser.hasPermission('users.view') || currentUser.hasPermission('roles.view') || currentUser.hasPermission('permissions.view') || currentUser.hasPermission('audit.view') || currentUser.hasPermission('company.view') || currentUser.hasPermission('company.manage')}">

@@ -229,7 +229,7 @@
                                 <th style="min-width: 170px; width: 18%;">Vị trí ứng tuyển &amp; CV</th>
                                 <th style="min-width: 130px; width: 14%;">Nguồn / Giới thiệu</th>
                                 <th style="min-width: 105px; width: 10%;">Thời gian</th>
-                                <th style="min-width: 105px; width: 10%;">Trạng thái</th>
+                                <th style="min-width: 120px; width: 12%;">Trạng thái &amp; SLA</th>
                                 <th class="text-end pe-3" style="min-width: 195px; width: 12%;">Thao tác &amp; Vòng tuyển</th>
                             </tr>
                         </thead>
@@ -300,9 +300,16 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'WITHDRAWN' ? 'secondary' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning')))}">
-                                            ${c.getStatusLabel()}
-                                        </span>
+                                        <div class="d-flex flex-column gap-1">
+                                            <span class="badge-pill-status ${c.status == 'HIRED' ? 'success' : (c.status == 'WITHDRAWN' ? 'secondary' : (c.status == 'REJECTED' ? 'danger' : (c.status == 'OFFER' ? 'info' : 'warning')))}">
+                                                ${c.getStatusLabel()}
+                                            </span>
+                                            <c:if test="${c.slaOverdue}">
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.72rem; width: fit-content;" title="Hồ sơ đã ở giai đoạn ${c.daysInCurrentStage} ngày (Ngưỡng SLA: ${c.slaDaysThreshold} ngày)">
+                                                    <i class="bi bi-flag-fill text-danger"></i> Quá hạn SLA (${c.daysInCurrentStage}/${c.slaDaysThreshold} ngày)
+                                                </span>
+                                            </c:if>
+                                        </div>
                                     </td>
                                     <td class="text-end pe-3">
                                         <div class="d-inline-flex align-items-center gap-1.5 justify-content-end">

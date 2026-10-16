@@ -14,7 +14,6 @@ import java.io.IOException;
         "/interviews/*",
         "/offers/*",
         "/onboarding/*",
-        "/notifications/*",
         "/reports/*"
 })
 public class PlaceholderServlet extends HttpServlet {

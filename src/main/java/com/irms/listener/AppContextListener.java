@@ -30,6 +30,7 @@ public class AppContextListener implements ServletContextListener {
         LOGGER.info("================================================================");
         EmailService.startScheduledWorker();
         JobExpirationService.startDailyExpirationTask();
+        com.irms.service.SlaService.startDailyScheduler();
     }
 
     /**
@@ -37,8 +38,9 @@ public class AppContextListener implements ServletContextListener {
      */
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        LOGGER.info("Đang tắt hệ thống IRMS: dọn dẹp Email Worker, Job Expiration Service và DB Pool...");
+        LOGGER.info("Đang tắt hệ thống IRMS: dọn dẹp Email Worker, Job Expiration Service, SLA Scheduler và DB Pool...");
         JobExpirationService.shutdown();
+        com.irms.service.SlaService.shutdown();
         EmailService.shutdown();
         DBConnection.closePool();
     }

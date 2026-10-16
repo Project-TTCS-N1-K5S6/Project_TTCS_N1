@@ -38,6 +38,16 @@ public class Candidate implements Serializable {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
+    // Các trường phục vụ Quản lý & Cảnh báo SLA (KN-363, KN-364, KN-365)
+    private boolean isSlaOverdue = false;
+    private Timestamp slaOverdueDetectedAt;
+    private Timestamp stageEnteredAt;
+    private int daysInCurrentStage = 0;
+    private int slaDaysThreshold = 3;
+    private String recruiterId;
+    private String recruiterName;
+    private String recruiterEmail;
+
     public Candidate() {}
 
     public String getId() { return id; }
@@ -180,5 +190,34 @@ public class Candidate implements Serializable {
         if ("REJECTED".equalsIgnoreCase(status)) return "Đã từ chối";
         if ("WITHDRAWN".equalsIgnoreCase(status)) return "Ứng viên rút hồ sơ";
         return status;
+    }
+
+    public boolean isSlaOverdue() { return isSlaOverdue; }
+    public boolean getSlaOverdue() { return isSlaOverdue; }
+    public void setSlaOverdue(boolean isSlaOverdue) { this.isSlaOverdue = isSlaOverdue; }
+
+    public Timestamp getSlaOverdueDetectedAt() { return slaOverdueDetectedAt; }
+    public void setSlaOverdueDetectedAt(Timestamp slaOverdueDetectedAt) { this.slaOverdueDetectedAt = slaOverdueDetectedAt; }
+
+    public Timestamp getStageEnteredAt() { return stageEnteredAt; }
+    public void setStageEnteredAt(Timestamp stageEnteredAt) { this.stageEnteredAt = stageEnteredAt; }
+
+    public int getDaysInCurrentStage() { return daysInCurrentStage; }
+    public void setDaysInCurrentStage(int daysInCurrentStage) { this.daysInCurrentStage = daysInCurrentStage; }
+
+    public int getSlaDaysThreshold() { return slaDaysThreshold; }
+    public void setSlaDaysThreshold(int slaDaysThreshold) { this.slaDaysThreshold = slaDaysThreshold; }
+
+    public String getRecruiterId() { return recruiterId; }
+    public void setRecruiterId(String recruiterId) { this.recruiterId = recruiterId; }
+
+    public String getRecruiterName() { return recruiterName; }
+    public void setRecruiterName(String recruiterName) { this.recruiterName = recruiterName; }
+
+    public String getRecruiterEmail() { return recruiterEmail; }
+    public void setRecruiterEmail(String recruiterEmail) { this.recruiterEmail = recruiterEmail; }
+
+    public int getOverdueDays() {
+        return Math.max(0, daysInCurrentStage - slaDaysThreshold);
     }
 }

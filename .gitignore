@@ -13,6 +13,8 @@ dist/
 **/dist/
 build/
 **/build/
+target/
+**/target/
 
 # Maven & Java build artifacts
 target/
