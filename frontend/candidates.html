@@ -98,6 +98,11 @@
                     <h4 class="fw-bold mb-1">Pipeline &amp; Hồ sơ Ứng viên</h4>
                     <p class="text-muted small mb-0">Theo dõi tiến trình tuyển dụng, sàng lọc CV, phỏng vấn và gửi Offer.</p>
                 </div>
+                <div>
+                    <button class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+                        <i class="bi bi-person-plus-fill"></i> Thêm ứng viên thủ công
+                    </button>
+                </div>
             </div>
 
             <!-- Bảng ứng viên -->
@@ -218,8 +223,160 @@
             </div>
         </div>
 
+        <!-- Modal Thêm Ứng Viên Thủ Công (KN-288) -->
+        <div class="modal fade" id="addCandidateModal" tabindex="-1" aria-labelledby="addCandidateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+                    <form id="manualCandidateForm" action="/candidates/create" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="duplicateAction" id="manualDuplicateAction" value="">
+                        
+                        <div class="modal-header bg-light border-bottom py-3 px-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                                    <i class="bi bi-person-plus-fill text-primary fs-5"></i>
+                                </div>
+                                <div>
+                                    <h5 class="modal-title fw-bold text-dark mb-0" id="addCandidateModalLabel">
+                                        Thêm ứng viên thủ công
+                                    </h5>
+                                    <small class="text-muted">Nhập tay thông tin và đính kèm CV (tự động phát hiện trùng lặp theo email &amp; SĐT)</small>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body p-4">
+                            <!-- Khung Cảnh báo Trùng lặp (KN-346, KN-351, KN-352) -->
+                            <div id="manualDupAlert" class="alert alert-warning border border-warning shadow-sm mb-4 d-none" style="border-radius: 10px; background-color: #fff9ea;">
+                                <div class="d-flex align-items-start gap-2 mb-2">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0 mt-1"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">Phát hiện hồ sơ có khả năng trùng lặp!</h6>
+                                        <p class="text-muted small mb-2" id="manualDupMsg">
+                                            Email hoặc số điện thoại của ứng viên này trùng khớp với hồ sơ hiện có trong hệ thống:
+                                        </p>
+                                    </div>
+                                </div>
+                                <div id="manualDupList" class="d-flex flex-column gap-2 mb-3"></div>
+                                <div class="d-flex justify-content-end align-items-center gap-2 pt-2 border-top border-warning-subtle">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" id="btnCancelDup">
+                                        <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa lại thông tin
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm px-3 fw-bold text-dark shadow-sm" id="btnOverrideDup">
+                                        <i class="bi bi-check2-circle me-1"></i> Vẫn tạo hồ sơ mới
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Khung Thông báo Lỗi chung -->
+                            <div id="manualErrorAlert" class="alert alert-danger border border-danger-subtle shadow-sm mb-3 d-none" style="border-radius: 8px;">
+                                <i class="bi bi-x-circle-fill me-1"></i> <span id="manualErrorMsg"></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-dark">Họ và tên ứng viên <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-person text-muted"></i></span>
+                                        <input type="text" class="form-control" name="fullName" id="manualFullName" required maxlength="120" placeholder="VD: Nguyễn Văn A">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-semibold text-dark">Email liên hệ <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-envelope text-muted"></i></span>
+                                        <input type="email" class="form-control" name="email" id="manualEmail" required maxlength="254" placeholder="candidate@email.com">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-semibold text-dark">Số điện thoại <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="bi bi-telephone text-muted"></i></span>
+                                        <input type="tel" class="form-control" name="phone" id="manualPhone" required maxlength="30" placeholder="0901234567">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-semibold text-dark">Vị trí tuyển dụng</label>
+                                    <input type="text" class="form-control" name="position" id="manualPosition" placeholder="VD: Senior Java Developer">
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-semibold text-dark">Nguồn ứng viên</label>
+                                    <select class="form-select" name="source" id="manualSourceId">
+                                        <option value="Giới thiệu">Giới thiệu nội bộ</option>
+                                        <option value="LinkedIn">LinkedIn</option>
+                                        <option value="TopCV">TopCV</option>
+                                        <option value="Mạng xã hội">Mạng xã hội</option>
+                                        <option value="Sự kiện tuyển dụng">Sự kiện tuyển dụng</option>
+                                        <option value="Nguồn khác">Nguồn khác</option>
+                                    </select>
+                                </div>
+
+                                <!-- Khu vực Đính kèm & Xem trước CV (KN-349, KN-350) -->
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-dark d-flex justify-content-between align-items-center mb-1">
+                                        <span><i class="bi bi-file-earmark-arrow-up text-primary me-1"></i> Tệp CV ứng viên (.pdf, .doc, .docx - Tối đa 5MB)</span>
+                                        <span class="text-muted text-xs">Không bắt buộc</span>
+                                    </label>
+                                    <input type="file" id="manualCvFileInput" name="cv" accept=".pdf,.doc,.docx" class="d-none">
+                                    <div id="manualCvDropzone" class="border border-2 border-dashed rounded p-3 text-center bg-light" style="cursor: pointer; transition: all 0.2s;">
+                                        <div class="text-primary fs-3 mb-1"><i class="bi bi-cloud-arrow-up"></i></div>
+                                        <div class="fw-semibold small text-dark" id="manualCvDropzoneText">Kéo thả CV vào đây hoặc bấm để chọn tệp</div>
+                                        <div class="text-muted text-xs mt-1">Chấp nhận tệp .pdf, .doc, .docx dung lượng tối đa 5MB</div>
+                                    </div>
+
+                                    <!-- Khung Xem trước CV PDF trực tiếp (KN-349) -->
+                                    <div id="manualCvPreviewContainer" class="card mt-2 border border-info-subtle shadow-sm d-none" style="border-radius: 8px; overflow: hidden;">
+                                        <div class="card-header bg-info-subtle py-2 px-3 d-flex justify-content-between align-items-center">
+                                            <div class="small fw-semibold text-info-emphasis d-flex align-items-center gap-1">
+                                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-6"></i>
+                                                <span id="manualCvPreviewName" class="text-truncate" style="max-width: 400px;">cv.pdf</span>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.75rem;" id="btnRemoveCv">
+                                                <i class="bi bi-trash me-1"></i> Bỏ tệp
+                                            </button>
+                                        </div>
+                                        <div class="card-body p-0" id="manualCvPreviewBody">
+                                            <iframe id="manualCvPreviewIframe" src="" style="width: 100%; height: 320px; border: none;"></iframe>
+                                            <div id="manualCvPreviewDocNote" class="p-3 text-center text-muted small d-none">
+                                                <i class="bi bi-info-circle text-primary me-1"></i> Trình duyệt không hỗ trợ xem trước tệp Word trực tiếp. Tệp sẽ được tải lên và lưu trữ an toàn trên máy chủ.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-semibold text-dark">Trạng thái khởi tạo</label>
+                                    <select class="form-select" name="status" id="manualStatus">
+                                        <option value="APPLIED">Mới ứng tuyển</option>
+                                        <option value="SCREENING">Sàng lọc CV</option>
+                                        <option value="INTERVIEWING">Phỏng vấn</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label small fw-semibold text-dark">Đường dẫn CV online (tùy chọn thay thế)</label>
+                                    <input type="url" class="form-control" name="cvUrl" id="manualCvUrl" placeholder="https://storage.cloud/cv.pdf">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold text-dark">Ghi chú ban đầu</label>
+                                    <textarea class="form-control" name="notes" id="manualNotes" rows="2" placeholder="Ghi chú kinh nghiệm, kỹ năng nổi bật..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold" id="btnSubmitManualCand">
+                                <i class="bi bi-check-lg me-1"></i> Kiểm tra trùng &amp; Lưu hồ sơ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal Đối Chiếu & Xác Nhận Thông Tin Bóc Tách từ CV (KN-213) -->
         <div class="modal fade" id="reviewCVExtractionModal" tabindex="-1" aria-labelledby="reviewCVExtractionModalLabel" aria-hidden="true">
+
             <div class="modal-dialog modal-dialog-centered modal-xl">
                 <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
                     <div class="modal-header bg-light border-bottom py-3 px-4">
@@ -391,6 +548,285 @@
             badgeElem.className = 'badge ' + badgeClass;
             badgeElem.textContent = statusLabel;
         }
+
+        // =========================================================================
+        // [KN-288]: XỬ LÝ GIAO DIỆN THÊM ỨNG VIÊN THỦ CÔNG & XEM TRƯỚC CV & TRÙNG LẶP
+        // =========================================================================
+        (function () {
+            var fileInput = document.getElementById('manualCvFileInput');
+            var dropzone = document.getElementById('manualCvDropzone');
+            var dropzoneText = document.getElementById('manualCvDropzoneText');
+            var previewContainer = document.getElementById('manualCvPreviewContainer');
+            var previewName = document.getElementById('manualCvPreviewName');
+            var previewIframe = document.getElementById('manualCvPreviewIframe');
+            var previewDocNote = document.getElementById('manualCvPreviewDocNote');
+            var btnRemoveCv = document.getElementById('btnRemoveCv');
+            var previewObjectUrl = null;
+
+            var dupAlert = document.getElementById('manualDupAlert');
+            var dupMsg = document.getElementById('manualDupMsg');
+            var dupList = document.getElementById('manualDupList');
+            var btnOverrideDup = document.getElementById('btnOverrideDup');
+            var btnCancelDup = document.getElementById('btnCancelDup');
+
+            var errorAlert = document.getElementById('manualErrorAlert');
+            var errorMsg = document.getElementById('manualErrorMsg');
+
+            var form = document.getElementById('manualCandidateForm');
+            var btnSubmit = document.getElementById('btnSubmitManualCand');
+            var dupActionInput = document.getElementById('manualDuplicateAction');
+
+            if (!form) return;
+
+            function resetCvPreview() {
+                if (previewObjectUrl) {
+                    URL.revokeObjectURL(previewObjectUrl);
+                    previewObjectUrl = null;
+                }
+                if (previewIframe) previewIframe.src = '';
+                if (previewContainer) previewContainer.classList.add('d-none');
+                if (previewDocNote) previewDocNote.classList.add('d-none');
+                if (dropzoneText) dropzoneText.textContent = 'Kéo thả CV vào đây hoặc bấm để chọn tệp';
+                if (fileInput) fileInput.value = '';
+            }
+
+            function handleFileSelected(file) {
+                if (!file) {
+                    resetCvPreview();
+                    return;
+                }
+                var ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+                var allowed = ['.pdf', '.doc', '.docx'];
+                if (allowed.indexOf(ext) === -1) {
+                    alert('Định dạng tệp không được hỗ trợ. Vui lòng chọn tệp .pdf, .doc hoặc .docx');
+                    resetCvPreview();
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Dung lượng tệp vượt quá giới hạn 5MB cho phép.');
+                    resetCvPreview();
+                    return;
+                }
+
+                dropzoneText.textContent = 'Đã chọn: ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                previewName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                previewContainer.classList.remove('d-none');
+
+                if (ext === '.pdf') {
+                    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+                    previewObjectUrl = URL.createObjectURL(file);
+                    previewIframe.src = previewObjectUrl;
+                    previewIframe.classList.remove('d-none');
+                    previewDocNote.classList.add('d-none');
+                } else {
+                    previewIframe.classList.add('d-none');
+                    previewDocNote.classList.remove('d-none');
+                }
+            }
+
+            if (dropzone) {
+                dropzone.addEventListener('click', function () {
+                    fileInput.click();
+                });
+                dropzone.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    dropzone.classList.add('bg-white', 'border-primary');
+                });
+                dropzone.addEventListener('dragleave', function (e) {
+                    dropzone.classList.remove('bg-white', 'border-primary');
+                });
+                dropzone.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    dropzone.classList.remove('bg-white', 'border-primary');
+                    var files = e.dataTransfer.files;
+                    if (files && files.length > 0) {
+                        fileInput.files = files;
+                        handleFileSelected(files[0]);
+                    }
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function () {
+                    if (fileInput.files && fileInput.files.length > 0) {
+                        handleFileSelected(fileInput.files[0]);
+                    } else {
+                        resetCvPreview();
+                    }
+                });
+            }
+
+            if (btnRemoveCv) {
+                btnRemoveCv.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    resetCvPreview();
+                });
+            }
+
+            if (btnCancelDup) {
+                btnCancelDup.addEventListener('click', function () {
+                    dupAlert.classList.add('d-none');
+                    dupActionInput.value = '';
+                });
+            }
+
+            if (btnOverrideDup) {
+                btnOverrideDup.addEventListener('click', function () {
+                    dupActionInput.value = 'create_anyway';
+                    submitFormAjax();
+                });
+            }
+
+            function renderDuplicateMatches(matches) {
+                dupList.replaceChildren();
+                if (!matches || !matches.length) return;
+
+                var labels = { email: 'Trùng Email', phone: 'Trùng Số điện thoại' };
+
+                matches.forEach(function (m) {
+                    var cand = m.candidate || {};
+                    var item = document.createElement('div');
+                    item.className = 'p-3 bg-white border border-warning rounded shadow-xs';
+
+                    var topRow = document.createElement('div');
+                    topRow.className = 'd-flex justify-content-between align-items-center mb-1';
+                    
+                    var nameSpan = document.createElement('strong');
+                    nameSpan.className = 'text-dark';
+                    nameSpan.textContent = cand.fullName || cand.name || 'Ứng viên';
+
+                    var tagsDiv = document.createElement('div');
+                    tagsDiv.className = 'd-flex gap-1 flex-wrap';
+
+                    (m.matchedFields || []).forEach(function (field) {
+                        var badge = document.createElement('span');
+                        badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle';
+                        badge.style.fontSize = '0.72rem';
+                        badge.innerHTML = '<i class="bi bi-shield-exclamation me-1"></i>' + (labels[field] || field);
+                        tagsDiv.appendChild(badge);
+                    });
+
+                    if (m.sameName) {
+                        var nameBadge = document.createElement('span');
+                        nameBadge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                        nameBadge.style.fontSize = '0.72rem';
+                        nameBadge.textContent = 'Cùng họ tên';
+                        tagsDiv.appendChild(nameBadge);
+                    }
+
+                    if (m.samePosition) {
+                        var posBadge = document.createElement('span');
+                        posBadge.className = 'badge bg-info-subtle text-info border border-info-subtle';
+                        posBadge.style.fontSize = '0.72rem';
+                        posBadge.textContent = 'Cùng vị trí';
+                        tagsDiv.appendChild(posBadge);
+                    }
+
+                    topRow.append(nameSpan, tagsDiv);
+
+                    var metaRow = document.createElement('div');
+                    metaRow.className = 'small text-muted d-flex gap-3 mt-1 flex-wrap';
+                    metaRow.innerHTML = '<span><i class="bi bi-envelope me-1"></i>' + (cand.email || '-') + '</span>' +
+                                        '<span><i class="bi bi-telephone me-1"></i>' + (cand.phone || '-') + '</span>' +
+                                        '<span><i class="bi bi-briefcase me-1"></i>' + (cand.position || 'Chưa gắn vị trí') + '</span>';
+
+                    item.append(topRow, metaRow);
+                    dupList.appendChild(item);
+                });
+            }
+
+            function submitFormAjax() {
+                errorAlert.classList.add('d-none');
+                if (!form.reportValidity()) return;
+
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Đang xử lý...';
+
+                // Check if we are running in standalone HTML/file demo mode
+                if (window.location.protocol === 'file:' || !window.location.port) {
+                    setTimeout(function () {
+                        var emailVal = document.getElementById('manualEmail').value;
+                        if (emailVal && emailVal.includes('trung') && dupActionInput.value !== 'create_anyway') {
+                            dupMsg.textContent = 'Phát hiện trùng khớp với hồ sơ hiện có trong hệ thống:';
+                            renderDuplicateMatches([{
+                                candidate: { fullName: 'Trần Thị Trùng', email: emailVal, phone: '0988888888', position: 'Java Developer' },
+                                matchedFields: ['email'],
+                                sameName: false,
+                                samePosition: false
+                            }]);
+                            dupAlert.classList.remove('d-none');
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = '<i class="bi bi-check-lg me-1"></i> Kiểm tra trùng &amp; Lưu hồ sơ';
+                            return;
+                        }
+                        alert('Tạo ứng viên thủ công thành công!\n(Đã mô phỏng thêm ứng viên vào hệ thống)');
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('addCandidateModal'));
+                        if (modal) modal.hide();
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = '<i class="bi bi-check-lg me-1"></i> Kiểm tra trùng &amp; Lưu hồ sơ';
+                    }, 600);
+                    return;
+                }
+
+                var formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).then(function (response) {
+                    return response.json().then(function (data) {
+                        return { status: response.status, ok: response.ok, data: data };
+                    }).catch(function () {
+                        if (response.ok) {
+                            window.location.reload();
+                            return;
+                        }
+                        throw new Error('Máy chủ phản hồi trạng thái: ' + response.status);
+                    });
+                }).then(function (res) {
+                    if (!res) return;
+                    if (res.status === 409) {
+                        dupMsg.textContent = res.data.message || 'Phát hiện trùng khớp với hồ sơ hiện có trong hệ thống:';
+                        renderDuplicateMatches(res.data.matches);
+                        dupAlert.classList.remove('d-none');
+                        dupAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else if (res.ok) {
+                        dupAlert.classList.add('d-none');
+                        window.location.reload();
+                    } else {
+                        errorMsg.textContent = res.data.message || 'Không thể lưu hồ sơ ứng viên.';
+                        errorAlert.classList.remove('d-none');
+                    }
+                }).catch(function (err) {
+                    errorMsg.textContent = err.message || 'Lỗi mạng hoặc kết nối máy chủ.';
+                    errorAlert.classList.remove('d-none');
+                }).finally(function () {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="bi bi-check-lg me-1"></i> Kiểm tra trùng &amp; Lưu hồ sơ';
+                });
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                dupActionInput.value = '';
+                submitFormAjax();
+            });
+
+            var modalElement = document.getElementById('addCandidateModal');
+            if (modalElement) {
+                modalElement.addEventListener('hidden.bs.modal', function () {
+                    form.reset();
+                    resetCvPreview();
+                    dupAlert.classList.add('d-none');
+                    errorAlert.classList.add('d-none');
+                    dupActionInput.value = '';
+                });
+            }
+        })();
         </script>
 
         <footer class="app-footer">
