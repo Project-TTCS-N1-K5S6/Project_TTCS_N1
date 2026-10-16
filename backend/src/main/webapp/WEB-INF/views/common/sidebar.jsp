@@ -58,6 +58,12 @@
                         <span>Danh sách ứng viên</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link ${activeMenu == 'talent-pool' ? 'active' : ''}" href="${pageContext.request.contextPath}/candidates/talent-pool">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span>Kho ứng viên tiềm năng</span>
+                    </a>
+                </li>
             </c:if>
             <li class="nav-item">
                 <a class="nav-link ${activeMenu == 'referrals' ? 'active' : ''}" href="${pageContext.request.contextPath}/referrals">

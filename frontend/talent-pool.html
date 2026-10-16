@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kho Ứng Viên Tiềm Năng (Talent Pool) - IRMS Platform</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SASS Compiled Stylesheet -->
+    <link rel="stylesheet" href="../src/main/webapp/assets/css/main.css">
+    <style>
+        .talent-kpi-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .talent-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .star-rating {
+            color: #f59e0b;
+            letter-spacing: 2px;
+        }
+        .skill-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            border: 1px solid #bfdbfe;
+            margin: 2px;
+        }
+        .skill-pill-btn {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .skill-pill-btn:hover, .skill-pill-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+<div id="app-wrapper">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="sidebar-header">
+            <a href="dashboard.html" class="brand-logo">
+                <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+                <span>IRMS PLATFORM</span>
+            </a>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-header">TỔNG QUAN</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html">
+                        <i class="bi bi-grid-fill"></i>
+                        <span>Bảng điều khiển</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="candidates.html">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Danh sách ứng viên</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="talent-pool.html">
+                        <i class="bi bi-stars"></i>
+                        <span>Kho ứng viên tiềm năng</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUY TRÌNH TUYỂN DỤNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="recruitment-requests.html">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>Yêu cầu tuyển dụng</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="menu-header">QUẢN TRỊ HỆ THỐNG</div>
+            <ul class="nav flex-column mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="users.html">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Tài khoản người dùng</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="permissions.html">
+                        <i class="bi bi-diagram-3-fill"></i>
+                        <span>Ma trận phân quyền</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="app-main">
+        <header class="app-header">
+            <div class="header-left">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle" type="button"><i class="bi bi-list"></i></button>
+                <div class="page-breadcrumb">
+                    <span class="text-muted fs-6"><i class="bi bi-house-door me-1"></i> IRMS</span>
+                    <span class="text-muted mx-2">/</span>
+                    <a href="candidates.html" class="text-muted text-decoration-none fs-6">Hồ sơ ứng viên</a>
+                    <span class="text-muted mx-2">/</span>
+                    <span class="fw-semibold text-dark fs-6">Kho ứng viên tiềm năng</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                        <div class="user-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-weight: bold;">HR</div>
+                        <div class="d-none d-md-block text-start lh-1">
+                            <div class="fw-semibold text-dark fs-6">Trần Tuyển Dụng</div>
+                            <small class="text-muted">Chuyên viên Nhân sự</small>
+                        </div>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
+                        <li><a class="dropdown-item py-2 text-danger" href="index.html"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <!-- Header Banner -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                <div>
+                    <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-stars text-warning fs-3"></i>
+                        <span>Kho ứng viên tiềm năng (Talent Pool)</span>
+                    </h3>
+                    <div class="text-muted small">
+                        Lưu trữ, phân loại và tái kết nối nhân tài dự bị cho các chiến dịch tuyển dụng tương lai
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="candidates.html" class="btn btn-outline-secondary btn-sm px-3 py-2">
+                        <i class="bi bi-arrow-left me-1"></i> Về danh sách ứng viên
+                    </a>
+                    <button class="btn btn-warning text-dark fw-bold btn-sm px-3 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#addNewPotentialModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Thêm vào kho tiềm năng
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4 Thẻ KPI thống kê kho tiềm năng -->
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="talent-kpi-card d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Tổng ứng viên lưu trữ</div>
+                            <div class="fs-2 fw-bold text-dark mt-1">42</div>
+                            <div class="text-success small mt-1"><i class="bi bi-arrow-up-right"></i> +8 trong tháng này</div>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                            <i class="bi bi-people-fill fs-4 text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="talent-kpi-card d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Đánh giá 5 sao (Xuất sắc)</div>
+                            <div class="fs-2 fw-bold text-warning mt-1">16</div>
+                            <div class="text-muted small mt-1">38% tổng số ứng viên</div>
+                        </div>
+                        <div class="rounded-circle bg-warning bg-opacity-15 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                            <i class="bi bi-star-fill fs-4 text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="talent-kpi-card d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Sẵn sàng tái điều động</div>
+                            <div class="fs-2 fw-bold text-success mt-1">29</div>
+                            <div class="text-muted small mt-1">Chưa gắn yêu cầu đang mở</div>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                            <i class="bi bi-arrow-repeat fs-4 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="talent-kpi-card d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Thẻ kỹ năng phổ biến</div>
+                            <div class="fs-4 fw-bold text-info mt-1">Java, React</div>
+                            <div class="text-muted small mt-1">Microservices, AWS</div>
+                        </div>
+                        <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                            <i class="bi bi-tags-fill fs-4 text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bộ lọc tìm kiếm đa tiêu chí -->
+            <div class="card shadow-none border mb-4" style="border-radius: 12px;">
+                <div class="card-body p-3">
+                    <form id="filterForm" class="row g-2 align-items-center">
+                        <div class="col-12 col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0" id="filterKeyword" placeholder="Tìm theo tên, email, kỹ năng (Java, Cloud...)" onkeyup="filterTalentTable()">
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <select class="form-select" id="filterRating" onchange="filterTalentTable()">
+                                <option value="">Tất cả đánh giá</option>
+                                <option value="5">★★★★★ (5 sao)</option>
+                                <option value="4">★★★★☆ (4 sao)</option>
+                                <option value="3">★★★☆☆ (3 sao)</option>
+                                <option value="2">★★☆☆☆ (2 sao)</option>
+                                <option value="1">★☆☆☆☆ (1 sao)</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <select class="form-select" id="filterDept" onchange="filterTalentTable()">
+                                <option value="">Tất cả phòng ban</option>
+                                <option value="Trung tâm Phát triển Phần mềm">Trung tâm Phát triển Phần mềm</option>
+                                <option value="Khối Công nghệ & Dữ liệu">Khối Công nghệ & Dữ liệu</option>
+                                <option value="Khối Kinh doanh & Marketing">Khối Kinh doanh & Marketing</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3 d-flex gap-2">
+                            <button type="button" class="btn btn-primary w-100" onclick="filterTalentTable()"><i class="bi bi-funnel me-1"></i> Lọc hồ sơ</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="resetFilter()"><i class="bi bi-arrow-counterclockwise"></i></button>
+                        </div>
+                    </form>
+
+                    <!-- Quick Skill Pill Tags -->
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-2 border-top">
+                        <span class="text-muted small fw-semibold me-1"><i class="bi bi-lightning-charge text-warning"></i> Thẻ nhanh:</span>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('Java')">#Java</button>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('Spring Boot')">#Spring Boot</button>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('React')">#React</button>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('Node.js')">#Node.js</button>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('AWS')">#AWS</button>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('Microservices')">#Microservices</button>
+                        <button type="button" class="skill-pill-btn" onclick="applySkillPill('Product Manager')">#Product Manager</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng hồ sơ trong kho tiềm năng -->
+            <div class="card shadow-none border mb-4" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0 fs-6">Danh sách ứng viên tiềm năng</h5>
+                        <small class="text-muted">Được đánh giá chất lượng cao và có tiềm năng kết nạp vào các đợt tuyển dụng sau</small>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill">
+                        Hiển thị: <strong id="rowCount">3</strong> hồ sơ
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom align-middle mb-0" id="talentTable">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Ứng viên &amp; Liên hệ</th>
+                                    <th>Đánh giá tiềm năng</th>
+                                    <th>Kỹ năng nổi bật</th>
+                                    <th>Phòng ban &amp; Vị trí dự kiến</th>
+                                    <th>Ghi chú năng lực</th>
+                                    <th>Ngày lưu kho</th>
+                                    <th class="text-end pe-4" style="min-width: 190px;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Row 1 -->
+                                <tr data-rating="5" data-dept="Trung tâm Phát triển Phần mềm">
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #047857); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">H</div>
+                                            <div>
+                                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                    <span>Hoàng Minh Tuấn</span>
+                                                    <span class="badge bg-warning bg-opacity-25 text-warning-emphasis border border-warning-subtle rounded-pill text-xs px-2">5★ Xuất sắc</span>
+                                                </div>
+                                                <div class="text-muted small">tuan.hoang@email.test &bull; 0988776655</div>
+                                                <a href="#" class="text-primary text-xs text-decoration-none"><i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="star-rating fs-6">★★★★★</div>
+                                        <small class="text-muted fw-semibold">5 / 5 sao</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="skill-badge">Java</span>
+                                            <span class="skill-badge">Spring Boot</span>
+                                            <span class="skill-badge">Microservices</span>
+                                            <span class="skill-badge">Kafka</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">Senior Backend Engineer</div>
+                                        <small class="text-muted">Trung tâm Phát triển Phần mềm</small>
+                                    </td>
+                                    <td>
+                                        <div class="small text-secondary text-truncate" style="max-width: 200px;" title="Phỏng vấn kỹ thuật đạt 9.5/10. Do dự án hiện tại hoãn mở rộng nên lưu kho cho Q4.">
+                                            Phỏng vấn kỹ thuật đạt 9.5/10. Do dự án hiện tại hoãn mở rộng nên lưu kho cho Q4.
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">14/10/2026<br>bởi <em>Admin</em></small>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-success" title="Tái điều động vào đợt tuyển mới" data-bs-toggle="modal" data-bs-target="#assignModal" onclick="prepareAssign('cand-001', 'Hoàng Minh Tuấn')">
+                                                <i class="bi bi-arrow-repeat me-1"></i> Tái tuyển
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary" title="Cập nhật đánh giá" data-bs-toggle="modal" data-bs-target="#editModal" onclick="prepareEdit('cand-001', 'Hoàng Minh Tuấn', 5, 'Java, Spring Boot, Microservices, Kafka', 'Senior Backend Engineer')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" title="Loại khỏi kho tiềm năng" onclick="confirmRemove('Hoàng Minh Tuấn')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 2 -->
+                                <tr data-rating="4" data-dept="Khối Công nghệ & Dữ liệu">
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">Đ</div>
+                                            <div>
+                                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                    <span>Đỗ Thị Mai</span>
+                                                    <span class="badge bg-primary bg-opacity-15 text-primary border border-primary-subtle rounded-pill text-xs px-2">4★ Rất tốt</span>
+                                                </div>
+                                                <div class="text-muted small">mai.do@email.test &bull; 0912334455</div>
+                                                <a href="#" class="text-primary text-xs text-decoration-none"><i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="star-rating fs-6">★★★★<span class="text-muted opacity-25">★</span></div>
+                                        <small class="text-muted fw-semibold">4 / 5 sao</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="skill-badge">React</span>
+                                            <span class="skill-badge">TypeScript</span>
+                                            <span class="skill-badge">TailwindCSS</span>
+                                            <span class="skill-badge">Next.js</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">Frontend Lead</div>
+                                        <small class="text-muted">Khối Công nghệ & Dữ liệu</small>
+                                    </td>
+                                    <td>
+                                        <div class="small text-secondary text-truncate" style="max-width: 200px;" title="Giao tiếp tiếng Anh lưu loát, kinh nghiệm xây dựng Design System quy mô lớn.">
+                                            Giao tiếp tiếng Anh lưu loát, kinh nghiệm xây dựng Design System quy mô lớn.
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">10/10/2026<br>bởi <em>Recruiter</em></small>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-success" title="Tái điều động vào đợt tuyển mới" data-bs-toggle="modal" data-bs-target="#assignModal" onclick="prepareAssign('cand-002', 'Đỗ Thị Mai')">
+                                                <i class="bi bi-arrow-repeat me-1"></i> Tái tuyển
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary" title="Cập nhật đánh giá" data-bs-toggle="modal" data-bs-target="#editModal" onclick="prepareEdit('cand-002', 'Đỗ Thị Mai', 4, 'React, TypeScript, TailwindCSS, Next.js', 'Frontend Lead')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" title="Loại khỏi kho tiềm năng" onclick="confirmRemove('Đỗ Thị Mai')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 3 -->
+                                <tr data-rating="4" data-dept="Khối Kinh doanh & Marketing">
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #ec4899, #be185d); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;">V</div>
+                                            <div>
+                                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                    <span>Vũ Thanh Hương</span>
+                                                    <span class="badge bg-info bg-opacity-15 text-info-emphasis border border-info-subtle rounded-pill text-xs px-2">4★ Rất tốt</span>
+                                                </div>
+                                                <div class="text-muted small">huong.vu@email.test &bull; 0977889900</div>
+                                                <a href="#" class="text-primary text-xs text-decoration-none"><i class="bi bi-file-earmark-pdf"></i> Xem CV đính kèm</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="star-rating fs-6">★★★★<span class="text-muted opacity-25">★</span></div>
+                                        <small class="text-muted fw-semibold">4 / 5 sao</small>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="skill-badge">Product Manager</span>
+                                            <span class="skill-badge">Agile/Scrum</span>
+                                            <span class="skill-badge">Data Analysis</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">Senior Product Owner</div>
+                                        <small class="text-muted">Khối Kinh doanh & Marketing</small>
+                                    </td>
+                                    <td>
+                                        <div class="small text-secondary text-truncate" style="max-width: 200px;" title="Từng làm PO tại ngân hàng số, tư duy sản phẩm nhạy bén.">
+                                            Từng làm PO tại ngân hàng số, tư duy sản phẩm nhạy bén.
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">05/10/2026<br>bởi <em>HR_Manager</em></small>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-success" title="Tái điều động vào đợt tuyển mới" data-bs-toggle="modal" data-bs-target="#assignModal" onclick="prepareAssign('cand-003', 'Vũ Thanh Hương')">
+                                                <i class="bi bi-arrow-repeat me-1"></i> Tái tuyển
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary" title="Cập nhật đánh giá" data-bs-toggle="modal" data-bs-target="#editModal" onclick="prepareEdit('cand-003', 'Vũ Thanh Hương', 4, 'Product Manager, Agile/Scrum, Data Analysis', 'Senior Product Owner')">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" title="Loại khỏi kho tiềm năng" onclick="confirmRemove('Vũ Thanh Hương')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <div>&copy; 2026 IRMS Platform. All rights reserved.</div>
+            <div class="text-muted">Frontend: <strong>Bootstrap 5 &amp; SASS</strong> &bull; Subsystem: <strong>Talent Pool Management</strong></div>
+        </footer>
+    </main>
+</div>
+
+<!-- Modal 1: Tiếp nhận trực tiếp vào kho tiềm năng -->
+<div class="modal fade" id="addNewPotentialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header border-bottom py-3" style="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-stars text-warning me-2"></i>Thêm ứng viên vào kho tiềm năng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="addPotentialForm" onsubmit="event.preventDefault(); alert('Đã lưu ứng viên vào kho tiềm năng thành công!'); bootstrap.Modal.getInstance(document.getElementById('addNewPotentialModal')).hide();">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Họ và tên ứng viên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" required placeholder="VD: Nguyễn Văn Anh">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email liên hệ <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" required placeholder="anh.nguyen@example.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Số điện thoại</label>
+                            <input type="text" class="form-control" placeholder="0912345678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Đánh giá tiềm năng <span class="text-danger">*</span></label>
+                            <select class="form-select" required>
+                                <option value="5">★★★★★ (5 sao - Xuất sắc)</option>
+                                <option value="4" selected>★★★★☆ (4 sao - Rất tốt)</option>
+                                <option value="3">★★★☆☆ (3 sao - Tốt/Khá)</option>
+                                <option value="2">★★☆☆☆ (2 sao - Trung bình)</option>
+                                <option value="1">★☆☆☆☆ (1 sao - Cần đào tạo thêm)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phòng ban dự kiến</label>
+                            <select class="form-select">
+                                <option value="">-- Chưa gán phòng ban --</option>
+                                <option value="dept-01">Trung tâm Phát triển Phần mềm</option>
+                                <option value="dept-02">Khối Công nghệ & Dữ liệu</option>
+                                <option value="dept-03">Khối Kinh doanh & Marketing</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Vị trí tương lai phù hợp</label>
+                            <input type="text" class="form-control" placeholder="VD: Senior Backend Engineer">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Thẻ kỹ năng (phân tách bằng dấu phẩy)</label>
+                            <input type="text" class="form-control" placeholder="VD: Java, Spring Boot, React, AWS, Docker">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Link CV đính kèm</label>
+                            <input type="url" class="form-control" placeholder="https://cloud.storage/cv.pdf">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Ghi chú & Đánh giá năng lực</label>
+                            <textarea class="form-control" rows="3" placeholder="Nhận xét điểm mạnh, lý do đưa vào kho, thời điểm thích hợp tái liên hệ..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer px-0 pb-0 pt-4 mt-3 border-top">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold"><i class="bi bi-star-fill text-dark me-1"></i> Lưu vào kho tiềm năng</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2: Tái điều động vào đợt tuyển dụng đang mở -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header border-bottom py-3" style="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);">
+                <h5 class="modal-title fw-bold text-success"><i class="bi bi-arrow-repeat me-2"></i>Tái điều động ứng viên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="assignForm" onsubmit="event.preventDefault(); alert('Ứng viên đã được gán vào chiến dịch tuyển dụng và chuyển sang vòng Sàng lọc CV!'); bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Hồ sơ ứng viên được chọn</label>
+                        <input type="text" class="form-control bg-light" id="assignCandidateName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Gán vào yêu cầu tuyển dụng đang mở <span class="text-danger">*</span></label>
+                        <select class="form-select" required>
+                            <option value="">-- Chọn yêu cầu tuyển dụng đang mở --</option>
+                            <option value="req-01">[REQ-2026-001] Tuyển dụng Kỹ sư Java Backend Senior</option>
+                            <option value="req-02">[REQ-2026-002] Tuyển dụng Trưởng nhóm Frontend React</option>
+                            <option value="req-03">[REQ-2026-005] Tuyển dụng Senior Product Manager</option>
+                        </select>
+                        <div class="form-text text-muted small"><i class="bi bi-info-circle me-1"></i>Hồ sơ sẽ tự động chuyển sang vòng <strong>Sàng lọc CV (SCREENING)</strong> của vị trí được chọn.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Ghi chú điều động</label>
+                        <textarea class="form-control" rows="2" placeholder="Ghi chú thêm về lý do tái tuyển dụng cho đợt này..."></textarea>
+                    </div>
+                    <div class="modal-footer px-0 pb-0 pt-3 border-top">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check2-circle me-1"></i> Xác nhận điều động</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 3: Chỉnh sửa đánh giá tiềm năng -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header border-bottom py-3 bg-light">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square text-primary me-2"></i>Cập nhật đánh giá tiềm năng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editForm" onsubmit="event.preventDefault(); alert('Cập nhật thông tin thành công!'); bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Ứng viên</label>
+                        <input type="text" class="form-control bg-light" id="editCandidateName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Đánh giá tiềm năng</label>
+                        <select class="form-select" id="editRating">
+                            <option value="5">★★★★★ (5 sao - Xuất sắc)</option>
+                            <option value="4">★★★★☆ (4 sao - Rất tốt)</option>
+                            <option value="3">★★★☆☆ (3 sao - Tốt/Khá)</option>
+                            <option value="2">★★☆☆☆ (2 sao - Trung bình)</option>
+                            <option value="1">★☆☆☆☆ (1 sao - Cần đào tạo thêm)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Vị trí tương lai phù hợp</label>
+                        <input type="text" class="form-control" id="editPosition">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Thẻ kỹ năng</label>
+                        <input type="text" class="form-control" id="editSkills">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Ghi chú năng lực</label>
+                        <textarea class="form-control" id="editNotes" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer px-0 pb-0 pt-3 border-top">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i> Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function prepareAssign(id, name) {
+    document.getElementById('assignCandidateName').value = name;
+}
+
+function prepareEdit(id, name, rating, skills, position) {
+    document.getElementById('editCandidateName').value = name;
+    document.getElementById('editRating').value = rating;
+    document.getElementById('editSkills').value = skills;
+    document.getElementById('editPosition').value = position;
+}
+
+function confirmRemove(name) {
+    if (confirm('Bạn có chắc chắn muốn đưa ứng viên "' + name + '" ra khỏi Kho tiềm năng?')) {
+        alert('Đã đưa ứng viên ra khỏi kho tiềm năng.');
+    }
+}
+
+function filterTalentTable() {
+    var kw = document.getElementById('filterKeyword').value.toLowerCase().trim();
+    var rating = document.getElementById('filterRating').value;
+    var dept = document.getElementById('filterDept').value;
+    var rows = document.querySelectorAll('#talentTable tbody tr');
+    var visible = 0;
+
+    rows.forEach(function(row) {
+        var text = row.innerText.toLowerCase();
+        var rowRating = row.getAttribute('data-rating') || '';
+        var rowDept = row.getAttribute('data-dept') || '';
+
+        var matchKw = !kw || text.includes(kw);
+        var matchRating = !rating || rowRating === rating;
+        var matchDept = !dept || rowDept === dept;
+
+        if (matchKw && matchRating && matchDept) {
+            row.style.display = '';
+            visible++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    document.getElementById('rowCount').innerText = visible;
+}
+
+function applySkillPill(skill) {
+    document.getElementById('filterKeyword').value = skill;
+    filterTalentTable();
+}
+
+function resetFilter() {
+    document.getElementById('filterKeyword').value = '';
+    document.getElementById('filterRating').value = '';
+    document.getElementById('filterDept').value = '';
+    filterTalentTable();
+}
+</script>
+</body>
+</html>

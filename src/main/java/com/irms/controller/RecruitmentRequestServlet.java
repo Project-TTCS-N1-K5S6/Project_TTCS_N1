@@ -1,10 +1,12 @@
 package com.irms.controller;
 
+import com.irms.model.Candidate;
 import com.irms.model.Department;
 import com.irms.model.RecruitmentRequest;
 import com.irms.model.RequisitionApprovalStep;
 import com.irms.model.SalaryRange;
 import com.irms.model.User;
+import com.irms.service.CandidateService;
 import com.irms.service.DepartmentService;
 import com.irms.service.HeadcountBudgetService;
 import com.irms.service.RecruitmentRequestService;
@@ -47,7 +49,8 @@ import java.util.Map;
         "/recruitment-requests/reject-step",
         "/recruitment-requests/api/approval-chain",
         "/recruitment-requests/api/approve",
-        "/recruitment-requests/api/budget-check"
+        "/recruitment-requests/api/budget-check",
+        "/recruitment-requests/api/suggested-talents"
 })
 public class RecruitmentRequestServlet extends HttpServlet {
 
@@ -57,6 +60,7 @@ public class RecruitmentRequestServlet extends HttpServlet {
     private final UserService userService = new UserService();
     private final com.irms.service.RecruitmentApprovalService approvalService = new com.irms.service.RecruitmentApprovalService();
     private final HeadcountBudgetService headcountBudgetService = new HeadcountBudgetService();
+    private final CandidateService candidateService = new CandidateService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -66,6 +70,12 @@ public class RecruitmentRequestServlet extends HttpServlet {
         // 1. AJAX API: Kiểm tra pipeline ứng viên và tin tuyển dụng trước khi đóng
         if ("/recruitment-requests/check-pipeline".equals(path)) {
             handleCheckPipeline(request, response);
+            return;
+        }
+
+        // AJAX API: Gợi ý ứng viên tiềm năng phù hợp từ kho khi mở vị trí mới (KN-286)
+        if ("/recruitment-requests/api/suggested-talents".equals(path)) {
+            handleSuggestedTalentsApi(request, response);
             return;
         }
 
@@ -712,5 +722,22 @@ public class RecruitmentRequestServlet extends HttpServlet {
                 departmentId, fiscalYear, headcount, salary, requisitionId, currentUser);
 
         JsonUtil.sendJsonResponse(response, 200, result);
+    }
+
+    /**
+     * [KN-286]: AJAX API trả về danh sách ứng viên tiềm năng gợi ý từ kho phù hợp với vị trí tuyển dụng
+     */
+    private void handleSuggestedTalentsApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String requisitionId = request.getParameter("requisitionId");
+        int limit = 15;
+        try {
+            if (request.getParameter("limit") != null && !request.getParameter("limit").trim().isEmpty()) {
+                limit = Integer.parseInt(request.getParameter("limit").trim());
+            }
+        } catch (NumberFormatException ignored) {}
+
+        List<Candidate> suggestions = candidateService.getSuggestedTalents(requisitionId, limit);
+        JsonUtil.sendJsonResponse(response, 200, suggestions);
     }
 }

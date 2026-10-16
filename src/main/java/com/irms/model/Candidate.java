@@ -29,6 +29,18 @@ public class Candidate implements Serializable {
     private String ipAddress;
     private String departmentId;
     private String departmentName;
+    private boolean isPotential;
+    private int potentialRating = 3;
+    private String potentialSkills;
+    private String potentialNotes;
+    private String targetDepartmentId;
+    private String targetDepartmentName;
+    private String targetPosition;
+    private Timestamp addedToPoolAt;
+    private String addedToPoolBy;
+    private String addedToPoolByName;
+    private int matchScore;
+    private String matchReason;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -99,6 +111,57 @@ public class Candidate implements Serializable {
 
     public Timestamp getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public boolean isPotential() { return isPotential; }
+    public void setPotential(boolean potential) { isPotential = potential; }
+
+    public int getPotentialRating() { return potentialRating; }
+    public void setPotentialRating(int potentialRating) { this.potentialRating = potentialRating; }
+
+    public String getPotentialSkills() { return potentialSkills; }
+    public void setPotentialSkills(String potentialSkills) { this.potentialSkills = potentialSkills; }
+
+    public String getPotentialNotes() { return potentialNotes; }
+    public void setPotentialNotes(String potentialNotes) { this.potentialNotes = potentialNotes; }
+
+    public String getTargetDepartmentId() { return targetDepartmentId; }
+    public void setTargetDepartmentId(String targetDepartmentId) { this.targetDepartmentId = targetDepartmentId; }
+
+    public String getTargetDepartmentName() { return targetDepartmentName; }
+    public void setTargetDepartmentName(String targetDepartmentName) { this.targetDepartmentName = targetDepartmentName; }
+
+    public String getTargetPosition() { return targetPosition; }
+    public void setTargetPosition(String targetPosition) { this.targetPosition = targetPosition; }
+
+    public Timestamp getAddedToPoolAt() { return addedToPoolAt; }
+    public void setAddedToPoolAt(Timestamp addedToPoolAt) { this.addedToPoolAt = addedToPoolAt; }
+
+    public String getAddedToPoolBy() { return addedToPoolBy; }
+    public void setAddedToPoolBy(String addedToPoolBy) { this.addedToPoolBy = addedToPoolBy; }
+
+    public String getAddedToPoolByName() { return addedToPoolByName; }
+    public void setAddedToPoolByName(String addedToPoolByName) { this.addedToPoolByName = addedToPoolByName; }
+
+    public int getMatchScore() { return matchScore; }
+    public void setMatchScore(int matchScore) { this.matchScore = matchScore; }
+
+    public String getMatchReason() { return matchReason; }
+    public void setMatchReason(String matchReason) { this.matchReason = matchReason; }
+
+    public String[] getSkillsArray() {
+        if (potentialSkills == null || potentialSkills.trim().isEmpty()) {
+            return new String[0];
+        }
+        return potentialSkills.split("[,;\\n]+");
+    }
+
+    public String getPotentialRatingBadgeClass() {
+        if (potentialRating >= 5) return "bg-warning text-dark";
+        if (potentialRating == 4) return "bg-success text-white";
+        if (potentialRating == 3) return "bg-primary text-white";
+        if (potentialRating == 2) return "bg-info text-dark";
+        return "bg-secondary text-white";
+    }
 
     public String getStatusBadgeClass() {
         if ("APPLIED".equalsIgnoreCase(status)) return "bg-primary";

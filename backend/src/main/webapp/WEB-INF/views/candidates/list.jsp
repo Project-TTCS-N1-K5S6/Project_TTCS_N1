@@ -31,9 +31,14 @@
                 <h3 class="fw-bold text-dark mb-1">Danh sách ứng viên</h3>
                 <div class="text-muted small">Hệ thống quản trị / Danh sách ứng viên</div>
             </div>
-            <button class="btn-ris-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
-                <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                <a href="${pageContext.request.contextPath}/candidates/talent-pool" class="btn btn-outline-warning text-dark fw-semibold d-inline-flex align-items-center shadow-sm" style="border-radius: 8px;">
+                    <i class="bi bi-stars text-warning me-1 fs-6"></i> Kho ứng viên tiềm năng
+                </a>
+                <button class="btn-ris-primary" data-bs-toggle="modal" data-bs-target="#addCandidateModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Tiếp nhận ứng viên
+                </button>
+            </div>
         </div>
 
         <%-- [KN-116]: Thông báo phạm vi hiển thị cho Recruiter được phân công --%>
@@ -240,7 +245,14 @@
                                                 ${c.fullName != null && c.fullName.length() > 0 ? c.fullName.substring(0, 1) : 'U'}
                                             </div>
                                             <div>
-                                                <div class="fw-bold text-dark">${c.fullName}</div>
+                                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                    <span>${c.fullName}</span>
+                                                    <c:if test="${c.potential}">
+                                                        <span class="badge bg-warning bg-opacity-25 text-warning-emphasis border border-warning-subtle rounded-pill text-xs ms-1 d-inline-flex align-items-center px-2 py-0" title="Ứng viên trong kho tiềm năng (${c.potentialRating} sao)">
+                                                            <i class="bi bi-star-fill text-warning me-1"></i>${c.potentialRating > 0 ? c.potentialRating : ''} Tiềm năng
+                                                        </span>
+                                                    </c:if>
+                                                </div>
                                                 <div class="text-muted text-xs">${c.email}</div>
                                             </div>
                                         </div>
@@ -274,6 +286,34 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="d-inline-flex align-items-center gap-2">
+                                            <c:choose>
+                                                <c:when test="${c.potential}">
+                                                    <a href="${pageContext.request.contextPath}/candidates/talent-pool?keyword=${c.fullName}"
+                                                       class="btn btn-sm btn-outline-warning text-dark py-1 px-2 d-inline-flex align-items-center"
+                                                       title="Đã có trong kho tiềm năng (${c.potentialRating} sao) - Bấm để xem chi tiết"
+                                                       style="border-radius: 6px; font-size: 0.8rem;">
+                                                        <i class="bi bi-star-fill text-warning me-1"></i> Kho TN
+                                                    </a>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-secondary py-1 px-2 d-inline-flex align-items-center"
+                                                            title="Đưa vào kho ứng viên tiềm năng"
+                                                            onclick="openAddToTalentPoolModal('${c.id}', '${c.fullName}', '${c.departmentId != null ? c.departmentId : ''}', '${c.targetPosition != null ? c.targetPosition : (c.requisitionTitle != null ? c.requisitionTitle : '')}')"
+                                                            style="border-radius: 6px; font-size: 0.8rem;">
+                                                        <i class="bi bi-star text-warning me-1"></i> + Kho TN
+                                                    </button>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            <c:if test="${c.status == 'INTERVIEWING' || c.status == 'OFFER'}">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger py-1 px-2 d-inline-flex align-items-center"
+                                                        title="Ứng viên bị loại ở vòng cuối được đánh dấu đưa vào kho tiềm năng kèm lý do (KN-286)"
+                                                        onclick="openRejectAndPoolModal('${c.id}', '${c.fullName}', '${c.departmentId != null ? c.departmentId : ''}', '${c.targetPosition != null ? c.targetPosition : (c.requisitionTitle != null ? c.requisitionTitle : '')}')"
+                                                        style="border-radius: 6px; font-size: 0.78rem;">
+                                                    <i class="bi bi-x-circle text-danger me-1"></i> Loại vòng cuối
+                                                </button>
+                                            </c:if>
                                             <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST"
                                                   class="candidate-status-form d-inline-flex flex-column gap-1 align-items-end"
                                                   data-current-status="${c.status}" data-current-reason="${c.rejectionReasonId}">
@@ -296,6 +336,12 @@
                                                             </option>
                                                         </c:forEach>
                                                     </select>
+                                                    <div class="form-check mt-1 text-start" style="font-size: 0.70rem;">
+                                                        <input class="form-check-input" type="checkbox" name="saveToTalentPool" value="true" id="savePool_${c.id}" ${c.status == 'INTERVIEWING' || c.status == 'OFFER' ? 'checked' : ''}>
+                                                        <label class="form-check-label text-warning-emphasis fw-bold" for="savePool_${c.id}" title="Lưu vào kho tiềm năng">
+                                                            + Kho TN
+                                                        </label>
+                                                    </div>
                                                 </div>
                                                 <button type="submit" class="btn btn-sm btn-primary candidate-status-submit py-0 px-2" style="font-size: 0.75rem;" hidden>
                                                     Lưu
@@ -425,7 +471,160 @@
         </div>
     </div>
 
+    <!-- Modal Đưa ứng viên vào Kho tiềm năng -->
+    <div class="modal fade" id="addToTalentPoolModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow border-0" style="border-radius: 12px; overflow: hidden;">
+                <form action="${pageContext.request.contextPath}/candidates/talent-pool/add" method="POST">
+                    <input type="hidden" name="candidateId" id="poolCandidateId">
+                    <input type="hidden" name="redirect" value="candidates">
+                    <div class="modal-header border-bottom py-3" style="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);">
+                        <h6 class="modal-title fw-bold text-dark mb-0">
+                            <i class="bi bi-stars text-warning me-2 fs-5"></i>Đưa vào kho ứng viên tiềm năng
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Họ và tên ứng viên</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="poolCandidateName" readonly>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Đánh giá tiềm năng <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" name="potentialRating" required>
+                                    <option value="5">★★★★★ (5 sao - Xuất sắc)</option>
+                                    <option value="4" selected>★★★★☆ (4 sao - Rất tốt)</option>
+                                    <option value="3">★★★☆☆ (3 sao - Tốt/Khá)</option>
+                                    <option value="2">★★☆☆☆ (2 sao - Tiềm năng trung bình)</option>
+                                    <option value="1">★☆☆☆☆ (1 sao - Cần đào tạo thêm)</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Phòng ban mục tiêu</label>
+                                <select class="form-select form-select-sm" name="targetDepartmentId" id="poolTargetDept">
+                                    <option value="">-- Chưa gán phòng ban --</option>
+                                    <c:forEach var="d" items="${departments}">
+                                        <option value="${d.id}"><c:out value="${d.name}" /></option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Vị trí phù hợp trong tương lai</label>
+                            <input type="text" class="form-control form-control-sm" name="targetPosition" id="poolTargetPosition" placeholder="VD: Senior Java Developer, Tech Lead...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Thẻ kỹ năng chính (cách nhau dấu phẩy)</label>
+                            <input type="text" class="form-control form-control-sm" name="potentialSkills" placeholder="VD: Java, Spring Boot, Microservices, AWS...">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Ghi chú & Đánh giá năng lực</label>
+                            <textarea class="form-control form-control-sm" name="potentialNotes" rows="3" placeholder="Nhận xét lý do lưu trữ, điểm mạnh, lưu ý khi liên hệ lại..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-2 px-3 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold">
+                            <i class="bi bi-star-fill text-dark me-1"></i> Lưu vào kho tiềm năng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Loại ứng viên vòng cuối & Lưu kho tiềm năng (KN-286) -->
+    <div class="modal fade" id="rejectAndPoolModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow border-0" style="border-radius: 12px; overflow: hidden;">
+                <form action="${pageContext.request.contextPath}/candidates/update-status" method="POST">
+                    <input type="hidden" name="candidateId" id="rejectCandidateId">
+                    <input type="hidden" name="status" value="REJECTED">
+                    <input type="hidden" name="saveToTalentPool" value="true">
+                    <div class="modal-header border-bottom py-3" style="background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);">
+                        <h6 class="modal-title fw-bold text-danger mb-0">
+                            <i class="bi bi-shield-x text-danger me-2 fs-5"></i>Loại vòng cuối &amp; Đưa vào kho tiềm năng
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-warning py-2 px-3 small border border-warning-subtle mb-3" style="border-radius: 8px;">
+                            <i class="bi bi-info-circle-fill text-warning me-1"></i>
+                            Ứng viên đã đến vòng tuyển dụng cuối (Phỏng vấn / Gửi Offer). Ghi nhận lý do loại và đánh dấu lưu trữ vào kho tiềm năng để tái kết nối khi mở vị trí mới.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Họ và tên ứng viên</label>
+                            <input type="text" class="form-control form-control-sm bg-light" id="rejectCandidateName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Lý do loại hồ sơ <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm" name="rejectionReasonId" required>
+                                <option value="">-- Chọn lý do loại hồ sơ --</option>
+                                <c:forEach var="reason" items="${rejectionReasons}">
+                                    <option value="${reason.id}"><c:out value="${reason.value}" /></option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Đánh giá tiềm năng <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" name="potentialRating" required>
+                                    <option value="5">★★★★★ (5 sao - Xuất sắc)</option>
+                                    <option value="4" selected>★★★★☆ (4 sao - Rất tốt)</option>
+                                    <option value="3">★★★☆☆ (3 sao - Tốt/Khá)</option>
+                                    <option value="2">★★☆☆☆ (2 sao - Trung bình)</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Chức danh quan tâm</label>
+                                <input type="text" class="form-control form-control-sm" name="targetPosition" id="rejectTargetPosition" placeholder="VD: Senior Java Developer...">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Kỹ năng nổi bật</label>
+                            <input type="text" class="form-control form-control-sm" name="potentialSkills" placeholder="VD: Java, Spring Boot, Microservices...">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Lý do đưa vào kho tiềm năng &amp; Đánh giá năng lực <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-sm" name="potentialNotes" rows="3" required placeholder="Nhận xét lý do loại ở vòng cuối, chuyên môn nổi bật, thời điểm thích hợp tái liên hệ..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light py-2 px-3 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-sm btn-danger fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Xác nhận &amp; Lưu kho tiềm năng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 <script>
+function openAddToTalentPoolModal(id, name, deptId, position) {
+    document.getElementById('poolCandidateId').value = id;
+    document.getElementById('poolCandidateName').value = name;
+    if (deptId && document.getElementById('poolTargetDept')) {
+        document.getElementById('poolTargetDept').value = deptId;
+    }
+    if (position && document.getElementById('poolTargetPosition')) {
+        document.getElementById('poolTargetPosition').value = position;
+    }
+    var modal = new bootstrap.Modal(document.getElementById('addToTalentPoolModal'));
+    modal.show();
+}
+
+function openRejectAndPoolModal(id, name, deptId, position) {
+    document.getElementById('rejectCandidateId').value = id;
+    document.getElementById('rejectCandidateName').value = name;
+    if (position && document.getElementById('rejectTargetPosition')) {
+        document.getElementById('rejectTargetPosition').value = position;
+    }
+    var modal = new bootstrap.Modal(document.getElementById('rejectAndPoolModal'));
+    modal.show();
+}
+
 function toggleCandidateStatusForm(control) {
     var form = control.closest('.candidate-status-form');
     var status = form.querySelector('[name="status"]');

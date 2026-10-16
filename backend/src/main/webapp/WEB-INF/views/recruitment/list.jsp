@@ -506,6 +506,12 @@
                                                                 title="Tạo nhanh bài đăng tuyển dụng (KN-204)">
                                                             <i class="bi bi-lightning-charge-fill text-warning"></i>
                                                         </button>
+                                                        <!-- KN-286: Gợi ý ứng viên phù hợp từ kho tiềm năng -->
+                                                        <button type="button" class="btn btn-outline-info text-dark"
+                                                                onclick="openSuggestedTalentsModal('${r.id}', '${r.code}', '${r.positionTitle}', '${r.departmentName}')"
+                                                                title="Gợi ý ứng viên phù hợp từ kho tiềm năng (KN-286)">
+                                                            <i class="bi bi-person-check-fill text-info"></i>
+                                                        </button>
                                                     </c:if>
                                                     <!-- Quản lý xuất bản tin tuyển dụng -->
                                                     <a href="${pageContext.request.contextPath}/post-publishing?search=${r.code}" 
@@ -873,6 +879,9 @@
                     <i class="bi bi-diagram-3-fill me-1"></i>Xem Nhật ký & Chuỗi cấp duyệt
                 </button>
                 <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="modalSuggestedTalentsBtn" class="btn btn-outline-info btn-sm text-dark fw-semibold" style="display:none;" onclick="openSuggestedTalentsFromDetail()">
+                        <i class="bi bi-person-check-fill text-info me-1"></i>Gợi ý ứng viên tiềm năng
+                    </button>
                     <button type="button" id="modalQuickPostBtn" class="btn btn-warning btn-sm text-dark fw-semibold" style="display:none;" onclick="openQuickPostFromDetail()">
                         <i class="bi bi-lightning-charge-fill me-1"></i>Tạo nhanh bài đăng
                     </button>
@@ -1232,6 +1241,64 @@
     </div>
 </div>
 
+<!-- ============================================================== -->
+<!-- MODAL: GỢI Ý ỨNG VIÊN PHÙ HỢP TỪ KHO TIỀM NĂNG (KN-286) -->
+<!-- ============================================================== -->
+<div class="modal fade" id="suggestedTalentsModal" tabindex="-1" aria-labelledby="suggestedTalentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header py-3" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white;">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0 text-white" id="suggestedTalentsModalLabel">
+                        <i class="bi bi-stars text-warning me-2 fs-5"></i>Gợi ý Ứng viên Phù hợp từ Kho Tiềm năng (KN-286)
+                    </h5>
+                    <small class="text-white-50" id="suggestedModalSubtitle">Vị trí: Đang tải...</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="alert alert-info py-2 px-3 small border border-info-subtle mb-3 d-flex align-items-center justify-content-between" style="border-radius: 8px;">
+                    <div>
+                        <i class="bi bi-info-circle-fill me-1"></i>
+                        Hệ thống tự động lọc và xếp hạng ứng viên tiềm năng trong kho dựa theo <strong>Chức danh quan tâm</strong>, <strong>Phòng ban</strong> và <strong>Kỹ năng</strong> tương thích với vị trí mới này.
+                    </div>
+                    <a href="${pageContext.request.contextPath}/candidates/talent-pool" class="btn btn-xs btn-outline-primary text-nowrap ms-2" target="_blank">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Mở toàn bộ kho
+                    </a>
+                </div>
+
+                <div id="suggestedTalentsLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tìm kiếm...</span>
+                    </div>
+                    <div class="mt-2 text-muted small fw-semibold">Đang phân tích và tìm kiếm ứng viên tương thích từ kho...</div>
+                </div>
+
+                <div id="suggestedTalentsEmpty" class="text-center py-5 d-none bg-white rounded border">
+                    <i class="bi bi-person-x fs-1 text-muted opacity-50 d-block mb-2"></i>
+                    <h6 class="fw-bold text-dark">Chưa tìm thấy ứng viên tiềm năng phù hợp trực tiếp</h6>
+                    <p class="text-muted small mb-3">Hiện tại chưa có ứng viên trong kho tiềm năng khớp với chức danh hoặc phòng ban này.</p>
+                    <a href="${pageContext.request.contextPath}/candidates/talent-pool" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-search me-1"></i>Tìm kiếm thủ công trong Kho tiềm năng
+                    </a>
+                </div>
+
+                <div id="suggestedTalentsContainer" class="d-none">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="small text-muted">
+                            Tìm thấy <strong class="text-dark" id="suggestedTalentsCount">0</strong> ứng viên tiềm năng phù hợp:
+                        </div>
+                    </div>
+                    <div class="row g-3" id="suggestedTalentsList"></div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top py-2 px-3">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <jsp:include page="../common/footer.jsp" />
 
 <script>
@@ -1416,6 +1483,15 @@ function viewDetails(id, code, pos, dept, count, reason, sal, deadline, statusLa
             quickPostBtn.style.display = 'inline-block';
         } else {
             quickPostBtn.style.display = 'none';
+        }
+    }
+
+    var suggestedTalentsBtn = document.getElementById('modalSuggestedTalentsBtn');
+    if (suggestedTalentsBtn) {
+        if (statusCode === 'APPROVED' || statusCode === 'OPEN') {
+            suggestedTalentsBtn.style.display = 'inline-block';
+        } else {
+            suggestedTalentsBtn.style.display = 'none';
         }
     }
 
@@ -2070,4 +2146,123 @@ document.getElementById('quickJobPostingForm').addEventListener('submit', functi
         errMsgSpan.innerText = 'Lỗi kết nối máy chủ: ' + err;
     });
 });
+
+// ==============================================================
+// GỢI Ý ỨNG VIÊN PHÙ HỢP TỪ KHO TIỀM NĂNG (KN-286)
+// ==============================================================
+function openSuggestedTalentsFromDetail() {
+    var detailModalEl = document.getElementById('detailModal');
+    var detailModalInstance = bootstrap.Modal.getInstance(detailModalEl);
+    if (detailModalInstance) {
+        detailModalInstance.hide();
+    }
+    if (currentDetailId) {
+        var pos = document.getElementById('modalPosition') ? document.getElementById('modalPosition').textContent : '';
+        var code = document.getElementById('modalCode') ? document.getElementById('modalCode').textContent : '';
+        var dept = document.getElementById('modalDept') ? document.getElementById('modalDept').textContent : '';
+        openSuggestedTalentsModal(currentDetailId, code, pos, dept);
+    }
+}
+
+function openSuggestedTalentsModal(reqId, reqCode, reqTitle, deptName) {
+    var modalEl = document.getElementById('suggestedTalentsModal');
+    var subtitleEl = document.getElementById('suggestedModalSubtitle');
+    var loadingEl = document.getElementById('suggestedTalentsLoading');
+    var emptyEl = document.getElementById('suggestedTalentsEmpty');
+    var containerEl = document.getElementById('suggestedTalentsContainer');
+    var listEl = document.getElementById('suggestedTalentsList');
+    var countEl = document.getElementById('suggestedTalentsCount');
+
+    subtitleEl.textContent = 'Vị trí: [' + (reqCode || '') + '] ' + (reqTitle || '') + (deptName ? ' - ' + deptName : '');
+    loadingEl.classList.remove('d-none');
+    emptyEl.classList.add('d-none');
+    containerEl.classList.add('d-none');
+    listEl.innerHTML = '';
+
+    var modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    fetch('${pageContext.request.contextPath}/candidates/talent-pool/suggested?requisitionId=' + encodeURIComponent(reqId) + '&limit=12')
+        .then(function(res) { return res.json(); })
+        .then(function(talents) {
+            loadingEl.classList.add('d-none');
+            if (!talents || talents.length === 0) {
+                emptyEl.classList.remove('d-none');
+                return;
+            }
+
+            countEl.textContent = talents.length;
+            containerEl.classList.remove('d-none');
+
+            var html = '';
+            talents.forEach(function(c) {
+                var stars = '';
+                var rating = c.potentialRating || 4;
+                for (var i = 1; i <= 5; i++) {
+                    if (i <= rating) {
+                        stars += '<i class="bi bi-star-fill text-warning"></i>';
+                    } else {
+                        stars += '<i class="bi bi-star text-muted opacity-50"></i>';
+                    }
+                }
+
+                var skillsBadges = '';
+                if (c.potentialSkills) {
+                    var skillsArr = c.potentialSkills.split(/[,;\n]+/);
+                    skillsArr.forEach(function(sk) {
+                        var trimmed = sk.trim();
+                        if (trimmed) {
+                            skillsBadges += '<span class="badge bg-light text-dark border me-1 mb-1 font-monospace" style="font-size: 0.72rem;">' + escapeHtml(trimmed) + '</span>';
+                        }
+                    });
+                } else {
+                    skillsBadges = '<span class="text-muted fst-italic text-xs">Chưa cập nhật kỹ năng</span>';
+                }
+
+                var matchBadge = '<span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1"><i class="bi bi-bullseye me-1"></i>' + escapeHtml(c.matchReason || 'Phù hợp từ kho tiềm năng') + '</span>';
+
+                var notesHtml = '';
+                if (c.potentialNotes) {
+                    notesHtml = '<div class="p-2 rounded bg-light border mt-2 text-xs text-secondary fst-italic" style="line-height: 1.4;"><i class="bi bi-chat-quote me-1"></i>' + escapeHtml(c.potentialNotes) + '</div>';
+                }
+
+                var targetPosText = c.targetPosition || (c.requisitionTitle || 'Tự do');
+
+                html += '<div class="col-12 col-md-6">';
+                html += '  <div class="card h-100 border shadow-sm" style="border-radius: 10px;">';
+                html += '    <div class="card-body p-3 d-flex flex-column justify-content-between">';
+                html += '      <div>';
+                html += '        <div class="d-flex justify-content-between align-items-start mb-2">';
+                html += '          <div>';
+                html += '            <h6 class="fw-bold text-dark mb-0">' + escapeHtml(c.fullName) + '</h6>';
+                html += '            <div class="text-xs text-muted mt-0.5"><i class="bi bi-envelope me-1"></i>' + escapeHtml(c.email || 'Chưa có email') + (c.phone ? ' &bull; <i class="bi bi-telephone me-1"></i>' + escapeHtml(c.phone) : '') + '</div>';
+                html += '          </div>';
+                html += '          <div class="text-nowrap ms-2" title="' + rating + '/5 sao">' + stars + '</div>';
+                html += '        </div>';
+                html += '        <div class="mb-2">' + matchBadge + '</div>';
+                html += '        <div class="text-xs mb-2"><span class="text-muted fw-semibold">Vị trí quan tâm:</span> <strong class="text-primary">' + escapeHtml(targetPosText) + '</strong></div>';
+                html += '        <div class="mb-2"><span class="text-muted fw-semibold text-xs d-block mb-1">Kỹ năng:</span>' + skillsBadges + '</div>';
+                html +=          notesHtml;
+                html += '      </div>';
+                html += '      <div class="border-top pt-2 mt-3 d-flex justify-content-between align-items-center">';
+                html += '        <a href="${pageContext.request.contextPath}/candidates/detail?id=' + encodeURIComponent(c.id) + '" target="_blank" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;"><i class="bi bi-person-vcard me-1"></i>Xem hồ sơ</a>';
+                html += '        <form action="${pageContext.request.contextPath}/candidates/talent-pool/assign" method="POST" class="d-inline m-0" onsubmit="return confirm(\'Xác nhận tái điều động ứng viên ' + escapeHtml(c.fullName).replace(/'/g, "\\'") + ' vào vị trí này? Hồ sơ sẽ được chuyển sang vòng Sàng lọc.\');">';
+                html += '          <input type="hidden" name="candidateId" value="' + escapeHtml(c.id) + '">';
+                html += '          <input type="hidden" name="requisitionId" value="' + escapeHtml(reqId) + '">';
+                html += '          <input type="hidden" name="notes" value="Tái điều động từ gợi ý kho tiềm năng cho vị trí [' + escapeHtml(reqCode || '') + ']">';
+                html += '          <button type="submit" class="btn btn-sm btn-success py-1 px-3 fw-bold" style="font-size: 0.78rem;"><i class="bi bi-arrow-right-circle-fill me-1"></i>Tái điều động</button>';
+                html += '        </form>';
+                html += '      </div>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            listEl.innerHTML = html;
+        })
+        .catch(function(err) {
+            loadingEl.classList.add('d-none');
+            emptyEl.classList.remove('d-none');
+            emptyEl.innerHTML = '<div class="text-danger py-4"><i class="bi bi-exclamation-triangle-fill fs-2 d-block mb-2"></i>Lỗi tải danh sách gợi ý: ' + escapeHtml(err.message) + '</div>';
+        });
+}
 </script>

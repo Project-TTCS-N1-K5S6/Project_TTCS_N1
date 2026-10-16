@@ -267,6 +267,14 @@ CREATE TABLE candidates (
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
     status VARCHAR(50) NOT NULL DEFAULT 'APPLIED', -- 'APPLIED', 'SCREENING', 'INTERVIEWING', 'OFFER', 'HIRED', 'REJECTED'
+    is_potential BOOLEAN NOT NULL DEFAULT FALSE,
+    potential_rating INT NOT NULL DEFAULT 3, -- 1-5 sao đánh giá độ tiềm năng
+    potential_skills VARCHAR(500) NULL, -- Danh sách kỹ năng nổi bật
+    potential_notes TEXT NULL, -- Ghi chú đánh giá tiềm năng
+    target_department_id VARCHAR(36) NULL, -- Phòng ban dự kiến phù hợp
+    target_position VARCHAR(255) NULL, -- Vị trí công việc tương lai
+    added_to_pool_at TIMESTAMP NULL, -- Thời điểm đưa vào kho tiềm năng
+    added_to_pool_by VARCHAR(36) NULL, -- Người đưa vào kho tiềm năng
     tracking_code VARCHAR(50) NULL UNIQUE,
     cv_url TEXT,
     notes TEXT,
@@ -277,10 +285,14 @@ CREATE TABLE candidates (
     CONSTRAINT fk_cand_requisition FOREIGN KEY (requisition_id) REFERENCES recruitment_requisitions(id) ON DELETE SET NULL,
     CONSTRAINT fk_cand_application_source FOREIGN KEY (application_source_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
     CONSTRAINT fk_cand_referred_by FOREIGN KEY (referred_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_cand_rejection_reason FOREIGN KEY (rejection_reason_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT
+    CONSTRAINT fk_cand_rejection_reason FOREIGN KEY (rejection_reason_id) REFERENCES shared_catalogs(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_cand_target_dept FOREIGN KEY (target_department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    CONSTRAINT fk_cand_pool_by FOREIGN KEY (added_to_pool_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_cand_referrer ON candidates(referred_by_user_id);
+CREATE INDEX idx_cand_potential ON candidates(is_potential, potential_rating);
+CREATE INDEX idx_cand_target_dept ON candidates(target_department_id);
 
 -- 14. Bảng Dải lương theo vị trí (salary_ranges)
 DROP TABLE IF EXISTS salary_ranges;

@@ -281,4 +281,147 @@ public class CandidateService {
         }
         return candidateDAO.findByTrackingCode(trackingCode.trim());
     }
+
+    /**
+     * Lấy hồ sơ ứng viên theo ID
+     */
+    public Candidate getCandidateById(String id) {
+        if (id == null || id.trim().isEmpty()) {
+            return null;
+        }
+        return candidateDAO.findById(id.trim());
+    }
+
+    /**
+     * Lấy danh sách Kho ứng viên tiềm năng có phân trang & lọc theo chức danh quan tâm, kỹ năng... (KN-286)
+     */
+    public List<Candidate> getTalentPool(String search, String targetPosition, String skill, Integer minRating, String departmentId, String recruiterId, int page, int pageSize) {
+        int p = Math.max(1, page);
+        int size = Math.max(1, pageSize);
+        int offset = (p - 1) * size;
+        return candidateDAO.findTalentPool(search, targetPosition, skill, minRating, departmentId, recruiterId, offset, size);
+    }
+
+    public List<Candidate> getTalentPool(String search, Integer minRating, String skill, String departmentId, String recruiterId, int page, int pageSize) {
+        return getTalentPool(search, null, skill, minRating, departmentId, recruiterId, page, pageSize);
+    }
+
+    /**
+     * Đếm tổng số lượng ứng viên trong Kho tiềm năng theo bộ lọc bao gồm chức danh quan tâm (KN-286)
+     */
+    public int countTalentPool(String search, String targetPosition, String skill, Integer minRating, String departmentId, String recruiterId) {
+        return candidateDAO.countTalentPool(search, targetPosition, skill, minRating, departmentId, recruiterId);
+    }
+
+    public int countTalentPool(String search, Integer minRating, String skill, String departmentId, String recruiterId) {
+        return countTalentPool(search, null, skill, minRating, departmentId, recruiterId);
+    }
+
+    /**
+     * [KN-286]: Gợi ý ứng viên phù hợp từ kho tiềm năng khi mở vị trí mới
+     */
+    public List<Candidate> getSuggestedTalents(String requisitionId, int limit) {
+        if (requisitionId == null || requisitionId.trim().isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        return candidateDAO.findSuggestedTalents(requisitionId.trim(), limit);
+    }
+
+    /**
+     * [KN-286]: Ứng viên bị loại ở vòng cuối được đánh dấu đưa vào kho tiềm năng kèm lý do
+     */
+    public boolean rejectAndAddToTalentPool(String candidateId, String rejectionReasonId, int potentialRating, String potentialNotes, String potentialSkills, String targetPosition, String targetDeptId, String userId) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã ứng viên không được để trống.");
+        }
+        boolean statusUpdated = updateStatus(candidateId.trim(), "REJECTED", rejectionReasonId);
+        if (!statusUpdated) {
+            return false;
+        }
+        int rating = Math.max(1, Math.min(5, potentialRating));
+        return addToTalentPool(candidateId.trim(), rating, potentialSkills, potentialNotes, targetDeptId, targetPosition, userId);
+    }
+
+    /**
+     * Đưa ứng viên hiện có vào Kho ứng viên tiềm năng
+     */
+    public boolean addToTalentPool(String candidateId, int rating, String skills, String notes, String targetDeptId, String targetPosition, String userId) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã ứng viên không được để trống.");
+        }
+        int clampedRating = Math.max(1, Math.min(5, rating));
+        return candidateDAO.addToTalentPool(candidateId.trim(), clampedRating, skills, notes, targetDeptId, targetPosition, userId);
+    }
+
+    /**
+     * Cập nhật thông tin đánh giá tiềm năng, kỹ năng, phòng ban mong muốn
+     */
+    public boolean updateTalentPool(String candidateId, int rating, String skills, String notes, String targetDeptId, String targetPosition) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã ứng viên không được để trống.");
+        }
+        int clampedRating = Math.max(1, Math.min(5, rating));
+        return candidateDAO.updateTalentPool(candidateId.trim(), clampedRating, skills, notes, targetDeptId, targetPosition);
+    }
+
+    /**
+     * Loại bỏ ứng viên khỏi Kho tiềm năng
+     */
+    public boolean removeFromTalentPool(String candidateId) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã ứng viên không được để trống.");
+        }
+        return candidateDAO.removeFromTalentPool(candidateId.trim());
+    }
+
+    /**
+     * Tái sử dụng ứng viên từ kho tiềm năng: Gán vào một Yêu cầu tuyển dụng đang mở
+     */
+    public boolean assignCandidateToRequisition(String candidateId, String requisitionId, String notes, String userId) {
+        if (candidateId == null || candidateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Mã ứng viên không được để trống.");
+        }
+        if (requisitionId == null || requisitionId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn yêu cầu tuyển dụng cần gán.");
+        }
+        return candidateDAO.assignCandidateToRequisition(candidateId.trim(), requisitionId.trim(), notes, userId);
+    }
+
+    /**
+     * Thêm mới trực tiếp một hồ sơ vào Kho ứng viên tiềm năng
+     */
+    public boolean createPotentialCandidate(Candidate c, String userId) {
+        if (c == null) {
+            throw new IllegalArgumentException("Thông tin ứng viên không được để trống.");
+        }
+        if (c.getFullName() == null || c.getFullName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ và tên ứng viên là bắt buộc.");
+        }
+        String email = c.getEmail();
+        if (email == null || !email.trim().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            throw new IllegalArgumentException("Địa chỉ email ứng viên không đúng định dạng.");
+        }
+        c.setId(SecurityUtil.generateUUID());
+        c.setEmail(email.trim().toLowerCase());
+        c.setFullName(c.getFullName().trim());
+        if (c.getPhone() != null && !c.getPhone().trim().isEmpty()) {
+            c.setPhone(c.getPhone().trim());
+        }
+        if (c.getTrackingCode() == null || c.getTrackingCode().trim().isEmpty()) {
+            c.setTrackingCode(generateUniqueTrackingCode());
+        }
+        c.setAddedToPoolBy(userId);
+        c.setPotential(true);
+        if (c.getPotentialRating() < 1 || c.getPotentialRating() > 5) {
+            c.setPotentialRating(3);
+        }
+        return candidateDAO.insertPotentialCandidate(c);
+    }
+
+    /**
+     * Lấy thống kê KPI của Kho ứng viên tiềm năng
+     */
+    public int[] getTalentPoolStats(String recruiterId) {
+        return candidateDAO.getTalentPoolStats(recruiterId);
+    }
 }

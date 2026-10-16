@@ -1,5 +1,6 @@
 package com.irms.controller;
 
+import com.irms.dao.DepartmentDAO;
 import com.irms.dao.RecruitmentRequestDAO;
 import com.irms.model.Candidate;
 import com.irms.model.RecruitmentRequest;
@@ -38,6 +39,7 @@ public class CandidateServlet extends HttpServlet {
     private final CandidateService candidateService = new CandidateService();
     private final SharedCatalogService catalogService = new SharedCatalogService();
     private final RecruitmentRequestDAO requisitionDAO = new RecruitmentRequestDAO();
+    private final DepartmentDAO departmentDAO = new DepartmentDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -83,6 +85,7 @@ public class CandidateServlet extends HttpServlet {
         request.setAttribute("rejectionReasons", rejectionReasons);
         List<RecruitmentRequest> requisitions = requisitionDAO.findAll(null, null, null);
         request.setAttribute("requisitions", requisitions);
+        request.setAttribute("departments", departmentDAO.findAll());
 
         request.getRequestDispatcher("/WEB-INF/views/candidates/list.jsp").forward(request, response);
     }
@@ -121,15 +124,43 @@ public class CandidateServlet extends HttpServlet {
             } else if ("/candidates/update-status".equals(path)) {
                 String id = request.getParameter("candidateId");
                 String newStatus = request.getParameter("status");
-                if (!candidateService.updateStatus(id, newStatus, request.getParameter("rejectionReasonId"))) {
+                String rejectionReasonId = request.getParameter("rejectionReasonId");
+                if (!candidateService.updateStatus(id, newStatus, rejectionReasonId)) {
                     throw new IllegalStateException("Không thể cập nhật trạng thái hồ sơ ứng viên.");
                 }
-                if (session != null) session.setAttribute("flashSuccess", "Đã cập nhật trạng thái ứng viên thành công!");
+
+                // [KN-286]: Ứng viên bị loại ở vòng cuối được đánh dấu đưa vào kho tiềm năng kèm lý do
+                String saveToTalentPool = request.getParameter("saveToTalentPool");
+                if ("REJECTED".equals(newStatus) && ("true".equalsIgnoreCase(saveToTalentPool) || "on".equalsIgnoreCase(saveToTalentPool) || "1".equals(saveToTalentPool))) {
+                    int rating = 4;
+                    try {
+                        if (request.getParameter("potentialRating") != null && !request.getParameter("potentialRating").trim().isEmpty()) {
+                            rating = Integer.parseInt(request.getParameter("potentialRating").trim());
+                        }
+                    } catch (NumberFormatException ignored) {}
+                    String notes = request.getParameter("potentialNotes");
+                    String skills = request.getParameter("potentialSkills");
+                    String targetPosition = request.getParameter("targetPosition");
+                    String targetDeptId = request.getParameter("targetDepartmentId");
+
+                    if (notes == null || notes.trim().isEmpty()) {
+                        notes = "Bị loại ở vòng tuyển dụng cuối, được đánh dấu lưu trữ vào kho tiềm năng để tái liên hệ.";
+                    }
+                    candidateService.addToTalentPool(id, rating, skills, notes, targetDeptId, targetPosition, currentUser.getId());
+                    if (session != null) session.setAttribute("flashSuccess", "Đã cập nhật trạng thái Từ chối và lưu ứng viên vào Kho tiềm năng thành công!");
+                } else {
+                    if (session != null) session.setAttribute("flashSuccess", "Đã cập nhật trạng thái ứng viên thành công!");
+                }
             }
         } catch (Exception e) {
             if (session != null) session.setAttribute("flashError", "Lỗi: " + e.getMessage());
         }
 
-        response.sendRedirect(request.getContextPath() + "/candidates");
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            response.sendRedirect(referer);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/candidates");
+        }
     }
 }
